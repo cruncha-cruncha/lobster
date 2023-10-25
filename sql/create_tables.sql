@@ -87,7 +87,7 @@ CREATE TABLE post_views (
 
 CREATE TABLE posts (
     uuid UUID NOT NULL,
-    user_id INTEGER NOT NULL,
+    author_id INTEGER NOT NULL,
     title TEXT NOT NULL,
     images TEXT[] NOT NULL,
     content TEXT NOT NULL,
@@ -105,7 +105,7 @@ CREATE TABLE posts (
         REFERENCES currencies(id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts USING btree(user_id);
+CREATE INDEX IF NOT EXISTS idx_posts_author_id ON posts USING btree(author_id);
 
 CREATE TABLE sales (
     post_uuid UUID NOT NULL,
@@ -160,32 +160,32 @@ CREATE INDEX IF NOT EXISTS idx_abuses_reporter_id ON abuses USING btree(reporter
 CREATE TABLE comments (
     uuid UUID NOT NULL,
     post_uuid UUID NOT NULL,
-    user_id INTEGER NOT NULL,
+    author_id INTEGER NOT NULL,
     content TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT current_timestamp NOT NULL,
     updated_at TIMESTAMP DEFAULT current_timestamp NOT NULL,
     deleted BOOLEAN NOT NULL,
     changes JSONB NOT NULL,
+    viewed_by_author BOOLEAN NOT NULL,
     viewed_by_poster BOOLEAN NOT NULL,
+    author_notifications JSONB NOT NULL,
+    poster_notifications JSONB NOT NULL,
     PRIMARY KEY (uuid),
-    UNIQUE (post_uuid, user_id)
+    UNIQUE (post_uuid, author_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_comments_user_id ON comments USING btree(user_id);
+CREATE INDEX IF NOT EXISTS idx_comments_user_id ON comments USING btree(author_id);
 
 CREATE TABLE replies (
     uuid UUID NOT NULL,
     comment_uuid UUID NOT NULL,
-    user_id INTEGER NOT NULL,
+    author_id INTEGER NOT NULL,
     content TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT current_timestamp NOT NULL,
     updated_at TIMESTAMP DEFAULT current_timestamp NOT NULL,
     deleted BOOLEAN NOT NULL,
     changes JSONB NOT NULL,
-    viewed_by_commenter BOOLEAN NOT NULL,
-    viewed_by_poster BOOLEAN NOT NULL,
     PRIMARY KEY (uuid),
 );
 
 CREATE INDEX IF NOT EXISTS idx_replies_comment_uuid ON replies USING hash(comment_uuid);
-CREATE INDEX IF NOT EXISTS idx_replies_user_id ON replies USING btree(user_id);
