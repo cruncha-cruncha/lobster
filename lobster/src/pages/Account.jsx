@@ -5,7 +5,7 @@ export const useAccount = ({ languages, data }) => {
   };
 };
 
-export const Account = (account) => {
+export const PureAccount = (account) => {
   // POST STATES AND TRANSITIONS
   // -> draft ('post-draft-created')
   // -> active ('post-active-created')
@@ -56,6 +56,11 @@ export const Account = (account) => {
     </div>
   );
 };
+
+export const Account = (props) => {
+  const account = useAccount(props);
+  return <PureAccount {...account} />;
+}
 
 export const fakeLanguages = [
   {

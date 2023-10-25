@@ -5,51 +5,51 @@ export const useProfile = ({ data }) => {
     console.log("back");
   };
 
-  const viewRatings = () => {
+  const viewRatings = ({ user_id }) => {
     console.log("ratings");
   };
 
-  const viewAllOffers = () => {
+  const viewAllOffers = ({ user_id }) => {
     console.log("all offers");
   };
 
-  const viewOpenOffers = () => {
+  const viewOpenOffers = ({ user_id }) => {
     console.log("open offers");
   };
 
-  const viewHitOffers = () => {
+  const viewHitOffers = ({ user_id }) => {
     console.log("hit offers");
   };
 
-  const viewMissedOffers = () => {
+  const viewMissedOffers = ({ user_id }) => {
     console.log("missed offers");
   };
 
-  const viewAllPosts = () => {
+  const viewAllPosts = ({ user_id }) => {
     console.log("all posts");
   };
 
-  const viewActivePosts = () => {
+  const viewActivePosts = ({ user_id }) => {
     console.log("active posts");
   };
 
-  const viewSoldPosts = () => {
+  const viewSoldPosts = ({ user_id }) => {
     console.log("sold posts");
   };
 
-  const viewInactivePosts = () => {
+  const viewInactivePosts = ({ user_id }) => {
     console.log("inactive posts");
   };
 
-  const viewFirstPost = () => {
+  const viewFirstPost = ({ user_id }) => {
     console.log("first post");
   };
 
-  const viewMostRecentPost = () => {
+  const viewMostRecentPost = ({ user_id }) => {
     console.log("most recent post");
   };
 
-  const viewOldestActivePost = () => {
+  const viewOldestActivePost = ({ user_id }) => {
     console.log("oldest active post");
   };
 
@@ -71,7 +71,7 @@ export const useProfile = ({ data }) => {
   };
 };
 
-export const Profile = (profile) => {
+export const PureProfile = (profile) => {
   return (
     <div className="flex h-full justify-center p-2 pt-5">
       <div className="flex w-full max-w-md flex-col justify-between">
@@ -244,6 +244,11 @@ export const Profile = (profile) => {
       </div>
     </div>
   );
+};
+
+export const Profile = (props) => {
+  const profile = useProfile(props);
+  return <PureProfile {...profile} />;
 };
 
 export const fakeData = {

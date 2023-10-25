@@ -4,19 +4,19 @@ import { format } from "date-fns";
 export const usePost = ({ data }) => {
   const [offer, setOffer] = useState("");
 
-  const viewEdits = () => {
+  const viewEdits = ({ post_uuid }) => {
     console.log("see edits");
   };
 
-  const onFlag = () => {
+  const onFlag = ({ post_uuid }) => {
     console.log("flag");
   };
 
-  const viewAuthor = () => {
+  const viewAuthor = ({ author_id }) => {
     console.log("author");
   };
 
-  const onOffer = () => {
+  const onOffer = ({ post_uuid, user_id, offer }) => {
     console.log("offer");
   };
 
@@ -24,11 +24,11 @@ export const usePost = ({ data }) => {
     console.log("back");
   };
 
-  const viewOffers = () => {
+  const viewOffers = ({ post_uuid }) => {
     console.log("offers");
   };
 
-  const viewLocation = () => {
+  const viewLocation = ({ location }) => {
     console.log("location");
   };
 
@@ -46,7 +46,7 @@ export const usePost = ({ data }) => {
   };
 };
 
-export const Post = (post) => {
+export const PurePost = (post) => {
   return (
     <div className="flex min-h-full flex-col justify-between py-2 text-left">
       <div className="px-2">
@@ -157,6 +157,11 @@ export const Post = (post) => {
       </div>
     </div>
   );
+};
+
+export const Post = (props) => {
+  const post = usePost(props);
+  return <PurePost {...post} />;
 };
 
 export const fakeData = {
