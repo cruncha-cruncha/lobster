@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 
-export const Comments = ({ postData, comments }) => {
+export const useComments = ({ postData, data }) => {
   const [activeComment, setActiveComment] = useState("");
   const [reply, setReply] = useState("");
 
@@ -23,35 +23,56 @@ export const Comments = ({ postData, comments }) => {
     console.log("back");
   };
 
+  return {
+    postData,
+    data,
+    activeComment,
+    setActiveComment,
+    reply,
+    setReply,
+    onReply,
+    handleClickComment,
+    onBack,
+  };
+};
+
+export const Comments = (comments) => {
   return (
     <div className="flex min-h-full w-full flex-col justify-between pb-2">
       <div className="w-full">
-        {comments.map((comment, i) => (
+        {comments?.data?.map((data, i) => (
           <Comment
-            key={comment.uuid}
-            onClick={() => handleClickComment(comment.uuid)}
-            isActive={comment.uuid == activeComment}
-            darkBg={i % 2 == 0}
-            data={comment}
+            key={data.uuid}
+            {...useComment({
+              onClick: () => comments?.handleClickComment(data?.uuid),
+              isActive: data?.uuid == comments?.activeComment,
+              darkBg: i % 2 == 0,
+              data,
+            })}
           />
         ))}
       </div>
       <div className="flex px-2">
-        <div className="mr-2 cursor-pointer" onClick={() => {}}>
-          <p className="relative top-2 pr-2 text-lg font-bold" onClick={onBack}>
+        <div className="mr-2">
+          <p
+            className="relative top-2 cursor-pointer pr-2 text-lg font-bold"
+            onClick={comments?.onBack}
+          >
             {"<"}
           </p>
         </div>
-        <form className="flex grow flex-row" onSubmit={() => {}}>
+        <form className="flex grow flex-row">
           <input
             className={
               "mr-2 grow rounded p-2 " +
-              (activeComment == "" ? "text-neutral-500" : "")
+              (comments?.activeComment == "" ? "text-neutral-500" : "")
             }
             type="text"
-            placeholder={!activeComment ? "select a comment to reply" : "reply"}
-            disabled={activeComment == ""}
-            value={reply}
+            placeholder={
+              !comments?.activeComment ? "select a comment to reply" : "reply"
+            }
+            disabled={comments?.activeComment == ""}
+            value={comments?.reply}
             onChange={(e) => {
               setReply(e.target.value);
             }}
@@ -59,13 +80,13 @@ export const Comments = ({ postData, comments }) => {
           <button
             className={
               "rounded-md border-2 px-4 py-2 " +
-              (!activeComment || !reply
+              (!comments?.activeComment || !comments?.reply
                 ? "border-neutral-400 text-neutral-500"
                 : "border-white bg-emerald-100 hover:bg-emerald-900 hover:text-white")
             }
             type="button"
-            disabled={!activeComment || !reply}
-            onClick={onReply}
+            disabled={!comments?.activeComment || !comments?.reply}
+            onClick={comments?.onReply}
           >
             Reply
           </button>
@@ -75,7 +96,7 @@ export const Comments = ({ postData, comments }) => {
   );
 };
 
-export const Comment = ({ onClick, darkBg, data, isActive }) => {
+export const useComment = ({ onClick, isActive, darkBg, data }) => {
   const onSeeEdits = (e) => {
     if (isActive) {
       e.stopPropagation();
@@ -124,19 +145,39 @@ export const Comment = ({ onClick, darkBg, data, isActive }) => {
     console.log("view commenter " + data.commenter.id);
   };
 
-  if (data.deleted) {
+  return {
+    data,
+    onClick,
+    darkBg,
+    isActive,
+    onSeeEdits,
+    onRemove,
+    onDeleted,
+    onFlag,
+    onEdit,
+    viewCommenter,
+  };
+};
+
+export const Comment = (comment) => {
+  if (comment?.data?.deleted) {
     return (
       <div
-        onClick={onDeleted}
+        onClick={comment?.onDeleted}
         className={
           "py-1 pl-1 " +
-          (darkBg
+          (comment?.darkBg
             ? "border-l-4 border-neutral-100 bg-neutral-100"
             : "border-l-4 border-white")
         }
       >
         <div className="flex flex-row justify-between text-sm italic">
-          <p>deleted, {format(data.time, "HH:mm dd/MM")}</p>
+          <p>
+            deleted,{" "}
+            {comment?.data?.time
+              ? format(comment?.data?.time, "HH:mm dd/MM")
+              : ""}
+          </p>
         </div>
       </div>
     );
@@ -144,27 +185,31 @@ export const Comment = ({ onClick, darkBg, data, isActive }) => {
 
   return (
     <div
-      onClick={onClick}
+      onClick={comment?.onClick}
       className={
         "py-1 " +
-        (darkBg
+        (comment?.darkBg
           ? "border-l-4 border-neutral-100 bg-neutral-100"
           : "border-l-4 border-white")
       }
     >
       <div className="py-1 pl-1">
         <div className="mb-0.5 flex flex-row justify-between pr-2">
-          <p>{data.text}</p>
-          <p className="ml-2">{data.replies.length}</p>
+          <p>{comment?.data?.text}</p>
+          <p className="ml-2">{comment?.data?.replies?.length}</p>
         </div>
         <div className="flex flex-row justify-between text-sm">
           <p className="italic">
-            <span className="cursor-pointer" onClick={viewCommenter}>
-              {data.commenter.name},{" "}
+            <span className="cursor-pointer" onClick={comment?.viewCommenter}>
+              {comment?.data?.commenter?.name},{" "}
             </span>
-            <span>{format(data.time, "HH:mm dd/MM")}</span>
-            {data.edits?.length ? (
-              <span className="cursor-pointer" onClick={onSeeEdits}>
+            <span>
+              {comment?.data?.time
+                ? format(comment?.data?.time, "HH:mm dd/MM")
+                : ""}
+            </span>
+            {comment?.data?.edits?.length ? (
+              <span className="cursor-pointer" onClick={comment?.onSeeEdits}>
                 , edited
               </span>
             ) : (
@@ -172,13 +217,13 @@ export const Comment = ({ onClick, darkBg, data, isActive }) => {
             )}
           </p>
           <div className="flex flex-row">
-            <p className="cursor-pointer px-1" onClick={onEdit}>
+            <p className="cursor-pointer px-1" onClick={comment?.onEdit}>
               edit
             </p>
-            <p className="cursor-pointer px-1" onClick={onFlag}>
+            <p className="cursor-pointer px-1" onClick={comment?.onFlag}>
               flag
             </p>
-            <p className="cursor-pointer pl-1 pr-2" onClick={onRemove}>
+            <p className="cursor-pointer pl-1 pr-2" onClick={comment?.onRemove}>
               &ndash;
             </p>
           </div>
@@ -187,20 +232,20 @@ export const Comment = ({ onClick, darkBg, data, isActive }) => {
       <div
         className={
           "transition-height duration-300 ease-out " +
-          (isActive
+          (comment?.isActive
             ? "max-h-96 overflow-y-scroll"
             : "max-h-0 overflow-y-hidden")
         }
       >
-        {data.replies.map((reply) => (
-          <Reply key={reply.uuid} data={reply} />
+        {comment?.data?.replies?.map((data) => (
+          <Reply key={data.uuid} {...useReply({ data })} />
         ))}
       </div>
     </div>
   );
 };
 
-export const Reply = ({ data }) => {
+export const useReply = ({ data }) => {
   const onSeeEdits = (e) => {
     e.stopPropagation();
     console.log("see edits for reply " + data.uuid);
@@ -226,16 +271,30 @@ export const Reply = ({ data }) => {
     console.log("edit reply " + data.uuid);
   };
 
-  if (data.deleted) {
+  return {
+    data,
+    onSeeEdits,
+    onRemove,
+    onDeleted,
+    onFlag,
+    onEdit,
+  };
+};
+
+export const Reply = (reply) => {
+  if (reply?.data?.deleted) {
     return (
       <div
-        onClick={onDeleted}
+        onClick={reply?.onDeleted}
         className={
           "rounded-l-lg py-1 pl-2 italic " +
-          (!data.byCommenter ? "bg-sky-200" : "")
+          (!reply?.data?.byCommenter ? "bg-sky-200" : "")
         }
       >
-        <p className="text-sm">deleted, {format(data.time, "HH:mm dd/MM")}</p>
+        <p className="text-sm">
+          deleted,{" "}
+          {reply?.data?.time ? format(reply?.data?.time, "HH:mm dd/MM") : ""}
+        </p>
       </div>
     );
   }
@@ -243,17 +302,20 @@ export const Reply = ({ data }) => {
   return (
     <div
       className={
-        "rounded-l-lg py-1 pl-2 " + (!data.byCommenter ? "bg-sky-200" : "")
+        "rounded-l-lg py-1 pl-2 " +
+        (!reply?.data?.byCommenter ? "bg-sky-200" : "")
       }
     >
       <div className="mb-0.5 flex flex-row justify-between pr-2">
-        <p>{data.text}</p>
+        <p>{reply?.data?.text}</p>
       </div>
       <div className="flex flex-row justify-between text-sm">
         <p className="italic">
-          <span>{format(data.time, "HH:mm dd/MM")}</span>
-          {data.edits?.length ? (
-            <span className="cursor-pointer" onClick={onSeeEdits}>
+          <span>
+            {reply?.data?.time ? format(reply?.data?.time, "HH:mm dd/MM") : ""}
+          </span>
+          {reply?.data?.edits?.length ? (
+            <span className="cursor-pointer" onClick={reply?.onSeeEdits}>
               , edited
             </span>
           ) : (
@@ -261,13 +323,13 @@ export const Reply = ({ data }) => {
           )}
         </p>
         <div className="flex flex-row">
-          <p className="cursor-pointer px-1" onClick={onEdit}>
+          <p className="cursor-pointer px-1" onClick={reply?.onEdit}>
             edit
           </p>
-          <p className="cursor-pointer px-1" onClick={onFlag}>
+          <p className="cursor-pointer px-1" onClick={reply?.onFlag}>
             flag
           </p>
-          <p className="cursor-pointer pl-1 pr-2" onClick={onRemove}>
+          <p className="cursor-pointer pl-1 pr-2" onClick={reply?.onRemove}>
             &ndash;
           </p>
         </div>
@@ -280,13 +342,13 @@ export const fakePostData = {
   uuid: "63856492738",
 };
 
-export const fakeComments = [
+export const fakeData = [
   {
     uuid: "971468364529",
     text: "Hello! First!1! I'm here!",
     time: new Date(), // when it was last edited
     commenter: {
-      id: "79283683716",
+      id: 79283683716,
       name: "Annoying Guy",
     },
     edits: [
@@ -310,7 +372,7 @@ export const fakeComments = [
     deleted: true,
     time: new Date(),
     commenter: {
-      id: "7621039864",
+      id: 7621039864,
       name: "Mabel",
     },
   },
@@ -319,7 +381,7 @@ export const fakeComments = [
     text: "Is this still available? I like it but not like like like it, so I'm not willing to put in much effort.",
     time: new Date(),
     commenter: {
-      id: "6926539486",
+      id: 6926539486,
       name: "Marcus",
     },
     edits: [
@@ -368,7 +430,7 @@ export const fakeComments = [
     text: "Does it still work?",
     time: new Date(),
     commenter: {
-      id: "38745541827",
+      id: 38745541827,
       name: "Rob",
     },
     edits: [],
@@ -395,7 +457,7 @@ export const fakeComments = [
     time: new Date(),
     edits: [],
     commenter: {
-      id: "6926539486",
+      id: 6926539486,
       name: "Steve",
     },
     replies: [

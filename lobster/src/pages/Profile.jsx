@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 
-export const Profile = ({ profile }) => {
+export const useProfile = ({ data }) => {
   const onBack = () => {
     console.log("back");
   };
@@ -53,125 +53,183 @@ export const Profile = ({ profile }) => {
     console.log("oldest active post");
   };
 
-  const viewSets = () => {
-    console.log("sets");
+  return {
+    data,
+    onBack,
+    viewRatings,
+    viewAllOffers,
+    viewOpenOffers,
+    viewHitOffers,
+    viewMissedOffers,
+    viewAllPosts,
+    viewActivePosts,
+    viewSoldPosts,
+    viewInactivePosts,
+    viewFirstPost,
+    viewMostRecentPost,
+    viewOldestActivePost,
   };
+};
 
+export const Profile = (profile) => {
   return (
     <div className="flex h-full justify-center p-2 pt-5">
       <div className="flex w-full max-w-md flex-col justify-between">
         <div>
           <div
             className="mb-3 cursor-pointer text-center"
-            onClick={viewRatings}
+            onClick={profile?.viewRatings}
           >
-            <p className="text-xl">{profile.name}</p>
+            <p className="text-xl">{profile?.data?.name}</p>
             <p className="pb-1">
-              {profile.rating} ({profile.numRatings}{" "}
-              {profile.numRatings == 1 ? "rating" : "ratings"})
+              {profile?.data?.rating} ({profile?.data?.numRatings}{" "}
+              {profile?.data?.numRatings == 1 ? "rating" : "ratings"})
             </p>
-            <p className="text-sm">{profile.location}</p>
+            <p className="text-sm">{profile?.data?.location}</p>
           </div>
           <div className="mb-4">
-            <p className="cursor-pointer p-2 font-bold" onClick={viewAllOffers}>
-              {profile.offers.total}{" "}
-              {profile.offers.total == 1 ? "Offer" : "Offers"}
+            <p
+              className="cursor-pointer p-2 font-bold"
+              onClick={profile?.viewAllOffers}
+            >
+              {profile?.data?.offers?.total}{" "}
+              {profile?.data?.offers?.total == 1 ? "Offer" : "Offers"}
             </p>
             <div className="flex justify-between bg-neutral-100 py-2">
               <p>
-                <span className="cursor-pointer p-2" onClick={viewOpenOffers}>
+                <span
+                  className="cursor-pointer p-2"
+                  onClick={profile?.viewOpenOffers}
+                >
                   open
                 </span>
                 <span>/</span>
-                <span className="cursor-pointer p-2" onClick={viewHitOffers}>
+                <span
+                  className="cursor-pointer p-2"
+                  onClick={profile?.viewHitOffers}
+                >
                   hit
                 </span>
                 <span>/</span>
-                <span className="cursor-pointer p-2" onClick={viewMissedOffers}>
+                <span
+                  className="cursor-pointer p-2"
+                  onClick={profile?.viewMissedOffers}
+                >
                   missed
                 </span>
               </p>
               <p>
-                <span className="cursor-pointer p-2" onClick={viewOpenOffers}>
-                  {profile.offers.open}
+                <span
+                  className="cursor-pointer p-2"
+                  onClick={profile?.viewOpenOffers}
+                >
+                  {profile?.data?.offers?.open}
                 </span>
                 <span>/</span>
-                <span className="cursor-pointer p-2" onClick={viewHitOffers}>
-                  {profile.offers.hit}
+                <span
+                  className="cursor-pointer p-2"
+                  onClick={profile?.viewHitOffers}
+                >
+                  {profile?.data?.offers?.hit}
                 </span>
                 <span>/</span>
-                <span className="cursor-pointer p-2" onClick={viewMissedOffers}>
-                  {profile.offers.missed}
+                <span
+                  className="cursor-pointer p-2"
+                  onClick={profile?.viewMissedOffers}
+                >
+                  {profile?.data?.offers?.missed}
                 </span>
               </p>
             </div>
           </div>
           <div className="mb-2">
-            <p className="cursor-pointer p-2 font-bold" onClick={viewAllPosts}>
-              {profile.posts.total}{" "}
-              {profile.posts.total == 1 ? "Post" : "Posts"},{" "}
-              {profile.posts.replies}{" "}
-              {profile.posts.replies == 1 ? "Reply" : "Replies"}
+            <p
+              className="cursor-pointer p-2 font-bold"
+              onClick={profile?.viewAllPosts}
+            >
+              {profile?.data?.posts?.total}{" "}
+              {profile?.data?.posts?.total == 1 ? "Post" : "Posts"},{" "}
+              {profile?.data?.posts?.replies}{" "}
+              {profile?.data?.posts?.replies == 1 ? "Reply" : "Replies"}
             </p>
             <div className="flex justify-between bg-neutral-100 py-2">
               <p>
-                <span className="cursor-pointer p-2" onClick={viewActivePosts}>
+                <span
+                  className="cursor-pointer p-2"
+                  onClick={profile?.viewActivePosts}
+                >
                   active
                 </span>
                 <span>/</span>
-                <span className="cursor-pointer p-2" onClick={viewSoldPosts}>
+                <span
+                  className="cursor-pointer p-2"
+                  onClick={profile?.viewSoldPosts}
+                >
                   sold
                 </span>
                 <span>/</span>
                 <span
                   className="cursor-pointer p-2"
-                  onClick={viewInactivePosts}
+                  onClick={profile?.viewInactivePosts}
                 >
                   inactive
                 </span>
               </p>
               <p>
-                <span className="cursor-pointer p-2" onClick={viewActivePosts}>
-                  {profile.posts.active}
-                </span>
-                <span>/</span>
-                <span className="cursor-pointer p-2" onClick={viewSoldPosts}>
-                  {profile.posts.sold}
+                <span
+                  className="cursor-pointer p-2"
+                  onClick={profile?.viewActivePosts}
+                >
+                  {profile?.data?.posts?.active}
                 </span>
                 <span>/</span>
                 <span
                   className="cursor-pointer p-2"
-                  onClick={viewInactivePosts}
+                  onClick={profile?.viewSoldPosts}
                 >
-                  {profile.posts.inactive}
+                  {profile?.data?.posts?.sold}
+                </span>
+                <span>/</span>
+                <span
+                  className="cursor-pointer p-2"
+                  onClick={profile?.viewInactivePosts}
+                >
+                  {profile?.data?.posts?.inactive}
                 </span>
               </p>
             </div>
             <p
               className="flex cursor-pointer justify-between p-2"
-              onClick={viewFirstPost}
+              onClick={profile?.viewFirstPost}
             >
               <span>first</span>
-              <span>{format(profile.posts.first, "dd/MM/yy")}</span>
+              <span>{profile?.data?.posts?.first ? format(profile?.data?.posts?.first, "dd/MM/yy") : ""}</span>
             </p>
             <p
               className="flex cursor-pointer justify-between bg-neutral-100 p-2"
-              onClick={viewMostRecentPost}
+              onClick={profile?.viewMostRecentPost}
             >
               <span>most recent</span>
-              <span>{format(profile.posts.mostRecent, "dd/MM/yy")}</span>
+              <span>
+                {profile?.data?.posts?.mostRecent ? format(profile?.data?.posts?.mostRecent, "dd/MM/yy") : ""}
+              </span>
             </p>
             <p
               className="flex cursor-pointer justify-between p-2"
-              onClick={viewOldestActivePost}
+              onClick={profile?.viewOldestActivePost}
             >
               <span>oldest active</span>
-              <span>{format(profile.posts.oldestActive, "dd/MM/yy")}</span>
+              <span>
+                {profile?.data?.posts?.oldestActive ? format(profile?.data?.posts?.oldestActive, "dd/MM/yy") : ""}
+              </span>
             </p>
           </div>
         </div>
         <div>
-          <p className="cursor-pointer px-2 text-lg font-bold" onClick={onBack}>
+          <p
+            className="cursor-pointer px-2 text-lg font-bold"
+            onClick={profile?.onBack}
+          >
             {"<"}
           </p>
         </div>
@@ -180,8 +238,8 @@ export const Profile = ({ profile }) => {
   );
 };
 
-export const fakeProfile = {
-  id: "765426834098",
+export const fakeData = {
+  id: 765426834098,
   name: "Douglas",
   rating: 4.5,
   numRatings: 10,
