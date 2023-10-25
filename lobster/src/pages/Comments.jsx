@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, memo } from "react";
 import { format } from "date-fns";
 
 export const useComments = ({ postData, data }) => {
@@ -9,15 +9,18 @@ export const useComments = ({ postData, data }) => {
     console.log("reply");
   };
 
-  const handleClickComment = (uuid) => {
-    setActiveComment((prev) => {
-      if (prev !== uuid) {
-        return uuid;
-      } else {
-        return "";
-      }
-    });
-  };
+  const handleClickComment = useCallback(
+    (uuid) => {
+      setActiveComment((prev) => {
+        if (prev !== uuid) {
+          return uuid;
+        } else {
+          return "";
+        }
+      });
+    },
+    [setActiveComment],
+  );
 
   const onBack = () => {
     console.log("back");
@@ -44,7 +47,10 @@ export const Comments = (comments) => {
           <Comment
             key={data.uuid}
             {...useComment({
-              onClick: () => comments?.handleClickComment(data?.uuid),
+              onClick: useCallback(
+                () => comments?.handleClickComment(data?.uuid),
+                [comments?.handleClickComment, data?.uuid],
+              ),
               isActive: data?.uuid == comments?.activeComment,
               darkBg: i % 2 == 0,
               data,
@@ -97,53 +103,71 @@ export const Comments = (comments) => {
 };
 
 export const useComment = ({ onClick, isActive, darkBg, data }) => {
-  const onSeeEdits = (e) => {
-    if (isActive) {
-      e.stopPropagation();
-    }
+  const onSeeEdits = useCallback(
+    (e) => {
+      if (isActive) {
+        e.stopPropagation();
+      }
 
-    console.log("see edits for comment " + data.uuid);
-  };
+      console.log("see edits for comment " + data.uuid);
+    },
+    [isActive, data.uuid],
+  );
 
-  const onRemove = (e) => {
-    if (isActive) {
-      e.stopPropagation();
-    }
+  const onRemove = useCallback(
+    (e) => {
+      if (isActive) {
+        e.stopPropagation();
+      }
 
-    console.log("remove comment " + data.uuid);
-  };
+      console.log("remove comment " + data.uuid);
+    },
+    [isActive, data.uuid],
+  );
 
-  const onDeleted = (e) => {
-    if (isActive) {
-      e.stopPropagation();
-    }
+  const onDeleted = useCallback(
+    (e) => {
+      if (isActive) {
+        e.stopPropagation();
+      }
 
-    console.log("undelete comment " + data.uuid);
-  };
+      console.log("undelete comment " + data.uuid);
+    },
+    [isActive, data.uuid],
+  );
 
-  const onFlag = (e) => {
-    if (isActive) {
-      e.stopPropagation();
-    }
+  const onFlag = useCallback(
+    (e) => {
+      if (isActive) {
+        e.stopPropagation();
+      }
 
-    console.log("flag comment " + data.uuid);
-  };
+      console.log("flag comment " + data.uuid);
+    },
+    [isActive, data.uuid],
+  );
 
-  const onEdit = (e) => {
-    if (isActive) {
-      e.stopPropagation();
-    }
+  const onEdit = useCallback(
+    (e) => {
+      if (isActive) {
+        e.stopPropagation();
+      }
 
-    console.log("edit comment " + data.uuid);
-  };
+      console.log("edit comment " + data.uuid);
+    },
+    [isActive, data.uuid],
+  );
 
-  const viewCommenter = (e) => {
-    if (isActive) {
-      e.stopPropagation();
-    }
+  const viewCommenter = useCallback(
+    (e) => {
+      if (isActive) {
+        e.stopPropagation();
+      }
 
-    console.log("view commenter " + data.commenter.id);
-  };
+      console.log("view commenter " + data.commenter.id);
+    },
+    [isActive, data.commenter.id],
+  );
 
   return {
     data,
@@ -159,7 +183,7 @@ export const useComment = ({ onClick, isActive, darkBg, data }) => {
   };
 };
 
-export const Comment = (comment) => {
+export const Comment = memo((comment) => {
   if (comment?.data?.deleted) {
     return (
       <div
@@ -243,33 +267,48 @@ export const Comment = (comment) => {
       </div>
     </div>
   );
-};
+});
 
 export const useReply = ({ data }) => {
-  const onSeeEdits = (e) => {
-    e.stopPropagation();
-    console.log("see edits for reply " + data.uuid);
-  };
+  const onSeeEdits = useCallback(
+    (e) => {
+      e.stopPropagation();
+      console.log("see edits for reply " + data.uuid);
+    },
+    [data.uuid],
+  );
 
-  const onRemove = (e) => {
-    e.stopPropagation();
-    console.log("remove reply " + data.uuid);
-  };
+  const onRemove = useCallback(
+    (e) => {
+      e.stopPropagation();
+      console.log("remove reply " + data.uuid);
+    },
+    [data.uuid],
+  );
 
-  const onDeleted = (e) => {
-    e.stopPropagation();
-    console.log("undelete reply " + data.uuid);
-  };
+  const onDeleted = useCallback(
+    (e) => {
+      e.stopPropagation();
+      console.log("undelete reply " + data.uuid);
+    },
+    [data.uuid],
+  );
 
-  const onFlag = (e) => {
-    e.stopPropagation();
-    console.log("flag reply " + data.uuid);
-  };
+  const onFlag = useCallback(
+    (e) => {
+      e.stopPropagation();
+      console.log("flag reply " + data.uuid);
+    },
+    [data.uuid],
+  );
 
-  const onEdit = (e) => {
-    e.stopPropagation();
-    console.log("edit reply " + data.uuid);
-  };
+  const onEdit = useCallback(
+    (e) => {
+      e.stopPropagation();
+      console.log("edit reply " + data.uuid);
+    },
+    [data.uuid],
+  );
 
   return {
     data,
@@ -281,7 +320,7 @@ export const useReply = ({ data }) => {
   };
 };
 
-export const Reply = (reply) => {
+export const Reply = memo((reply) => {
   if (reply?.data?.deleted) {
     return (
       <div
@@ -336,7 +375,7 @@ export const Reply = (reply) => {
       </div>
     </div>
   );
-};
+});
 
 export const fakePostData = {
   uuid: "63856492738",

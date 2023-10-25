@@ -18,16 +18,16 @@ function App() {
   return (
     <div id="app">
       {/* <Post { ...usePost({ data: fakePost })} /> */}
-      {/* <Comments
+      <Comments
         {...useComments({
           fakePostData: fakeCommentPostData,
           data: fakeComments,
         })}
-      /> */}
-      {/* <Profile { ...useProfile({ data: fakeProfile })} /> */}
-      <Account
-        {...useAccount({ languages: fakeLanguages, data: fakeAccount })}
       />
+      {/* <Profile { ...useProfile({ data: fakeProfile })} /> */}
+      {/* <Account
+        {...useAccount({ languages: fakeLanguages, data: fakeAccount })}
+      /> */}
     </div>
   );
 }
