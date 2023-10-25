@@ -50,7 +50,10 @@ export const Post = (post) => {
   return (
     <div className="flex min-h-full flex-col justify-between py-2 text-left">
       <div className="px-2">
-        <h1 className="mb-2 cursor-pointer text-2xl" onClick={post?.viewAuthor}>
+        <h1
+          className="mb-2 cursor-pointer text-2xl"
+          onClick={() => post?.viewAuthor?.()}
+        >
           Incredible Bicycle! 56 Speed! Super fast! Wow!
         </h1>
         <div className="float-left mb-2 mr-2 min-w-full bg-yellow-400 sm:min-w-min">
@@ -65,15 +68,20 @@ export const Post = (post) => {
               <span> - </span>
               <span
                 className="cursor-pointer italic"
-                onClick={post?.viewAuthor}
+                onClick={() => post?.viewAuthor?.()}
               >
                 {post?.data?.author?.name}
               </span>
-              <span>, {post?.data?.time ? format(post?.data?.time, "dd/MM/yy") : ""}</span>
+              <span>
+                , {post?.data?.time ? format(post?.data?.time, "dd/MM/yy") : ""}
+              </span>
               {post?.data?.edits?.length ? (
                 <>
                   <span>, </span>
-                  <span onClick={post?.viewEdits} className="cursor-pointer">
+                  <span
+                    onClick={() => post?.viewEdits?.()}
+                    className="cursor-pointer"
+                  >
                     edited
                   </span>
                 </>
@@ -86,14 +94,17 @@ export const Post = (post) => {
         <div className="mt-2 flex flex-row items-center justify-between">
           <div>
             <button
-              onClick={post?.onFlag}
+              onClick={() => post?.onFlag?.()}
               className="rounded bg-orange-300 px-2 py-1 hover:bg-orange-900 hover:text-white"
             >
               Flag
             </button>
           </div>
           <div className="text-right">
-            <p onClick={post?.viewLocation} className="cursor-pointer">
+            <p
+              onClick={() => post?.viewLocation?.()}
+              className="cursor-pointer"
+            >
               {post?.data?.location}
             </p>
             <p>{post?.data?.price}</p>
@@ -120,7 +131,7 @@ export const Post = (post) => {
                   : "border-neutral-400 text-neutral-500")
               }
               type="button"
-              onClick={post?.onOffer}
+              onClick={() => post?.onOffer?.()}
               disabled={!post?.offer?.length}
             >
               Post
@@ -128,10 +139,13 @@ export const Post = (post) => {
           </form>
         </div>
         <div className="mt-2 flex flex-row justify-between leading-6">
-          <div className="cursor-pointer px-2" onClick={post.onBack}>
+          <div className="cursor-pointer px-2" onClick={() => post.onBack?.()}>
             <p className="text-lg font-bold">{"<"}</p>
           </div>
-          <div className="cursor-pointer px-2" onClick={post.viewOffers}>
+          <div
+            className="cursor-pointer px-2"
+            onClick={() => post.viewOffers?.()}
+          >
             <p className="relative bottom-0.5 text-sm">
               offers
               <span className="relative top-0.5 pl-1 text-lg font-bold">

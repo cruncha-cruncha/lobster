@@ -10,7 +10,7 @@ export const useComments = ({ postData, data }) => {
   };
 
   const handleClickComment = useCallback(
-    (uuid) => {
+    ({ uuid }) => {
       setActiveComment((prev) => {
         if (prev !== uuid) {
           return uuid;
@@ -45,12 +45,9 @@ export const Comments = (comments) => {
       <div className="w-full">
         {comments?.data?.map((data, i) => (
           <Comment
-            key={data.uuid}
+            key={data?.uuid}
             {...useComment({
-              onClick: useCallback(
-                () => comments?.handleClickComment(data?.uuid),
-                [comments?.handleClickComment, data?.uuid],
-              ),
+              onClick: comments?.handleClickComment,
               isActive: data?.uuid == comments?.activeComment,
               darkBg: i % 2 == 0,
               data,
@@ -62,7 +59,7 @@ export const Comments = (comments) => {
         <div className="mr-2">
           <p
             className="relative top-2 cursor-pointer pr-2 text-lg font-bold"
-            onClick={comments?.onBack}
+            onClick={() => comments?.onBack?.()}
           >
             {"<"}
           </p>
@@ -92,7 +89,7 @@ export const Comments = (comments) => {
             }
             type="button"
             disabled={!comments?.activeComment || !comments?.reply}
-            onClick={comments?.onReply}
+            onClick={() => comments?.onReply?.()}
           >
             Reply
           </button>
@@ -103,71 +100,53 @@ export const Comments = (comments) => {
 };
 
 export const useComment = ({ onClick, isActive, darkBg, data }) => {
-  const onSeeEdits = useCallback(
-    (e) => {
-      if (isActive) {
-        e.stopPropagation();
-      }
+  const onSeeEdits = useCallback(({ e, isActive, uuid }) => {
+    if (isActive) {
+      e?.stopPropagation?.();
+    }
 
-      console.log("see edits for comment " + data.uuid);
-    },
-    [isActive, data.uuid],
-  );
+    console.log("see edits for comment " + uuid);
+  }, []);
 
-  const onRemove = useCallback(
-    (e) => {
-      if (isActive) {
-        e.stopPropagation();
-      }
+  const onRemove = useCallback(({ e, isActive, uuid }) => {
+    if (isActive) {
+      e?.stopPropagation?.();
+    }
 
-      console.log("remove comment " + data.uuid);
-    },
-    [isActive, data.uuid],
-  );
+    console.log("remove comment " + uuid);
+  }, []);
 
-  const onDeleted = useCallback(
-    (e) => {
-      if (isActive) {
-        e.stopPropagation();
-      }
+  const onDeleted = useCallback(({ e, isActive, uuid }) => {
+    if (isActive) {
+      e?.stopPropagation?.();
+    }
 
-      console.log("undelete comment " + data.uuid);
-    },
-    [isActive, data.uuid],
-  );
+    console.log("undelete comment " + uuid);
+  }, []);
 
-  const onFlag = useCallback(
-    (e) => {
-      if (isActive) {
-        e.stopPropagation();
-      }
+  const onFlag = useCallback(({ e, isActive, uuid }) => {
+    if (isActive) {
+      e?.stopPropagation?.();
+    }
 
-      console.log("flag comment " + data.uuid);
-    },
-    [isActive, data.uuid],
-  );
+    console.log("flag comment " + uuid);
+  }, []);
 
-  const onEdit = useCallback(
-    (e) => {
-      if (isActive) {
-        e.stopPropagation();
-      }
+  const onEdit = useCallback(({ e, isActive, uuid }) => {
+    if (isActive) {
+      e?.stopPropagation?.();
+    }
 
-      console.log("edit comment " + data.uuid);
-    },
-    [isActive, data.uuid],
-  );
+    console.log("edit comment " + uuid);
+  }, []);
 
-  const viewCommenter = useCallback(
-    (e) => {
-      if (isActive) {
-        e.stopPropagation();
-      }
+  const viewCommenter = useCallback(({ e, isActive, commenterId }) => {
+    if (isActive) {
+      e?.stopPropagation?.();
+    }
 
-      console.log("view commenter " + data.commenter.id);
-    },
-    [isActive, data.commenter.id],
-  );
+    console.log("view commenter " + commenterId);
+  }, []);
 
   return {
     data,
@@ -187,7 +166,13 @@ export const Comment = memo((comment) => {
   if (comment?.data?.deleted) {
     return (
       <div
-        onClick={comment?.onDeleted}
+        onClick={(e) =>
+          comment?.onDeleted?.({
+            e,
+            isActive: comment?.isActive,
+            uuid: comment?.data?.uuid,
+          })
+        }
         className={
           "py-1 pl-1 " +
           (comment?.darkBg
@@ -209,7 +194,13 @@ export const Comment = memo((comment) => {
 
   return (
     <div
-      onClick={comment?.onClick}
+      onClick={(e) =>
+        comment?.onClick?.({
+          e,
+          isActive: comment?.isActive,
+          uuid: comment?.data?.uuid,
+        })
+      }
       className={
         "py-1 " +
         (comment?.darkBg
@@ -224,7 +215,16 @@ export const Comment = memo((comment) => {
         </div>
         <div className="flex flex-row justify-between text-sm">
           <p className="italic">
-            <span className="cursor-pointer" onClick={comment?.viewCommenter}>
+            <span
+              className="cursor-pointer"
+              onClick={(e) =>
+                comment?.viewCommenter?.({
+                  e,
+                  isActive: comment?.isActive,
+                  commenterId: comment?.data?.commenter?.id,
+                })
+              }
+            >
               {comment?.data?.commenter?.name},{" "}
             </span>
             <span>
@@ -233,7 +233,16 @@ export const Comment = memo((comment) => {
                 : ""}
             </span>
             {comment?.data?.edits?.length ? (
-              <span className="cursor-pointer" onClick={comment?.onSeeEdits}>
+              <span
+                className="cursor-pointer"
+                onClick={(e) =>
+                  comment?.onSeeEdits?.({
+                    e,
+                    isActive: comment?.isActive,
+                    uuid: comment?.data?.uuid,
+                  })
+                }
+              >
                 , edited
               </span>
             ) : (
@@ -241,13 +250,40 @@ export const Comment = memo((comment) => {
             )}
           </p>
           <div className="flex flex-row">
-            <p className="cursor-pointer px-1" onClick={comment?.onEdit}>
+            <p
+              className="cursor-pointer px-1"
+              onClick={(e) =>
+                comment?.onEdit?.({
+                  e,
+                  isActive: comment?.isActive,
+                  uuid: comment?.data?.uuid,
+                })
+              }
+            >
               edit
             </p>
-            <p className="cursor-pointer px-1" onClick={comment?.onFlag}>
+            <p
+              className="cursor-pointer px-1"
+              onClick={(e) =>
+                comment?.onFlag?.({
+                  e,
+                  isActive: comment?.isActive,
+                  uuid: comment?.data?.uuid,
+                })
+              }
+            >
               flag
             </p>
-            <p className="cursor-pointer pl-1 pr-2" onClick={comment?.onRemove}>
+            <p
+              className="cursor-pointer pl-1 pr-2"
+              onClick={(e) =>
+                comment?.onRemove?.({
+                  e,
+                  isActive: comment?.isActive,
+                  uuid: comment?.data?.uuid,
+                })
+              }
+            >
               &ndash;
             </p>
           </div>
@@ -262,7 +298,7 @@ export const Comment = memo((comment) => {
         }
       >
         {comment?.data?.replies?.map((data) => (
-          <Reply key={data.uuid} {...useReply({ data })} />
+          <Reply key={data?.uuid} {...useReply({ data })} />
         ))}
       </div>
     </div>
@@ -270,45 +306,30 @@ export const Comment = memo((comment) => {
 });
 
 export const useReply = ({ data }) => {
-  const onSeeEdits = useCallback(
-    (e) => {
-      e.stopPropagation();
-      console.log("see edits for reply " + data.uuid);
-    },
-    [data.uuid],
-  );
+  const onSeeEdits = useCallback(({ e, uuid }) => {
+    e.stopPropagation();
+    console.log("see edits for reply " + uuid);
+  }, []);
 
-  const onRemove = useCallback(
-    (e) => {
-      e.stopPropagation();
-      console.log("remove reply " + data.uuid);
-    },
-    [data.uuid],
-  );
+  const onRemove = useCallback(({ e, uuid }) => {
+    e.stopPropagation();
+    console.log("remove reply " + uuid);
+  }, []);
 
-  const onDeleted = useCallback(
-    (e) => {
-      e.stopPropagation();
-      console.log("undelete reply " + data.uuid);
-    },
-    [data.uuid],
-  );
+  const onDeleted = useCallback(({ e, uuid }) => {
+    e.stopPropagation();
+    console.log("undelete reply " + uuid);
+  }, []);
 
-  const onFlag = useCallback(
-    (e) => {
-      e.stopPropagation();
-      console.log("flag reply " + data.uuid);
-    },
-    [data.uuid],
-  );
+  const onFlag = useCallback(({ e, uuid }) => {
+    e.stopPropagation();
+    console.log("flag reply " + uuid);
+  }, []);
 
-  const onEdit = useCallback(
-    (e) => {
-      e.stopPropagation();
-      console.log("edit reply " + data.uuid);
-    },
-    [data.uuid],
-  );
+  const onEdit = useCallback(({ e, uuid }) => {
+    e.stopPropagation();
+    console.log("edit reply " + uuid);
+  }, []);
 
   return {
     data,
@@ -324,7 +345,7 @@ export const Reply = memo((reply) => {
   if (reply?.data?.deleted) {
     return (
       <div
-        onClick={reply?.onDeleted}
+        onClick={(e) => reply?.onDeleted?.({ e, uuid: reply?.data?.uuid })}
         className={
           "rounded-l-lg py-1 pl-2 italic " +
           (!reply?.data?.byCommenter ? "bg-sky-200" : "")
@@ -354,7 +375,12 @@ export const Reply = memo((reply) => {
             {reply?.data?.time ? format(reply?.data?.time, "HH:mm dd/MM") : ""}
           </span>
           {reply?.data?.edits?.length ? (
-            <span className="cursor-pointer" onClick={reply?.onSeeEdits}>
+            <span
+              className="cursor-pointer"
+              onClick={(e) =>
+                reply?.onSeeEdits?.({ e, uuid: reply?.data?.uuid })
+              }
+            >
               , edited
             </span>
           ) : (
@@ -362,13 +388,22 @@ export const Reply = memo((reply) => {
           )}
         </p>
         <div className="flex flex-row">
-          <p className="cursor-pointer px-1" onClick={reply?.onEdit}>
+          <p
+            className="cursor-pointer px-1"
+            onClick={(e) => reply?.onEdit?.({ e, uuid: reply?.data?.uuid })}
+          >
             edit
           </p>
-          <p className="cursor-pointer px-1" onClick={reply?.onFlag}>
+          <p
+            className="cursor-pointer px-1"
+            onClick={(e) => reply?.onFlag?.({ e, uuid: reply?.data?.uuid })}
+          >
             flag
           </p>
-          <p className="cursor-pointer pl-1 pr-2" onClick={reply?.onRemove}>
+          <p
+            className="cursor-pointer pl-1 pr-2"
+            onClick={(e) => reply?.onRemove?.({ e, uuid: reply?.data?.uuid })}
+          >
             &ndash;
           </p>
         </div>

@@ -78,7 +78,7 @@ export const Profile = (profile) => {
         <div>
           <div
             className="mb-3 cursor-pointer text-center"
-            onClick={profile?.viewRatings}
+            onClick={() => profile?.viewRatings?.()}
           >
             <p className="text-xl">{profile?.data?.name}</p>
             <p className="pb-1">
@@ -90,7 +90,7 @@ export const Profile = (profile) => {
           <div className="mb-4">
             <p
               className="cursor-pointer p-2 font-bold"
-              onClick={profile?.viewAllOffers}
+              onClick={() => profile?.viewAllOffers?.()}
             >
               {profile?.data?.offers?.total}{" "}
               {profile?.data?.offers?.total == 1 ? "Offer" : "Offers"}
@@ -99,21 +99,21 @@ export const Profile = (profile) => {
               <p>
                 <span
                   className="cursor-pointer p-2"
-                  onClick={profile?.viewOpenOffers}
+                  onClick={() => profile?.viewOpenOffers?.()}
                 >
                   open
                 </span>
                 <span>/</span>
                 <span
                   className="cursor-pointer p-2"
-                  onClick={profile?.viewHitOffers}
+                  onClick={() => profile?.viewHitOffers?.()}
                 >
                   hit
                 </span>
                 <span>/</span>
                 <span
                   className="cursor-pointer p-2"
-                  onClick={profile?.viewMissedOffers}
+                  onClick={() => profile?.viewMissedOffers?.()}
                 >
                   missed
                 </span>
@@ -121,21 +121,21 @@ export const Profile = (profile) => {
               <p>
                 <span
                   className="cursor-pointer p-2"
-                  onClick={profile?.viewOpenOffers}
+                  onClick={() => profile?.viewOpenOffers?.()}
                 >
                   {profile?.data?.offers?.open}
                 </span>
                 <span>/</span>
                 <span
                   className="cursor-pointer p-2"
-                  onClick={profile?.viewHitOffers}
+                  onClick={() => profile?.viewHitOffers?.()}
                 >
                   {profile?.data?.offers?.hit}
                 </span>
                 <span>/</span>
                 <span
                   className="cursor-pointer p-2"
-                  onClick={profile?.viewMissedOffers}
+                  onClick={() => profile?.viewMissedOffers?.()}
                 >
                   {profile?.data?.offers?.missed}
                 </span>
@@ -145,7 +145,7 @@ export const Profile = (profile) => {
           <div className="mb-2">
             <p
               className="cursor-pointer p-2 font-bold"
-              onClick={profile?.viewAllPosts}
+              onClick={() => profile?.viewAllPosts?.()}
             >
               {profile?.data?.posts?.total}{" "}
               {profile?.data?.posts?.total == 1 ? "Post" : "Posts"},{" "}
@@ -156,21 +156,21 @@ export const Profile = (profile) => {
               <p>
                 <span
                   className="cursor-pointer p-2"
-                  onClick={profile?.viewActivePosts}
+                  onClick={() => profile?.viewActivePosts?.()}
                 >
                   active
                 </span>
                 <span>/</span>
                 <span
                   className="cursor-pointer p-2"
-                  onClick={profile?.viewSoldPosts}
+                  onClick={() => profile?.viewSoldPosts?.()}
                 >
                   sold
                 </span>
                 <span>/</span>
                 <span
                   className="cursor-pointer p-2"
-                  onClick={profile?.viewInactivePosts}
+                  onClick={() => profile?.viewInactivePosts?.()}
                 >
                   inactive
                 </span>
@@ -178,21 +178,21 @@ export const Profile = (profile) => {
               <p>
                 <span
                   className="cursor-pointer p-2"
-                  onClick={profile?.viewActivePosts}
+                  onClick={() => profile?.viewActivePosts?.()}
                 >
                   {profile?.data?.posts?.active}
                 </span>
                 <span>/</span>
                 <span
                   className="cursor-pointer p-2"
-                  onClick={profile?.viewSoldPosts}
+                  onClick={() => profile?.viewSoldPosts?.()}
                 >
                   {profile?.data?.posts?.sold}
                 </span>
                 <span>/</span>
                 <span
                   className="cursor-pointer p-2"
-                  onClick={profile?.viewInactivePosts}
+                  onClick={() => profile?.viewInactivePosts?.()}
                 >
                   {profile?.data?.posts?.inactive}
                 </span>
@@ -200,27 +200,35 @@ export const Profile = (profile) => {
             </div>
             <p
               className="flex cursor-pointer justify-between p-2"
-              onClick={profile?.viewFirstPost}
+              onClick={() => profile?.viewFirstPost?.()}
             >
               <span>first</span>
-              <span>{profile?.data?.posts?.first ? format(profile?.data?.posts?.first, "dd/MM/yy") : ""}</span>
+              <span>
+                {profile?.data?.posts?.first
+                  ? format(profile?.data?.posts?.first, "dd/MM/yy")
+                  : ""}
+              </span>
             </p>
             <p
               className="flex cursor-pointer justify-between bg-neutral-100 p-2"
-              onClick={profile?.viewMostRecentPost}
+              onClick={() => profile?.viewMostRecentPost?.()}
             >
               <span>most recent</span>
               <span>
-                {profile?.data?.posts?.mostRecent ? format(profile?.data?.posts?.mostRecent, "dd/MM/yy") : ""}
+                {profile?.data?.posts?.mostRecent
+                  ? format(profile?.data?.posts?.mostRecent, "dd/MM/yy")
+                  : ""}
               </span>
             </p>
             <p
               className="flex cursor-pointer justify-between p-2"
-              onClick={profile?.viewOldestActivePost}
+              onClick={() => profile?.viewOldestActivePost?.()}
             >
               <span>oldest active</span>
               <span>
-                {profile?.data?.posts?.oldestActive ? format(profile?.data?.posts?.oldestActive, "dd/MM/yy") : ""}
+                {profile?.data?.posts?.oldestActive
+                  ? format(profile?.data?.posts?.oldestActive, "dd/MM/yy")
+                  : ""}
               </span>
             </p>
           </div>
@@ -228,7 +236,7 @@ export const Profile = (profile) => {
         <div>
           <p
             className="cursor-pointer px-2 text-lg font-bold"
-            onClick={profile?.onBack}
+            onClick={() => profile?.onBack?.()}
           >
             {"<"}
           </p>
