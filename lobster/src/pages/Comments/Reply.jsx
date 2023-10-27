@@ -1,32 +1,51 @@
 import { memo } from "react";
 import { format } from "date-fns";
 
-export const useReply = ({ data, dispatch }) => {
-  const onSeeEdits = ({ e, uuid }) => {
+export const useReply = ({ commentUuid, data, dispatch }) => {
+  const onSeeEdits = (e) => {
     e?.stopPropagation?.();
-    console.log("see edits for reply " + uuid);
+    console.log("see edits for reply " + data?.uuid);
   };
-  
-  const onRemove = ({ e, uuid }) => {
+
+  const onRemove = (e) => {
     e?.stopPropagation?.();
-    console.log("remove reply " + uuid);
+    dispatch?.({
+      type: "removeReply",
+      payload: {
+        parent: commentUuid,
+        uuid: data?.uuid,
+      },
+    });
   };
-  
-  const onDeleted = ({ e, uuid }) => {
+
+  const onDeleted = (e) => {
     e?.stopPropagation?.();
-    console.log("undelete reply " + uuid);
+    dispatch?.({
+      type: "undeleteReply",
+      payload: {
+        parent: commentUuid,
+        uuid: data?.uuid,
+      },
+    });
   };
-  
-  const onFlag = ({ e, uuid }) => {
+
+  const onFlag = (e) => {
     e?.stopPropagation?.();
-    console.log("flag reply " + uuid);
+    console.log("flag reply " + data?.uuid);
   };
-  
-  const onEdit = ({ e, uuid }) => {
+
+  const onEdit = (e) => {
     e?.stopPropagation?.();
-    console.log("edit reply " + uuid);
+    dispatch?.({
+      type: "editReply",
+      payload: {
+        parent: commentUuid,
+        uuid: data?.uuid,
+        text: data?.text
+      },
+    });
   };
-  
+
   return {
     data,
     onSeeEdits,
@@ -41,13 +60,15 @@ export const PureReply = (reply) => {
   if (reply?.data?.deleted) {
     return (
       <div
-        onClick={(e) => reply?.onDeleted?.({ e, uuid: reply?.data?.uuid })}
         className={
-          "rounded-l-lg py-1 pl-2 italic " +
+          "flex rounded-l-lg py-1 pl-2 italic " +
           (!reply?.data?.byCommenter ? "bg-sky-200" : "")
         }
       >
-        <p className="text-sm">
+        <p
+          className="cursor-pointer text-sm"
+          onClick={(e) => reply?.onDeleted?.(e)}
+        >
           deleted,{" "}
           {reply?.data?.time ? format(reply?.data?.time, "HH:mm dd/MM") : ""}
         </p>
@@ -73,9 +94,7 @@ export const PureReply = (reply) => {
           {reply?.data?.edits?.length ? (
             <span
               className="cursor-pointer"
-              onClick={(e) =>
-                reply?.onSeeEdits?.({ e, uuid: reply?.data?.uuid })
-              }
+              onClick={(e) => reply?.onSeeEdits?.(e)}
             >
               , edited
             </span>
@@ -86,19 +105,19 @@ export const PureReply = (reply) => {
         <div className="flex flex-row">
           <p
             className="cursor-pointer px-1"
-            onClick={(e) => reply?.onEdit?.({ e, uuid: reply?.data?.uuid })}
+            onClick={(e) => reply?.onEdit?.(e)}
           >
             edit
           </p>
           <p
             className="cursor-pointer px-1"
-            onClick={(e) => reply?.onFlag?.({ e, uuid: reply?.data?.uuid })}
+            onClick={(e) => reply?.onFlag?.(e)}
           >
             flag
           </p>
           <p
             className="cursor-pointer pl-1 pr-2"
-            onClick={(e) => reply?.onRemove?.({ e, uuid: reply?.data?.uuid })}
+            onClick={(e) => reply?.onRemove?.(e)}
           >
             &ndash;
           </p>

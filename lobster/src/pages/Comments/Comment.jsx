@@ -2,68 +2,62 @@ import { useState, memo } from "react";
 import { format } from "date-fns";
 import { Reply } from "./Reply";
 
-// TODO: replace 'onClick' with 'dispatch' 
-export const useComment = ({ onClick, isActive, darkBg, data }) => {  
+export const useComment = ({ isActive, darkBg, data, dispatch }) => {
   const [renderReplies, setRenderReplies] = useState(false);
 
   if (isActive && !renderReplies) {
     setRenderReplies(true);
   }
 
-  const onSeeEdits = ({ e, isActive, uuid }) => {
-    if (isActive) {
-      e?.stopPropagation?.();
-    }
-  
-    console.log("see edits for comment " + uuid);
+  const onClick = () => {
+    dispatch?.({ type: "setActiveComment", payload: { uuid: data?.uuid } });
   };
-  
-  const onRemove = ({ e, isActive, uuid }) => {
+
+  const onSeeEdits = (e) => {
     if (isActive) {
       e?.stopPropagation?.();
     }
-  
-    console.log("remove comment " + uuid);
+
+    console.log("see edits for comment " + data?.uuid);
   };
-  
-  const onDeleted = ({ e, isActive, uuid }) => {
-    if (isActive) {
-      e?.stopPropagation?.();
-    }
-  
-    console.log("undelete comment " + uuid);
+
+  const onRemove = (e) => {
+    e?.stopPropagation?.();
+    dispatch?.({ type: "removeComment", payload: { uuid: data?.uuid } });
   };
-  
-  const onFlag = ({ e, isActive, uuid }) => {
-    if (isActive) {
-      e?.stopPropagation?.();
-    }
-  
-    console.log("flag comment " + uuid);
+
+  const onDeleted = (e) => {
+    dispatch?.({ type: "undeleteComment", payload: { uuid: data?.uuid } });
   };
-  
-  const onEdit = ({ e, isActive, uuid }) => {
+
+  const onFlag = (e) => {
     if (isActive) {
       e?.stopPropagation?.();
     }
-  
-    console.log("edit comment " + uuid);
+
+    console.log("flag comment " + data?.uuid);
   };
-  
-  const viewCommenter = ({ e, isActive, commenterId }) => {
+
+  const onEdit = (e) => {
+    e?.stopPropagation?.();
+    dispatch?.({ type: "editComment", payload: { uuid: data?.uuid, text: data?.text } });
+  };
+
+  const viewCommenter = (e) => {
     if (isActive) {
       e?.stopPropagation?.();
     }
-  
-    console.log("view commenter " + commenterId);
+
+    console.log("view commenter " + data?.commenter?.id);
   };
 
   return {
     data,
-    onClick,
     darkBg,
     isActive,
     renderReplies: isActive || renderReplies,
+    dispatch,
+    onClick,
     onSeeEdits,
     onRemove,
     onDeleted,
@@ -77,41 +71,27 @@ const PureComment = (comment) => {
   if (comment?.data?.deleted) {
     return (
       <div
-        onClick={(e) =>
-          comment?.onDeleted?.({
-            e,
-            isActive: comment?.isActive,
-            uuid: comment?.data?.uuid,
-          })
-        }
+        onClick={(e) => comment?.onDeleted?.(e)}
         className={
-          "py-1 pl-1 " +
+          "py-1 pl-1 text-sm italic " +
           (comment?.darkBg
             ? "border-l-4 border-neutral-100 bg-neutral-100"
             : "border-l-4 border-white")
         }
       >
-        <div className="flex flex-row justify-between text-sm italic">
-          <p>
-            deleted,{" "}
-            {comment?.data?.time
-              ? format(comment?.data?.time, "HH:mm dd/MM")
-              : ""}
-          </p>
-        </div>
+        <p>
+          deleted,{" "}
+          {comment?.data?.time
+            ? format(comment?.data?.time, "HH:mm dd/MM")
+            : ""}
+        </p>
       </div>
     );
   }
 
   return (
     <div
-      onClick={(e) =>
-        comment?.onClick?.({
-          e,
-          isActive: comment?.isActive,
-          uuid: comment?.data?.uuid,
-        })
-      }
+      onClick={(e) => comment?.onClick?.(e)}
       className={
         "py-1 " +
         (comment?.darkBg
@@ -128,13 +108,7 @@ const PureComment = (comment) => {
           <p className="italic">
             <span
               className="cursor-pointer"
-              onClick={(e) =>
-                comment?.viewCommenter?.({
-                  e,
-                  isActive: comment?.isActive,
-                  commenterId: comment?.data?.commenter?.id,
-                })
-              }
+              onClick={(e) => comment?.viewCommenter?.(e)}
             >
               {comment?.data?.commenter?.name},{" "}
             </span>
@@ -146,13 +120,7 @@ const PureComment = (comment) => {
             {comment?.data?.edits?.length ? (
               <span
                 className="cursor-pointer"
-                onClick={(e) =>
-                  comment?.onSeeEdits?.({
-                    e,
-                    isActive: comment?.isActive,
-                    uuid: comment?.data?.uuid,
-                  })
-                }
+                onClick={(e) => comment?.onSeeEdits?.(e)}
               >
                 , edited
               </span>
@@ -163,37 +131,19 @@ const PureComment = (comment) => {
           <div className="flex flex-row">
             <p
               className="cursor-pointer px-1"
-              onClick={(e) =>
-                comment?.onEdit?.({
-                  e,
-                  isActive: comment?.isActive,
-                  uuid: comment?.data?.uuid,
-                })
-              }
+              onClick={(e) => comment?.onEdit?.(e)}
             >
               edit
             </p>
             <p
               className="cursor-pointer px-1"
-              onClick={(e) =>
-                comment?.onFlag?.({
-                  e,
-                  isActive: comment?.isActive,
-                  uuid: comment?.data?.uuid,
-                })
-              }
+              onClick={(e) => comment?.onFlag?.(e)}
             >
               flag
             </p>
             <p
               className="cursor-pointer pl-1 pr-2"
-              onClick={(e) =>
-                comment?.onRemove?.({
-                  e,
-                  isActive: comment?.isActive,
-                  uuid: comment?.data?.uuid,
-                })
-              }
+              onClick={(e) => comment?.onRemove?.(e)}
             >
               &ndash;
             </p>
@@ -210,7 +160,12 @@ const PureComment = (comment) => {
       >
         {comment?.renderReplies &&
           comment?.data?.replies?.map((data) => (
-            <Reply key={data?.uuid} data={data} />
+            <Reply
+              key={data?.uuid}
+              commentUuid={comment?.data?.uuid}
+              data={data}
+              dispatch={comment?.dispatch}
+            />
           ))}
       </div>
     </div>
@@ -221,4 +176,3 @@ export const Comment = memo((props) => {
   const comment = useComment(props);
   return <PureComment {...comment} />;
 });
-

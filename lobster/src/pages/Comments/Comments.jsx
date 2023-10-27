@@ -1,40 +1,142 @@
-import { useState, useCallback } from "react";
+import { useReducer, useState, useEffect } from "react";
 import { Comment } from "./Comment";
 
-export const useComments = ({ postData, data }) => {
-  const [activeComment, setActiveComment] = useState("");
-  const [reply, setReply] = useState("");
-
-  const onReply = () => {
-    console.log("reply");
+function reducer(state, action) {
+  switch (action?.type) {
+    case "setText":
+      return { ...state, text: action?.payload?.text };
+    case "setActiveComment":
+      if (state.activeComment == action?.payload?.uuid) {
+        return { ...state, activeComment: "" };
+      } else {
+        return {
+          ...state,
+          activeComment: action?.payload?.uuid,
+          editing: { amEditing: false, originalText: "", parent: "", uuid: "" },
+        };
+      }
+    case "editComment":
+      return {
+        ...state,
+        text: action?.payload?.text,
+        activeComment: action?.payload?.uuid,
+        editing: {
+          amEditing: true,
+          originalText: action?.payload?.text,
+          parent: "",
+          uuid: action?.payload?.uuid,
+        },
+      };
+    case "editReply":
+      return {
+        ...state,
+        text: action?.payload?.text,
+        activeComment: action?.payload?.parent,
+        editing: {
+          amEditing: true,
+          originalText: action?.payload?.text,
+          parent: action?.payload?.parent,
+          uuid: action?.payload?.uuid,
+        },
+      };
+    case "clearAll":
+      return {
+        ...state,
+        text: "",
+        activeComment: "",
+        editing: { amEditing: false, originalText: "", parent: "", uuid: "" },
+      };
+    case "clearEditing":
+      return {
+        ...state,
+        text: "",
+        editing: { amEditing: false, originalText: "", parent: "", uuid: "" },
+      };
+    case "clearText":
+      return { ...state, text: "" };
+    default:
+      console.log("uncaught reduce ", action);
   }
 
-  const handleClickComment = useCallback(
-    ({ uuid }) => {
-      setActiveComment((prev) => {
-        if (prev !== uuid) {
-          return uuid;
-        } else {
-          return "";
-        }
-      });
+  return state;
+}
+
+export const useComments = ({ postUuid }) => {
+  const [data, setData] = useState(fakeData);
+  const [state, dispatch] = useReducer(reducer, {
+    text: "",
+    activeComment: "",
+    editing: {
+      amEditing: false,
+      originalText: "",
+      parent: "",
+      uuid: "",
     },
-    [setActiveComment],
-  );
+  });
+
+  const setText = (text) => {
+    dispatch({ type: "setText", payload: { text } });
+  };
+
+  const buttonText = state.editing.amEditing ? "Edit" : "Reply";
+
+  const submitTextDisabled =
+    !state.text || (!state.activeComment && !state.editing.amEditing);
+
+  const onSubmitText = () => {
+    if (state.editing.amEditing) {
+      console.log("edit " + state.editing.uuid + " as " + state.text);
+      dispatch({ type: "clearEditing" });
+    } else if (state.activeComment) {
+      console.log("reply to " + state.activeComment + " as " + state.text);
+      dispatch({ type: "clearText" });
+    } else {
+      console.log("bad text submit");
+    }
+  };
+
+  const MoreDispatch = (action) => {
+    switch (action?.type) {
+      case "undeleteComment":
+        console.log("undelete comment ", action?.payload);
+        dispatch({
+          type: "setActiveComment",
+          payload: { uuid: action?.payload?.uuid },
+        });
+        break;
+      case "undeleteReply":
+        console.log("undelete reply ", action?.payload);
+        break;
+      case "removeComment":
+        console.log("remove comment ", action?.payload);
+        if (state.activeComment == action?.payload?.uuid) {
+          dispatch({ type: "clearAll" });
+        }
+        break;
+      case "removeReply":
+        console.log("remove reply ", action?.payload);
+        if (state.editing.amEditing && state.editing.parent == action?.payload?.parent && state.editing.uuid == action?.payload?.uuid) {
+          dispatch({ type: "clearEditing" });
+        }
+        break;
+      default:
+        dispatch(action);
+    }
+  };
 
   const onBack = () => {
-    console.log("back");
+    console.log("back to post " + postUuid);
   };
 
   return {
-    postData,
     data,
-    activeComment,
-    setActiveComment,
-    reply,
-    setReply,
-    onReply,
-    handleClickComment,
+    buttonText,
+    dispatch: MoreDispatch,
+    activeComment: state.activeComment,
+    text: state.text,
+    setText,
+    submitTextDisabled,
+    onSubmitText,
     onBack,
   };
 };
@@ -46,7 +148,7 @@ export const PureComments = (comments) => {
         {comments?.data?.map((data, i) => (
           <Comment
             key={data?.uuid}
-            onClick={comments?.handleClickComment}
+            dispatch={comments?.dispatch}
             isActive={data?.uuid == comments?.activeComment}
             darkBg={i % 2 == 0}
             data={data}
@@ -66,30 +168,30 @@ export const PureComments = (comments) => {
           <input
             className={
               "mr-2 grow rounded p-2 " +
-              (comments?.activeComment == "" ? "text-neutral-500" : "")
+              (!comments?.activeComment ? "text-neutral-500" : "")
             }
             type="text"
             placeholder={
               !comments?.activeComment ? "select a comment to reply" : "reply"
             }
-            disabled={comments?.activeComment == ""}
-            value={comments?.reply}
+            disabled={!comments?.activeComment}
+            value={comments?.text}
             onChange={(e) => {
-              comments?.setReply?.(e.target.value);
+              comments?.setText?.(e.target.value);
             }}
           />
           <button
             className={
               "rounded-md border-2 px-4 py-2 " +
-              (!comments?.activeComment || !comments?.reply
+              (!!comments?.submitTextDisabled
                 ? "border-neutral-400 text-neutral-500"
                 : "border-white bg-emerald-100 hover:bg-emerald-900 hover:text-white")
             }
             type="button"
-            disabled={!comments?.activeComment || !comments?.reply}
-            onClick={() => comments?.onReply?.()}
+            disabled={!!comments?.submitTextDisabled}
+            onClick={() => comments?.onSubmitText?.()}
           >
-            Reply
+            {comments?.buttonText}
           </button>
         </form>
       </div>
@@ -100,10 +202,6 @@ export const PureComments = (comments) => {
 export const Comments = (props) => {
   const comments = useComments(props);
   return <PureComments {...comments} />;
-};
-
-export const fakePostData = {
-  uuid: "63856492738",
 };
 
 export const fakeData = [
