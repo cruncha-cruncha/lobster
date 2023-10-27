@@ -89,13 +89,13 @@ export const PureProfile = (profile) => {
           </div>
           <div className="mb-4">
             <p
-              className="cursor-pointer p-2 font-bold"
+              className="cursor-pointer border-b-2 border-neutral-400 p-2 font-bold"
               onClick={() => profile?.viewAllOffers?.()}
             >
               {profile?.data?.offers?.total}{" "}
               {profile?.data?.offers?.total == 1 ? "Offer" : "Offers"}
             </p>
-            <div className="flex justify-between bg-neutral-100 py-2">
+            <div className="flex justify-between border-b-2 border-neutral-200 py-2">
               <p>
                 <span
                   className="cursor-pointer p-2"
@@ -144,7 +144,7 @@ export const PureProfile = (profile) => {
           </div>
           <div className="mb-2">
             <p
-              className="cursor-pointer p-2 font-bold"
+              className="cursor-pointer border-b-2 border-neutral-400 p-2 font-bold"
               onClick={() => profile?.viewAllPosts?.()}
             >
               {profile?.data?.posts?.total}{" "}
@@ -152,7 +152,7 @@ export const PureProfile = (profile) => {
               {profile?.data?.posts?.replies}{" "}
               {profile?.data?.posts?.replies == 1 ? "Reply" : "Replies"}
             </p>
-            <div className="flex justify-between bg-neutral-100 py-2">
+            <div className="flex justify-between border-b-2 border-neutral-200 py-2">
               <p>
                 <span
                   className="cursor-pointer p-2"
@@ -199,7 +199,7 @@ export const PureProfile = (profile) => {
               </p>
             </div>
             <p
-              className="flex cursor-pointer justify-between p-2"
+              className="flex cursor-pointer justify-between border-b-2 border-neutral-200 p-2"
               onClick={() => profile?.viewFirstPost?.()}
             >
               <span>first</span>
@@ -210,7 +210,7 @@ export const PureProfile = (profile) => {
               </span>
             </p>
             <p
-              className="flex cursor-pointer justify-between bg-neutral-100 p-2"
+              className="flex cursor-pointer justify-between border-b-2 border-neutral-200 p-2"
               onClick={() => profile?.viewMostRecentPost?.()}
             >
               <span>most recent</span>
@@ -221,7 +221,7 @@ export const PureProfile = (profile) => {
               </span>
             </p>
             <p
-              className="flex cursor-pointer justify-between p-2"
+              className="flex cursor-pointer justify-between border-b-2 border-neutral-200 p-2"
               onClick={() => profile?.viewOldestActivePost?.()}
             >
               <span>oldest active</span>
