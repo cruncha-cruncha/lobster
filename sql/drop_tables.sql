@@ -1,16 +1,15 @@
 DROP INDEX IF EXISTS idx_cities_location;
-DROP INDEX IF EXISTS idx_posts_user_id;
+DROP INDEX IF EXISTS idx_posts_author_id;
 DROP INDEX IF EXISTS idx_sales_buyer_id;
 DROP INDEX IF EXISTS idx_abuses_offender_id;
 DROP INDEX IF EXISTS idx_abuses_reporter_id;
-DROP INDEX IF EXISTS idx_comments_user_id;
+DROP INDEX IF EXISTS idx_comments_author_id;
 DROP INDEX IF EXISTS idx_replies_comment_uuid;
-DROP INDEX IF EXISTS idx_replies_user_id;
 
 DROP TABLE IF EXISTS replies;
 DROP TABLE IF EXISTS comments;
-DROP TABLE IF EXISTS abuse_status;
 DROP TABLE IF EXISTS abuses;
+DROP TABLE IF EXISTS abuse_status;
 DROP TABLE IF EXISTS resource_types;
 DROP TABLE IF EXISTS sales;
 DROP TABLE IF EXISTS posts;

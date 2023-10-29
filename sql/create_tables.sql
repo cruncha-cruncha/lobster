@@ -36,7 +36,7 @@ CREATE TABLE users (
     name TEXT NOT NULL, -- TODO: external search index?
     ip_address INET NOT NULL,
     email TEXT NOT NULL,
-    salt BINARY(128) NOT NULL,
+    salt BYTEA NOT NULL,
     password CHAR(64) NOT NULL,
     created_at TIMESTAMP DEFAULT current_timestamp NOT NULL,
     updated_at TIMESTAMP DEFAULT current_timestamp NOT NULL,
@@ -115,7 +115,7 @@ CREATE TABLE sales (
     price TEXT NOT NULL,
     rating INTEGER,
     review TEXT,
-    PRIMARY KEY(post_uuid),
+    PRIMARY KEY(post_uuid)
 );
 
 CREATE INDEX IF NOT EXISTS idx_sales_buyer_id ON sales USING btree(buyer_id);
@@ -132,7 +132,7 @@ CREATE TABLE abuse_status (
     name TEXT NOT NULL,
     PRIMARY KEY (id),
     UNIQUE (name)
-)
+);
 
 CREATE TABLE abuses (
     uuid UUID NOT NULL,
@@ -174,7 +174,7 @@ CREATE TABLE comments (
     UNIQUE (post_uuid, author_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_comments_user_id ON comments USING btree(author_id);
+CREATE INDEX IF NOT EXISTS idx_comments_author_id ON comments USING btree(author_id);
 
 CREATE TABLE replies (
     uuid UUID NOT NULL,
@@ -185,7 +185,7 @@ CREATE TABLE replies (
     updated_at TIMESTAMP DEFAULT current_timestamp NOT NULL,
     deleted BOOLEAN NOT NULL,
     changes JSONB NOT NULL,
-    PRIMARY KEY (uuid),
+    PRIMARY KEY (uuid)
 );
 
 CREATE INDEX IF NOT EXISTS idx_replies_comment_uuid ON replies USING hash(comment_uuid);
