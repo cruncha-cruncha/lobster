@@ -115,7 +115,7 @@ export const useComments = ({ postUuid }) => {
         break;
       case "removeReply":
         console.log("remove reply ", action?.payload);
-        if (state.editing.amEditing && state.editing.parent == action?.payload?.parent && state.editing.uuid == action?.payload?.uuid) {
+        if (state.editing.amEditing && state.editing.uuid == action?.payload?.uuid) {
           dispatch({ type: "clearEditing" });
         }
         break;
