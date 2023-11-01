@@ -8,7 +8,8 @@ CREATE TABLE countries (
 CREATE TABLE cities (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     country INTEGER NOT NULL,
-    location POINT NOT NULL,
+    latitude REAL NOT NULL,
+    longitude REAL NOT NULL,
     name TEXT NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT fk_country
@@ -16,7 +17,7 @@ CREATE TABLE cities (
         REFERENCES countries(id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_cities_location ON cities USING gist(location);
+-- TODO: spatial index
 
 CREATE TABLE languages (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
@@ -31,19 +32,30 @@ CREATE TABLE currencies (
     PRIMARY KEY (id)
 );
 
+CREATE TABLE invitations (
+    id INTEGER GENERATED ALWAYS AS IDENTITY,
+    email TEXT NOT NULL,
+    code TEXT NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
+    PRIMARY KEY (id),
+    UNIQUE (email)
+);
+
 CREATE TABLE users (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     name TEXT NOT NULL, -- TODO: external search index?
-    ip_address INET NOT NULL,
+    ip_address INET,
     email TEXT NOT NULL,
     salt BYTEA NOT NULL,
     password CHAR(64) NOT NULL,
-    created_at TIMESTAMP DEFAULT current_timestamp NOT NULL,
-    updated_at TIMESTAMP DEFAULT current_timestamp NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
+    banned_until TIMESTAMPTZ,
     language INTEGER NOT NULL,
-    country INTEGER NOT NULL,
-    location POINT NOT NULL,
-    near TEXT NOT NULL,
+    country INTEGER,
+    latitude REAL,
+    longitude REAL,
+    near TEXT,
     changes JSONB NOT NULL,
     PRIMARY KEY (id),
     UNIQUE (email),
@@ -67,13 +79,14 @@ CREATE TABLE searches (
     user_id INTEGER NOT NULL,
     ip_address INET NOT NULL,
     text TEXT NOT NULL,
-    location POINT NOT NULL,
+    latitude REAL NOT NULL,
+    longitude REAL NOT NULL,
     radius INTEGER NOT NULL,
-    price_min DECIMAL,
-    price_max DECIMAL,
+    price_min REAL,
+    price_max REAL,
     country INTEGER,
     sort INTEGER NOT NULL,
-    created_at TIMESTAMP DEFAULT current_timestamp NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     page INTEGER NOT NULL
 );
 
@@ -82,7 +95,7 @@ CREATE TABLE post_views (
     user_id INTEGER NOT NULL,
     ip_address INET NOT NULL,
     post_uuid UUID NOT NULL,
-    created_at TIMESTAMP DEFAULT current_timestamp NOT NULL
+    created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL
 );
 
 CREATE TABLE posts (
@@ -91,13 +104,14 @@ CREATE TABLE posts (
     title TEXT NOT NULL,
     images TEXT[] NOT NULL,
     content TEXT NOT NULL,
-    price DECIMAL NOT NULL,
+    price REAL NOT NULL,
     currency INTEGER NOT NULL,
-    location POINT NOT NULL,
-    created_at TIMESTAMP DEFAULT current_timestamp NOT NULL,
-    updated_at TIMESTAMP DEFAULT current_timestamp NOT NULL,
-    deleted BOOLEAN NOT NULL,
+    latitude REAL NOT NULL,
+    longitude REAL NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     draft BOOLEAN NOT NULL,
+    deleted BOOLEAN NOT NULL,
     changes JSONB NOT NULL,
     PRIMARY KEY (uuid),
     CONSTRAINT fk_currency
@@ -110,8 +124,8 @@ CREATE INDEX IF NOT EXISTS idx_posts_author_id ON posts USING btree(author_id);
 CREATE TABLE sales (
     post_uuid UUID NOT NULL,
     buyer_id INTEGER NOT NULL,
-    created_at TIMESTAMP DEFAULT current_timestamp NOT NULL,
-    reviewed_at TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
+    reviewed_at TIMESTAMPTZ,
     price TEXT NOT NULL,
     rating INTEGER,
     review TEXT,
@@ -141,8 +155,8 @@ CREATE TABLE abuses (
     offender_id INTEGER NOT NULL,
     reporter_id INTEGER NOT NULL,
     content TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT current_timestamp NOT NULL,
-    updated_at TIMESTAMP DEFAULT current_timestamp NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     status INTEGER NOT NULL,
     comments JSONB NOT NULL,
     PRIMARY KEY (uuid),
@@ -162,14 +176,12 @@ CREATE TABLE comments (
     post_uuid UUID NOT NULL,
     author_id INTEGER NOT NULL,
     content TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT current_timestamp NOT NULL,
-    updated_at TIMESTAMP DEFAULT current_timestamp NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     deleted BOOLEAN NOT NULL,
     changes JSONB NOT NULL,
     viewed_by_author BOOLEAN NOT NULL,
     viewed_by_poster BOOLEAN NOT NULL,
-    author_notifications JSONB NOT NULL,
-    poster_notifications JSONB NOT NULL,
     PRIMARY KEY (uuid),
     UNIQUE (post_uuid, author_id)
 );
@@ -181,8 +193,8 @@ CREATE TABLE replies (
     comment_uuid UUID NOT NULL,
     author_id INTEGER NOT NULL,
     content TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT current_timestamp NOT NULL,
-    updated_at TIMESTAMP DEFAULT current_timestamp NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     deleted BOOLEAN NOT NULL,
     changes JSONB NOT NULL,
     PRIMARY KEY (uuid)

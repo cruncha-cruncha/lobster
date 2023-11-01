@@ -1,4 +1,3 @@
-DROP INDEX IF EXISTS idx_cities_location;
 DROP INDEX IF EXISTS idx_posts_author_id;
 DROP INDEX IF EXISTS idx_sales_buyer_id;
 DROP INDEX IF EXISTS idx_abuses_offender_id;
@@ -17,6 +16,7 @@ DROP TABLE IF EXISTS post_views;
 DROP TABLE IF EXISTS searches;
 DROP TABLE IF EXISTS search_sorts;
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS invitations;
 DROP TABLE IF EXISTS currencies;
 DROP TABLE IF EXISTS languages;
 DROP TABLE IF EXISTS cities;

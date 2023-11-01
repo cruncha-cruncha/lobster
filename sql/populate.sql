@@ -1,8 +1,8 @@
 INSERT INTO countries (name)
 VALUES ('Canada');
 
-INSERT INTO cities (country, location, name)
-VALUES (1, POINT(45.4215, -75.6972), 'Ottawa');
+INSERT INTO cities (country, latitude, longitude, name)
+VALUES (1, 45.4215, -75.6972, 'Ottawa');
 
 INSERT INTO languages (name)
 VALUES ('English'), ('French');
