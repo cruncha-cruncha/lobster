@@ -5,15 +5,19 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+ignoreAuth = []
+
 [dependencies]
-axum = { version = "0.6.20", features = ["ws", "headers", "json"] }
+axum = { version = "0.6", features = ["ws", "headers", "json"] }
 hyper = { version = "1.0.0-rc.4", features = ["full"] }
-tokio = { version = "1.33.0", features = ["full"] }
-tower = "0.4.13"
-pem = "3.0.2"
-jsonwebtoken = "9.1.0"
-serde = { version = "1.0.190", features = ["derive"] }
-sqlx = { version = "0.7.2", features = [
+tokio = { version = "1.33", features = ["full"] }
+tower = "0.4"
+pem = "3.0"
+jsonwebtoken = "9.1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0", features = ["raw_value"] }
+sqlx = { version = "0.7", features = [
     "runtime-tokio",
     "tls-native-tls",
     "postgres",
@@ -23,7 +27,9 @@ sqlx = { version = "0.7.2", features = [
     "ipnetwork",
     "json",
 ] }
-pbkdf2 = "0.12.2"
-time = "0.3.30"
-dotenvy = "0.15.7"
+uuid = { version = "1.5", features = ["v4", "fast-rng", "serde"] }
+time = { version = "0.3", features = ["serde"] }
+pbkdf2 = "0.12"
+dotenvy = "0.15"
+futures = "0.3"
 
