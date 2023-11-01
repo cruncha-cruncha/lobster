@@ -1,6 +1,10 @@
 import { memo } from "react";
 import { format } from "date-fns";
 
+// this architecture creates a bunch of functions for every reply
+// it would be more efficient to define the functions once, and pass all the data to them
+// however that would make PureReply less "pure": it would have to care about a lot more data
+
 export const useReply = ({ commentUuid, data, dispatch }) => {
   const onSeeEdits = (e) => {
     e?.stopPropagation?.();
