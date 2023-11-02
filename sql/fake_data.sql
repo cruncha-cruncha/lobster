@@ -1,8 +1,8 @@
-INSERT INTO users (name, ip_address, email, salt, password, created_at, updated_at, language, country, latitude, longitude, near, changes)
+INSERT INTO users (claim_level, first_name, email, salt, password, created_at, updated_at, language, country, latitude, longitude, near, changes)
 VALUES (
+    1,
     'Liam',
-    '192.168.0.1',
-    '_@gmail.com',
+    '',
     '',
     '',
     NOW(),

@@ -43,11 +43,11 @@ CREATE TABLE invitations (
 
 CREATE TABLE users (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
-    name TEXT NOT NULL, -- TODO: external search index?
-    ip_address INET,
-    email TEXT NOT NULL,
+    claim_level INTEGER NOT NULL,
+    first_name TEXT NOT NULL, -- TODO: external search index?
+    email BYTEA NOT NULL,
     salt BYTEA NOT NULL,
-    password CHAR(64) NOT NULL,
+    password BYTEA NOT NULL,
     created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     banned_until TIMESTAMPTZ,
