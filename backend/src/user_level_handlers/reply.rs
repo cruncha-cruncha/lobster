@@ -12,14 +12,15 @@ use axum::{
     http::StatusCode,
 };
 use std::sync::Arc;
-use crate::{AppState, Claims};
+use crate::AppState;
+use crate::auth::claims::Claims;
 
 #[derive(Debug, sqlx::FromRow, sqlx::Type, Serialize, Deserialize)]
 pub struct GetReplyData {
     pub uuid: reply::Uuid,
     pub comment_uuid: reply::CommentUuid,
     pub author_id: reply::AuthorId,
-    pub author_name: user::Name,
+    pub author_name: user::FirstName,
     pub content: reply::Content,
     pub created_at: reply::CreatedAt,
     pub updated_at: reply::UpdatedAt,
@@ -100,7 +101,7 @@ pub async fn post(
         author_id == auth.commenter_id,
     ).fetch_all(&state.db).await {
         Ok(_) => {},
-        Err(e) => { println!("ERROR user_create_reply_update_comment_viewed, {}", e); },
+        Err(e) => { eprintln!("ERROR user_create_reply_update_comment_viewed, {}", e); },
     }
 
     Ok(axum::Json(row))
@@ -163,7 +164,7 @@ pub async fn patch(
         author_id,
     ).fetch_all(&state.db).await {
         Ok(_) => {},
-        Err(e) => { println!("ERROR user_update_reply_update_comment_viewed, {}", e); },
+        Err(e) => { eprintln!("ERROR user_update_reply_update_comment_viewed, {}", e); },
     }
 
     Ok(axum::Json(row))
@@ -219,7 +220,7 @@ pub async fn delete(
         user_id,
     ).fetch_all(&state.db).await {
         Ok(_) => {},
-        Err(e) => { println!("ERROR user_delete_reply_update_comment_viewed, {}", e); },
+        Err(e) => { eprintln!("ERROR user_delete_reply_update_comment_viewed, {}", e); },
     }
 
     return Ok(StatusCode::NO_CONTENT);

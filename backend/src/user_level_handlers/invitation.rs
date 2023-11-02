@@ -1,6 +1,3 @@
-// POST - request an invite
-// PATCH - accept an invite, create an account (a new user)
-
 use crate::db_structs::invitation;
 use crate::AppState;
 use axum::{
@@ -9,6 +6,11 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use crate::auth::encryption::encode_plain_email;
+
+pub fn generate_code() -> invitation::Code {
+    format!("invite-{}", uuid::Uuid::new_v4())
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PostInvitationData {
@@ -19,11 +21,16 @@ pub async fn post(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<PostInvitationData>,
 ) -> Result<StatusCode, (StatusCode, String)> {
+    let email = match encode_plain_email(&payload.email) {
+        Some(email) => email,
+        None => return Err((StatusCode::INTERNAL_SERVER_ERROR, String::from("auth_encode_plain_email"))),
+    };
+
     match sqlx::query!(
         r#"
         SELECT * FROM users WHERE email = $1
         "#,
-        payload.email
+        email
     )
     .fetch_optional(&state.db)
     .await
@@ -44,10 +51,11 @@ pub async fn post(
         INSERT INTO invitations (email, code, updated_at)
         VALUES($1,$2,NOW()) 
         ON CONFLICT (email) 
-        DO UPDATE SET updated_at = NOW();
+        DO UPDATE SET updated_at = NOW()
+        RETURNING *;
         "#,
         payload.email,
-        uuid::Uuid::new_v4().to_string()
+        generate_code(),
     )
     .fetch_one(&state.db)
     .await

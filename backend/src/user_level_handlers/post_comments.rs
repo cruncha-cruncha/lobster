@@ -1,6 +1,7 @@
 use super::{comment, reply};
 use crate::db_structs::post;
-use crate::{AppState, Claims};
+use crate::AppState;
+use crate::auth::claims::Claims;
 use axum::{
     extract::{Json, Path, State},
     http::StatusCode,
@@ -28,7 +29,7 @@ pub async fn get(
                 comment.uuid,
                 comment.post_uuid,
                 comment_author.id AS author_id,
-                comment_author.name AS author_name,
+                comment_author.first_name AS author_name,
                 comment.content,
                 comment.created_at,
                 comment.updated_at,
@@ -40,7 +41,7 @@ pub async fn get(
                     reply.uuid,
                     reply.comment_uuid,
                     reply_author.id,
-                    reply_author.name,
+                    reply_author.first_name,
                     reply.content,
                     reply.created_at,
                     reply.updated_at,

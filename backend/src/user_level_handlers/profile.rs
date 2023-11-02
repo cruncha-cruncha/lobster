@@ -1,5 +1,6 @@
 use crate::db_structs::{comment, post, reply, sale, user};
-use crate::{AppState, Claims};
+use crate::AppState;
+use crate::auth::claims::Claims;
 use axum::{
     extract::{Json, Path, State},
     http::StatusCode,
@@ -10,7 +11,7 @@ use std::sync::Arc;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GetProfileData {
     pub id: user::Id,
-    pub name: user::Name,
+    pub name: user::FirstName,
     pub language: user::Language,
     pub country: user::Country,
     pub latitude: user::Latitude,
@@ -35,7 +36,7 @@ pub async fn get(
         r#"
         SELECT
             usr.id,
-            usr.name,
+            usr.first_name AS name,
             usr.language,
             usr.country,
             usr.latitude,

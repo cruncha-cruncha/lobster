@@ -1,5 +1,6 @@
 use crate::db_structs::{comment, helpers, post, user};
-use crate::{AppState, Claims};
+use crate::AppState;
+use crate::auth::claims::Claims;
 use axum::{
     extract::{Json, Path, State},
     http::StatusCode,
@@ -11,7 +12,7 @@ use std::sync::Arc;
 pub struct GetPostData {
     pub uuid: post::Uuid,
     pub author_id: post::AuthorId,
-    pub author_name: user::Name,
+    pub author_name: user::FirstName,
     pub title: post::Title,
     pub images: post::Images,
     pub content: post::Content,
@@ -38,7 +39,7 @@ pub async fn get(
         SELECT
             post.uuid,
             post.author_id,
-            usr.name AS author_name,
+            usr.first_name AS author_name,
             post.title,
             post.images,
             post.content,
@@ -56,7 +57,7 @@ pub async fn get(
         JOIN users usr ON usr.id = post.author_id
         LEFT JOIN comments comment ON comment.post_uuid = post.uuid
         WHERE post.uuid = $1
-        GROUP BY post.uuid, usr.name
+        GROUP BY post.uuid, usr.first_name
         "#,
         post_uuid
     )
@@ -208,7 +209,7 @@ pub async fn delete(
         post_uuid,
     ).fetch_all(&state.db).await {
         Ok(_) => {},
-        Err(e) => { println!("ERROR user_delete_post_update_comments_viewed, {}", e); },
+        Err(e) => { eprintln!("ERROR user_delete_post_update_comments_viewed, {}", e); },
     }
 
     return Ok(StatusCode::NO_CONTENT);
@@ -295,7 +296,7 @@ pub async fn patch(
         post_uuid,
     ).fetch_all(&state.db).await {
         Ok(_) => {},
-        Err(e) => { println!("ERROR user_patch_post_update_comments_viewed, {}", e); },
+        Err(e) => { eprintln!("ERROR user_patch_post_update_comments_viewed, {}", e); },
     }
 
     Ok(axum::Json(row))

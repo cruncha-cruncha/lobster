@@ -1,11 +1,13 @@
 use serde::{Deserialize, Serialize};
 
+use crate::auth::claims;
+
 pub type Id = i32;
-pub type Name = String;
-pub type IpAddress = Option<sqlx::types::ipnetwork::IpNetwork>;
-pub type Email = String;
+pub type ClaimLevel = claims::ClaimLevel;
+pub type FirstName = String;
+pub type Email = Vec<u8>;
 pub type Salt = Vec<u8>;
-pub type Password = String;
+pub type Password = Vec<u8>;
 pub type CreatedAt = time::OffsetDateTime;
 pub type UpdatedAt = time::OffsetDateTime;
 pub type BannedUntil = Option<time::OffsetDateTime>;
@@ -19,8 +21,8 @@ pub type Changes = serde_json::Value;
 #[derive(Debug, sqlx::FromRow, Serialize, Deserialize)]
 pub struct User {
     pub id: Id,
-    pub name: Name,
-    pub ip_address: IpAddress,
+    pub claim_level: ClaimLevel,
+    pub first_name: FirstName,
     pub email: Email,
     pub salt: Salt,
     pub password: Password,

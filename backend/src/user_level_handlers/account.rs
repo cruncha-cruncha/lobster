@@ -1,19 +1,18 @@
-use crate::db_structs::{helpers, user, invitation};
-use crate::{AppState, Claims};
+use crate::db_structs::{helpers, user};
+use crate::auth::claims::Claims;
+use crate::AppState;
 use axum::{
-    extract::{Json, Path, State, ConnectInfo},
+    extract::{Json, Path, State},
     http::StatusCode,
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use std::net::SocketAddr;
-use std::str::FromStr;
-
+use crate::auth::encryption::decode_email;
 #[derive(Debug, sqlx::FromRow, Serialize, Deserialize)]
 pub struct GetUserData {
     pub id: user::Id,
-    pub name: user::Name,
-    pub email: user::Email,
+    pub name: user::FirstName,
+    pub email: String,
     pub banned_until: user::BannedUntil,
     pub created_at: user::CreatedAt,
     pub updated_at: user::UpdatedAt,
@@ -36,23 +35,15 @@ pub async fn get(
     }
 
     // struct used in query_as must be a subset of columns returned from SELECT
-    let row = match sqlx::query_as!(GetUserData, r#"
-        SELECT
-            usr.id,
-            usr.name,
-            usr.email,
-            usr.banned_until,
-            usr.created_at,
-            usr.updated_at,
-            usr.language,
-            usr.country,
-            usr.latitude,
-            usr.longitude,
-            usr.near,
-            usr.changes
+    let row = match sqlx::query_as!(
+        user::User,
+        r#"
+        SELECT *
         FROM users usr
         WHERE usr.id = $1
-        "#, user_id as i64)
+        "#,
+        user_id as i64
+    )
     .fetch_one(&state.db)
     .await
     {
@@ -60,12 +51,25 @@ pub async fn get(
         Err(e) => return Err((StatusCode::NOT_FOUND, e.to_string())),
     };
 
-    Ok(axum::Json(row))
+    Ok(axum::Json(GetUserData {
+        id: row.id,
+        name: row.first_name,
+        email: decode_email(&row.email).unwrap_or_default(),
+        banned_until: row.banned_until,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+        language: row.language,
+        country: row.country,
+        latitude: row.latitude,
+        longitude: row.longitude,
+        near: row.near,
+        changes: row.changes,
+    }))
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PatchUserData {
-    pub name: user::Name,
+    pub name: user::FirstName,
     pub language: user::Language,
     pub country: user::Country,
     pub latitude: user::Latitude,
@@ -88,10 +92,12 @@ pub async fn patch(
         return Err((StatusCode::BAD_REQUEST, String::from("")));
     }
 
-    let row = match sqlx::query_as!(GetUserData, r#"
+    let row = match sqlx::query_as!(
+        user::User,
+        r#"
         UPDATE users usr
         SET
-            name = $3,
+            first_name = $3,
             language = $4,
             country = $5,
             latitude = $6,
@@ -101,7 +107,7 @@ pub async fn patch(
             changes = changes || jsonb_build_array(jsonb_build_object(
                 'who', $2::TEXT,
                 'when', NOW(),
-                'name', usr.name,
+                'name', usr.first_name,
                 'language', usr.language,
                 'country', usr.country,
                 'latitude', usr.latitude,
@@ -109,20 +115,17 @@ pub async fn patch(
                 'near', usr.near
             ))
         WHERE usr.id = $1
-        RETURNING
-            usr.id,
-            usr.name,
-            usr.email,
-            usr.banned_until,
-            usr.created_at,
-            usr.updated_at,
-            usr.language,
-            usr.country,
-            usr.latitude,
-            usr.longitude,
-            usr.near,
-            usr.changes
-        "#, user_id as i64, claims.sub, payload.name, payload.language, payload.country, payload.latitude, payload.longitude, payload.near)
+        RETURNING *
+        "#,
+        user_id as i64,
+        claims.sub,
+        payload.name,
+        payload.language,
+        payload.country,
+        payload.latitude,
+        payload.longitude,
+        payload.near
+    )
     .fetch_one(&state.db)
     .await
     {
@@ -130,7 +133,20 @@ pub async fn patch(
         Err(e) => return Err((StatusCode::NOT_FOUND, e.to_string())),
     };
 
-    Ok(axum::Json(row))
+    Ok(axum::Json(GetUserData {
+        id: row.id,
+        name: row.first_name,
+        email: decode_email(&row.email).unwrap_or_default(),
+        banned_until: row.banned_until,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+        language: row.language,
+        country: row.country,
+        latitude: row.latitude,
+        longitude: row.longitude,
+        near: row.near,
+        changes: row.changes,
+    }))
 }
 
 pub async fn delete(
@@ -164,62 +180,4 @@ pub async fn delete(
     };
 
     Ok(StatusCode::NO_CONTENT)
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct PostAccountData {
-    pub code: invitation::Code,
-    pub name: user::Name,
-    pub email: user::Email,
-    pub password: user::Password,
-    pub language: user::Language,
-}
-
-pub async fn post(
-    ConnectInfo(sock): ConnectInfo<SocketAddr>,
-    State(state): State<Arc<AppState>>,
-    Json(payload): Json<PostAccountData>,
-) -> Result<StatusCode, (StatusCode, String)> {
-    let invitation = match sqlx::query_as!(
-        invitation::Invitation,
-        r#"
-        SELECT * FROM invitations WHERE email = $1 AND code = $2
-        "#,
-        payload.email,
-        payload.code
-    ).fetch_one(&state.db).await {
-        Ok(invitation) => invitation,
-        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
-    };
-
-    let ip_addr = sqlx::types::ipnetwork::IpNetwork::from_str(&sock.ip().to_string()).ok();
-
-    match sqlx::query!(
-        r#"
-        INSERT INTO users (name, ip_address, email, salt, password, created_at, updated_at, language)
-        VALUES($1,$2,$3,$4,$5,NOW(),NOW(),$6) 
-        RETURNING id;
-        "#,
-        payload.name,
-        ip_addr,
-        payload.email,
-        b"",
-        payload.password,
-        payload.language
-    ).fetch_one(&state.db).await {
-        Ok(_) => {},
-        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
-    };
-
-    match sqlx::query!(
-        r#"
-        DELETE FROM invitations WHERE id = $1
-        "#,
-        invitation.id
-    ).execute(&state.db).await {
-        Ok(_) => {},
-        Err(e) => { println!("ERROR user_accept_invitation_delete_old {}", e); },
-    };
-
-    Ok(StatusCode::OK)
 }

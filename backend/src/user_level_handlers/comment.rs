@@ -1,6 +1,3 @@
-// patch -> need a comment_uuid from the path
-// delete -> need a comment_uuid from the path
-
 use serde::{Deserialize, Serialize};
 use axum::{
     extract::{Json, Path, State},
@@ -8,7 +5,8 @@ use axum::{
 };
 use std::sync::Arc;
 use crate::db_structs::{comment, user, helpers};
-use crate::{AppState, Claims};
+use crate::AppState;
+use crate::auth::claims::Claims;
 use super::reply;
 
 #[derive(Debug, sqlx::FromRow, Serialize, Deserialize)]
@@ -16,7 +14,7 @@ pub struct GetCommentData {
     pub uuid: comment::Uuid,
     pub post_uuid: comment::PostUuid,
     pub author_id: comment::AuthorId,
-    pub author_name: user::Name,
+    pub author_name: user::FirstName,
     pub content: comment::Content,
     pub created_at: comment::CreatedAt,
     pub updated_at: comment::UpdatedAt,

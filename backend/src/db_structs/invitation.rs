@@ -1,8 +1,7 @@
 use serde::{Deserialize, Serialize};
-use super::user;
 
 pub type Id = i32;
-pub type Email = user::Email;
+pub type Email = String;
 pub type Code = String;
 pub type UpdatedAt = time::OffsetDateTime;
 

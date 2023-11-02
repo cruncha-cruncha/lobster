@@ -1,4 +1,5 @@
 pub mod account;
+pub mod auth;
 pub mod comment;
 pub mod invitation;
 pub mod post_comments;

@@ -1,17 +1,13 @@
 mod db_structs;
+mod auth;
 mod user_level_handlers;
 
 use axum::{
-    extract::FromRequestParts,
-    http::{request::Parts, StatusCode},
     routing, Router,
 };
-use db_structs::user;
-use pem::Pem;
-use serde::{Deserialize, Serialize};
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::{env, error::Error, net::SocketAddr, sync::Arc};
-use user_level_handlers::{account, comment, invitation, post, post_comments, profile, reply};
+use user_level_handlers::{account, comment, invitation, post, post_comments, profile, reply, auth as auth_handler};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -36,18 +32,20 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .expect("HOSTING_ADDR must be a valid socket address");
 
     let app = Router::new()
-        .route("/invitation", routing::post(invitation::post))
-        .route("/account", routing::post(account::post))
+        .route("/users", routing::post(auth_handler::login))
+        .route("/tokens", routing::post(auth_handler::refresh))
+        .route("/invitations", routing::post(invitation::post))
+        .route("/accounts", routing::post(auth_handler::accept_invitation))
         .route(
-            "/account/:user_id",
+            "/accounts/:user_id",
             routing::get(account::get)
                 .patch(account::patch)
                 .delete(account::delete),
         )
-        .route("/profile/:user_id", routing::get(profile::get))
-        .route("/post", routing::post(post::post))
+        .route("/profiles/:user_id", routing::get(profile::get))
+        .route("/posts", routing::post(post::post))
         .route(
-            "/post/:post_uuid",
+            "/posts/:post_uuid",
             routing::get(post::get)
                 .patch(post::patch)
                 .delete(post::delete),
@@ -56,14 +54,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
             "/post-comments/:post_uuid",
             routing::get(post_comments::get),
         )
-        .route("/comment", routing::post(comment::post))
+        .route("/comments", routing::post(comment::post))
         .route(
-            "/comment/:comment_uuid",
+            "/comments/:comment_uuid",
             routing::patch(comment::patch).delete(comment::delete),
         )
-        .route("/reply", routing::post(reply::post))
+        .route("/replies", routing::post(reply::post))
         .route(
-            "/reply/:reply_uuid",
+            "/replies/:reply_uuid",
             routing::patch(reply::patch).delete(reply::delete),
         )
         .with_state(shared_state);
@@ -71,110 +69,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     axum::Server::bind(&hosting_addr)
         .serve(app.into_make_service_with_connect_info::<SocketAddr>())
         .await
-        .unwrap();
+        .expect("server failed to start");
 
     Ok(())
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
-pub enum ClaimLevel {
-    Admin,
-    Moderator,
-    User,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Claims {
-    iss: String,
-    sub: String,
-    email: String,
-    level: ClaimLevel,
-    aud: String,
-    exp: usize,
-    nbf: usize,
-    iat: usize,
-}
-
-fn get_jwt_public_key_pem() -> Option<Pem> {
-    // TODO: read from file
-    None
-}
-
-impl Claims {
-    pub fn subject_as_user_id(&self) -> Option<user::Id> {
-        self.sub.parse::<user::Id>().ok()
-    }
-}
-
-#[cfg(not(feature = "ignoreAuth"))]
-#[axum::async_trait]
-impl<S> FromRequestParts<S> for Claims
-where
-    S: Send + Sync,
-{
-    type Rejection = (StatusCode, String);
-
-    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
-        use hyper::header::AUTHORIZATION;
-        use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
-
-        let header_value = match parts.headers.get(AUTHORIZATION) {
-            Some(val) => val,
-            None => return Err((StatusCode::UNAUTHORIZED, "No auth header".to_string())),
-        };
-
-        let auth_string = match header_value.to_str().ok().and_then(|s| {
-            if s.starts_with("Bearer ") {
-                Some(s[7..].to_string())
-            } else {
-                None
-            }
-        }) {
-            Some(s) => s,
-            None => return Err((StatusCode::BAD_REQUEST, "Invalid auth header".to_string())),
-        };
-
-        let key = match get_jwt_public_key_pem() {
-            Some(key) => key,
-            None => {
-                return Err((
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "No private key".to_string(),
-                ))
-            }
-        };
-
-        let token_data = match decode::<Claims>(
-            &auth_string,
-            &DecodingKey::from_secret(key.contents()),
-            &Validation::new(Algorithm::RS256),
-        ) {
-            Ok(data) => data,
-            Err(e) => return Err((StatusCode::BAD_REQUEST, e.to_string())),
-        };
-
-        Ok(token_data.claims)
-    }
-}
-
-#[cfg(feature = "ignoreAuth")]
-#[axum::async_trait]
-impl<S> FromRequestParts<S> for Claims
-where
-    S: Send + Sync,
-{
-    type Rejection = (StatusCode, String);
-
-    async fn from_request_parts(_parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
-        Ok(Claims {
-            iss: String::from(""),
-            sub: String::from(""),
-            email: String::from(""),
-            level: ClaimLevel::Admin,
-            aud: String::from(""),
-            exp: 0,
-            nbf: 0,
-            iat: 0,
-        })
-    }
 }
