@@ -16,6 +16,7 @@ DROP TABLE IF EXISTS post_views;
 DROP TABLE IF EXISTS searches;
 DROP TABLE IF EXISTS search_sorts;
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS recovery_requests;
 DROP TABLE IF EXISTS invitations;
 DROP TABLE IF EXISTS currencies;
 DROP TABLE IF EXISTS languages;

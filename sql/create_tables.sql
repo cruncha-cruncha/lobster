@@ -34,7 +34,16 @@ CREATE TABLE currencies (
 
 CREATE TABLE invitations (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
-    email TEXT NOT NULL,
+    email BYTEA NOT NULL,
+    code TEXT NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
+    PRIMARY KEY (id),
+    UNIQUE (email)
+);
+
+CREATE TABLE recovery_requests (
+    id INTEGER GENERATED ALWAYS AS IDENTITY,
+    email BYTEA NOT NULL,
     code TEXT NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     PRIMARY KEY (id),

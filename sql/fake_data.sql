@@ -1,20 +1,3 @@
-INSERT INTO users (claim_level, first_name, email, salt, password, created_at, updated_at, language, country, latitude, longitude, near, changes)
-VALUES (
-    1,
-    'Liam',
-    '',
-    '',
-    '',
-    NOW(),
-    NOW(),
-    1,
-    1,
-    45.4215,
-    -75.6972,
-    'Center Town',
-    '{}'::JSONB
-);
-
 INSERT INTO posts (uuid, author_id, title, images, content, price, currency, latitude, longitude, created_at, updated_at, draft, deleted, changes)
 VALUES (
     'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
