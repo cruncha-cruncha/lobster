@@ -1,7 +1,21 @@
+import { useRouter } from "../components/Router/Router";
+import { useAuth } from "../components/userAuth";
+
 export const useAccount = ({ languages, data }) => {
+  const auth = useAuth();
+  const router = useRouter();
+
+  const onLogout = () => {
+    auth.logout();
+    router.goTo("/");
+    router.clearHistory();
+  };
+
   return {
     data,
     languages,
+    onBack: router.goBack,
+    onLogout,
   };
 };
 
@@ -21,9 +35,6 @@ export const PureAccount = (account) => {
   // both the commenter and the poster can delete and un-delete comments and replies
   // all edits must have a time
 
-  // deleting a post is irreversible
-  // deleting a comment or reply IS reversible
-
   // moving a post from active -> draft or draft -> active does not change 'viewed' status
   // selling or deleting a post marks all comments as unviewed
   // comments and replies on a draft, deleted, or sold post cannot be created, edited, or deleted, but they can be viewed
@@ -39,19 +50,96 @@ export const PureAccount = (account) => {
   // then I think we need noSQL
 
   return (
-    <div>
-      <p>Name: {account?.data?.name}</p>
-      <p>Language: {account?.data?.language}</p>
-      <p>Location: {account?.data?.location}</p>
-      <p>Country: {account?.data?.country}</p>
-      <div>
-        <p>My Posts</p>
-        <p>with new activity</p>
-        <p>all</p>
-      </div>
-      <div>
-        <p>My Offers</p>
-        <p>all</p>
+    <div className="flex h-full justify-center">
+      <div className="flex w-full max-w-md flex-col justify-between pb-2 pt-5">
+        <div>
+          <h1 className="text-center text-lg">Account</h1>
+          <div className="flex">
+            <div className="flex w-24 flex-col items-end gap-2">
+              <label htmlFor="name" className="border-b-2 border-transparent">
+                Name
+              </label>
+              <label
+                htmlFor="language"
+                className="border-b-2 border-transparent"
+              >
+                Language
+              </label>
+              <label
+                htmlFor="location"
+                className="border-b-2 border-transparent"
+              >
+                Location
+              </label>
+              <label
+                htmlFor="country"
+                className="border-b-2 border-transparent"
+              >
+                Country
+              </label>
+            </div>
+            <div className="ml-2 flex grow flex-col gap-2">
+              <div className="rounded-sm border-b-2 border-stone-800">
+                <input
+                  type="text"
+                  id="name"
+                  placeholder="Name"
+                  className="w-full"
+                />
+              </div>
+              <div className="rounded-sm border-b-2 border-stone-800">
+                <input
+                  type="text"
+                  id="language"
+                  placeholder="Language"
+                  className="w-full"
+                />
+              </div>
+              <div className="rounded-sm border-b-2 border-stone-800">
+                <input
+                  type="text"
+                  id="location"
+                  placeholder="Location"
+                  className="w-full"
+                />
+              </div>
+              <div className="rounded-sm border-b-2 border-stone-800">
+                <input
+                  type="text"
+                  id="country"
+                  placeholder="Country"
+                  className="w-full"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <p>My Posts</p>
+            <p>with new activity</p>
+            <p>all</p>
+          </div>
+          <div>
+            <p>My Offers</p>
+            <p>all</p>
+          </div>
+        </div>
+        <div>
+          <div className="flex justify-between">
+            <p
+              className="cursor-pointer p-2 text-lg font-bold"
+              onClick={(e) => account?.onBack?.(e)}
+            >
+              {"<"}
+            </p>
+            <button
+              className="rounded-full bg-sky-200 px-4 py-2 hover:bg-sky-900 hover:text-white"
+              onClick={(e) => account?.onLogout?.(e)}
+            >
+              Logout
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -60,7 +148,7 @@ export const PureAccount = (account) => {
 export const Account = (props) => {
   const account = useAccount(props);
   return <PureAccount {...account} />;
-}
+};
 
 export const fakeLanguages = [
   {
