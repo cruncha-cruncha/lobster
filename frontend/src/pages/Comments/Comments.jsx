@@ -1,5 +1,5 @@
 import { useReducer, useState } from "react";
-import { useRouter } from "../../components/Router/Router";
+import { useRouter } from "../../components/router/Router";
 import { Comment } from "./Comment";
 
 function reducer(state, action) {
@@ -133,8 +133,7 @@ export const useComments = () => {
   };
 
   const onBack = () => {
-    // console.log("back to post " + postUuid);
-    router.goBack();
+    router.goTo(`/post`, "right");
   };
 
   return {

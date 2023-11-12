@@ -92,6 +92,10 @@
   overflow: hidden;
 }
 
+.sliding .hide-while-sliding {
+  visibility: hidden;
+}
+
 .slide-left {
   display: flex;
   flex-direction: row;

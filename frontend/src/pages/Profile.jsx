@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { format } from "date-fns";
-import { useRouter } from "../components/Router/Router";
+import { useRouter } from "../components/router/Router";
 
-export const useProfile = ({ data }) => {
+export const useProfile = () => {
+  const [data, setData] = useState(fakeData);
   const router = useRouter();
 
   const viewRatings = ({ user_id }) => {
@@ -52,22 +54,20 @@ export const useProfile = ({ data }) => {
     console.log("oldest active post");
   };
 
-  const onPost = () => {
-    router.goTo("/post");
+  const onNewPost = () => {
+    router.goToWithBack("/new-post", "forward", "right");
   };
 
   const onSearch = () => {
-    console.log("search");
+    router.goTo("/search", "down");
   };
 
   const onAccount = () => {
-    router.goTo("/account");
-  }
+    router.goTo("/account", "up");
+  };
 
   return {
     data,
-    onBack: router.goBack,
-    canGoBack: router.canGoBack,
     viewRatings,
     viewAllOffers,
     viewOpenOffers,
@@ -80,7 +80,7 @@ export const useProfile = ({ data }) => {
     viewFirstPost,
     viewMostRecentPost,
     viewOldestActivePost,
-    onPost,
+    onNewPost,
     onSearch,
     onAccount,
   };
@@ -100,7 +100,7 @@ export const PureProfile = (profile) => {
               {profile?.data?.rating} ({profile?.data?.numRatings}{" "}
               {profile?.data?.numRatings == 1 ? "rating" : "ratings"})
             </p>
-            <p className="text-sm">{profile?.data?.location}</p>
+            <p className="text-sm">{profile?.data?.country}</p>
           </div>
           <div className="p-2">
             <p
@@ -252,39 +252,25 @@ export const PureProfile = (profile) => {
             </p>
           </div>
         </div>
-        <div
-          className={
-            "flex" + (profile?.canGoBack ? " justify-between" : " justify-end")
-          }
-        >
-          {profile?.canGoBack && (
-            <p
-              className="cursor-pointer p-2 text-lg font-bold"
-              onClick={(e) => profile?.onBack?.(e)}
-            >
-              {"<"}
-            </p>
-          )}
-          <div className="flex gap-x-2 pr-2">
-            <button
-              className="rounded-full bg-sky-200 px-4 py-2 hover:bg-sky-900 hover:text-white transition-colors"
-              onClick={(e) => profile?.onAccount?.(e)}
-            >
-              Account
-            </button>
-            <button
-              className="rounded-full bg-emerald-200 px-4 py-2 hover:bg-emerald-900 hover:text-white transition-colors"
-              onClick={(e) => profile?.onPost?.(e)}
-            >
-              Post
-            </button>
-            <button
-              className="rounded-full bg-emerald-200 px-4 py-2 hover:bg-emerald-900 hover:text-white transition-colors"
-              onClick={(e) => profile?.onSearch?.(e)}
-            >
-              Search
-            </button>
-          </div>
+        <div className="flex justify-end gap-x-2 pr-2">
+          <button
+            className="rounded-full bg-sky-200 px-4 py-2 transition-colors hover:bg-sky-900 hover:text-white"
+            onClick={(e) => profile?.onAccount?.(e)}
+          >
+            Account
+          </button>
+          <button
+            className="rounded-full bg-emerald-200 px-4 py-2 transition-colors hover:bg-emerald-900 hover:text-white"
+            onClick={(e) => profile?.onNewPost?.(e)}
+          >
+            New
+          </button>
+          <button
+            className="rounded-full bg-emerald-200 px-4 py-2 transition-colors hover:bg-emerald-900 hover:text-white"
+            onClick={(e) => profile?.onSearch?.(e)}
+          >
+            Search
+          </button>
         </div>
       </div>
     </div>
@@ -301,7 +287,7 @@ export const fakeData = {
   name: "Douglas",
   rating: 4.5,
   numRatings: 10,
-  location: "123 Bender Street, Canada",
+  country: "Canada",
   language: "english",
   posts: {
     total: 5,

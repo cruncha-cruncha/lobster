@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CenteredLoadingDots } from "../components/LoadingDots";
 import { useAuth } from "../components/userAuth";
+import { useInfoModal, PureInfoModal } from "../components/InfoModal";
 import * as endpoints from "../api/endpoints";
 
 export const validateEmail = (email) => {
@@ -12,8 +13,7 @@ export const validatePassword = (password) => {
 };
 
 export const useLogin = () => {
-  const [showModal, setShowModal] = useState(false);
-  const [modalText, setModalText] = useState("");
+  const modal = useInfoModal();
   const [email, _setEmail] = useState("");
   const [password, _setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -36,8 +36,7 @@ export const useLogin = () => {
         });
       })
       .catch(() => {
-        setModalText("Incorrent email or password.");
-        setShowModal(true);
+        modal.open("Request failed. Incorrent email or password.", "error");
       })
       .finally(() => {
         setIsLoading("");
@@ -47,12 +46,11 @@ export const useLogin = () => {
   const onSignUp = async () => {
     setIsLoading("signUp");
 
-    const showErrModal = () => {
-      setModalText(
+    const showErrModal = () =>
+      modal.open(
         "Request failed. There may already be a user with this email address.",
+        "error",
       );
-      setShowModal(true);
-    };
 
     endpoints
       .requestInvitation({ email })
@@ -60,10 +58,7 @@ export const useLogin = () => {
         if (!data) {
           showErrModal();
         } else {
-          setModalText(
-            "Request successful. You will receive an email when your account is ready.",
-          );
-          setShowModal(true);
+          modal.open("You will receive an email when your account is ready.");
         }
       }, showErrModal)
       .finally(() => {
@@ -74,12 +69,11 @@ export const useLogin = () => {
   const onRecover = async () => {
     setIsLoading("recover");
 
-    const showErrModal = () => {
-      setModalText(
-        "Request failed. There may not be a user with this email address.",
+    const showErrModal = () =>
+      modal.open(
+        "Request failed. Please check your email address and try again later.",
+        "error",
       );
-      setShowModal(true);
-    };
 
     endpoints
       .requestPasswordReset({ email })
@@ -87,10 +81,9 @@ export const useLogin = () => {
         if (!data) {
           showErrModal();
         } else {
-          setModalText(
-            "Request successful. You will receive an email with a link to reset your password.",
+          modal.open(
+            "You will receive an email with a link to reset your password.",
           );
-          setShowModal(true);
         }
       }, showErrModal)
       .finally(() => {
@@ -114,9 +107,6 @@ export const useLogin = () => {
     canLogin: validEmail && validPassword && !isLoading,
     canSignUp: validEmail && !password && !isLoading,
     canRecover: validEmail && !isLoading,
-    modalText,
-    showModal,
-    closeModal: () => setShowModal(false),
     onLogin,
     onSignUp,
     onRecover,
@@ -125,6 +115,7 @@ export const useLogin = () => {
     recoverLoading: isLoading === "recover",
     showPassword,
     toggleShowPassword: () => setShowPassword((prev) => !prev),
+    modal,
   };
 };
 
@@ -136,9 +127,7 @@ export const Login = (props) => {
 export const PureLogin = (login) => {
   return (
     <>
-      {login?.showModal && (
-        <PureLoginModal text={login?.modalText} onClose={login?.closeModal} />
-      )}
+      <PureInfoModal {...login?.modal} />
       <div className="flex h-full items-center justify-center">
         <div className="flex w-full max-w-sm flex-col justify-center">
           <h1 className="mb-2 text-center text-xl">Lobster</h1>
@@ -163,7 +152,7 @@ export const PureLogin = (login) => {
               />
               <div
                 className="relative cursor-pointer"
-                onClick={(e) => login?.toggleShowPassword(e)}
+                onClick={(e) => login?.toggleShowPassword?.(e)}
               >
                 <div className="absolute -left-4 h-full w-4 bg-gradient-to-l from-white to-transparent" />
                 <span className="py-1 pl-1 pr-2 text-sm text-stone-400">
@@ -229,25 +218,5 @@ export const PureLogin = (login) => {
         </div>
       </div>
     </>
-  );
-};
-
-export const PureLoginModal = (modal) => {
-  return (
-    <div className="fixed left-0 top-0 z-40 flex h-full w-full items-center justify-center bg-sky-100 bg-opacity-50">
-      <div className="flex w-full max-w-xs flex-col items-center justify-center">
-        <div className="rounded-md bg-white p-4 shadow-sm">
-          <p className="mb-6">{modal?.text}</p>
-          <div className="flex justify-center">
-            <button
-              className="rounded-full bg-emerald-200 px-4 py-1 hover:bg-emerald-900 hover:text-white"
-              onClick={(e) => modal?.onClose?.(e)}
-            >
-              OK
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
   );
 };

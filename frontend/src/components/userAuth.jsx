@@ -35,18 +35,6 @@ function reducer(state, action) {
 export const UserAuth = ({ children }) => {
   const [user, dispatch] = useReducer(reducer, INITIAL_USER);
 
-  return (
-    <UserContext.Provider value={user}>
-      <UserDispatchContext.Provider value={dispatch}>
-        {children}
-      </UserDispatchContext.Provider>
-    </UserContext.Provider>
-  );
-};
-
-export const usePersistAccessToken = () => {
-  const dispatch = useContext(UserDispatchContext);
-
   const logout = () => {
     dispatch?.({ type: "logout" });
     localStorage?.setItem?.("accessToken", "");
@@ -86,6 +74,14 @@ export const usePersistAccessToken = () => {
       clearInterval?.(intervalId);
     };
   }, []);
+
+  return (
+    <UserContext.Provider value={user}>
+      <UserDispatchContext.Provider value={dispatch}>
+        {children}
+      </UserDispatchContext.Provider>
+    </UserContext.Provider>
+  );
 };
 
 export const useAuth = () => {
