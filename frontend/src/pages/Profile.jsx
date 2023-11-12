@@ -1,9 +1,10 @@
+import { useState } from "react";
 import { format } from "date-fns";
+import { useRouter } from "../components/router/Router";
 
-export const useProfile = ({ data }) => {
-  const onBack = () => {
-    console.log("back");
-  };
+export const useProfile = () => {
+  const [data, setData] = useState(fakeData);
+  const router = useRouter();
 
   const viewRatings = ({ user_id }) => {
     console.log("ratings");
@@ -37,8 +38,8 @@ export const useProfile = ({ data }) => {
     console.log("sold posts");
   };
 
-  const viewInactivePosts = ({ user_id }) => {
-    console.log("inactive posts");
+  const viewDraftPosts = ({ user_id }) => {
+    console.log("draft posts");
   };
 
   const viewFirstPost = ({ user_id }) => {
@@ -53,9 +54,20 @@ export const useProfile = ({ data }) => {
     console.log("oldest active post");
   };
 
+  const onNewPost = () => {
+    router.goToWithBack("/new-post", "forward", "right");
+  };
+
+  const onSearch = () => {
+    router.goTo("/search", "down");
+  };
+
+  const onAccount = () => {
+    router.goTo("/account", "up");
+  };
+
   return {
     data,
-    onBack,
     viewRatings,
     viewAllOffers,
     viewOpenOffers,
@@ -64,56 +76,59 @@ export const useProfile = ({ data }) => {
     viewAllPosts,
     viewActivePosts,
     viewSoldPosts,
-    viewInactivePosts,
+    viewDraftPosts,
     viewFirstPost,
     viewMostRecentPost,
     viewOldestActivePost,
+    onNewPost,
+    onSearch,
+    onAccount,
   };
 };
 
 export const PureProfile = (profile) => {
   return (
-    <div className="flex h-full justify-center p-2 pt-5">
-      <div className="flex w-full max-w-md flex-col justify-between">
+    <div className="flex h-full justify-center">
+      <div className="flex w-full max-w-md flex-col justify-between pb-2 pt-5">
         <div>
           <div
             className="mb-3 cursor-pointer text-center"
-            onClick={() => profile?.viewRatings?.()}
+            onClick={(e) => profile?.viewRatings?.(e)}
           >
             <p className="text-xl">{profile?.data?.name}</p>
             <p className="pb-1">
               {profile?.data?.rating} ({profile?.data?.numRatings}{" "}
               {profile?.data?.numRatings == 1 ? "rating" : "ratings"})
             </p>
-            <p className="text-sm">{profile?.data?.location}</p>
+            <p className="text-sm">{profile?.data?.country}</p>
           </div>
-          <div className="mb-4">
+          <div className="p-2">
             <p
-              className="cursor-pointer border-b-2 border-neutral-400 p-2 font-bold"
-              onClick={() => profile?.viewAllOffers?.()}
+              className="cursor-pointer border-b-2 border-stone-400 p-2 font-bold"
+              onClick={(e) => profile?.viewAllOffers?.(e)}
             >
               {profile?.data?.offers?.total}{" "}
               {profile?.data?.offers?.total == 1 ? "Offer" : "Offers"}
             </p>
-            <div className="flex justify-between border-b-2 border-neutral-200 py-2">
+            <div className="flex justify-between border-b-2 border-stone-200 py-2">
               <p>
                 <span
                   className="cursor-pointer p-2"
-                  onClick={() => profile?.viewOpenOffers?.()}
+                  onClick={(e) => profile?.viewOpenOffers?.(e)}
                 >
                   open
                 </span>
                 <span>/</span>
                 <span
                   className="cursor-pointer p-2"
-                  onClick={() => profile?.viewHitOffers?.()}
+                  onClick={(e) => profile?.viewHitOffers?.(e)}
                 >
                   hit
                 </span>
                 <span>/</span>
                 <span
                   className="cursor-pointer p-2"
-                  onClick={() => profile?.viewMissedOffers?.()}
+                  onClick={(e) => profile?.viewMissedOffers?.(e)}
                 >
                   missed
                 </span>
@@ -121,86 +136,86 @@ export const PureProfile = (profile) => {
               <p>
                 <span
                   className="cursor-pointer p-2"
-                  onClick={() => profile?.viewOpenOffers?.()}
+                  onClick={(e) => profile?.viewOpenOffers?.(e)}
                 >
                   {profile?.data?.offers?.open}
                 </span>
                 <span>/</span>
                 <span
                   className="cursor-pointer p-2"
-                  onClick={() => profile?.viewHitOffers?.()}
+                  onClick={(e) => profile?.viewHitOffers?.(e)}
                 >
                   {profile?.data?.offers?.hit}
                 </span>
                 <span>/</span>
                 <span
                   className="cursor-pointer p-2"
-                  onClick={() => profile?.viewMissedOffers?.()}
+                  onClick={(e) => profile?.viewMissedOffers?.(e)}
                 >
                   {profile?.data?.offers?.missed}
                 </span>
               </p>
             </div>
           </div>
-          <div className="mb-2">
+          <div className="p-2">
             <p
-              className="cursor-pointer border-b-2 border-neutral-400 p-2 font-bold"
-              onClick={() => profile?.viewAllPosts?.()}
+              className="cursor-pointer border-b-2 border-stone-400 p-2 font-bold"
+              onClick={(e) => profile?.viewAllPosts?.(e)}
             >
               {profile?.data?.posts?.total}{" "}
               {profile?.data?.posts?.total == 1 ? "Post" : "Posts"},{" "}
               {profile?.data?.posts?.replies}{" "}
               {profile?.data?.posts?.replies == 1 ? "Reply" : "Replies"}
             </p>
-            <div className="flex justify-between border-b-2 border-neutral-200 py-2">
+            <div className="flex justify-between border-b-2 border-stone-200 py-2">
               <p>
                 <span
                   className="cursor-pointer p-2"
-                  onClick={() => profile?.viewActivePosts?.()}
+                  onClick={(e) => profile?.viewActivePosts?.(e)}
                 >
                   active
                 </span>
                 <span>/</span>
                 <span
                   className="cursor-pointer p-2"
-                  onClick={() => profile?.viewSoldPosts?.()}
+                  onClick={(e) => profile?.viewDraftPosts?.(e)}
                 >
-                  sold
+                  drafts
                 </span>
                 <span>/</span>
                 <span
                   className="cursor-pointer p-2"
-                  onClick={() => profile?.viewInactivePosts?.()}
+                  onClick={(e) => profile?.viewSoldPosts?.(e)}
                 >
-                  inactive
+                  sold
                 </span>
               </p>
               <p>
                 <span
                   className="cursor-pointer p-2"
-                  onClick={() => profile?.viewActivePosts?.()}
+                  onClick={(e) => profile?.viewActivePosts?.(e)}
                 >
                   {profile?.data?.posts?.active}
                 </span>
                 <span>/</span>
                 <span
                   className="cursor-pointer p-2"
-                  onClick={() => profile?.viewSoldPosts?.()}
+                  onClick={(e) => profile?.viewDraftPosts?.(e)}
                 >
-                  {profile?.data?.posts?.sold}
+                  {profile?.data?.posts?.drafts}
                 </span>
                 <span>/</span>
                 <span
                   className="cursor-pointer p-2"
-                  onClick={() => profile?.viewInactivePosts?.()}
+                  onClick={(e) => profile?.viewSoldPosts?.(e)}
                 >
-                  {profile?.data?.posts?.inactive}
+                  {profile?.data?.posts?.sold}
                 </span>
               </p>
             </div>
             <p
-              className="flex cursor-pointer justify-between border-b-2 border-neutral-200 p-2"
-              onClick={() => profile?.viewFirstPost?.()}
+              className="flex cursor-pointer justify-between border-b-2 border-stone-200 p-2"
+              onClick={(e) => profile?.viewFirstPost?.(e)}
             >
               <span>first</span>
               <span>
@@ -210,8 +225,8 @@ export const PureProfile = (profile) => {
               </span>
             </p>
             <p
-              className="flex cursor-pointer justify-between border-b-2 border-neutral-200 p-2"
-              onClick={() => profile?.viewMostRecentPost?.()}
+              className="flex cursor-pointer justify-between border-b-2 border-stone-200 p-2"
+              onClick={(e) => profile?.viewMostRecentPost?.(e)}
             >
               <span>most recent</span>
               <span>
@@ -221,8 +236,8 @@ export const PureProfile = (profile) => {
               </span>
             </p>
             <p
-              className="flex cursor-pointer justify-between border-b-2 border-neutral-200 p-2"
-              onClick={() => profile?.viewOldestActivePost?.()}
+              className="flex cursor-pointer justify-between border-b-2 border-stone-200 p-2"
+              onClick={(e) => profile?.viewOldestActivePost?.(e)}
             >
               <span>oldest active</span>
               <span>
@@ -231,15 +246,31 @@ export const PureProfile = (profile) => {
                   : ""}
               </span>
             </p>
+            <p className="flex justify-between border-b-2 border-stone-200 p-2">
+              <span>deleted</span>
+              <span>{profile?.data?.posts?.deleted}</span>
+            </p>
           </div>
         </div>
-        <div>
-          <p
-            className="cursor-pointer px-2 text-lg font-bold"
-            onClick={() => profile?.onBack?.()}
+        <div className="flex justify-end gap-x-2 pr-2">
+          <button
+            className="rounded-full bg-sky-200 px-4 py-2 transition-colors hover:bg-sky-900 hover:text-white"
+            onClick={(e) => profile?.onAccount?.(e)}
           >
-            {"<"}
-          </p>
+            Account
+          </button>
+          <button
+            className="rounded-full bg-emerald-200 px-4 py-2 transition-colors hover:bg-emerald-900 hover:text-white"
+            onClick={(e) => profile?.onNewPost?.(e)}
+          >
+            New
+          </button>
+          <button
+            className="rounded-full bg-emerald-200 px-4 py-2 transition-colors hover:bg-emerald-900 hover:text-white"
+            onClick={(e) => profile?.onSearch?.(e)}
+          >
+            Search
+          </button>
         </div>
       </div>
     </div>
@@ -256,12 +287,13 @@ export const fakeData = {
   name: "Douglas",
   rating: 4.5,
   numRatings: 10,
-  location: "123 Bender Street, Canada",
+  country: "Canada",
   language: "english",
   posts: {
     total: 5,
     active: 2,
-    inactive: 1, // either deleted or draft
+    drafts: 1, // either deleted or draft
+    deleted: 1,
     sold: 2,
     replies: 29, // only to our posts
     first: new Date(),

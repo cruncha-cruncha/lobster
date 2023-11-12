@@ -18,9 +18,6 @@ pub struct GetUserData {
     pub updated_at: user::UpdatedAt,
     pub language: user::Language,
     pub country: user::Country,
-    pub latitude: user::Latitude,
-    pub longitude: user::Longitude,
-    pub near: user::Near,
     pub changes: serde_json::Value,
 }
 
@@ -29,7 +26,6 @@ pub async fn get(
     Path(user_id): Path<u32>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<GetUserData>, (StatusCode, String)> {
-    #[cfg(not(feature = "ignoreAuth"))]
     if claims.sub != user_id.to_string() {
         return Err((StatusCode::UNAUTHORIZED, String::from("")));
     }
@@ -60,9 +56,6 @@ pub async fn get(
         updated_at: row.updated_at,
         language: row.language,
         country: row.country,
-        latitude: row.latitude,
-        longitude: row.longitude,
-        near: row.near,
         changes: row.changes,
     }))
 }
@@ -72,9 +65,6 @@ pub struct PatchUserData {
     pub name: user::FirstName,
     pub language: user::Language,
     pub country: user::Country,
-    pub latitude: user::Latitude,
-    pub longitude: user::Longitude,
-    pub near: user::Near,
 }
 
 pub async fn patch(
@@ -83,7 +73,6 @@ pub async fn patch(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<PatchUserData>, // json data being sent must be a superset of struct
 ) -> Result<Json<GetUserData>, (StatusCode, String)> {
-    #[cfg(not(feature = "ignoreAuth"))]
     if claims.sub != user_id.to_string() {
         return Err((StatusCode::UNAUTHORIZED, String::from("")));
     }
@@ -100,19 +89,13 @@ pub async fn patch(
             first_name = $3,
             language = $4,
             country = $5,
-            latitude = $6,
-            longitude = $7,
-            near = $8,
             updated_at = NOW(),
             changes = changes || jsonb_build_array(jsonb_build_object(
                 'who', $2::TEXT,
                 'when', NOW(),
                 'name', usr.first_name,
                 'language', usr.language,
-                'country', usr.country,
-                'latitude', usr.latitude,
-                'longitude', usr.longitude,
-                'near', usr.near
+                'country', usr.country
             ))
         WHERE usr.id = $1
         RETURNING *
@@ -122,9 +105,6 @@ pub async fn patch(
         payload.name,
         payload.language,
         payload.country,
-        payload.latitude,
-        payload.longitude,
-        payload.near
     )
     .fetch_one(&state.db)
     .await
@@ -142,9 +122,6 @@ pub async fn patch(
         updated_at: row.updated_at,
         language: row.language,
         country: row.country,
-        latitude: row.latitude,
-        longitude: row.longitude,
-        near: row.near,
         changes: row.changes,
     }))
 }
@@ -154,7 +131,6 @@ pub async fn delete(
     Path(user_id): Path<u32>,
     State(state): State<Arc<AppState>>,
 ) -> Result<StatusCode, (StatusCode, String)> {
-    #[cfg(not(feature = "ignoreAuth"))]
     if claims.sub != user_id.to_string() {
         return Err((StatusCode::UNAUTHORIZED, String::from("")));
     }

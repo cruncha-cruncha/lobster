@@ -79,7 +79,7 @@ pub enum ClaimLevel {
 }
 
 impl ClaimLevel {
-    pub fn pg_encode(&self) -> i32 {
+    pub fn encode_numeric(&self) -> i32 {
         match self {
             ClaimLevel::Admin => 3,
             ClaimLevel::Moderator => 2,
@@ -115,7 +115,6 @@ impl Claims {
     }
 }
 
-#[cfg(not(feature = "ignoreAuth"))]
 #[axum::async_trait]
 impl<S> FromRequestParts<S> for Claims
 where
@@ -150,24 +149,5 @@ where
             };
 
         Ok(token_data.claims)
-    }
-}
-
-#[cfg(feature = "ignoreAuth")]
-#[axum::async_trait]
-impl<S> FromRequestParts<S> for Claims
-where
-    S: Send + Sync,
-{
-    type Rejection = (StatusCode, String);
-
-    async fn from_request_parts(_parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
-        Ok(Claims {
-            sub: String::from(""),
-            level: ClaimLevel::Admin,
-            is_access: true,
-            exp: 0,
-            iat: 0,
-        })
     }
 }

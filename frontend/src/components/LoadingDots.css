@@ -1,0 +1,94 @@
+.lobster-loading {
+  display: flex;
+  flex-direction: row;
+}
+
+.lobster-loading .dot-one {
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background-color: black;
+  opacity: 0%;
+  animation: dot-one infinite 4s linear;
+}
+
+.lobster-loading .dot-two {
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background-color: black;
+  margin: 0 6px;
+  opacity: 0%;
+  animation: dot-two infinite 4s linear;
+}
+
+.lobster-loading .dot-three {
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background-color: black;
+  opacity: 0%;
+  animation: dot-three infinite 4s linear;
+}
+
+@keyframes dot-one {
+  0% {
+    opacity: 0%;
+  }
+
+  11% {
+    opacity: 100%;
+  }
+
+  50% {
+    opacity: 100%;
+  }
+
+  61% {
+    opacity: 0%;
+  }
+}
+
+@keyframes dot-two {
+  0% {
+    opacity: 0%;
+  }
+
+  17% {
+    opacity: 0%;
+  }
+
+  28% {
+    opacity: 100%;
+  }
+
+  67% {
+    opacity: 100%;
+  }
+
+  78% {
+    opacity: 0%;
+  }
+}
+
+@keyframes dot-three {
+  0% {
+    opacity: 0%;
+  }
+
+  34% {
+    opacity: 0%;
+  }
+
+  45% {
+    opacity: 100%;
+  }
+
+  84% {
+    opacity: 100%;
+  }
+
+  95% {
+    opacity: 0%;
+  }
+}

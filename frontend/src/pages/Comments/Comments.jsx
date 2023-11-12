@@ -1,4 +1,5 @@
-import { useReducer, useState, useEffect } from "react";
+import { useReducer, useState } from "react";
+import { useRouter } from "../../components/router/Router";
 import { Comment } from "./Comment";
 
 function reducer(state, action) {
@@ -7,10 +8,11 @@ function reducer(state, action) {
       return { ...state, text: action?.payload?.text };
     case "setActiveComment":
       if (state.activeComment == action?.payload?.uuid) {
-        return { ...state, activeComment: "" };
+        return { ...state, activeComment: "", text: "" };
       } else {
         return {
           ...state,
+          text: "",
           activeComment: action?.payload?.uuid,
           editing: { amEditing: false, originalText: "", parent: "", uuid: "" },
         };
@@ -55,13 +57,14 @@ function reducer(state, action) {
     case "clearText":
       return { ...state, text: "" };
     default:
-      console.log("uncaught reduce ", action);
+      console.error("uncaught reduce ", action);
   }
 
   return state;
 }
 
-export const useComments = ({ postUuid }) => {
+export const useComments = () => {
+  const router = useRouter();
   const [data, setData] = useState(fakeData);
   const [state, dispatch] = useReducer(reducer, {
     text: "",
@@ -81,7 +84,9 @@ export const useComments = ({ postUuid }) => {
   const buttonText = state.editing.amEditing ? "Edit" : "Reply";
 
   const submitTextDisabled =
-    !state.text || (!state.activeComment && !state.editing.amEditing);
+    !state.text ||
+    (!state.activeComment && !state.editing.amEditing) ||
+    (state.editing.amEditing && state.text == state.editing.originalText);
 
   const onSubmitText = () => {
     if (state.editing.amEditing) {
@@ -91,7 +96,7 @@ export const useComments = ({ postUuid }) => {
       console.log("reply to " + state.activeComment + " as " + state.text);
       dispatch({ type: "clearText" });
     } else {
-      console.log("bad text submit");
+      // fail silently
     }
   };
 
@@ -115,7 +120,10 @@ export const useComments = ({ postUuid }) => {
         break;
       case "removeReply":
         console.log("remove reply ", action?.payload);
-        if (state.editing.amEditing && state.editing.uuid == action?.payload?.uuid) {
+        if (
+          state.editing.amEditing &&
+          state.editing.uuid == action?.payload?.uuid
+        ) {
           dispatch({ type: "clearEditing" });
         }
         break;
@@ -125,7 +133,7 @@ export const useComments = ({ postUuid }) => {
   };
 
   const onBack = () => {
-    console.log("back to post " + postUuid);
+    router.goTo(`/post`, "right");
   };
 
   return {
@@ -159,7 +167,7 @@ export const PureComments = (comments) => {
         <div className="mr-2">
           <p
             className="relative top-2 cursor-pointer pr-2 text-lg font-bold"
-            onClick={() => comments?.onBack?.()}
+            onClick={(e) => comments?.onBack?.(e)}
           >
             {"<"}
           </p>
@@ -167,12 +175,12 @@ export const PureComments = (comments) => {
         <form className="flex grow flex-row">
           <input
             className={
-              "mr-2 grow rounded p-2 " +
-              (!comments?.activeComment ? "text-neutral-500" : "")
+              "mr-2 grow rounded p-2 ring-sky-500 focus-visible:outline-none focus-visible:ring-2" +
+              (!comments?.activeComment ? " text-neutral-500" : "")
             }
             type="text"
             placeholder={
-              !comments?.activeComment ? "select a comment to reply" : "reply"
+              !comments?.activeComment ? "Select a comment to reply" : "Reply"
             }
             disabled={!comments?.activeComment}
             value={comments?.text}
@@ -185,11 +193,11 @@ export const PureComments = (comments) => {
               "rounded-md border-2 px-4 py-2 " +
               (!!comments?.submitTextDisabled
                 ? "border-neutral-400 text-neutral-500"
-                : "border-white bg-emerald-100 hover:bg-emerald-900 hover:text-white")
+                : "border-emerald-100 bg-emerald-100 hover:border-emerald-900 hover:bg-emerald-900 hover:text-white")
             }
             type="button"
             disabled={!!comments?.submitTextDisabled}
-            onClick={() => comments?.onSubmitText?.()}
+            onClick={(e) => comments?.onSubmitText?.(e)}
           >
             {comments?.buttonText}
           </button>

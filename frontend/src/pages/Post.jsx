@@ -1,45 +1,69 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
+import { useRouter } from "../components/router/Router";
+import { useAuth } from "../components/userAuth";
+import * as endpoints from "../api/endpoints";
 
-export const usePost = ({ data }) => {
+export const usePost = () => {
+  const router = useRouter();
+  const auth = useAuth();
+  const [data, setData] = useState(fakeData);
   const [offer, setOffer] = useState("");
+  const uuid = router?.urlParams?.get?.("uuid");
 
-  const viewEdits = ({ post_uuid }) => {
+  // useEffect(() => {
+  //   endpoints
+  //     .getPost({
+  //       postUuid: uuid,
+  //       accessToken: auth.accessToken,
+  //     })
+  //     .then((res) => console.log("GOT RESPONSE!!", res, data))
+  //     .catch(() => console.log("ERROR"));
+  // }, []);
+
+  const viewEdits = () => {
     console.log("see edits");
   };
 
-  const onFlag = ({ post_uuid }) => {
+  const onFlag = () => {
     console.log("flag");
   };
 
-  const viewAuthor = ({ author_id }) => {
+  const viewAuthor = () => {
     console.log("author");
   };
 
-  const onOffer = ({ post_uuid, user_id, offer }) => {
+  const onOffer = () => {
     console.log("offer");
   };
 
-  const onBack = () => {
-    console.log("back");
+  const viewOffers = () => {
+    //if (!uuid) return;
+    router.goTo("/comments?uuid=" + uuid, "left");
   };
 
-  const viewOffers = ({ post_uuid }) => {
-    console.log("offers");
-  };
-
-  const viewLocation = ({ location }) => {
+  const viewLocation = () => {
     console.log("location");
+  };
+
+  const onBack = () => {
+    if (router.canGoBack) {
+      router.goBack("right");
+    } else {
+      router.goTo("/search", "right");
+    }
   };
 
   return {
     data,
     offer,
     setOffer,
+    canMakeOffer: true,
+    isDraft: false,
+    onOffer,
     viewEdits,
     onFlag,
     viewAuthor,
-    onOffer,
     onBack,
     viewOffers,
     viewLocation,
@@ -48,111 +72,122 @@ export const usePost = ({ data }) => {
 
 export const PurePost = (post) => {
   return (
-    <div className="flex min-h-full flex-col justify-between py-2 text-left">
-      <div className="px-2">
-        <h1
-          className="mb-2 cursor-pointer text-2xl"
-          onClick={() => post?.viewAuthor?.()}
-        >
-          Incredible Bicycle! 56 Speed! Super fast! Wow!
-        </h1>
-        <div className="float-left mb-2 mr-2 min-w-full bg-yellow-400 sm:min-w-min">
-          <div className="flex h-64 flex-row items-center justify-center sm:w-64">
-            <span>image area</span>
-          </div>
-        </div>
-        <div>
-          <p>
-            <span>{post?.data?.description}</span>
-            <span className="italic">
-              <span> - </span>
-              <span
-                className="cursor-pointer italic"
-                onClick={() => post?.viewAuthor?.()}
-              >
-                {post?.data?.author?.name}
-              </span>
-              <span>
-                , {post?.data?.time ? format(post?.data?.time, "dd/MM/yy") : ""}
-              </span>
-              {post?.data?.edits?.length ? (
-                <>
-                  <span>, </span>
-                  <span
-                    onClick={() => post?.viewEdits?.()}
-                    className="cursor-pointer"
-                  >
-                    edited
-                  </span>
-                </>
-              ) : (
-                ""
-              )}
-            </span>
-          </p>
-        </div>
-        <div className="mt-2 flex flex-row items-center justify-between">
-          <div>
-            <button
-              onClick={() => post?.onFlag?.()}
-              className="rounded bg-orange-300 px-2 py-1 hover:bg-orange-900 hover:text-white"
-            >
-              Flag
-            </button>
-          </div>
-          <div className="text-right">
-            <p
-              onClick={() => post?.viewLocation?.()}
-              className="cursor-pointer"
-            >
-              {post?.data?.location}
-            </p>
-            <p>{post?.data?.price}</p>
-          </div>
-        </div>
-      </div>
-      <div>
-        <div className="mt-2 px-2">
-          <form className="flex flex-row">
-            <input
-              className="mr-2 grow rounded p-2"
-              type="text"
-              placeholder="make an offer"
-              value={post?.offer}
-              onChange={(e) => {
-                post?.setOffer(e.target.value);
-              }}
-            />
-            <button
-              className={
-                "rounded-md border-2 px-4 py-2 " +
-                (post?.offer?.length
-                  ? "border-white bg-emerald-100 hover:bg-emerald-900 hover:text-white"
-                  : "border-neutral-400 text-neutral-500")
-              }
-              type="button"
-              onClick={() => post?.onOffer?.()}
-              disabled={!post?.offer?.length}
-            >
-              Post
-            </button>
-          </form>
-        </div>
-        <div className="mt-2 flex flex-row justify-between leading-6">
-          <div className="cursor-pointer px-2" onClick={() => post.onBack?.()}>
-            <p className="text-lg font-bold">{"<"}</p>
-          </div>
-          <div
-            className="cursor-pointer px-2"
-            onClick={() => post.viewOffers?.()}
+    <div className="flex h-full justify-center">
+      <div className="flex max-w-3xl flex-col justify-between text-left">
+        <div className="p-2">
+          <h1
+            className="mb-2 cursor-pointer text-2xl"
+            onClick={(e) => post?.viewAuthor?.(e)}
           >
-            <p className="relative bottom-0.5 text-sm">
-              offers
-              <span className="relative top-0.5 pl-1 text-lg font-bold">
-                {">"}
+            Incredible Bicycle! 56 Speed! Super fast! Wow!
+          </h1>
+          <div className="float-left mb-2 mr-2 min-w-full bg-yellow-400 sm:min-w-min">
+            <div className="flex h-64 flex-row items-center justify-center sm:w-64">
+              <span>image area</span>
+            </div>
+          </div>
+          <div>
+            <p>
+              <span>{post?.data?.description}</span>
+              <span className="italic">
+                <span> - </span>
+                <span
+                  className="cursor-pointer italic"
+                  onClick={(e) => post?.viewAuthor?.(e)}
+                >
+                  {post?.data?.author?.name}
+                </span>
+                <span>
+                  ,{" "}
+                  {post?.data?.time ? format(post?.data?.time, "dd/MM/yy") : ""}
+                </span>
+                {post?.data?.edits?.length ? (
+                  <>
+                    <span>, </span>
+                    <span
+                      onClick={(e) => post?.viewEdits?.(e)}
+                      className="cursor-pointer"
+                    >
+                      edited
+                    </span>
+                  </>
+                ) : (
+                  ""
+                )}
               </span>
             </p>
           </div>
+          <div className="mt-2 flex flex-row items-center justify-between">
+            <div>
+              <button
+                onClick={(e) => post?.onFlag?.(e)}
+                className="rounded-full bg-orange-200 px-4 py-1 hover:bg-orange-900 hover:text-white"
+              >
+                Flag
+              </button>
+            </div>
+            <div className="text-right">
+              <p
+                onClick={(e) => post?.viewLocation?.(e)}
+                className="cursor-pointer"
+              >
+                {post?.data?.location}
+              </p>
+              <p>{post?.data?.price}</p>
+            </div>
+          </div>
+        </div>
+        <div className="my-2 flex flex-row justify-between">
+          <button
+            className="relative ml-2 cursor-pointer rounded-full bg-sky-200 px-4 py-4 hover:bg-sky-900 hover:text-white"
+            onClick={(e) => post?.onBack?.(e)}
+          >
+            <p className="absolute left-0 right-0 -translate-y-1/2 text-lg font-bold">
+              {"<"}
+            </p>
+          </button>
+          {post?.canMakeOffer && (
+            <div className="mx-2 flex grow rounded-sm border-b-2 border-stone-800">
+              <input
+                className="grow rounded-sm p-2 ring-sky-500 focus-visible:outline-none focus-visible:ring-2"
+                type="text"
+                placeholder="Make an offer"
+                value={post?.offer}
+                onChange={(e) => {
+                  post?.setOffer(e.target.value);
+                }}
+              />
+            </div>
+          )}
+          <button
+            className={
+              "mr-2 rounded-full px-4 py-2 transition-colors hover:text-white" +
+              (post?.offer?.length
+                ? " bg-emerald-200 hover:bg-emerald-900"
+                : " bg-sky-200 hover:bg-sky-900")
+            }
+            type="button"
+            onClick={(e) => {
+              if (!post?.offer?.length) {
+                post?.viewOffers?.(e);
+              } else {
+                post?.onOffer?.(e);
+              }
+            }}
+          >
+            <div className="relative flex justify-center">
+              <span className={post?.offer?.length ? "invisible" : ""}>
+                Offers
+              </span>
+              <span
+                className={
+                  post?.offer?.length ? "absolute left-0 right-0" : "hidden"
+                }
+              >
+                Offer
+              </span>
+            </div>
+          </button>
         </div>
       </div>
     </div>

@@ -6,7 +6,7 @@ pub type Code = String;
 pub type UpdatedAt = time::OffsetDateTime;
 
 #[derive(Debug, sqlx::FromRow, sqlx::Type, Serialize, Deserialize)]
-pub struct Invitation {
+pub struct RecoveryRequest {
     pub id: Id,
     pub email: Email,
     pub code: Code,
