@@ -43,7 +43,7 @@ pub fn hash_password(password: &str, salt: &[u8]) -> [u8; 32] {
 }
 
 pub fn encode_plain_email(email: &str) -> Option<Vec<u8>> {
-    match AES_CIPHER.encrypt(&AES_NONCE, email.as_bytes()) {
+    match AES_CIPHER.encrypt(&AES_NONCE, email.to_lowercase().as_bytes()) {
         Ok(vec) => Some(vec),
         Err(e) => {
             eprintln!("ERROR auth_encode_plain_email, {}", e);

@@ -2,6 +2,7 @@ pub mod account;
 pub mod auth;
 pub mod comment;
 pub mod invitation;
+pub mod password_reset;
 pub mod post_comments;
 pub mod post;
 pub mod profile;

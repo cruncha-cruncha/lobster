@@ -1,13 +1,16 @@
-mod db_structs;
 mod auth;
+mod db_structs;
 mod user_level_handlers;
 
-use axum::{
-    routing, Router,
-};
+use axum::{routing, Router};
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::{env, error::Error, net::SocketAddr, sync::Arc};
-use user_level_handlers::{account, comment, invitation, post, post_comments, profile, reply, auth as auth_handler};
+#[cfg(feature = "cors")]
+use tower_http::cors::CorsLayer;
+use user_level_handlers::{
+    account, auth as auth_handler, comment, invitation, password_reset, post, post_comments,
+    profile, reply,
+};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -35,7 +38,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .route("/users", routing::post(auth_handler::login))
         .route("/tokens", routing::post(auth_handler::refresh))
         .route("/invitations", routing::post(invitation::post))
-        .route("/accounts", routing::post(auth_handler::accept_invitation))
+        .route(
+            "/invitations/:code",
+            routing::post(auth_handler::accept_invitation),
+        )
+        .route("/password-resets", routing::post(password_reset::post))
+        .route(
+            "/password-resets/:code",
+            routing::post(auth_handler::reset_password),
+        )
         .route(
             "/accounts/:user_id",
             routing::get(account::get)
@@ -63,8 +74,25 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .route(
             "/replies/:reply_uuid",
             routing::patch(reply::patch).delete(reply::delete),
-        )
-        .with_state(shared_state);
+        );
+
+    #[cfg(feature = "cors")]
+    let app = app.layer(
+        CorsLayer::new()
+            .allow_methods([
+                hyper::Method::GET,
+                hyper::Method::POST,
+                hyper::Method::PATCH,
+                hyper::Method::DELETE,
+            ])
+            .allow_headers(vec![
+                hyper::header::AUTHORIZATION,
+                hyper::header::CONTENT_TYPE,
+            ])
+            .allow_origin(tower_http::cors::Any),
+    );
+
+    let app = app.with_state(shared_state);
 
     axum::Server::bind(&hosting_addr)
         .serve(app.into_make_service_with_connect_info::<SocketAddr>())

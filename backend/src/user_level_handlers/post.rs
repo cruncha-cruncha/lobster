@@ -12,7 +12,7 @@ use std::sync::Arc;
 pub struct GetPostData {
     pub uuid: post::Uuid,
     pub author_id: post::AuthorId,
-    pub author_name: user::FirstName,
+    pub author_name: Option<user::FirstName>,
     pub title: post::Title,
     pub images: post::Images,
     pub content: post::Content,
@@ -39,7 +39,7 @@ pub async fn get(
         SELECT
             post.uuid,
             post.author_id,
-            usr.first_name AS author_name,
+            COALESCE(usr.first_name, '') AS author_name,
             post.title,
             post.images,
             post.content,
@@ -54,19 +54,24 @@ pub async fn get(
             post.changes,
             COALESCE(NULLIF(ARRAY_AGG(comment), '{NULL}'), '{}') AS "comments: Vec<comment::Comment>"
         FROM posts post
-        JOIN users usr ON usr.id = post.author_id
+        LEFT JOIN users usr ON usr.id = post.author_id
         LEFT JOIN comments comment ON comment.post_uuid = post.uuid
         WHERE post.uuid = $1
         GROUP BY post.uuid, usr.first_name
         "#,
         post_uuid
     )
-    .fetch_one(&state.db)
+    .fetch_optional(&state.db)
     .await
     {
         Ok(row) => row,
-        Err(e) => return Err((StatusCode::NOT_FOUND, e.to_string())),
+        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     };
+
+    if row.is_none() {
+        return Err((StatusCode::NOT_FOUND, String::from("")));
+    }
+    let row = row.unwrap();
 
     Ok(axum::Json(row))
 }
@@ -262,8 +267,7 @@ pub async fn patch(
                 'currency', post.currency,
                 'latitude', post.latitude,
                 'longitude', post.longitude,
-                'draft', post.draft,
-                'deleted', post.deleted
+                'draft', post.draft
             )) 
         WHERE post.uuid = $1 AND post.author_id = $2
         RETURNING *

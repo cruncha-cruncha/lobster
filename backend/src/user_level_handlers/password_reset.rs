@@ -9,17 +9,17 @@ use std::sync::Arc;
 use crate::auth::encryption::encode_plain_email;
 
 pub fn generate_code() -> invitation::Code {
-    format!("invite-{}", uuid::Uuid::new_v4())
+    format!("recover-{}", uuid::Uuid::new_v4())
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct PostInvitationData {
+pub struct PostRecoveryData {
     pub email: String,
 }
 
 pub async fn post(
     State(state): State<Arc<AppState>>,
-    Json(payload): Json<PostInvitationData>,
+    Json(payload): Json<PostRecoveryData>,
 ) -> Result<StatusCode, (StatusCode, String)> {
     let email = match encode_plain_email(&payload.email) {
         Some(email) => email,
@@ -36,10 +36,10 @@ pub async fn post(
     .await
     {
         Ok(row) => {
-            if row.is_some() {
+            if row.is_none() {
                 return Err((
-                    StatusCode::BAD_REQUEST,
-                    "User with this email already exists".to_string(),
+                    StatusCode::NOT_FOUND,
+                    "User not found".to_string(),
                 ));
             }
         }
@@ -48,7 +48,7 @@ pub async fn post(
 
     match sqlx::query!(
         r#"
-        INSERT INTO invitations (email, code, updated_at)
+        INSERT INTO recovery_requests (email, code, updated_at)
         VALUES($1,$2,NOW()) 
         ON CONFLICT (email) 
         DO UPDATE SET updated_at = NOW()
@@ -64,7 +64,7 @@ pub async fn post(
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     };
 
-    // TODO: send email with invitation code
+    // TODO: send email with recovery code
 
     Ok(StatusCode::OK)
 }
