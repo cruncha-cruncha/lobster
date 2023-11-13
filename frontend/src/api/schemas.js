@@ -26,24 +26,46 @@ const refreshAccessTokenSchema = {
   additionalProperties: false,
 };
 
-/*
-    pub uuid: post::Uuid,
-    pub author_id: post::AuthorId,
-    pub author_name: user::FirstName,
-    pub title: post::Title,
-    pub images: post::Images,
-    pub content: post::Content,
-    pub price: post::Price,
-    pub currency: post::Currency,
-    pub latitude: post::Latitude,
-    pub longitude: post::Longitude,
-    pub created_at: post::CreatedAt,
-    pub updated_at: post::UpdatedAt,
-    pub deleted: post::Deleted,
-    pub draft: post::Draft,
-    pub changes: post::Changes,
-    pub comments: Option<Vec<comment::Comment>>,
-*/
+const countriesSchema = {
+  type: "array",
+  items: {
+    type: "object",
+    properties: {
+      id: { type: "integer" },
+      name: { type: "string" },
+      short: { type: "string" },
+    },
+    required: ["id", "name", "short"],
+    additionalProperties: false,
+  },
+};
+
+const currenciesSchema = {
+  type: "array",
+  items: {
+    type: "object",
+    properties: {
+      id: { type: "integer" },
+      name: { type: "string" },
+      symbol: { type: "string" },
+    },
+    required: ["id", "name", "symbol"],
+    additionalProperties: false,
+  },
+};
+
+const languagesSchema = {
+  type: "array",
+  items: {
+    type: "object",
+    properties: {
+      id: { type: "integer" },
+      name: { type: "string" },
+    },
+    required: ["id", "name"],
+    additionalProperties: false,
+  },
+};
 
 const singleChangeSchema = {
   type: "object",
@@ -136,7 +158,7 @@ const makeLazyValidator = (schema) => {
         validate = ajv.compile(schema);
       }
     }
-    
+
     if (!validate) validate = ajv.compile(schema);
     const valid = validate(data);
     if (!valid) console.error("schema validation errors", validate.errors);
@@ -150,4 +172,13 @@ export const validateRefreshAccessToken = makeLazyValidator(
   refreshAccessTokenSchema,
 );
 
-export const validateGetPost = makeLazyValidator([singleChangeSchema, getPostSchema]);
+export const validateGetPost = makeLazyValidator([
+  singleChangeSchema,
+  getPostSchema,
+]);
+
+export const validateCountries = makeLazyValidator(countriesSchema);
+
+export const validateCurrencies = makeLazyValidator(currenciesSchema);
+
+export const validateLanguages = makeLazyValidator(languagesSchema);

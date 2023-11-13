@@ -2,7 +2,7 @@ import { useReducer, useState } from "react";
 import { validateEmail, validatePassword } from "./Login";
 import { useInfoModal, PureInfoModal } from "../components/InfoModal";
 import { useRouter } from "../components/router/Router";
-import { CenteredLoadingDots } from "../components/LoadingDots";
+import { CenteredLoadingDots } from "../components/loading/LoadingDots";
 import * as endpoints from "../api/endpoints";
 
 export const initialState = {
@@ -27,7 +27,7 @@ const reducer = (state, action) => {
   }
 };
 
-export const useResetPassword = (props) => {
+export const useResetPassword = () => {
   const modal = useInfoModal();
   const router = useRouter();
   const [state, dispatch] = useReducer(reducer, initialState);
@@ -68,7 +68,7 @@ export const useResetPassword = (props) => {
         if (!data) {
           showErrModal();
         } else {
-          router.goTo("login", "left")
+          router.goTo("/login", "left")
         }
       }, showErrModal)
       .finally(() => {

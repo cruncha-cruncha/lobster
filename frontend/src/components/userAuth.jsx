@@ -34,6 +34,7 @@ function reducer(state, action) {
 
 export const UserAuth = ({ children }) => {
   const [user, dispatch] = useReducer(reducer, INITIAL_USER);
+  usePersistAccessToken(dispatch);
 
   const logout = () => {
     dispatch?.({ type: "logout" });
@@ -50,12 +51,12 @@ export const UserAuth = ({ children }) => {
         .refreshAccessToken({
           refreshToken,
         })
-        .then(({ access_token, user_id, claims_level }) => {
-          if (!access_token || !user_id || !claims_level) {
+        .then(data => {
+          if (!data) {
             logout();
           } else {
-            dispatch?.({ type: "login", payload: { userId: user_id, claimsLevel: claims_level } });
-            localStorage?.setItem?.("accessToken", access_token);
+            dispatch?.({ type: "login", payload: { userId: data?.user_id, claimsLevel: data?.claims_level } });
+            localStorage?.setItem?.("accessToken", data?.access_token);
           }
         })
         .catch(() => {
@@ -82,6 +83,49 @@ export const UserAuth = ({ children }) => {
       </UserDispatchContext.Provider>
     </UserContext.Provider>
   );
+};
+
+const usePersistAccessToken = (dispatch) => {
+
+  const logout = () => {
+    dispatch?.({ type: "logout" });
+    localStorage?.setItem?.("accessToken", "");
+    localStorage?.setItem?.("refreshToken", "");
+  };
+
+  useEffect(() => {
+    const signIn = () => {
+      const refreshToken = localStorage?.getItem?.("refreshToken") || "";
+      if (!refreshToken) return;
+
+      endpoints
+        .refreshAccessToken({
+          refreshToken,
+        })
+        .then(data => {
+          if (!data) {
+            logout();
+          } else {
+            dispatch?.({ type: "login", payload: { userId: data?.user_id, claimsLevel: data?.claims_level } });
+            localStorage?.setItem?.("accessToken", data?.access_token);
+          }
+        })
+        .catch(() => {
+          logout();
+        })
+        .finally(() => {
+          window?.dispatchEvent?.(new Event("NEW_LOBSTER_ACCESS_TOKEN"));
+        });
+    };
+
+    signIn();
+
+    const intervalId = setInterval?.(signIn, 1000 * 60 * 15); // 15 minutes
+
+    return () => {
+      clearInterval?.(intervalId);
+    };
+  }, []);
 };
 
 export const useAuth = () => {

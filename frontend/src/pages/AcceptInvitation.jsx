@@ -1,8 +1,9 @@
-import { useReducer, useState } from "react";
+import { useReducer, useState, useEffect } from "react";
 import { validateEmail, validatePassword } from "./Login";
-import { CenteredLoadingDots } from "../components/LoadingDots";
+import { CenteredLoadingDots } from "../components/loading/LoadingDots";
 import { useInfoModal, PureInfoModal } from "../components/InfoModal";
 import { useRouter } from "../components/router/Router";
+import { useAuth } from "../components/userAuth";
 import * as endpoints from "../api/endpoints";
 
 const initialState = {
@@ -37,12 +38,43 @@ const reducer = (state, action) => {
 export const useAcceptInvitation = (props) => {
   const modal = useInfoModal();
   const router = useRouter();
+  const auth = useAuth();
   const [state, dispatch] = useReducer(reducer, initialState);
   const [showPassword, setShowPassword] = useState(false);
+  const [countryOptions, setCountryOptions] = useState([]);
+  const [languageOptions, setLanguageOptions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const validEmail = validateEmail(state.email);
   const validPassword = validatePassword(state.password);
+
+  useEffect(() => {
+    let mounted = true;
+
+    endpoints.getLanguages().then((data) => {
+      if (data) {
+        const options = data.map((lang) => ({
+          value: lang.id,
+          label: lang.name,
+        }));
+        mounted && setLanguageOptions(options);
+      }
+    });
+
+    endpoints.getCountries().then((data) => {
+      if (data) {
+        const options = data.map((country) => ({
+          value: country.id,
+          label: country.name,
+        }));
+        mounted && setCountryOptions(options);
+      }
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const canAccept =
     state.code &&
@@ -69,11 +101,19 @@ export const useAcceptInvitation = (props) => {
         email: state.email,
         password: state.password,
         language: state.language,
+        country: state.country,
       })
       .then((data) => {
         if (!data) {
           showErrModal();
         } else {
+          auth.login({
+            userId: data.user_id,
+            claimsLevel: data.claims_level,
+            accessToken: data.access_token,
+            refreshToken: data.refresh_token,
+          });
+
           router.goTo("/profile", "back");
         }
       }, showErrModal)
@@ -93,8 +133,8 @@ export const useAcceptInvitation = (props) => {
     setLanguage: (e) => dispatch({ type: "language", payload: e.target.value }),
     setCountry: (e) => dispatch({ type: "country", payload: e.target.value }),
     onAccept,
-    languageOptions: [],
-    countryOptions: [],
+    languageOptions,
+    countryOptions,
     canAccept,
     isLoading,
     modal,
@@ -181,9 +221,11 @@ export const PureAcceptInvitation = (acceptInvitation) => {
             <option value="0" disabled className="placeholder">
               Language
             </option>
-            <option value="1">English</option>
-            <option value="2">Spanish</option>
-            <option value="3">French</option>
+            {acceptInvitation?.languageOptions?.map((lang) => (
+              <option key={lang.value} value={lang.value}>
+                {lang.label}
+              </option>
+            ))}
           </select>
           <select
             className={
@@ -196,8 +238,11 @@ export const PureAcceptInvitation = (acceptInvitation) => {
             <option value="0" disabled className="placeholder">
               Country
             </option>
-            <option value="1">Canada</option>
-            <option value="2">USA</option>
+            {acceptInvitation?.countryOptions?.map((country) => (
+              <option key={country.value} value={country.value}>
+                {country.label}
+              </option>
+            ))}
           </select>
           <div className="mt-4 flex justify-center">
             <button

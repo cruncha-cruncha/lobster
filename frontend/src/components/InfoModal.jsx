@@ -34,7 +34,7 @@ export const PureInfoModal = (infoModal) => {
     <>
       {infoModal?.isOpen && (
         <div
-          className={`fixed left-0 top-0 z-40 flex h-full w-full items-center justify-center bg-opacity-75 ${bgColor}`}
+          className={`absolute left-0 top-0 z-40 flex h-full w-full items-center justify-center bg-opacity-75 ${bgColor}`}
         >
           <div className="flex w-full max-w-xs flex-col items-center justify-center">
             <div className="rounded-md bg-white p-4 shadow-sm">

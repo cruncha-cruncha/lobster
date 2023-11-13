@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { CenteredLoadingDots } from "../components/LoadingDots";
+import { CenteredLoadingDots } from "../components/loading/LoadingDots";
 import { useAuth } from "../components/userAuth";
+import { useRouter } from "../components/router/Router";
 import { useInfoModal, PureInfoModal } from "../components/InfoModal";
 import * as endpoints from "../api/endpoints";
 
@@ -13,30 +14,42 @@ export const validatePassword = (password) => {
 };
 
 export const useLogin = () => {
+  const auth = useAuth();
+  const router = useRouter();
   const modal = useInfoModal();
   const [email, _setEmail] = useState("");
   const [password, _setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState("");
-  const auth = useAuth();
+
+  console.log("modal", modal);
 
   const validEmail = validateEmail(email);
   const validPassword = validatePassword(password);
 
   const onLogin = async () => {
     setIsLoading("login");
+
+    const showErrModal = () =>
+      modal.open("Request failed. Incorrent email or password.", "error");
+
     endpoints
       .login({ email, password })
       .then((data) => {
-        auth.login({
-          userId: data.user_id,
-          claimsLevel: data.claims_level,
-          accessToken: data.access_token,
-          refreshToken: data.refresh_token,
-        });
+        if (data) {
+          auth.login({
+            userId: data.user_id,
+            claimsLevel: data.claims_level,
+            accessToken: data.access_token,
+            refreshToken: data.refresh_token,
+          });
+          router.goTo("/profile", "forward");
+        } else {
+          showErrModal();
+        }
       })
       .catch(() => {
-        modal.open("Request failed. Incorrent email or password.", "error");
+        showErrModal();
       })
       .finally(() => {
         setIsLoading("");

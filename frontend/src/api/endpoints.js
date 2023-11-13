@@ -1,4 +1,11 @@
-import { validateTokens, validateRefreshAccessToken, validateGetPost } from "./schemas";
+import {
+  validateTokens,
+  validateRefreshAccessToken,
+  validateGetPost,
+  validateLanguages,
+  validateCurrencies,
+  validateCountries,
+} from "./schemas";
 
 const serverUrl = "http://127.0.0.1:3000";
 
@@ -53,7 +60,7 @@ export const requestInvitation = async ({ email }) => {
 
   if (!response || response?.status !== 200) return null;
   return true;
-}
+};
 
 export const acceptInvitation = async ({
   code,
@@ -61,6 +68,7 @@ export const acceptInvitation = async ({
   name,
   password,
   language,
+  country,
 }) => {
   const response = await handle(serverUrl + `/invitations/${code}`, {
     method: "POST",
@@ -70,12 +78,13 @@ export const acceptInvitation = async ({
       name,
       password,
       language: Number(language),
+      country: Number(country),
     }),
   });
 
   if (!response || response?.status !== 200) return null;
 
-  const valid = validate(response?.data);
+  const valid = validateTokens(response?.data);
   if (!valid) return null;
   return response.data;
 };
@@ -89,7 +98,7 @@ export const requestPasswordReset = async ({ email }) => {
 
   if (!response || response?.status !== 200) return null;
   return true;
-}
+};
 
 export const resetPassword = async ({ code, email, password }) => {
   const response = await handle(serverUrl + `/password-resets/${code}`, {
@@ -100,7 +109,7 @@ export const resetPassword = async ({ code, email, password }) => {
 
   if (!response || response?.status !== 200) return null;
   return true;
-}
+};
 
 export const refreshAccessToken = async ({ refreshToken }) => {
   const response = await handle(serverUrl + "/tokens", {
@@ -131,4 +140,46 @@ export const getPost = async ({ postUuid, accessToken }) => {
   const valid = validateGetPost(response?.data);
   if (!valid) return null;
   return response.data;
-}
+};
+
+export const getLanguages = async () => {
+  const response = await handle(serverUrl + "/languages", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response || response?.status !== 200) return null;
+  const valid = validateLanguages(response?.data);
+  if (!valid) return null;
+  return response.data;
+};
+
+export const getCurrencies = async () => {
+  const response = await handle(serverUrl + "/currencies", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response || response?.status !== 200) return null;
+  const valid = validateCurrencies(response?.data);
+  if (!valid) return null;
+  return response.data;
+};
+
+export const getCountries = async () => {
+  const response = await handle(serverUrl + "/countries", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response || response?.status !== 200) return null;
+  const valid = validateCountries(response?.data);
+  if (!valid) return null;
+  return response.data;
+};
