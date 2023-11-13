@@ -6,23 +6,14 @@ use axum::{
     extract::{Json, Path, State},
     http::StatusCode,
 };
-use futures::TryStreamExt;
-use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct GetPostCommentsData {
-    pub comments: Vec<comment::GetCommentData>,
-}
 
 pub async fn get(
     _claims: Claims,
     Path(post_uuid): Path<post::Uuid>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<GetPostCommentsData>, (StatusCode, String)> {
-    let mut out: Vec<comment::GetCommentData> = Vec::new();
-
-    match sqlx::query_as!(
+) -> Result<Json<Vec<comment::GetCommentData>>, (StatusCode, String)> {
+    let comments = match sqlx::query_as!(
         comment::GetCommentData,
         r#"
         SELECT
@@ -58,16 +49,12 @@ pub async fn get(
         "#,
         post_uuid
     )
-    .fetch(&state.db)
-    .try_for_each(|row| {
-        out.push(row);
-        futures::future::ready(Ok(()))
-    })
+    .fetch_all(&state.db)
     .await
     {
-        Ok(_) => {}
+        Ok(rows) => rows,
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     };
 
-    Ok(axum::Json(GetPostCommentsData { comments: out }))
+    Ok(axum::Json(comments))
 }

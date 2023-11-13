@@ -174,6 +174,7 @@ pub struct PostAcceptInvitationData {
     pub email: String,
     pub password: String,
     pub language: user::Language,
+    pub country: user::Country,
 }
 
 pub async fn accept_invitation(
@@ -212,8 +213,8 @@ pub async fn accept_invitation(
     let user = match sqlx::query_as!(
         user::User,
         r#"
-        INSERT INTO users (claim_level, first_name, email, salt, password, created_at, updated_at, language, changes)
-        VALUES($1,$2,$3,$4,$5,NOW(),NOW(),$6,'[]'::JSONB) 
+        INSERT INTO users (claim_level, first_name, email, salt, password, created_at, updated_at, language, country, changes)
+        VALUES($1,$2,$3,$4,$5,NOW(),NOW(),$6,$7,'[]'::JSONB) 
         RETURNING *;
         "#,
         claims::ClaimLevel::User.encode_numeric(),
@@ -221,7 +222,8 @@ pub async fn accept_invitation(
         email,
         &salt,
         &password,
-        payload.language
+        payload.language,
+        payload.country,
     ).fetch_optional(&state.db).await {
         Ok(row) => row,
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
@@ -317,8 +319,8 @@ pub async fn reset_password(
         RETURNING *
         "#,
         email,
-        &new_salt,
         &password,
+        &new_salt,
     ).fetch_optional(&state.db).await {
         Ok(row) => row,
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
