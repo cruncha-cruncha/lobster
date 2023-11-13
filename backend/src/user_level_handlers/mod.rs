@@ -1,7 +1,10 @@
 pub mod account;
 pub mod auth;
 pub mod comment;
+pub mod countries;
+pub mod currencies;
 pub mod invitation;
+pub mod languages;
 pub mod password_reset;
 pub mod post_comments;
 pub mod post;

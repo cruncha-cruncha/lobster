@@ -9,7 +9,7 @@ use std::{env, error::Error, net::SocketAddr, sync::Arc};
 use tower_http::cors::CorsLayer;
 use user_level_handlers::{
     account, auth as auth_handler, comment, invitation, password_reset, post, post_comments,
-    profile, reply,
+    profile, reply, languages, currencies, countries,
 };
 
 #[derive(Clone)]
@@ -74,7 +74,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .route(
             "/replies/:reply_uuid",
             routing::patch(reply::patch).delete(reply::delete),
-        );
+        )
+        .route("/currencies", routing::get(currencies::get))
+        .route("/languages", routing::get(languages::get))
+        .route("/countries", routing::get(countries::get));
 
     #[cfg(feature = "cors")]
     let app = app.layer(
