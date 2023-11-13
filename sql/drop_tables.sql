@@ -20,6 +20,5 @@ DROP TABLE IF EXISTS recovery_requests;
 DROP TABLE IF EXISTS invitations;
 DROP TABLE IF EXISTS currencies;
 DROP TABLE IF EXISTS languages;
-DROP TABLE IF EXISTS cities;
 DROP TABLE IF EXISTS countries;
 

@@ -1,23 +1,10 @@
 CREATE TABLE countries (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
+    short TEXT NOT NULL,
     name TEXT NOT NULL,
     PRIMARY KEY (id),
     UNIQUE (name)
 );
-
-CREATE TABLE cities (
-    id INTEGER GENERATED ALWAYS AS IDENTITY,
-    country INTEGER NOT NULL,
-    latitude REAL NOT NULL,
-    longitude REAL NOT NULL,
-    name TEXT NOT NULL,
-    PRIMARY KEY (id),
-    CONSTRAINT fk_country
-      FOREIGN KEY(country) 
-        REFERENCES countries(id)
-);
-
--- TODO: spatial index
 
 CREATE TABLE languages (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
@@ -61,7 +48,7 @@ CREATE TABLE users (
     updated_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     banned_until TIMESTAMPTZ,
     language INTEGER NOT NULL,
-    country INTEGER,
+    country INTEGER NOT NULL,
     changes JSONB NOT NULL,
     PRIMARY KEY (id),
     UNIQUE (email),
@@ -112,7 +99,7 @@ CREATE TABLE posts (
     content TEXT NOT NULL,
     price REAL NOT NULL,
     currency INTEGER NOT NULL,
-    latitude REAL NOT NULL,
+    latitude REAL NOT NULL, -- TODO: spatial index
     longitude REAL NOT NULL,
     created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
