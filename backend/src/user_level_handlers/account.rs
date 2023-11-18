@@ -13,12 +13,8 @@ pub struct GetUserData {
     pub id: user::Id,
     pub name: user::FirstName,
     pub email: String,
-    pub banned_until: user::BannedUntil,
-    pub created_at: user::CreatedAt,
-    pub updated_at: user::UpdatedAt,
     pub language: user::Language,
     pub country: user::Country,
-    pub changes: serde_json::Value,
 }
 
 pub async fn get(
@@ -51,12 +47,8 @@ pub async fn get(
         id: row.id,
         name: row.first_name,
         email: decode_email(&row.email).unwrap_or_default(),
-        banned_until: row.banned_until,
-        created_at: row.created_at,
-        updated_at: row.updated_at,
         language: row.language,
         country: row.country,
-        changes: row.changes,
     }))
 }
 
@@ -117,12 +109,8 @@ pub async fn patch(
         id: row.id,
         name: row.first_name,
         email: decode_email(&row.email).unwrap_or_default(),
-        banned_until: row.banned_until,
-        created_at: row.created_at,
-        updated_at: row.updated_at,
         language: row.language,
         country: row.country,
-        changes: row.changes,
     }))
 }
 

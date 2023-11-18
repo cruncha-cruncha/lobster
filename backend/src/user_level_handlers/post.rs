@@ -24,15 +24,21 @@ pub struct GetPostData {
     pub updated_at: post::UpdatedAt,
     pub deleted: post::Deleted,
     pub draft: post::Draft,
+    pub sold: post::Sold,
     pub changes: post::Changes,
-    pub comments: Option<Vec<comment::Comment>>,
+    pub my_comment: Option<comment::Comment>,
 }
 
 pub async fn get(
-    _claims: Claims,
+    claims: Claims,
     Path(post_uuid): Path<post::Uuid>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<GetPostData>, (StatusCode, String)> {
+    let caller_id = match claims.subject_as_user_id() {
+        Some(id) => id,
+        None => return Err((StatusCode::BAD_REQUEST, String::from(""))),
+    };
+
     let row = match sqlx::query_as!(
         GetPostData,
         r#"
@@ -51,15 +57,17 @@ pub async fn get(
             post.updated_at,
             post.deleted,
             post.draft,
+            post.sold,
             post.changes,
-            COALESCE(NULLIF(ARRAY_AGG(comment), '{NULL}'), '{}') AS "comments: Vec<comment::Comment>"
+            my_comment AS "my_comment: comment::Comment"
         FROM posts post
         LEFT JOIN users usr ON usr.id = post.author_id
-        LEFT JOIN comments comment ON comment.post_uuid = post.uuid
+        LEFT JOIN comments my_comment ON my_comment.post_uuid = post.uuid AND my_comment.author_id = $2
         WHERE post.uuid = $1
-        GROUP BY post.uuid, usr.first_name
+        GROUP BY post.uuid, usr.first_name, my_comment.*
         "#,
-        post_uuid
+        post_uuid,
+        caller_id,
     )
     .fetch_optional(&state.db)
     .await
@@ -115,6 +123,7 @@ pub async fn post(
             created_at,
             updated_at,
             deleted,
+            sold,
             changes
         ) VALUES (
             $1,
@@ -129,6 +138,7 @@ pub async fn post(
             $10,
             NOW(),
             NOW(),
+            false,
             false,
             '[]'::JSONB
         ) RETURNING *
@@ -174,18 +184,13 @@ pub async fn delete(
                 changes = changes || jsonb_build_array(jsonb_build_object(
                     'who', $3::TEXT,
                     'when', NOW(),
-                    'title', post.title,
-                    'images', post.images,
-                    'content', post.content,
-                    'price', post.price,
-                    'currency', post.currency,
-                    'latitude', post.latitude,
-                    'longitude', post.longitude,
-                    'draft', post.draft,
                     'deleted', post.deleted
                 )) 
             WHERE post.uuid = $1
             AND post.author_id = $2
+            AND NOT EXISTS(
+                SELECT * FROM sales sale
+                WHERE sale.post_uuid = post.uuid)
             RETURNING *)
         SELECT COUNT(*) as count
         FROM updated;
@@ -208,7 +213,7 @@ pub async fn delete(
     match sqlx::query!(
         r#"
         UPDATE comments comment SET
-            viewed_by_author = FALSE
+            unread_by_author = COALESCE(unread_by_author, '[]'::JSONB) || '["post-deleted"]'::JSONB
         WHERE comment.post_uuid = $1
         "#,
         post_uuid,
@@ -269,7 +274,12 @@ pub async fn patch(
                 'longitude', post.longitude,
                 'draft', post.draft
             )) 
-        WHERE post.uuid = $1 AND post.author_id = $2
+        WHERE post.uuid = $1
+        AND post.author_id = $2
+        AND post.deleted IS NOT TRUE
+        AND NOT EXISTS(
+            SELECT * FROM sales sale
+            WHERE sale.post_uuid = post.uuid)
         RETURNING *
         "#,
         post_uuid,
@@ -294,7 +304,7 @@ pub async fn patch(
     match sqlx::query!(
         r#"
         UPDATE comments comment SET
-            viewed_by_author = FALSE
+            unread_by_author = COALESCE(unread_by_author, '[]'::JSONB) || '["post-edited"]'::JSONB
         WHERE comment.post_uuid = $1
         "#,
         post_uuid,

@@ -26,8 +26,8 @@ pub async fn get(
                 comment.updated_at,
                 comment.deleted,
                 comment.changes,
-                comment.viewed_by_author,
-                comment.viewed_by_poster,
+                comment.unread_by_author,
+                comment.unread_by_poster,
                 COALESCE(NULLIF(ARRAY_AGG((
                     reply.uuid,
                     reply.comment_uuid,

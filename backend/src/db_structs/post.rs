@@ -15,6 +15,7 @@ pub type CreatedAt = time::OffsetDateTime;
 pub type UpdatedAt = time::OffsetDateTime;
 pub type Deleted = bool;
 pub type Draft = bool;
+pub type Sold = bool;
 pub type Changes = serde_json::Value;
 
 #[derive(Debug, sqlx::FromRow, sqlx::Type, Serialize, Deserialize)]
@@ -32,5 +33,6 @@ pub struct Post {
     pub updated_at: UpdatedAt,
     pub deleted: Deleted,
     pub draft: Draft,
+    pub sold: Sold,
     pub changes: Changes,
 }

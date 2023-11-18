@@ -93,8 +93,8 @@ pub async fn post(
     match sqlx::query!(
         r#"
         UPDATE comments comment SET
-            viewed_by_author = CASE WHEN $2 THEN viewed_by_author ELSE FALSE END,
-            viewed_by_poster = CASE WHEN $2 THEN FALSE ELSE viewed_by_poster END
+            unread_by_author = CASE WHEN $2 THEN unread_by_author ELSE COALESCE(unread_by_author, '[]'::JSONB) || '["new-reply"]'::JSONB END,
+            unread_by_poster = CASE WHEN $2 THEN COALESCE(unread_by_poster, '[]'::JSONB) || '["new-reply"]'::JSONB ELSE unread_by_poster END
         WHERE comment.uuid = $1
         "#,
         payload.comment_uuid,
@@ -133,8 +133,7 @@ pub async fn patch(
             changes = changes || jsonb_build_array(jsonb_build_object(
                 'who', $3::TEXT,
                 'when', NOW(),
-                'content', reply.content,
-                'deleted', reply.deleted
+                'content', reply.content
             ))
         WHERE uuid = $1 AND author_id = $2
         RETURNING *
@@ -154,8 +153,8 @@ pub async fn patch(
     match sqlx::query!(
         r#"
         UPDATE comments comment SET
-            viewed_by_author = CASE WHEN comment.author_id = $2 THEN viewed_by_author ELSE FALSE END,
-            viewed_by_poster = CASE WHEN comment.author_id = $2 THEN FALSE ELSE viewed_by_poster END
+            unread_by_author = CASE WHEN comment.author_id = $2 THEN unread_by_author ELSE COALESCE(unread_by_author, '[]'::JSONB) || '["reply-edited"]'::JSONB END,
+            unread_by_poster = CASE WHEN comment.author_id = $2 THEN COALESCE(unread_by_poster, '[]'::JSONB) || '["reply-edited"]'::JSONB ELSE unread_by_poster END
         FROM replies reply
         WHERE reply.uuid = $1
         AND comment.uuid = reply.comment_uuid
@@ -190,7 +189,6 @@ pub async fn delete(
             changes = changes || jsonb_build_array(jsonb_build_object(
                 'who', $3::TEXT,
                 'when', NOW(),
-                'content', reply.content,
                 'deleted', reply.deleted
             ))
         WHERE uuid = $1 AND author_id = $2
@@ -210,8 +208,8 @@ pub async fn delete(
     match sqlx::query!(
         r#"
         UPDATE comments comment SET
-            viewed_by_author = CASE WHEN comment.author_id = $2 THEN viewed_by_author ELSE FALSE END,
-            viewed_by_poster = CASE WHEN comment.author_id = $2 THEN FALSE ELSE viewed_by_poster END
+            unread_by_author = CASE WHEN comment.author_id = $2 THEN unread_by_author ELSE COALESCE(unread_by_author, '[]'::JSONB) || '["reply-deleted"]'::JSONB END,
+            unread_by_poster = CASE WHEN comment.author_id = $2 THEN COALESCE(unread_by_poster, '[]'::JSONB) || '["reply-deleted"]'::JSONB ELSE unread_by_poster END
         FROM replies reply
         WHERE reply.uuid = $1
         AND comment.uuid = reply.comment_uuid

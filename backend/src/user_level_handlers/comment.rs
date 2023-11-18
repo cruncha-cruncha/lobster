@@ -20,8 +20,8 @@ pub struct GetCommentData {
     pub updated_at: comment::UpdatedAt,
     pub deleted: comment::Deleted,
     pub changes: comment::Changes,
-    pub viewed_by_author: comment::ViewedByAuthor,
-    pub viewed_by_poster: comment::ViewedByPoster,
+    pub unread_by_author: comment::UnreadByAuthor,
+    pub unread_by_poster: comment::UnreadByPoster,
     pub replies: Option<Vec<reply::GetReplyData>>,
 }
 
@@ -41,11 +41,27 @@ pub async fn post(
         None => return Err((StatusCode::BAD_REQUEST, String::from(""))),
     };
 
+    match sqlx::query!(
+        r#"
+        SELECT post.uuid
+        FROM posts post
+        WHERE post.uuid = $1
+        AND post.deleted IS NOT TRUE
+        AND NOT EXISTS(
+            SELECT * FROM sales sale
+            WHERE sale.post_uuid = post.uuid)
+        "#,
+        payload.post_uuid,
+    ).fetch_one(&state.db).await {
+        Ok(_) => (),
+        Err(e) => return Err((StatusCode::NOT_FOUND, e.to_string())),
+    };
+
     let row = match sqlx::query_as!(
         comment::Comment,
         r#"
-        INSERT INTO comments (uuid, post_uuid, author_id, content, created_at, updated_at, deleted, changes, viewed_by_author, viewed_by_poster)
-        VALUES ($1, $2, $3, $4, NOW(), NOW(), FALSE, '[]'::JSONB, TRUE, FALSE)
+        INSERT INTO comments (uuid, post_uuid, author_id, content, created_at, updated_at, deleted, changes, unread_by_author, unread_by_poster)
+        VALUES ($1, $2, $3, $4, NOW(), NOW(), FALSE, '[]'::JSONB, NULL, '["new-comment"]'::JSONB)
         RETURNING *
         "#,
         uuid::Uuid::new_v4(),
@@ -85,16 +101,22 @@ pub async fn patch(
         UPDATE comments comment
         SET
             content = $4,
-            viewed_by_poster = FALSE,
+            unread_by_poster = COALESCE(comment.unread_by_poster, '[]'::JSONB) || '["comment-edited"]'::JSONB,
             updated_at = NOW(),
-            changes = changes || jsonb_build_array(jsonb_build_object(
+            changes = comment.changes || jsonb_build_array(jsonb_build_object(
                 'who', $3::TEXT,
                 'when', NOW(),
-                'content', comment.content,
-                'deleted', comment.deleted
+                'content', comment.content
             ))
-        WHERE uuid = $1 AND author_id = $2
-        RETURNING *
+        FROM posts post
+        WHERE comment.uuid = $1
+        AND comment.author_id = $2
+        AND post.uuid = comment.post_uuid
+        AND post.deleted IS NOT TRUE
+        AND NOT EXISTS(
+            SELECT * FROM sales sale
+            WHERE sale.post_uuid = post.uuid)
+        RETURNING comment.*
         "#,
         comment_uuid,
         author_id,
@@ -127,23 +149,27 @@ pub async fn delete(
         WITH post AS (
             SELECT post.author_id
             FROM comments comment
-            LEFT JOIN posts post ON post.uuid = comment.post_uuid
+            JOIN posts post ON post.uuid = comment.post_uuid
             WHERE comment.uuid = $1
+            AND post.deleted IS NOT TRUE
+            AND NOT EXISTS(
+                SELECT * FROM sales sale
+                WHERE sale.post_uuid = post.uuid)
         ), updated AS (
             UPDATE comments comment SET
                 deleted = true,
                 updated_at = NOW(),
-                viewed_by_author = CASE WHEN comment.author_id = $2 THEN viewed_by_author ELSE FALSE END,
-                viewed_by_poster = CASE WHEN comment.author_id = $2 THEN FALSE ELSE viewed_by_poster END,
+                unread_by_author = CASE WHEN comment.author_id = $2 THEN unread_by_author ELSE COALESCE(unread_by_author, '[]'::JSONB) || '["comment-deleted"]'::JSONB END,
+                unread_by_poster = CASE WHEN comment.author_id = $2 THEN COALESCE(unread_by_poster, '[]'::JSONB) || '["comment-deleted"]'::JSONB ELSE unread_by_poster END,
                 changes = changes || jsonb_build_array(jsonb_build_object(
                     'who', $3::TEXT,
                     'when', NOW(),
-                    'content', comment.content,
                     'deleted', comment.deleted
                 )) 
+            FROM post
             WHERE comment.uuid = $1
-            AND (comment.author_id = $2 OR (SELECT post.author_id FROM post) = $2)
-            RETURNING *)
+            AND comment.author_id = $2
+            RETURNING comment.uuid)
         SELECT COUNT(*) as count
         FROM updated;
         "#,

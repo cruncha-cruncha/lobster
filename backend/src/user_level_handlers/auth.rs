@@ -1,9 +1,9 @@
 use crate::auth::claims;
 use crate::auth::encryption::{encode_plain_email, generate_salt, hash_password};
-use crate::db_structs::{invitation, user, recovery_request};
+use crate::db_structs::{invitation, recovery_request, user};
 use crate::AppState;
 use axum::{
-    extract::{ConnectInfo, Json, State, Path},
+    extract::{ConnectInfo, Json, Path, State},
     http::StatusCode,
 };
 use serde::{Deserialize, Serialize};
@@ -63,8 +63,10 @@ pub async fn login(
     }
     let user = user.unwrap();
 
+    #[cfg(not(feature = "anyPassword"))]
     let password = hash_password(&payload.password, &user.salt);
 
+    #[cfg(not(feature = "anyPassword"))]
     match sqlx::query!(
         r#"
         SELECT usr.id
@@ -184,7 +186,12 @@ pub async fn accept_invitation(
 ) -> Result<Json<Tokens>, (StatusCode, String)> {
     let email = match encode_plain_email(&payload.email) {
         Some(email) => email,
-        None => return Err((StatusCode::INTERNAL_SERVER_ERROR, String::from("auth_encode_plain_email"))),
+        None => {
+            return Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                String::from("auth_encode_plain_email"),
+            ))
+        }
     };
 
     let invitation = match sqlx::query_as!(
@@ -282,7 +289,12 @@ pub async fn reset_password(
 ) -> Result<StatusCode, (StatusCode, String)> {
     let email = match encode_plain_email(&payload.email) {
         Some(email) => email,
-        None => return Err((StatusCode::INTERNAL_SERVER_ERROR, String::from("auth_encode_plain_email"))),
+        None => {
+            return Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                String::from("auth_encode_plain_email"),
+            ))
+        }
     };
 
     let recovery_request = match sqlx::query_as!(
@@ -321,7 +333,10 @@ pub async fn reset_password(
         email,
         &password,
         &new_salt,
-    ).fetch_optional(&state.db).await {
+    )
+    .fetch_optional(&state.db)
+    .await
+    {
         Ok(row) => row,
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     };

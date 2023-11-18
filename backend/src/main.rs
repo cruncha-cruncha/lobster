@@ -54,6 +54,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 .delete(account::delete),
         )
         .route("/profiles/:user_id", routing::get(profile::get))
+        .route("/profiles/:user_id/historical-data", routing::get(profile::get_history))
+        .route("/unread-activity/:user_id", routing::get(profile::get_unread))
         .route("/posts", routing::post(post::post))
         .route(
             "/posts/:post_uuid",
