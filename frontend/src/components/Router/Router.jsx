@@ -55,6 +55,7 @@ const reducer = (state, action) => {
     case "set": {
       const newPageKey = parsePageKeyFromPath(action?.payload?.path);
       if (newPageKey === state.pageKey) return state;
+      window.history.pushState({}, "", action?.payload?.path);
 
       return {
         ...state,
@@ -74,6 +75,7 @@ const reducer = (state, action) => {
     case "push": {
       const futurePageKey = parsePageKeyFromPath(action?.payload?.path);
       if (futurePageKey === state.pageKey) return state;
+      window.history.pushState({}, "", action?.payload?.path);
 
       return {
         ...state,
@@ -103,6 +105,7 @@ const reducer = (state, action) => {
     case "pushNoHistory": {
       const futurePageKey = parsePageKeyFromPath(action?.payload?.path);
       if (futurePageKey === state.pageKey) return state;
+      window.history.pushState({}, "", action?.payload?.path);
 
       return {
         ...state,
@@ -124,6 +127,7 @@ const reducer = (state, action) => {
 
     case "pop": {
       const prevState = state.prev[state.prev.length - 1];
+      window.history.pushState({}, "", prevState?.path);
       const prevPageKey = parsePageKeyFromPath(prevState?.path);
       const direction =
         action?.payload?.direction ||
@@ -195,6 +199,7 @@ export const Router = () => {
 
   const slideX = (go) => () => {
     if (router.slider.inTransition) return;
+
     dispatch({ type: "startTransition" });
 
     setTimeout(go, 0);
@@ -203,7 +208,6 @@ export const Router = () => {
       animationRef.current.className =
         router.slider.activeSide === "flip" ? "show-flop" : "show-flip";
       dispatch({ type: "doneTransition" });
-      window.history.pushState({}, "", router.path);
     }, 401);
   };
 
@@ -322,3 +326,8 @@ export const useRouter = () => {
 };
 
 export const EmptyPage = () => <></>;
+
+export const getQueryParams = () => {
+  const url = new URL(window.location.href);
+  return new URLSearchParams(url.search);
+}

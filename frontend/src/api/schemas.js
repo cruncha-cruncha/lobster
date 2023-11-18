@@ -4,6 +4,7 @@ const ajv = new Ajv();
 
 const tokensSchema = {
   type: "object",
+  $id: "#tokens",
   properties: {
     user_id: { type: "integer" },
     claims_level: { type: "integer" },
@@ -11,11 +12,11 @@ const tokensSchema = {
     refresh_token: { type: "string" },
   },
   required: ["user_id", "claims_level", "access_token", "refresh_token"],
-  additionalProperties: false,
 };
 
 const refreshAccessTokenSchema = {
   type: "object",
+  $id: "#refreshAccessToken",
   properties: {
     user_id: { type: "integer" },
     claims_level: { type: "integer" },
@@ -23,11 +24,11 @@ const refreshAccessTokenSchema = {
     refresh_token: { type: "null" },
   },
   required: ["user_id", "claims_level", "access_token"],
-  additionalProperties: false,
 };
 
 const countriesSchema = {
   type: "array",
+  $id: "#countries",
   items: {
     type: "object",
     properties: {
@@ -36,12 +37,118 @@ const countriesSchema = {
       short: { type: "string" },
     },
     required: ["id", "name", "short"],
-    additionalProperties: false,
   },
+};
+
+const profileHistorySchema = {
+  type: "object",
+  $id: "#profileHistory",
+  properties: {
+    oldest_post_uuid: { type: ["string", "null"] },
+    oldest_post_date: { type: ["string", "null"] },
+    newest_post_uuid: { type: ["string", "null"] },
+    newest_post_date: { type: ["string", "null"] },
+    oldest_comment_uuid: { type: ["string", "null"] },
+    oldest_comment_date: { type: ["string", "null"] },
+    newest_comment_uuid: { type: ["string", "null"] },
+    newest_comment_date: { type: ["string", "null"] },
+  },
+  required: [
+    "oldest_post_uuid",
+    "oldest_post_date",
+    "newest_post_uuid",
+    "newest_post_date",
+    "oldest_comment_uuid",
+    "oldest_comment_date",
+    "newest_comment_uuid",
+    "newest_comment_date",
+  ],
+};
+
+const accountSchema = {
+  type: "object",
+  $id: "#account",
+  properties: {
+    id: { type: "integer" },
+    name: { type: "string" },
+    email: { type: "string" },
+    language: { type: "integer" },
+    country: { type: "integer" },
+  },
+  required: ["id", "name", "email", "language", "country"],
+};
+
+const profileSchema = {
+  type: "object",
+  $id: "#profile",
+  properties: {
+    id: { type: "integer" },
+    name: { type: "string" },
+    language: { type: "integer" },
+    country: { type: "string" },
+    banned_until: { type: ["string", "null"] },
+    changes: { type: "array", items: { $ref: "#singleChange" } },
+    all_posts: { type: "integer" },
+    deleted_posts: { type: "integer" },
+    draft_posts: { type: "integer" },
+    sold_posts: { type: "integer" },
+    all_comments: { type: "integer" },
+    deleted_comments: { type: "integer" },
+    lost_comments: { type: "integer" },
+    active_comments: { type: "integer" },
+    missed_comments: { type: "integer" },
+    bought_comments: { type: "integer" },
+  },
+  required: ["id", "name", "country", "language", "banned_until", "changes"],
+};
+
+const singleCommentSchema = {
+  type: "object",
+  $id: "#singleComment",
+  properties: {
+    uuid: { type: "string" },
+    post_uuid: { type: "string" },
+    author_id: { type: "integer" },
+    poster_id: { type: "integer" },
+    content: { type: "string" },
+    created_at: { type: "string" },
+    updated_at: { type: "string" },
+    deleted: { type: "boolean" },
+    changes: { type: "array", items: { $ref: "#singleChange" } },
+    unread_by_author: { type: ["array", "null"], items: { type: "string" } },
+    unread_by_poster: { type: ["array", "null"], items: { type: "string" } },
+  },
+  required: [
+    "uuid",
+    "post_uuid",
+    "author_id",
+    "poster_id",
+    "content",
+    "created_at",
+    "updated_at",
+    "deleted",
+    "changes",
+    "unread_by_author",
+    "unread_by_poster",
+  ],
+};
+
+const unreadActivitySchema = {
+  type: "object",
+  $id: "#unreadActivity",
+  properties: {
+    comments: { type: "array", items: { $ref: "#singleComment" } },
+    authors: { type: "array", items: { type: "string" } },
+    posts: { type: "array", items: { $ref: "#singlePost" } },
+    offers: { type: "array", items: { $ref: "#singleComment" } },
+    wants: { type: "array", items: { $ref: "#singlePost" } },
+  },
+  required: ["comments", "authors", "posts", "offers", "wants"],
 };
 
 const currenciesSchema = {
   type: "array",
+  $id: "#currencies",
   items: {
     type: "object",
     properties: {
@@ -50,12 +157,12 @@ const currenciesSchema = {
       symbol: { type: "string" },
     },
     required: ["id", "name", "symbol"],
-    additionalProperties: false,
   },
 };
 
 const languagesSchema = {
   type: "array",
+  $id: "#languages",
   items: {
     type: "object",
     properties: {
@@ -63,7 +170,6 @@ const languagesSchema = {
       name: { type: "string" },
     },
     required: ["id", "name"],
-    additionalProperties: false,
   },
 };
 
@@ -74,14 +180,15 @@ const singleChangeSchema = {
     who: { type: "string" },
     when: { type: "string" },
   },
+  required: ["who", "when"],
 };
 
-const getPostSchema = {
+const singlePostSchema = {
   type: "object",
+  $id: "#singlePost",
   properties: {
     uuid: { type: "string" },
     author_id: { type: "integer" },
-    author_name: { type: "string" },
     title: { type: "string" },
     images: { type: "array", items: { type: "string" } },
     content: { type: "string" },
@@ -94,42 +201,10 @@ const getPostSchema = {
     deleted: { type: "boolean" },
     draft: { type: "boolean" },
     changes: { type: "array", items: { $ref: "#singleChange" } },
-    comments: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          uuid: { type: "string" },
-          post_uuid: { type: "string" },
-          author_id: { type: "integer" },
-          content: { type: "string" },
-          created_at: { type: "string" },
-          updated_at: { type: "string" },
-          deleted: { type: "boolean" },
-          changes: { type: "array", items: { $ref: "#singleChange" } },
-          viewed_by_author: { type: "boolean" },
-          viewed_by_poster: { type: "boolean" },
-        },
-        required: [
-          "uuid",
-          "post_uuid",
-          "author_id",
-          "content",
-          "created_at",
-          "updated_at",
-          "deleted",
-          "changes",
-          "viewed_by_author",
-          "viewed_by_poster",
-        ],
-        additionalProperties: false,
-      },
-    },
   },
   required: [
     "uuid",
     "author_id",
-    "author_name",
     "title",
     "images",
     "content",
@@ -142,9 +217,18 @@ const getPostSchema = {
     "deleted",
     "draft",
     "changes",
-    "comments",
   ],
-  additionalProperties: false,
+};
+
+const getPostSchema = {
+  allOf: [{ $ref: "#singlePost" }],
+  type: "object",
+  $id: "#getPost",
+  properties: {
+    author_name: { type: "string" },
+    my_comment: { oneOf: [{ type: "null" }, { $ref: "#singleComment" }] },
+  },
+  required: ["author_name", "my_comment"],
 };
 
 const makeLazyValidator = (schema) => {
@@ -152,7 +236,11 @@ const makeLazyValidator = (schema) => {
   return (data) => {
     if (!validate) {
       if (Array.isArray(schema)) {
-        schema.slice(0, schema.length - 1).forEach((s) => ajv.addSchema(s));
+        schema.slice(0, schema.length - 1).forEach((s) => {
+          if (!ajv.getSchema(s.$id)) {
+            ajv.addSchema(s);
+          }
+        });
         validate = ajv.compile(schema[schema.length - 1]);
       } else {
         validate = ajv.compile(schema);
@@ -174,11 +262,31 @@ export const validateRefreshAccessToken = makeLazyValidator(
 
 export const validateGetPost = makeLazyValidator([
   singleChangeSchema,
+  singlePostSchema,
+  singleCommentSchema,
   getPostSchema,
 ]);
+
+export const validateProfile = makeLazyValidator([
+  singleChangeSchema,
+  profileSchema,
+]);
+
+export const validateUnreadActivity = makeLazyValidator([
+  singleChangeSchema,
+  singleCommentSchema,
+  singlePostSchema,
+  unreadActivitySchema,
+]);
+
+export const validateProfileHistory = makeLazyValidator(profileHistorySchema);
 
 export const validateCountries = makeLazyValidator(countriesSchema);
 
 export const validateCurrencies = makeLazyValidator(currenciesSchema);
 
 export const validateLanguages = makeLazyValidator(languagesSchema);
+
+export const validateAccount = makeLazyValidator(accountSchema);
+
+export const validateSinglePost = makeLazyValidator(singlePostSchema);
