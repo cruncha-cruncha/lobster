@@ -2,6 +2,7 @@ DROP INDEX IF EXISTS idx_posts_author_id;
 DROP INDEX IF EXISTS idx_sales_buyer_id;
 DROP INDEX IF EXISTS idx_abuses_offender_id;
 DROP INDEX IF EXISTS idx_abuses_reporter_id;
+DROP INDEX IF EXISTS idx_comments_poster_id;
 DROP INDEX IF EXISTS idx_comments_author_id;
 DROP INDEX IF EXISTS idx_replies_comment_uuid;
 
@@ -12,9 +13,6 @@ DROP TABLE IF EXISTS abuse_status;
 DROP TABLE IF EXISTS resource_types;
 DROP TABLE IF EXISTS sales;
 DROP TABLE IF EXISTS posts;
-DROP TABLE IF EXISTS post_views;
-DROP TABLE IF EXISTS searches;
-DROP TABLE IF EXISTS search_sorts;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS recovery_requests;
 DROP TABLE IF EXISTS invitations;

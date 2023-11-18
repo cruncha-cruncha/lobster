@@ -60,37 +60,6 @@ CREATE TABLE users (
 	    REFERENCES countries(id)
 );
 
-CREATE TABLE search_sorts (
-    id INTEGER GENERATED ALWAYS AS IDENTITY,
-    name TEXT NOT NULL,
-    PRIMARY KEY (id),
-    UNIQUE (name)
-);
-
--- no primary key nor constraints (for performance)
-CREATE TABLE searches (
-    user_id INTEGER NOT NULL,
-    ip_address INET NOT NULL,
-    text TEXT NOT NULL,
-    latitude REAL NOT NULL,
-    longitude REAL NOT NULL,
-    radius INTEGER NOT NULL,
-    price_min REAL,
-    price_max REAL,
-    country INTEGER,
-    sort INTEGER NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
-    page INTEGER NOT NULL
-);
-
--- no primary key nor constraints (for performance)
-CREATE TABLE post_views (
-    user_id INTEGER NOT NULL,
-    ip_address INET NOT NULL,
-    post_uuid UUID NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL
-);
-
 CREATE TABLE posts (
     uuid UUID NOT NULL,
     author_id INTEGER NOT NULL,
@@ -105,6 +74,7 @@ CREATE TABLE posts (
     updated_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     draft BOOLEAN NOT NULL,
     deleted BOOLEAN NOT NULL,
+    sold BOOLEAN NOT NULL, -- denormalized
     changes JSONB NOT NULL,
     PRIMARY KEY (uuid),
     CONSTRAINT fk_currency
@@ -167,18 +137,20 @@ CREATE INDEX IF NOT EXISTS idx_abuses_reporter_id ON abuses USING btree(reporter
 CREATE TABLE comments (
     uuid UUID NOT NULL,
     post_uuid UUID NOT NULL,
+    poster_id INTEGER NOT NULL, -- denormalized
     author_id INTEGER NOT NULL,
     content TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     deleted BOOLEAN NOT NULL,
     changes JSONB NOT NULL,
-    viewed_by_author BOOLEAN NOT NULL,
-    viewed_by_poster BOOLEAN NOT NULL,
+    unread_by_author JSONB,
+    unread_by_poster JSONB,
     PRIMARY KEY (uuid),
     UNIQUE (post_uuid, author_id)
 );
 
+CREATE INDEX IF NOT EXISTS idx_comments_poster_id ON comments USING btree(poster_id);
 CREATE INDEX IF NOT EXISTS idx_comments_author_id ON comments USING btree(author_id);
 
 CREATE TABLE replies (
