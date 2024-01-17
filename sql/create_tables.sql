@@ -22,6 +22,7 @@ CREATE TABLE currencies (
 CREATE TABLE invitations (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     email BYTEA NOT NULL,
+    claim_level INTEGER NOT NULL,
     code TEXT NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     PRIMARY KEY (id),
@@ -89,7 +90,7 @@ CREATE TABLE sales (
     buyer_id INTEGER NOT NULL,
     created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     reviewed_at TIMESTAMPTZ,
-    price TEXT NOT NULL,
+    price TEXT,
     rating INTEGER,
     review TEXT,
     PRIMARY KEY(post_uuid)
@@ -144,8 +145,8 @@ CREATE TABLE comments (
     updated_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     deleted BOOLEAN NOT NULL,
     changes JSONB NOT NULL,
-    unread_by_author JSONB,
-    unread_by_poster JSONB,
+    unread_by_author JSONB NOT NULL,
+    unread_by_poster JSONB NOT NULL,
     PRIMARY KEY (uuid),
     UNIQUE (post_uuid, author_id)
 );
