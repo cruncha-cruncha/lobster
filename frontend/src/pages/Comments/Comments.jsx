@@ -1,27 +1,63 @@
-import { useReducer, useState } from "react";
-import { useRouter } from "../../components/router/Router";
+import { useReducer, useState, useEffect } from "react";
+import { useRouter, getQueryParams } from "../../components/router/Router";
 import { Comment } from "./Comment";
+import * as endpoints from "../../api/endpoints";
+import { useAuth } from "../../components/userAuth";
+import { useInfoModal, PureInfoModal } from "../../components/InfoModal";
+import { parseDate } from "../../api/parseDate";
+import { formatData as formatPostData } from "../Post";
+
+export const formatReply = (data, commentAuthorId, userId) => ({
+  uuid: data.uuid,
+  text: data.content,
+  time: parseDate(data.updated_at),
+  byCommenter: commentAuthorId === data.author_id,
+  edits: data.changes,
+  canEdit: data.author_id === userId,
+  deleted: data.deleted,
+  loading: false,
+});
+
+export const formatComment = (data, userId) => ({
+  uuid: data.uuid,
+  text: data.content,
+  time: parseDate(data.updated_at),
+  canEdit: data.author_id === userId,
+  loading: false,
+  deleted: data.deleted,
+  commenter: {
+    id: data.author_id,
+    name: data.author_id == userId ? "you" : data.author_name,
+  },
+  edits: data.changes,
+  replies: (data?.replies || []).map((reply) =>
+    formatReply(reply, data.author_id, userId),
+  ),
+});
+
+export const formatData = (allComments, userId) => {
+  return allComments.map((data) => formatComment(data, userId));
+};
 
 function reducer(state, action) {
   switch (action?.type) {
     case "setText":
       return { ...state, text: action?.payload?.text };
     case "setActiveComment":
-      if (state.activeComment == action?.payload?.uuid) {
-        return { ...state, activeComment: "", text: "" };
-      } else {
-        return {
-          ...state,
-          text: "",
-          activeComment: action?.payload?.uuid,
-          editing: { amEditing: false, originalText: "", parent: "", uuid: "" },
-        };
-      }
+      return {
+        ...state,
+        text: "",
+        activeCommentUuid:
+          state.activeCommentUuid == action?.payload?.uuid
+            ? ""
+            : action?.payload?.uuid,
+        editing: { amEditing: false, originalText: "", parent: "", uuid: "" },
+      };
     case "editComment":
       return {
         ...state,
         text: action?.payload?.text,
-        activeComment: action?.payload?.uuid,
+        activeCommentUuid: action?.payload?.uuid,
         editing: {
           amEditing: true,
           originalText: action?.payload?.text,
@@ -33,7 +69,7 @@ function reducer(state, action) {
       return {
         ...state,
         text: action?.payload?.text,
-        activeComment: action?.payload?.parent,
+        activeCommentUuid: action?.payload?.parent,
         editing: {
           amEditing: true,
           originalText: action?.payload?.text,
@@ -45,7 +81,7 @@ function reducer(state, action) {
       return {
         ...state,
         text: "",
-        activeComment: "",
+        activeCommentUuid: "",
         editing: { amEditing: false, originalText: "", parent: "", uuid: "" },
       };
     case "clearEditing":
@@ -64,11 +100,15 @@ function reducer(state, action) {
 }
 
 export const useComments = () => {
+  const auth = useAuth();
   const router = useRouter();
-  const [data, setData] = useState(fakeData);
+  const modal = useInfoModal();
+  const [post, setPost] = useState({});
+  const [networkData, setNetworkData] = useState([]);
+  const [data, setData] = useState([]);
   const [state, dispatch] = useReducer(reducer, {
     text: "",
-    activeComment: "",
+    activeCommentUuid: "",
     editing: {
       amEditing: false,
       originalText: "",
@@ -77,55 +117,706 @@ export const useComments = () => {
     },
   });
 
+  useEffect(() => {
+    if (!auth?.user?.userId || !networkData) return;
+    setData(formatData(networkData, auth.user.userId));
+  }, [auth?.user, networkData]);
+
+  const queryParams = getQueryParams();
+  const postUuid = queryParams.get("postUuid");
+
+  const myComment = data.find(
+    (comment) => comment.commenter.id == auth?.user?.userId,
+  );
+
+  const amPoster =
+    !!post?.author?.id && post?.author?.id === auth?.user?.userId;
+  const amCommenter = !!myComment && !myComment?.deleted;
+  const amViewer = !amPoster && !amCommenter;
+
+  const textControls = (() => {
+    if (state.editing.amEditing) {
+      return {
+        placeholder: "Edit",
+        inputDisabled: false,
+        buttonText: "Edit",
+        submitDisabled: state.text == state.editing.originalText || !state.text,
+      };
+    } else if (amPoster) {
+      if (state.activeCommentUuid) {
+        return {
+          placeholder: "Reply",
+          inputDisabled: false,
+          buttonText: "Reply",
+          submitDisabled: !state.text,
+        };
+      } else {
+        return {
+          placeholder: "Select a comment to reply",
+          inputDisabled: true,
+          buttonText: "Reply",
+          submitDisabled: true,
+        };
+      }
+    } else if (amCommenter) {
+      if (state.activeCommentUuid == myComment?.uuid) {
+        return {
+          placeholder: "Reply",
+          inputDisabled: false,
+          buttonText: "Reply",
+          submitDisabled: !state.text,
+        };
+      } else {
+        return {
+          placeholder: "Select your comment to reply",
+          inputDisabled: true,
+          buttonText: "Reply",
+          submitDisabled: true,
+        };
+      }
+    } else {
+      return {
+        placeholder: "Comment",
+        inputDisabled: false,
+        buttonText: "Comment",
+        submitDisabled: !state.text,
+      };
+    }
+  })();
+
   const setText = (text) => {
     dispatch({ type: "setText", payload: { text } });
   };
 
-  const buttonText = state.editing.amEditing ? "Edit" : "Reply";
+  useEffect(() => {
+    let mounted = true;
 
-  const submitTextDisabled =
-    !state.text ||
-    (!state.activeComment && !state.editing.amEditing) ||
-    (state.editing.amEditing && state.text == state.editing.originalText);
+    endpoints
+      .getPostComments({
+        accessToken: auth?.accessToken,
+        postUuid: postUuid,
+      })
+      .then((res) => {
+        if (!mounted || res.status !== 200) return;
+        setNetworkData(res.data);
+      });
+
+    endpoints
+      .getPost({
+        accessToken: auth?.accessToken,
+        postUuid: postUuid,
+      })
+      .then((res) => {
+        if (!mounted || res.status !== 200) return;
+        setPost(formatPostData(res.data));
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const applyReplyEdit = () => {
+    setData((prev) => {
+      return prev.map((comment) => {
+        if (comment.uuid == state.editing.parent) {
+          return {
+            ...comment,
+            replies: comment.replies.map((reply) => {
+              if (reply.uuid == state.editing.uuid) {
+                return {
+                  ...reply,
+                  text: state.text,
+                  loading: true,
+                };
+              }
+              return reply;
+            }),
+          };
+        }
+        return comment;
+      });
+    });
+
+    dispatch({ type: "clearText" });
+
+    endpoints
+      .updateReply({
+        accessToken: auth.accessToken,
+        replyUuid: state.editing.uuid,
+        data: {
+          content: state.text,
+        },
+      })
+      .then((res) => {
+        if (res.status !== 200) {
+          modal.open("Update failed. Please try again later.", "error");
+          setData((prev) =>
+            prev.map((comment) => {
+              if (comment.uuid == state.editing.parent) {
+                return {
+                  ...comment,
+                  replies: comment.replies.map((reply) => {
+                    if (reply.uuid == state.editing.uuid) {
+                      return {
+                        ...reply,
+                        text: state.editing.originalText,
+                        loading: false,
+                      };
+                    }
+                    return reply;
+                  }),
+                };
+              }
+              return comment;
+            }),
+          );
+        } else {
+          setData((prev) =>
+            prev.map((comment) => {
+              if (comment.uuid == state.editing.parent) {
+                return {
+                  ...comment,
+                  replies: comment.replies.map((reply) => {
+                    if (reply.uuid == state.editing.uuid) {
+                      return formatReply(
+                        res.data,
+                        comment.commenter.id,
+                        auth?.user?.userId,
+                      );
+                    }
+                    return reply;
+                  }),
+                };
+              }
+              return comment;
+            }),
+          );
+        }
+      });
+  };
+
+  const applyCommentEdit = () => {
+    setData((prev) =>
+      prev.map((comment) => {
+        if (comment.uuid == state.editing.uuid) {
+          return {
+            ...comment,
+            text: state.text,
+            loading: true,
+          };
+        }
+
+        return comment;
+      }),
+    );
+
+    dispatch({ type: "clearText" });
+
+    endpoints
+      .updateComment({
+        accessToken: auth.accessToken,
+        commentUuid: state.editing.uuid,
+        data: {
+          content: state.text,
+        },
+      })
+      .then((res) => {
+        if (res.status !== 200) {
+          modal.open("Update failed. Please try again later.", "error");
+          setData((prev) =>
+            prev.map((comment) => {
+              if (comment.uuid == state.editing.uuid) {
+                return {
+                  ...comment,
+                  text: state.editing.originalText,
+                  loading: false,
+                };
+              }
+
+              return comment;
+            }),
+          );
+        } else {
+          setData((prev) =>
+            prev.map((comment) => {
+              if (comment.uuid == state.editing.uuid) {
+                return {
+                  ...formatComment(res.data, auth?.user?.userId),
+                  replies: comment.replies,
+                };
+              }
+              return comment;
+            }),
+          );
+        }
+      });
+  };
+
+  const makeNewComment = (tmpFakeUuid) => {
+    const newComment = {
+      uuid: tmpFakeUuid,
+      text: state.text,
+      time: new Date(),
+      canEdit: true,
+      loading: true,
+      commenter: {
+        id: auth?.user?.userId,
+        name: "you",
+      },
+      edits: [],
+      replies: [],
+    };
+
+    setData((prev) => [
+      newComment,
+      ...prev.map((comment) => {
+        if (comment.uuid == myComment?.uuid) {
+          return {
+            ...comment,
+            loading: true,
+          };
+        }
+        return comment;
+      }),
+    ]);
+
+    dispatch({ type: "clearText" });
+
+    endpoints
+      .createNewComment({
+        accessToken: auth.accessToken,
+        data: {
+          post_uuid: post?.uuid,
+          content: state.text,
+        },
+      })
+      .then((res) => {
+        if (res.status !== 200) {
+          modal.open("Comment failed. Please try again later.", "error");
+          setData((prev) =>
+            prev
+              .filter((comment) => comment.uuid != tmpFakeUuid)
+              .map((comment) => {
+                if (comment.uuid == myComment?.uuid) {
+                  return {
+                    ...comment,
+                    loading: false,
+                  };
+                }
+                return comment;
+              }),
+          );
+        } else {
+          let replies = [];
+          setData((prev) =>
+            prev
+              .filter((comment) => {
+                if (comment.uuid == myComment?.uuid) {
+                  replies = comment.replies;
+                  return false;
+                }
+                return true;
+              })
+              .map((comment) => {
+                if (comment.uuid == tmpFakeUuid) {
+                  return {
+                    ...formatComment(res.data, auth?.user?.userId),
+                    replies: replies,
+                  };
+                }
+                return comment;
+              }),
+          );
+        }
+      });
+  };
+
+  const makeNewReply = (tmpFakeUuid) => {
+    setData((prev) => {
+      return prev.map((comment) => {
+        if (comment.uuid == state.activeCommentUuid) {
+          const newReply = {
+            uuid: tmpFakeUuid,
+            text: state.text,
+            time: new Date(),
+            byCommenter: comment.commenter.id === auth?.user?.userId,
+            edits: [],
+            canEdit: true,
+            loading: true,
+          };
+
+          return {
+            ...comment,
+            replies: [...comment.replies, newReply],
+          };
+        }
+
+        return comment;
+      });
+    });
+
+    dispatch({ type: "clearText" });
+
+    endpoints
+      .createNewReply({
+        accessToken: auth?.accessToken,
+        data: {
+          comment_uuid: state.activeCommentUuid,
+          content: state.text,
+        },
+      })
+      .then((res) => {
+        if (res.status !== 200) {
+          modal.open("Reply failed. Please try again later.", "error");
+
+          setData((prev) => {
+            return prev.map((comment) => {
+              if (comment.uuid == state.activeCommentUuid) {
+                return {
+                  ...comment,
+                  replies: comment.replies.filter(
+                    (reply) => reply.uuid != tmpFakeUuid,
+                  ),
+                };
+              }
+
+              return comment;
+            });
+          });
+        } else {
+          setData((prev) => {
+            return prev.map((comment) => {
+              if (comment.uuid == state.activeCommentUuid) {
+                return {
+                  ...comment,
+                  replies: comment.replies.map((reply) => {
+                    if (reply.uuid == tmpFakeUuid) {
+                      return formatReply(
+                        res.data,
+                        comment.commenter.id,
+                        auth?.user?.userId,
+                      );
+                    }
+
+                    return reply;
+                  }),
+                };
+              }
+
+              return comment;
+            });
+          });
+        }
+      });
+  };
 
   const onSubmitText = () => {
+    const tmpFakeUuid = `tmp-fake-uuid-${Math.random()}`;
+
     if (state.editing.amEditing) {
-      console.log("edit " + state.editing.uuid + " as " + state.text);
       dispatch({ type: "clearEditing" });
-    } else if (state.activeComment) {
-      console.log("reply to " + state.activeComment + " as " + state.text);
-      dispatch({ type: "clearText" });
+      if (state.editing.parent) {
+        applyReplyEdit();
+      } else {
+        applyCommentEdit();
+      }
+    } else if (amViewer) {
+      makeNewComment(tmpFakeUuid);
     } else {
-      // fail silently
+      makeNewReply(tmpFakeUuid);
     }
+  };
+
+  const undeleteMyComment = () => {
+    dispatch({
+      type: "setActiveComment",
+      payload: { uuid: myComment?.uuid },
+    });
+
+    setData((prev) => [
+      ...prev.map((comment) => {
+        if (comment.uuid == myComment?.uuid) {
+          return {
+            ...comment,
+            loading: true,
+          };
+        }
+        return comment;
+      }),
+    ]);
+
+    endpoints
+      .createNewComment({
+        accessToken: auth.accessToken,
+        data: {
+          post_uuid: post?.uuid,
+          content: myComment?.text,
+        },
+      })
+      .then((res) => {
+        if (res.status !== 200) {
+          modal.open(
+            "Could not retrieve comment. Please try again later.",
+            "error",
+          );
+          setData((prev) =>
+            prev.map((comment) => {
+              if (comment.uuid == myComment?.uuid) {
+                return {
+                  ...comment,
+                  loading: false,
+                };
+              }
+              return comment;
+            }),
+          );
+        } else {
+          setData((prev) =>
+            prev.map((comment) => {
+              if (comment.uuid == myComment?.uuid) {
+                return {
+                  ...comment,
+                  loading: false,
+                  deleted: false,
+                };
+              }
+              return comment;
+            }),
+          );
+        }
+      });
+  };
+
+  const undeleteReply = (replyUuid) => {
+    setData((prev) => {
+      return prev.map((comment) => {
+        if (comment.uuid == state.activeCommentUuid) {
+          return {
+            ...comment,
+            replies: comment.replies.map((reply) => {
+              if (reply.uuid == replyUuid) {
+                return {
+                  ...reply,
+                  loading: true,
+                };
+              }
+              return reply;
+            }),
+          };
+        }
+        return comment;
+      });
+    });
+
+    endpoints
+      .undeleteReply({
+        accessToken: auth.accessToken,
+        replyUuid,
+      })
+      .then((res) => {
+        if (res.status != 200) {
+          modal.open(
+            "Could not retrieve reply. Please try again later.",
+            "error",
+          );
+          setData((prev) => {
+            return prev.map((comment) => {
+              if (comment.uuid == state.activeCommentUuid) {
+                return {
+                  ...comment,
+                  replies: comment.replies.map((reply) => {
+                    if (reply.uuid == replyUuid) {
+                      return {
+                        ...reply,
+                        loading: false,
+                      };
+                    }
+                    return reply;
+                  }),
+                };
+              }
+              return comment;
+            });
+          });
+        } else {
+          setData((prev) => {
+            return prev.map((comment) => {
+              if (comment.uuid == state.activeCommentUuid) {
+                return {
+                  ...comment,
+                  replies: comment.replies.map((reply) => {
+                    if (reply.uuid == replyUuid) {
+                      return formatReply(
+                        res.data,
+                        comment.commenter.id,
+                        auth?.user?.userId,
+                      );
+                    }
+                    return reply;
+                  }),
+                };
+              }
+              return comment;
+            });
+          });
+        }
+      });
+  };
+
+  const removeComment = (commentUuid) => {
+    if (state.activeCommentUuid == commentUuid) {
+      dispatch({ type: "clearAll" });
+    }
+    setData((prev) =>
+      prev.map((comment) => {
+        if (comment.uuid == commentUuid) {
+          return {
+            ...comment,
+            loading: true,
+          };
+        }
+        return comment;
+      }),
+    );
+    endpoints
+      .removeComment({
+        accessToken: auth?.accessToken,
+        commentUuid,
+      })
+      .then((res) => {
+        if (res.status !== 204) {
+          modal.open(
+            "Could not remove comment. Please try again later.",
+            "error",
+          );
+          setData((prev) =>
+            prev.map((comment) => {
+              if (comment.uuid == commentUuid) {
+                return {
+                  ...comment,
+                  loading: false,
+                };
+              }
+              return comment;
+            }),
+          );
+        } else {
+          setData((prev) =>
+            prev.map((comment) => {
+              if (comment.uuid == commentUuid) {
+                return {
+                  ...comment,
+                  time: new Date(),
+                  loading: false,
+                  deleted: true,
+                };
+              }
+              return comment;
+            }),
+          );
+        }
+      });
+  };
+
+  const removeReply = (replyUuid) => {
+    if (
+      state.editing.amEditing &&
+      state.editing.uuid == action?.payload?.uuid
+    ) {
+      dispatch({ type: "clearEditing" });
+    }
+
+    setData((prev) =>
+      prev.map((comment) => {
+        if (comment.uuid == state.activeCommentUuid) {
+          return {
+            ...comment,
+            replies: comment.replies.map((reply) => {
+              if (reply.uuid == replyUuid) {
+                return {
+                  ...reply,
+                  loading: true,
+                };
+              }
+              return reply;
+            }),
+          };
+        }
+        return comment;
+      }),
+    );
+
+    endpoints
+      .removeReply({
+        accessToken: auth?.accessToken,
+        replyUuid,
+      })
+      .then((res) => {
+        if (res.status !== 204) {
+          modal.open(
+            "Could not remove reply. Please try again later.",
+            "error",
+          );
+          setData((prev) =>
+            prev.map((comment) => {
+              if (comment.uuid == state.activeCommentUuid) {
+                return {
+                  ...comment,
+                  replies: comment.replies.map((reply) => {
+                    if (reply.uuid == replyUuid) {
+                      return {
+                        ...reply,
+                        loading: false,
+                      };
+                    }
+                    return reply;
+                  }),
+                };
+              }
+              return comment;
+            }),
+          );
+        } else {
+          setData((prev) =>
+            prev.map((comment) => {
+              if (comment.uuid == state.activeCommentUuid) {
+                return {
+                  ...comment,
+                  replies: comment.replies.map((reply) => {
+                    if (reply.uuid == replyUuid) {
+                      return {
+                        ...reply,
+                        time: new Date(),
+                        loading: false,
+                        deleted: true,
+                      };
+                    }
+                    return reply;
+                  }),
+                };
+              }
+              return comment;
+            }),
+          );
+        }
+      });
   };
 
   const MoreDispatch = (action) => {
     switch (action?.type) {
       case "undeleteComment":
-        console.log("undelete comment ", action?.payload);
-        dispatch({
-          type: "setActiveComment",
-          payload: { uuid: action?.payload?.uuid },
-        });
+        if (action?.payload?.uuid != myComment?.uuid) return;
+        undeleteMyComment();
         break;
       case "undeleteReply":
-        console.log("undelete reply ", action?.payload);
+        undeleteReply(action?.payload?.uuid);
         break;
       case "removeComment":
-        console.log("remove comment ", action?.payload);
-        if (state.activeComment == action?.payload?.uuid) {
-          dispatch({ type: "clearAll" });
-        }
+        removeComment(action?.payload?.uuid);
         break;
       case "removeReply":
-        console.log("remove reply ", action?.payload);
-        if (
-          state.editing.amEditing &&
-          state.editing.uuid == action?.payload?.uuid
-        ) {
-          dispatch({ type: "clearEditing" });
-        }
+        removeReply(action?.payload?.uuid);
         break;
       default:
         dispatch(action);
@@ -138,12 +829,12 @@ export const useComments = () => {
 
   return {
     data,
-    buttonText,
+    modal,
     dispatch: MoreDispatch,
-    activeComment: state.activeComment,
+    activeCommentUuid: state.activeCommentUuid,
+    textControls,
     text: state.text,
     setText,
-    submitTextDisabled,
     onSubmitText,
     onBack,
   };
@@ -151,59 +842,64 @@ export const useComments = () => {
 
 export const PureComments = (comments) => {
   return (
-    <div className="flex min-h-full w-full flex-col justify-between pb-2">
-      <div className="w-full">
-        {comments?.data?.map((data, i) => (
-          <Comment
-            key={data?.uuid}
-            dispatch={comments?.dispatch}
-            isActive={data?.uuid == comments?.activeComment}
-            darkBg={i % 2 == 0}
-            data={data}
-          />
-        ))}
-      </div>
-      <div className="flex px-2">
-        <div className="mr-2">
-          <p
-            className="relative top-2 cursor-pointer pr-2 text-lg font-bold"
-            onClick={(e) => comments?.onBack?.(e)}
-          >
-            {"<"}
-          </p>
+    <>
+      <PureInfoModal {...comments?.modal} />
+      <div className="flex h-full justify-center">
+        <div className="flex min-h-full max-w-3xl grow flex-col justify-between pb-2">
+          <div className="w-full">
+            {comments?.data?.map((data, i) => (
+              <Comment
+                key={data?.uuid}
+                dispatch={comments?.dispatch}
+                isActive={data?.uuid == comments?.activeCommentUuid}
+                darkBg={i % 2 == 0}
+                data={data}
+              />
+            ))}
+          </div>
+          <div className="flex px-2">
+            <div className="mr-2">
+              <p
+                className="hide-while-sliding relative top-2 cursor-pointer pr-2 text-lg font-bold"
+                onClick={(e) => comments?.onBack?.(e)}
+              >
+                {"<"}
+              </p>
+            </div>
+            <form className="flex grow flex-row">
+              <input
+                className={
+                  "mr-2 grow rounded-sm border-b-2 border-stone-800 p-2 ring-sky-500 focus-visible:outline-none focus-visible:ring-2" +
+                  (comments?.textControls?.inputDisabled
+                    ? " text-neutral-500"
+                    : "")
+                }
+                type="text"
+                placeholder={comments?.textControls?.placeholder}
+                disabled={comments?.textControls?.inputDisabled}
+                value={comments?.text}
+                onChange={(e) => {
+                  comments?.setText?.(e.target.value);
+                }}
+              />
+              <button
+                className={
+                  "rounded-full px-4 py-2 transition-colors" +
+                  (comments?.textControls?.submitDisabled
+                    ? " bg-stone-300 text-white"
+                    : " bg-emerald-200 hover:bg-emerald-900 hover:text-white")
+                }
+                type="button"
+                disabled={comments?.textControls?.submitDisabled}
+                onClick={(e) => comments?.onSubmitText?.(e)}
+              >
+                {comments?.textControls?.buttonText}
+              </button>
+            </form>
+          </div>
         </div>
-        <form className="flex grow flex-row">
-          <input
-            className={
-              "mr-2 grow rounded p-2 ring-sky-500 focus-visible:outline-none focus-visible:ring-2" +
-              (!comments?.activeComment ? " text-neutral-500" : "")
-            }
-            type="text"
-            placeholder={
-              !comments?.activeComment ? "Select a comment to reply" : "Reply"
-            }
-            disabled={!comments?.activeComment}
-            value={comments?.text}
-            onChange={(e) => {
-              comments?.setText?.(e.target.value);
-            }}
-          />
-          <button
-            className={
-              "rounded-md border-2 px-4 py-2 " +
-              (!!comments?.submitTextDisabled
-                ? "border-neutral-400 text-neutral-500"
-                : "border-emerald-100 bg-emerald-100 hover:border-emerald-900 hover:bg-emerald-900 hover:text-white")
-            }
-            type="button"
-            disabled={!!comments?.submitTextDisabled}
-            onClick={(e) => comments?.onSubmitText?.(e)}
-          >
-            {comments?.buttonText}
-          </button>
-        </form>
       </div>
-    </div>
+    </>
   );
 };
 
@@ -211,164 +907,3 @@ export const Comments = (props) => {
   const comments = useComments(props);
   return <PureComments {...comments} />;
 };
-
-export const fakeData = [
-  {
-    uuid: "971468364529",
-    text: "Hello! First!1! I'm here!",
-    time: new Date(), // when it was last edited
-    commenter: {
-      id: 79283683716,
-      name: "Annoying Guy",
-    },
-    edits: [
-      {
-        text: "Hello! First!1!",
-        time: new Date(),
-      },
-    ],
-    replies: [
-      {
-        uuid: "9876657654",
-        text: "You're really annoying, please stop commenting on my posts, I beg of you. Every morning I wake up in fear that you will once again comment on my post.",
-        time: new Date(), // when it was last edited
-        edits: [],
-        byCommenter: false,
-      },
-    ],
-  },
-  {
-    uuid: "6729845362098",
-    deleted: true,
-    time: new Date(),
-    commenter: {
-      id: 7621039864,
-      name: "Mabel",
-    },
-  },
-  {
-    uuid: "897687912573",
-    text: "Is this still available? I like it but not like like like it, so I'm not willing to put in much effort.",
-    time: new Date(),
-    commenter: {
-      id: 6926539486,
-      name: "Marcus",
-    },
-    edits: [
-      {
-        time: new Date(),
-        deleted: false,
-      },
-      {
-        time: new Date(),
-        deleted: true,
-      },
-      {
-        text: "Is this still available?",
-        time: new Date(),
-      },
-    ],
-    replies: [
-      {
-        uuid: "97193476493761",
-        text: "Yes it is!",
-        time: new Date(),
-        byCommenter: false,
-        edits: [
-          {
-            text: "Yes, if the post is still up then it's still available.",
-            time: new Date(),
-          },
-        ],
-      },
-      {
-        uuid: "6789216573928",
-        text: "Can I pick it up on the weekend?",
-        time: new Date(),
-        byCommenter: true,
-      },
-      {
-        uuid: "8243509187635",
-        deleted: true,
-        time: new Date(),
-        byCommenter: false,
-      },
-    ],
-  },
-  {
-    uuid: "12835629945418",
-    text: "Does it still work?",
-    time: new Date(),
-    commenter: {
-      id: 38745541827,
-      name: "Rob",
-    },
-    edits: [],
-    replies: [
-      {
-        uuid: "62789047620464",
-        text: "Yes it does!?",
-        time: new Date(),
-        edits: [],
-        byCommenter: false,
-      },
-      {
-        uuid: "98752639503826",
-        text: "K just checking",
-        time: new Date(),
-        edits: [],
-        byCommenter: true,
-      },
-    ],
-  },
-  {
-    uuid: "3685761585957453",
-    text: "I don't like this",
-    time: new Date(),
-    edits: [],
-    commenter: {
-      id: 6926539486,
-      name: "Steve",
-    },
-    replies: [
-      {
-        uuid: "3267849846628993",
-        text: "There's no need to be rude",
-        time: new Date(),
-        byCommenter: false,
-        edits: [],
-      },
-      {
-        uuid: "64056278673",
-        text: "Deal with it",
-        time: new Date(),
-        edits: [],
-        byCommenter: false,
-      },
-      {
-        uuid: "75392870777152425",
-        text: "No thank you",
-        time: new Date(),
-        byCommenter: true,
-        edits: [
-          {
-            text: "You suck",
-            time: new Date(),
-          },
-        ],
-      },
-      {
-        uuid: "76543281977545",
-        text: "Have it your way",
-        time: new Date(),
-        byCommenter: false,
-        edits: [
-          {
-            text: "Fuck off",
-            time: new Date(),
-          },
-        ],
-      },
-    ],
-  },
-];

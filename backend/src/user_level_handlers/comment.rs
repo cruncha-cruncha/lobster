@@ -4,26 +4,9 @@ use axum::{
     http::StatusCode,
 };
 use std::sync::Arc;
-use crate::db_structs::{comment, user, helpers};
+use crate::db_structs::{comment, helpers, post};
 use crate::AppState;
 use crate::auth::claims::Claims;
-use super::reply;
-
-#[derive(Debug, sqlx::FromRow, Serialize, Deserialize)]
-pub struct GetCommentData {
-    pub uuid: comment::Uuid,
-    pub post_uuid: comment::PostUuid,
-    pub author_id: comment::AuthorId,
-    pub author_name: user::FirstName,
-    pub content: comment::Content,
-    pub created_at: comment::CreatedAt,
-    pub updated_at: comment::UpdatedAt,
-    pub deleted: comment::Deleted,
-    pub changes: comment::Changes,
-    pub unread_by_author: comment::UnreadByAuthor,
-    pub unread_by_poster: comment::UnreadByPoster,
-    pub replies: Option<Vec<reply::GetReplyData>>,
-}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PostCommentData {
@@ -41,9 +24,10 @@ pub async fn post(
         None => return Err((StatusCode::BAD_REQUEST, String::from(""))),
     };
 
-    match sqlx::query!(
+    let post = match sqlx::query_as!(
+        post::Post,
         r#"
-        SELECT post.uuid
+        SELECT *
         FROM posts post
         WHERE post.uuid = $1
         AND post.deleted IS NOT TRUE
@@ -53,21 +37,34 @@ pub async fn post(
         "#,
         payload.post_uuid,
     ).fetch_one(&state.db).await {
-        Ok(_) => (),
+        Ok(row) => row,
         Err(e) => return Err((StatusCode::NOT_FOUND, e.to_string())),
     };
 
     let row = match sqlx::query_as!(
         comment::Comment,
         r#"
-        INSERT INTO comments (uuid, post_uuid, author_id, content, created_at, updated_at, deleted, changes, unread_by_author, unread_by_poster)
-        VALUES ($1, $2, $3, $4, NOW(), NOW(), FALSE, '[]'::JSONB, NULL, '["new-comment"]'::JSONB)
-        RETURNING *
+        INSERT INTO comments (uuid, post_uuid, author_id, content, poster_id, created_at, updated_at, deleted, changes, unread_by_author, unread_by_poster)
+        VALUES ($1, $2, $3, $4, $5, NOW(), NOW(), FALSE, '[]'::JSONB, '[]'::JSONB, '["new-comment"]'::JSONB)
+        ON CONFLICT (author_id, post_uuid)
+        DO UPDATE SET
+            content = $4,
+            updated_at = NOW(),
+            deleted = FALSE,
+            changes = comments.changes || jsonb_build_array(jsonb_build_object(
+                'who', $3::TEXT,
+                'when', NOW(),
+                'content', comments.content,
+                'deleted', comments.deleted
+            )),
+            unread_by_poster = COALESCE(comments.unread_by_poster, '[]'::JSONB) || '["comment-edited"]'::JSONB
+        RETURNING *;
         "#,
         uuid::Uuid::new_v4(),
         payload.post_uuid,
         author_id,
         payload.content,
+        post.author_id,
     )
     .fetch_one(&state.db)
     .await
@@ -80,15 +77,15 @@ pub async fn post(
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct PatchCommentData {
+pub struct PutCommentData {
     pub content: comment::Content,
 }
 
-pub async fn patch(
+pub async fn put(
     claims: Claims,
     Path(comment_uuid): Path<comment::Uuid>,
     State(state): State<Arc<AppState>>,
-    Json(payload): Json<PatchCommentData>,
+    Json(payload): Json<PutCommentData>,
 ) -> Result<Json<comment::Comment>, (StatusCode, String)> {
     let author_id = match claims.subject_as_user_id() {
         Some(id) => id,

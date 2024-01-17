@@ -1,8 +1,9 @@
 import { useState, useEffect, useReducer } from "react";
-import { useRouter } from "../components/router/Router";
+import { useRouter, getQueryParams } from "../components/router/Router";
 import { useInfoModal, PureInfoModal } from "../components/InfoModal";
 import { validatePassword } from "./Login";
 import { useAuth } from "../components/userAuth";
+import * as endpoints from "../api/endpoints";
 
 const initialState = {
   name: "",
@@ -39,10 +40,35 @@ export const useAccount = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showOldPassword, setShowOldPassword] = useState(false);
 
+  const queryParams = getQueryParams();
+  const userId = queryParams.get("userId");
+
   useEffect(() => {
-    dispatch({ type: "name", payload: data?.name });
-    dispatch({ type: "language", payload: data?.language });
-    dispatch({ type: "country", payload: data?.country });
+    let mounted = true;
+
+    endpoints
+      .getAccount({
+        userId: userId,
+        accessToken: auth.accessToken,
+      })
+      .then((res) => {
+        if (res.status === 200 && mounted) {
+          setData(res.data);
+          if (state.name == "") {
+            dispatch({ type: "name", payload: res.data.name });
+          }
+          if (state.language == 0) {
+            dispatch({ type: "language", payload: res.data.language });
+          }
+          if (state.country == 0) {
+            dispatch({ type: "country", payload: res.data.country });
+          }
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const onLogout = () => {
@@ -69,7 +95,15 @@ export const useAccount = () => {
         "error",
       );
     } else {
-      modal.open("Request failed. Please try again later.", "error");
+      endpoints.updateAccount({
+        userId: userId,
+        accessToken: auth.accessToken,
+        data: {
+          name: state.name,
+          language: state.language,
+          country: state.country,
+        },
+      });
     }
   };
 
@@ -84,6 +118,7 @@ export const useAccount = () => {
 
   return {
     ...state,
+    email: data?.email,
     showNewPassword,
     showOldPassword,
     setName: (e) => dispatch({ type: "name", payload: e.target.value }),
@@ -97,7 +132,7 @@ export const useAccount = () => {
     isLoading: false,
     toggleShowNewPassword: () => setShowNewPassword((prev) => !prev),
     toggleShowOldPassword: () => setShowOldPassword((prev) => !prev),
-    onBack: () => router.goTo("/profile", "down"),
+    onBack: () => router.goTo(`/profile?userId=${userId}`, "down"),
     onLogout,
     onSave,
     canSave,
@@ -161,6 +196,14 @@ export const PureAccount = (account) => {
                   className="w-full rounded-sm px-2 py-1 ring-sky-500 transition-shadow focus-visible:outline-none focus-visible:ring-2"
                 />
               </div>
+            </div>
+            <div className="flex">
+              <div className="flex w-24 flex-col items-end">
+                <p className="my-2 border-b-2 border-transparent py-1">Email</p>
+              </div>
+              <p className="m-2 grow rounded-sm border-b-2 border-transparent px-2 py-1">
+                {account?.email}
+              </p>
             </div>
             <div className="flex">
               <div className="flex w-24 flex-col items-end">
@@ -329,62 +372,4 @@ export const fakeData = {
   name: "Jane",
   language: "1",
   country: "1",
-  posts: [
-    // just posts with recent activity
-    {
-      post: {
-        uuid: "1",
-        title: "title",
-        price: "$12 CAD",
-        images: [],
-      },
-      notifications: [
-        {
-          type: "comment-created",
-        },
-      ],
-      // comment-created
-      // comment-content-edited
-      // comment-deleted
-      // comment-un-deleted
-      // reply-created
-      // reply-content-edited
-      // reply-deleted
-      // reply-un-deleted
-      // my-reply-deleted
-      // my-reply-un-deleted
-    },
-  ],
-  offers: [
-    // just offers with recent activity
-    {
-      post: {
-        uuid: "1",
-        title: "title",
-        price: "$12 CAD",
-        images: [],
-        author: {
-          id: 765426834098,
-          name: "Douglas",
-        },
-      },
-      notifications: [
-        {
-          type: "",
-        },
-      ],
-      // poster-reply-created
-      // poster-reply-content-edited
-      // poster-reply-deleted
-      // poster-reply-un-deleted
-      // my-comment-deleted
-      // my-comment-un-deleted
-      // my-reply-deleted
-      // my-reply-un-deleted
-      // post-active-to-sold
-      // post-active-to-sold and now I can leave a review?
-      // post-draft-to-deleted
-      // post-active-to-deleted
-    },
-  ],
 };

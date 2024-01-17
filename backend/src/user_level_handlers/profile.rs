@@ -164,7 +164,7 @@ pub async fn get_history(
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GetUnreadData {
     pub comments: Option<Vec<comment::Comment>>,
-    pub authors: Option<Vec<user::FirstName>>,
+    pub commenters: Option<Vec<user::FirstName>>,
     pub posts: Option<Vec<post::Post>>,
     pub offers: Option<Vec<comment::Comment>>,
     pub wants: Option<Vec<post::Post>>,
@@ -178,22 +178,35 @@ pub async fn get_unread(
     let row = match sqlx::query_as!(
         GetUnreadData,
         r#"
+        WITH as_seller AS (
+            SELECT 
+                COALESCE(NULLIF(ARRAY_AGG(comment), '{NULL}'), '{}') AS comments,
+                COALESCE(NULLIF(ARRAY_AGG(commenters.first_name), '{NULL}'), '{}') AS commenters,
+                COALESCE(NULLIF(ARRAY_AGG(DISTINCT post), '{NULL}'), '{}') AS posts
+            FROM users usr
+            LEFT JOIN comments comment ON comment.poster_id = usr.id AND comment.unread_by_poster IS NOT NULL
+            LEFT JOIN users commenters ON commenters.id = comment.author_id
+            LEFT JOIN posts post ON post.uuid = comment.post_uuid
+            WHERE usr.id = $1
+        ), as_buyer AS (
+            SELECT 
+                COALESCE(NULLIF(ARRAY_AGG(my_comment), '{NULL}'), '{}') AS offers,
+                COALESCE(NULLIF(ARRAY_AGG(want), '{NULL}'), '{}') AS wants
+            FROM users usr
+            LEFT JOIN comments my_comment ON my_comment.author_id = usr.id AND my_comment.unread_by_author IS NOT NULL
+            LEFT JOIN posts want ON want.uuid = my_comment.post_uuid
+            WHERE usr.id = $1
+        )
         SELECT
-            COALESCE(NULLIF(ARRAY_AGG(comment), '{NULL}'), '{}') AS "comments: Vec<comment::Comment>",
-            COALESCE(NULLIF(ARRAY_AGG(author.first_name), '{NULL}'), '{}') AS "authors: Vec<user::FirstName>",
-            COALESCE(NULLIF(ARRAY_AGG(post), '{NULL}'), '{}') AS "posts: Vec<post::Post>",
-            COALESCE(NULLIF(ARRAY_AGG(my_comment), '{NULL}'), '{}') AS "offers: Vec<comment::Comment>",
-            COALESCE(NULLIF(ARRAY_AGG(want), '{NULL}'), '{}') AS "wants: Vec<post::Post>"
+            as_seller.comments AS "comments: Vec<comment::Comment>",
+            as_seller.commenters AS "commenters: Vec<user::FirstName>",
+            as_seller.posts AS "posts: Vec<post::Post>",
+            as_buyer.offers AS "offers: Vec<comment::Comment>",
+            as_buyer.wants AS "wants: Vec<post::Post>"
         FROM users usr
-        -- as a seller
-        LEFT JOIN comments comment ON poster_id = usr.id AND comment.unread_by_poster IS NOT NULL
-        LEFT JOIN users author ON author.id = comment.author_id
-        LEFT JOIN posts post ON post.uuid = comment.post_uuid
-        -- as a buyer
-        LEFT JOIN comments my_comment ON my_comment.author_id = usr.id AND my_comment.unread_by_author IS NOT NULL
-        LEFT JOIN posts want ON want.uuid = my_comment.post_uuid
+        LEFT JOIN as_seller ON true
+        LEFT JOIN as_buyer ON true
         WHERE usr.id = $1
-        GROUP BY usr.id
         "#,
         user_id as i64
     )

@@ -40,7 +40,10 @@ export const useComment = ({ isActive, darkBg, data, dispatch }) => {
 
   const onEdit = (e) => {
     e?.stopPropagation?.();
-    dispatch?.({ type: "editComment", payload: { uuid: data?.uuid, text: data?.text } });
+    dispatch?.({
+      type: "editComment",
+      payload: { uuid: data?.uuid, text: data?.text },
+    });
   };
 
   const viewCommenter = (e) => {
@@ -53,6 +56,7 @@ export const useComment = ({ isActive, darkBg, data, dispatch }) => {
 
   return {
     data,
+    canEdit: data?.canEdit,
     darkBg,
     isActive,
     renderReplies: isActive || renderReplies,
@@ -71,12 +75,11 @@ const PureComment = (comment) => {
   if (comment?.data?.deleted) {
     return (
       <div
-        onClick={(e) => comment?.onDeleted?.(e)}
         className={
-          "py-1 pl-1 text-sm italic " +
+          "flex justify-between py-1 pl-1 text-sm italic" +
           (comment?.darkBg
-            ? "border-l-4 border-neutral-100 bg-neutral-100"
-            : "border-l-4 border-white")
+            ? " border-l-4 border-neutral-100 bg-neutral-100"
+            : " border-l-4 border-white")
         }
       >
         <p>
@@ -85,6 +88,14 @@ const PureComment = (comment) => {
             ? format(comment?.data?.time, "HH:mm dd/MM")
             : ""}
         </p>
+        {comment?.canEdit && (
+          <p
+            onClick={(e) => comment?.onDeleted?.(e)}
+            className="cursor-pointer px-2 text-sm"
+          >
+            +
+          </p>
+        )}
       </div>
     );
   }
@@ -129,24 +140,28 @@ const PureComment = (comment) => {
             )}
           </p>
           <div className="flex flex-row">
-            <p
-              className="cursor-pointer px-1"
-              onClick={(e) => comment?.onEdit?.(e)}
-            >
-              edit
-            </p>
+            {comment?.canEdit && (
+              <p
+                className="cursor-pointer px-1"
+                onClick={(e) => comment?.onEdit?.(e)}
+              >
+                edit
+              </p>
+            )}
             <p
               className="cursor-pointer px-1"
               onClick={(e) => comment?.onFlag?.(e)}
             >
               flag
             </p>
-            <p
-              className="cursor-pointer pl-1 pr-2"
-              onClick={(e) => comment?.onRemove?.(e)}
-            >
-              &ndash;
-            </p>
+            {comment?.canEdit && (
+              <p
+                className="cursor-pointer pl-1 pr-2"
+                onClick={(e) => comment?.onRemove?.(e)}
+              >
+                &ndash;
+              </p>
+            )}
           </div>
         </div>
       </div>

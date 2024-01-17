@@ -6,7 +6,10 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use crate::auth::encryption::encode_plain_email;
+use crate::auth::{
+    encryption::encode_plain_email,
+    claims,
+};
 
 pub fn generate_code() -> invitation::Code {
     format!("invite-{}", uuid::Uuid::new_v4())
@@ -48,14 +51,15 @@ pub async fn post(
 
     match sqlx::query!(
         r#"
-        INSERT INTO invitations (email, code, updated_at)
-        VALUES($1,$2,NOW()) 
+        INSERT INTO invitations (email, code, claim_level, updated_at)
+        VALUES($1,$2,$3,NOW()) 
         ON CONFLICT (email) 
         DO UPDATE SET updated_at = NOW()
         RETURNING *;
         "#,
         email,
         generate_code(),
+        claims::ClaimLevel::User.encode_numeric(),
     )
     .fetch_one(&state.db)
     .await

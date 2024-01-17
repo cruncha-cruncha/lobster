@@ -155,8 +155,11 @@ export const PureEditPostContent = (editPost) => {
           <option value="0" disabled className="placeholder">
             Currency
           </option>
-          <option value="1">CAD</option>
-          <option value="2">USD</option>
+          {(editPost?.currencyOptions || []).map((currency) => (
+            <option key={currency?.value} value={currency?.value}>
+              {currency?.label}
+            </option>
+          ))}
         </select>
       </div>
     </div>

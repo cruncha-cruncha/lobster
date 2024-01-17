@@ -224,7 +224,7 @@ pub async fn accept_invitation(
         VALUES($1,$2,$3,$4,$5,NOW(),NOW(),$6,$7,'[]'::JSONB) 
         RETURNING *;
         "#,
-        claims::ClaimLevel::User.encode_numeric(),
+        invitation.claim_level,
         payload.name,
         email,
         &salt,

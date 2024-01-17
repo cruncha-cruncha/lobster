@@ -51,12 +51,12 @@ export const UserAuth = ({ children }) => {
         .refreshAccessToken({
           refreshToken,
         })
-        .then(data => {
-          if (!data) {
+        .then(res => {
+          if (res.status !== 200) {
             logout();
           } else {
-            dispatch?.({ type: "login", payload: { userId: data?.user_id, claimsLevel: data?.claims_level } });
-            localStorage?.setItem?.("accessToken", data?.access_token);
+            dispatch?.({ type: "login", payload: { userId: res.data.user_id, claimsLevel: res.data.claims_level } });
+            localStorage?.setItem?.("accessToken", res.data.access_token);
           }
         })
         .catch(() => {
@@ -98,16 +98,19 @@ const usePersistAccessToken = (dispatch) => {
       const refreshToken = localStorage?.getItem?.("refreshToken") || "";
       if (!refreshToken) return;
 
+      // TODO: try again if it fails the first time? Yes, with exponential backoff, and jitter.
+      // if we get a response saying the token is expired, then delete the token and don't try again
+    
       endpoints
         .refreshAccessToken({
           refreshToken,
         })
-        .then(data => {
-          if (!data) {
+        .then(res => {
+          if (res.status !== 200) {
             logout();
           } else {
-            dispatch?.({ type: "login", payload: { userId: data?.user_id, claimsLevel: data?.claims_level } });
-            localStorage?.setItem?.("accessToken", data?.access_token);
+            dispatch?.({ type: "login", payload: { userId: res.data.user_id, claimsLevel: res.data.claims_level } });
+            localStorage?.setItem?.("accessToken", res.data.access_token);
           }
         })
         .catch(() => {
@@ -135,7 +138,7 @@ export const useAuth = () => {
     localStorage?.getItem?.("accessToken") || "",
   );
 
-  const isLoggedIn = user.userId && user.claimsLevel && accessToken;
+  const isLoggedIn = user.userId && user.claimsLevel && !!accessToken;
 
   useEffect(() => {
     let mounted = true;

@@ -51,9 +51,9 @@ export const useAcceptInvitation = (props) => {
   useEffect(() => {
     let mounted = true;
 
-    endpoints.getLanguages().then((data) => {
-      if (data) {
-        const options = data.map((lang) => ({
+    endpoints.getLanguages().then((res) => {
+      if (res.status === 200) {
+        const options = res.data.map((lang) => ({
           value: lang.id,
           label: lang.name,
         }));
@@ -61,9 +61,9 @@ export const useAcceptInvitation = (props) => {
       }
     });
 
-    endpoints.getCountries().then((data) => {
-      if (data) {
-        const options = data.map((country) => ({
+    endpoints.getCountries().then((res) => {
+      if (res.status === 200) {
+        const options = res.data.map((country) => ({
           value: country.id,
           label: country.name,
         }));
@@ -103,18 +103,18 @@ export const useAcceptInvitation = (props) => {
         language: state.language,
         country: state.country,
       })
-      .then((data) => {
-        if (!data) {
+      .then((res) => {
+        if (res.status !== 200) {
           showErrModal();
         } else {
           auth.login({
-            userId: data.user_id,
-            claimsLevel: data.claims_level,
-            accessToken: data.access_token,
-            refreshToken: data.refresh_token,
+            userId: res.data.user_id,
+            claimsLevel: res.data.claims_level,
+            accessToken: res.data.access_token,
+            refreshToken: res.data.refresh_token,
           });
 
-          router.goTo("/profile", "back");
+          router.goTo(`/profile?userId=${res.data.user_id}`, "back");
         }
       }, showErrModal)
       .finally(() => {

@@ -8,8 +8,8 @@ use std::{env, error::Error, net::SocketAddr, sync::Arc};
 #[cfg(feature = "cors")]
 use tower_http::cors::CorsLayer;
 use user_level_handlers::{
-    account, auth as auth_handler, comment, invitation, password_reset, post, post_comments,
-    profile, reply, languages, currencies, countries,
+    account, auth as auth_handler, comment, countries, currencies, invitation, languages,
+    password_reset, post, post_comments, profile, reply,
 };
 
 #[derive(Clone)]
@@ -54,8 +54,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 .delete(account::delete),
         )
         .route("/profiles/:user_id", routing::get(profile::get))
-        .route("/profiles/:user_id/historical-data", routing::get(profile::get_history))
-        .route("/unread-activity/:user_id", routing::get(profile::get_unread))
+        .route(
+            "/profiles/:user_id/historical-data",
+            routing::get(profile::get_history),
+        )
+        .route(
+            "/unread-activity/:user_id",
+            routing::get(profile::get_unread),
+        )
         .route("/posts", routing::post(post::post))
         .route(
             "/posts/:post_uuid",
@@ -64,18 +70,20 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 .delete(post::delete),
         )
         .route(
-            "/post-comments/:post_uuid",
+            "/posts/:post_uuid/comments",
             routing::get(post_comments::get),
         )
         .route("/comments", routing::post(comment::post))
         .route(
             "/comments/:comment_uuid",
-            routing::patch(comment::patch).delete(comment::delete),
+            routing::put(comment::put).delete(comment::delete),
         )
         .route("/replies", routing::post(reply::post))
         .route(
             "/replies/:reply_uuid",
-            routing::patch(reply::patch).delete(reply::delete),
+            routing::put(reply::put)
+                .delete(reply::delete)
+                .patch(reply::patch),
         )
         .route("/currencies", routing::get(currencies::get))
         .route("/languages", routing::get(languages::get))
@@ -88,6 +96,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 hyper::Method::GET,
                 hyper::Method::POST,
                 hyper::Method::PATCH,
+                hyper::Method::PUT,
                 hyper::Method::DELETE,
             ])
             .allow_headers(vec![

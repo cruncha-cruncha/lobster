@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CenteredLoadingDots } from "../components/loading/LoadingDots";
 import { useAuth } from "../components/userAuth";
 import { useRouter } from "../components/router/Router";
 import { useInfoModal, PureInfoModal } from "../components/InfoModal";
 import * as endpoints from "../api/endpoints";
+import { set } from "date-fns";
 
 export const validateEmail = (email) => {
   return new RegExp(/^.+@.+\..+$/).test(email);
@@ -22,8 +23,6 @@ export const useLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState("");
 
-  console.log("modal", modal);
-
   const validEmail = validateEmail(email);
   const validPassword = validatePassword(password);
 
@@ -35,15 +34,16 @@ export const useLogin = () => {
 
     endpoints
       .login({ email, password })
-      .then((data) => {
-        if (data) {
+      .then((res) => {
+        if (res.status === 200) {
           auth.login({
-            userId: data.user_id,
-            claimsLevel: data.claims_level,
-            accessToken: data.access_token,
-            refreshToken: data.refresh_token,
+            userId: res.data.user_id,
+            claimsLevel: res.data.claims_level,
+            accessToken: res.data.access_token,
+            refreshToken: res.data.refresh_token,
           });
-          router.goTo("/profile", "forward");
+
+          router.goTo(`/profile?userId=${res.data.user_id}`, "forward");
         } else {
           showErrModal();
         }
@@ -67,8 +67,8 @@ export const useLogin = () => {
 
     endpoints
       .requestInvitation({ email })
-      .then((data) => {
-        if (!data) {
+      .then((res) => {
+        if (res.status !== 200) {
           showErrModal();
         } else {
           modal.open("You will receive an email when your account is ready.");
@@ -90,8 +90,8 @@ export const useLogin = () => {
 
     endpoints
       .requestPasswordReset({ email })
-      .then((data) => {
-        if (!data) {
+      .then((res) => {
+        if (res.status !== 200) {
           showErrModal();
         } else {
           modal.open(

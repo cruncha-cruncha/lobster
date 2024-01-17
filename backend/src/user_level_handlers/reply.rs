@@ -4,7 +4,6 @@ use crate::db_structs::{
     post,
     comment,
     reply,
-    user,
 };
 
 use axum::{
@@ -14,20 +13,6 @@ use axum::{
 use std::sync::Arc;
 use crate::AppState;
 use crate::auth::claims::Claims;
-
-#[derive(Debug, sqlx::FromRow, sqlx::Type, Serialize, Deserialize)]
-pub struct GetReplyData {
-    pub uuid: reply::Uuid,
-    pub comment_uuid: reply::CommentUuid,
-    pub author_id: reply::AuthorId,
-    pub author_name: user::FirstName,
-    pub content: reply::Content,
-    pub created_at: reply::CreatedAt,
-    pub updated_at: reply::UpdatedAt,
-    pub deleted: reply::Deleted,
-    pub changes: reply::Changes,
-}
-
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PostReplyData {
@@ -108,15 +93,15 @@ pub async fn post(
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct PatchReplyData {
-    pub content: comment::Content,
+pub struct PutReplyData {
+    pub content: reply::Content,
 }
 
-pub async fn patch(
+pub async fn put(
     claims: Claims,
     Path(reply_uuid): Path<reply::Uuid>,
     State(state): State<Arc<AppState>>,
-    Json(payload): Json<PatchReplyData>,
+    Json(payload): Json<PutReplyData>,
 ) -> Result<Json<reply::Reply>, (StatusCode, String)> {
     let author_id = match claims.subject_as_user_id() {
         Some(id) => id,
@@ -169,9 +154,64 @@ pub async fn patch(
     Ok(axum::Json(row))
 }
 
+pub async fn patch(
+    claims: Claims,
+    Path(reply_uuid): Path<reply::Uuid>,
+    State(state): State<Arc<AppState>>,
+) -> Result<Json<reply::Reply>, (StatusCode, String)> {
+    let author_id = match claims.subject_as_user_id() {
+        Some(id) => id,
+        None => return Err((StatusCode::BAD_REQUEST, String::from(""))),
+    };
+
+    let row = match sqlx::query_as!(
+        reply::Reply,
+        r#"
+        UPDATE replies reply
+        SET
+            deleted = FALSE,
+            updated_at = NOW(),
+            changes = changes || jsonb_build_array(jsonb_build_object(
+                'who', $3::TEXT,
+                'when', NOW(),
+                'deleted', reply.deleted
+            ))
+        WHERE uuid = $1 AND author_id = $2
+        RETURNING *
+        "#,
+        reply_uuid,
+        author_id,
+        claims.sub,
+    )
+    .fetch_one(&state.db)
+    .await
+    {
+        Ok(row) => row,
+        Err(e) => return Err((StatusCode::NOT_FOUND, e.to_string())),
+    };
+
+    match sqlx::query!(
+        r#"
+        UPDATE comments comment SET
+            unread_by_author = CASE WHEN comment.author_id = $2 THEN unread_by_author ELSE COALESCE(unread_by_author, '[]'::JSONB) || '["reply-edited"]'::JSONB END,
+            unread_by_poster = CASE WHEN comment.author_id = $2 THEN COALESCE(unread_by_poster, '[]'::JSONB) || '["reply-edited"]'::JSONB ELSE unread_by_poster END
+        FROM replies reply
+        WHERE reply.uuid = $1
+        AND comment.uuid = reply.comment_uuid
+        "#,
+        reply_uuid,
+        author_id,
+    ).fetch_all(&state.db).await {
+        Ok(_) => {},
+        Err(e) => { eprintln!("ERROR user_update_reply_update_comment_viewed, {}", e); },
+    }
+
+    Ok(axum::Json(row))
+}
+
 pub async fn delete(
     claims: Claims,
-    Path(reply_uuid): Path<comment::Uuid>,
+    Path(reply_uuid): Path<reply::Uuid>,
     State(state): State<Arc<AppState>>,
 ) -> Result<StatusCode, (StatusCode, String)> {
     let user_id = match claims.subject_as_user_id() {

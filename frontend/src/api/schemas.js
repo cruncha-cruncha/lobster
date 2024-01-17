@@ -102,6 +102,48 @@ const profileSchema = {
   required: ["id", "name", "country", "language", "banned_until", "changes"],
 };
 
+const singleReplySchema = {
+  type: "object",
+  $id: "#singleReply",
+  properties: {
+    uuid: { type: "string" },
+    comment_uuid: { type: "string" },
+    author_id: { type: "integer" },
+    content: { type: "string" },
+    created_at: { type: "string" },
+    updated_at: { type: "string" },
+    deleted: { type: "boolean" },
+    changes: { type: "array", items: { $ref: "#singleChange" } },
+  },
+  required: [
+    "uuid",
+    "comment_uuid",
+    "author_id",
+    "content",
+    "created_at",
+    "updated_at",
+    "deleted",
+    "changes",
+  ],
+};
+
+const fullCommentSchema = {
+  allOf: [{ $ref: "#singleComment" }],
+  type: "object",
+  $id: "#fullCommentSchema",
+  properties: {
+    author_name: { type: "string" },
+    replies: { type: ["array"], items: { $ref: "#singleReply" } },
+  },
+  required: ["author_name", "replies"],
+};
+
+const postCommentsSchema = {
+  type: "array",
+  $id: "#postComments",
+  items: { $ref: "#fullCommentSchema" },
+};
+
 const singleCommentSchema = {
   type: "object",
   $id: "#singleComment",
@@ -115,8 +157,8 @@ const singleCommentSchema = {
     updated_at: { type: "string" },
     deleted: { type: "boolean" },
     changes: { type: "array", items: { $ref: "#singleChange" } },
-    unread_by_author: { type: ["array", "null"], items: { type: "string" } },
-    unread_by_poster: { type: ["array", "null"], items: { type: "string" } },
+    unread_by_author: { type: ["array"], items: { type: "string" } },
+    unread_by_poster: { type: ["array"], items: { type: "string" } },
   },
   required: [
     "uuid",
@@ -138,12 +180,12 @@ const unreadActivitySchema = {
   $id: "#unreadActivity",
   properties: {
     comments: { type: "array", items: { $ref: "#singleComment" } },
-    authors: { type: "array", items: { type: "string" } },
+    commenters: { type: "array", items: { type: "string" } },
     posts: { type: "array", items: { $ref: "#singlePost" } },
     offers: { type: "array", items: { $ref: "#singleComment" } },
     wants: { type: "array", items: { $ref: "#singlePost" } },
   },
-  required: ["comments", "authors", "posts", "offers", "wants"],
+  required: ["comments", "commenters", "posts", "offers", "wants"],
 };
 
 const currenciesSchema = {
@@ -227,6 +269,7 @@ const getPostSchema = {
   properties: {
     author_name: { type: "string" },
     my_comment: { oneOf: [{ type: "null" }, { $ref: "#singleComment" }] },
+    comment_count: { type: "integer" },
   },
   required: ["author_name", "my_comment"],
 };
@@ -289,4 +332,25 @@ export const validateLanguages = makeLazyValidator(languagesSchema);
 
 export const validateAccount = makeLazyValidator(accountSchema);
 
-export const validateSinglePost = makeLazyValidator(singlePostSchema);
+export const validateSinglePost = makeLazyValidator([
+  singleChangeSchema,
+  singlePostSchema,
+]);
+
+export const validateSingleComment = makeLazyValidator([
+  singleChangeSchema,
+  singleCommentSchema,
+]);
+
+export const validatePostComments = makeLazyValidator([
+  singleChangeSchema,
+  singleReplySchema,
+  singleCommentSchema,
+  fullCommentSchema,
+  postCommentsSchema,
+]);
+
+export const validateSingleReply = makeLazyValidator([
+  singleChangeSchema,
+  singleReplySchema,
+]);

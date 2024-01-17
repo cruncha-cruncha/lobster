@@ -1,4 +1,4 @@
-import { Profile } from "../../pages/profile";
+import { Profile } from "../../pages/Profile";
 import { Search } from "../../pages/Search";
 import { NewPost } from "../../pages/NewPost";
 import { Account } from "../../pages/Account";

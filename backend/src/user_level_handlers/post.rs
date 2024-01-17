@@ -27,6 +27,7 @@ pub struct GetPostData {
     pub sold: post::Sold,
     pub changes: post::Changes,
     pub my_comment: Option<comment::Comment>,
+    pub comment_count: Option<i64>,
 }
 
 pub async fn get(
@@ -59,10 +60,12 @@ pub async fn get(
             post.draft,
             post.sold,
             post.changes,
-            my_comment AS "my_comment: comment::Comment"
+            my_comment AS "my_comment: comment::Comment",
+            COALESCE(COUNT(comment.*), 0) AS comment_count
         FROM posts post
         LEFT JOIN users usr ON usr.id = post.author_id
         LEFT JOIN comments my_comment ON my_comment.post_uuid = post.uuid AND my_comment.author_id = $2
+        LEFT JOIN comments comment ON comment.post_uuid = post.uuid
         WHERE post.uuid = $1
         GROUP BY post.uuid, usr.first_name, my_comment.*
         "#,

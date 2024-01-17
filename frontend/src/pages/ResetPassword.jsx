@@ -64,8 +64,8 @@ export const useResetPassword = () => {
         email: state.email,
         password: state.password,
       })
-      .then((data) => {
-        if (!data) {
+      .then((res) => {
+        if (res.status !== 200) {
           showErrModal();
         } else {
           router.goTo("/login", "left")

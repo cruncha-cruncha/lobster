@@ -1,50 +1,56 @@
-use super::{comment, reply};
-use crate::db_structs::post;
-use crate::AppState;
 use crate::auth::claims::Claims;
+use crate::db_structs::{post, comment, reply, user};
+use crate::AppState;
 use axum::{
     extract::{Json, Path, State},
     http::StatusCode,
 };
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+
+#[derive(Debug, sqlx::FromRow, Serialize, Deserialize)]
+pub struct GetCommentData {
+    pub uuid: comment::Uuid,
+    pub post_uuid: comment::PostUuid,
+    pub author_id: comment::AuthorId,
+    pub poster_id: comment::PosterId,
+    pub author_name: user::FirstName,
+    pub content: comment::Content,
+    pub created_at: comment::CreatedAt,
+    pub updated_at: comment::UpdatedAt,
+    pub deleted: comment::Deleted,
+    pub changes: comment::Changes,
+    pub unread_by_author: comment::UnreadByAuthor,
+    pub unread_by_poster: comment::UnreadByPoster,
+    pub replies: Option<Vec<reply::Reply>>,
+}
 
 pub async fn get(
     _claims: Claims,
     Path(post_uuid): Path<post::Uuid>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<Vec<comment::GetCommentData>>, (StatusCode, String)> {
+) -> Result<Json<Vec<GetCommentData>>, (StatusCode, String)> {
     let comments = match sqlx::query_as!(
-        comment::GetCommentData,
+        GetCommentData,
         r#"
         SELECT
-                comment.uuid,
-                comment.post_uuid,
-                comment_author.id AS author_id,
-                comment_author.first_name AS author_name,
-                comment.content,
-                comment.created_at,
-                comment.updated_at,
-                comment.deleted,
-                comment.changes,
-                comment.unread_by_author,
-                comment.unread_by_poster,
-                COALESCE(NULLIF(ARRAY_AGG((
-                    reply.uuid,
-                    reply.comment_uuid,
-                    reply_author.id,
-                    reply_author.first_name,
-                    reply.content,
-                    reply.created_at,
-                    reply.updated_at,
-                    reply.deleted,
-                    reply.changes
-                )), '{NULL}'), '{}') AS "replies: Vec<reply::GetReplyData>"
-        FROM posts post
-        LEFT JOIN comments comment ON comment.post_uuid = post.uuid
+            comment.uuid,
+            comment.post_uuid,
+            comment_author.id AS author_id,
+            comment_author.first_name AS author_name,
+            comment.poster_id,
+            comment.content,
+            comment.created_at,
+            comment.updated_at,
+            comment.deleted,
+            comment.changes,
+            comment.unread_by_author,
+            comment.unread_by_poster,
+            COALESCE(NULLIF(ARRAY_AGG(reply.* ORDER BY reply.created_at ASC), '{NULL}'), '{}') AS "replies: Vec<reply::Reply>"
+        FROM comments comment
         LEFT JOIN users comment_author ON comment_author.id = comment.author_id
         LEFT JOIN replies reply ON reply.comment_uuid = comment.uuid
-        LEFT JOIN users reply_author ON reply_author.id = reply.author_id
-        WHERE post.uuid = $1
+        WHERE comment.post_uuid = $1
         GROUP BY comment.uuid, comment_author.id
         "#,
         post_uuid

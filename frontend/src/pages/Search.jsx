@@ -1,10 +1,12 @@
 import { useRouter } from "../components/router/Router";
+import { useAuth } from "../components/userAuth";
 
 export const useSearch = () => {
   const router = useRouter();
+  const auth = useAuth();
 
   const goToMyProfile = () => {
-    router.goTo("/profile", "up");
+    router.goTo(`/profile?userId=${auth.user.userId}`, "up");
   };
 
   const goToPost = () => {

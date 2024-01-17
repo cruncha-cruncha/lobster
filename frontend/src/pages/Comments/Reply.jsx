@@ -45,13 +45,14 @@ export const useReply = ({ commentUuid, data, dispatch }) => {
       payload: {
         parent: commentUuid,
         uuid: data?.uuid,
-        text: data?.text
+        text: data?.text,
       },
     });
   };
 
   return {
     data,
+    canEdit: data?.canEdit,
     onSeeEdits,
     onRemove,
     onDeleted,
@@ -65,16 +66,19 @@ export const PureReply = (reply) => {
     return (
       <div
         className={
-          "flex rounded-l-lg py-1 pl-2 italic " +
-          (!reply?.data?.byCommenter ? "bg-sky-200" : "")
+          "flex justify-between rounded-l-lg py-1 pl-2 italic" +
+          (!reply?.data?.byCommenter ? " bg-sky-200" : "")
         }
       >
-        <p
-          className="cursor-pointer text-sm"
-          onClick={(e) => reply?.onDeleted?.(e)}
-        >
+        <p className="text-sm">
           deleted,{" "}
           {reply?.data?.time ? format(reply?.data?.time, "HH:mm dd/MM") : ""}
+        </p>
+        <p
+          className="cursor-pointer px-2 text-sm"
+          onClick={(e) => reply?.onDeleted?.(e)}
+        >
+          +
         </p>
       </div>
     );
@@ -107,24 +111,28 @@ export const PureReply = (reply) => {
           )}
         </p>
         <div className="flex flex-row">
-          <p
-            className="cursor-pointer px-1"
-            onClick={(e) => reply?.onEdit?.(e)}
-          >
-            edit
-          </p>
+          {reply?.canEdit && (
+            <p
+              className="cursor-pointer px-1"
+              onClick={(e) => reply?.onEdit?.(e)}
+            >
+              edit
+            </p>
+          )}
           <p
             className="cursor-pointer px-1"
             onClick={(e) => reply?.onFlag?.(e)}
           >
             flag
           </p>
-          <p
-            className="cursor-pointer pl-1 pr-2"
-            onClick={(e) => reply?.onRemove?.(e)}
-          >
-            &ndash;
-          </p>
+          {reply?.canEdit && (
+            <p
+              className="cursor-pointer pl-1 pr-2"
+              onClick={(e) => reply?.onRemove?.(e)}
+            >
+              &ndash;
+            </p>
+          )}
         </div>
       </div>
     </div>

@@ -1,25 +1,60 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { useRouter } from "../components/router/Router";
+import { parseDate } from "../api/parseDate";
+import { useRouter, getQueryParams } from "../components/router/Router";
 import { useAuth } from "../components/userAuth";
 import * as endpoints from "../api/endpoints";
+
+export const formatData = (data) => {
+  return {
+    uuid: data.uuid,
+    time: parseDate(data.updated_at),
+    title: data.title,
+    images: data.images,
+    description: data.content,
+    author: {
+      id: data.author_id,
+      name: data.author_name,
+    },
+    location: "123 Bender Street", // data.latitude, data.longitude
+    price: data.price.toFixed(2), // data.currency
+    edits: data.changes,
+    myComment: data.my_comment,
+    commentCount: data.comment_count,
+  };
+};
 
 export const usePost = () => {
   const router = useRouter();
   const auth = useAuth();
-  const [data, setData] = useState(fakeData);
+  const [data, setData] = useState({});
   const [offer, setOffer] = useState("");
-  const uuid = router?.urlParams?.get?.("uuid");
 
-  // useEffect(() => {
-  //   endpoints
-  //     .getPost({
-  //       postUuid: uuid,
-  //       accessToken: auth.accessToken,
-  //     })
-  //     .then((res) => console.log("GOT RESPONSE!!", res, data))
-  //     .catch(() => console.log("ERROR"));
-  // }, []);
+  const queryParams = getQueryParams();
+  const uuid = queryParams.get("uuid");
+
+  const isMyPost = data?.author?.id === auth?.user?.userId;
+  const canMakeOffer = !isMyPost && !data.myComment;
+  const haveMadeOffer = !!data.myComment;
+
+  useEffect(() => {
+    let mounted = true;
+    if (!uuid) return;
+
+    endpoints
+      .getPost({
+        postUuid: uuid,
+        accessToken: auth.accessToken,
+      })
+      .then((res) => {
+        if (res.status !== 200 || !mounted) return;
+        setData(formatData(res.data));
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [uuid]);
 
   const viewEdits = () => {
     console.log("see edits");
@@ -34,12 +69,18 @@ export const usePost = () => {
   };
 
   const onOffer = () => {
+    endpoints.createNewComment({
+      accessToken: auth.accessToken,
+      data: {
+        post_uuid: uuid,
+        content: offer,
+      },
+    });
     console.log("offer");
   };
 
   const viewOffers = () => {
-    //if (!uuid) return;
-    router.goTo("/comments?uuid=" + uuid, "left");
+    router.goTo("/comments?posUuid=" + uuid, "left");
   };
 
   const viewLocation = () => {
@@ -58,7 +99,9 @@ export const usePost = () => {
     data,
     offer,
     setOffer,
-    canMakeOffer: true,
+    isMyPost,
+    canMakeOffer,
+    haveMadeOffer,
     isDraft: false,
     onOffer,
     viewEdits,
@@ -73,13 +116,13 @@ export const usePost = () => {
 export const PurePost = (post) => {
   return (
     <div className="flex h-full justify-center">
-      <div className="flex max-w-3xl flex-col justify-between text-left">
+      <div className="flex max-w-3xl grow flex-col justify-between text-left">
         <div className="p-2">
           <h1
             className="mb-2 cursor-pointer text-2xl"
             onClick={(e) => post?.viewAuthor?.(e)}
           >
-            Incredible Bicycle! 56 Speed! Super fast! Wow!
+            {post?.data?.title}
           </h1>
           <div className="float-left mb-2 mr-2 min-w-full bg-yellow-400 sm:min-w-min">
             <div className="flex h-64 flex-row items-center justify-center sm:w-64">
@@ -139,7 +182,7 @@ export const PurePost = (post) => {
         </div>
         <div className="my-2 flex flex-row justify-between">
           <button
-            className="relative ml-2 cursor-pointer rounded-full bg-sky-200 px-4 py-4 hover:bg-sky-900 hover:text-white"
+            className="hide-while-sliding relative ml-2 cursor-pointer px-4 py-4"
             onClick={(e) => post?.onBack?.(e)}
           >
             <p className="absolute left-0 right-0 -translate-y-1/2 text-lg font-bold">
@@ -157,6 +200,13 @@ export const PurePost = (post) => {
                   post?.setOffer(e.target.value);
                 }}
               />
+            </div>
+          )}
+          {post?.haveMadeOffer && (
+            <div className="mx-2 flex grow rounded-sm border-b-2 border-transparent">
+              <p className="grow rounded-sm p-2 ring-sky-500 focus-visible:outline-none focus-visible:ring-2">
+                {post?.data?.myComment?.content}
+              </p>
             </div>
           )}
           <button
