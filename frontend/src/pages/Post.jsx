@@ -80,7 +80,7 @@ export const usePost = () => {
   };
 
   const viewOffers = () => {
-    router.goTo("/comments?posUuid=" + uuid, "left");
+    router.goTo("/comments?postUuid=" + uuid, "left");
   };
 
   const viewLocation = () => {

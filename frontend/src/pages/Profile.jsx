@@ -151,15 +151,15 @@ export const useProfile = () => {
   };
 
   const viewFirstPost = () => {
-    console.log("first post");
+    router.goToWithBack(`/post?uuid=${history.oldestPost.uuid}`, "left")
   };
 
   const viewMostRecentPost = () => {
-    console.log("most recent post");
+    router.goToWithBack(`/post?uuid=${history.newestPost.uuid}`, "left")
   };
 
   const onNewPost = () => {
-    router.goToWithBack("/new-post", "forward", "right");
+    router.goToWithBack("/new-post", "forward");
   };
 
   const onSearch = () => {

@@ -150,6 +150,13 @@ export const useComments = () => {
           buttonText: "Reply",
           submitDisabled: !state.text,
         };
+      } else if (data.length <= 0) {
+        return {
+          placeholder: "No comments yet",
+          inputDisabled: true,
+          buttonText: "Reply",
+          submitDisabled: true,
+        };
       } else {
         return {
           placeholder: "Select a comment to reply",
@@ -824,7 +831,7 @@ export const useComments = () => {
   };
 
   const onBack = () => {
-    router.goTo(`/post`, "right");
+    router.goTo(`/post?uuid=${postUuid}`, "right");
   };
 
   return {
