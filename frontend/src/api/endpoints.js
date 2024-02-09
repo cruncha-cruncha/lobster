@@ -15,7 +15,7 @@ import {
   validateSingleReply,
 } from "./schemas";
 
-const serverUrl = "http://127.0.0.1:3000";
+const serverUrl = import.meta.env.VITE_SERVER_URL || "http://127.0.0.1:3000";
 
 const handle = (url, params) => {
   return fetch(url, params)
