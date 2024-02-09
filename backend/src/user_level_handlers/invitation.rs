@@ -23,7 +23,7 @@ pub struct PostInvitationData {
 pub async fn post(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<PostInvitationData>,
-) -> Result<StatusCode, (StatusCode, String)> {
+) -> Result<(StatusCode, String), (StatusCode, String)> {
     let email = match encode_plain_email(&payload.email) {
         Some(email) => email,
         None => return Err((StatusCode::INTERNAL_SERVER_ERROR, String::from("auth_encode_plain_email"))),
@@ -49,6 +49,8 @@ pub async fn post(
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     };
 
+    let invite_code = generate_code();
+
     match sqlx::query!(
         r#"
         INSERT INTO invitations (email, code, claim_level, updated_at)
@@ -58,7 +60,7 @@ pub async fn post(
         RETURNING *;
         "#,
         email,
-        generate_code(),
+        invite_code,
         claims::ClaimLevel::User.encode_numeric(),
     )
     .fetch_one(&state.db)
@@ -70,5 +72,5 @@ pub async fn post(
 
     // TODO: send email with invitation code
 
-    Ok(StatusCode::OK)
+    Ok((StatusCode::OK, invite_code))
 }

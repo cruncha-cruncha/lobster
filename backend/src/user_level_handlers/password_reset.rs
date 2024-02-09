@@ -20,7 +20,7 @@ pub struct PostRecoveryData {
 pub async fn post(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<PostRecoveryData>,
-) -> Result<StatusCode, (StatusCode, String)> {
+) -> Result<(StatusCode, String), (StatusCode, String)> {
     let email = match encode_plain_email(&payload.email) {
         Some(email) => email,
         None => return Err((StatusCode::INTERNAL_SERVER_ERROR, String::from("auth_encode_plain_email"))),
@@ -46,6 +46,8 @@ pub async fn post(
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     };
 
+    let recovery_code = generate_code();
+
     match sqlx::query!(
         r#"
         INSERT INTO recovery_requests (email, code, updated_at)
@@ -55,7 +57,7 @@ pub async fn post(
         RETURNING *;
         "#,
         email,
-        generate_code(),
+        recovery_code,
     )
     .fetch_one(&state.db)
     .await
@@ -66,5 +68,5 @@ pub async fn post(
 
     // TODO: send email with recovery code
 
-    Ok(StatusCode::OK)
+    Ok((StatusCode::OK, recovery_code))
 }
