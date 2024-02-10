@@ -1,7 +1,7 @@
 use std::env;
 
 use lapin::{
-    options::*, types::FieldTable, Connection, ConnectionProperties, Result, Channel
+    options::*, types::FieldTable, Channel, Connection, ConnectionProperties, ExchangeKind, Result,
 };
 
 use super::{helpers::send_post_changed_message, post_change_msg::PostChangeMsg};
@@ -14,9 +14,10 @@ pub async fn setup() -> Result<(Connection, Channel)> {
     let channel = conn.create_channel().await?;
 
     channel
-        .queue_declare(
-            "posts",
-            QueueDeclareOptions::default(),
+        .exchange_declare(
+            "post-changed",
+            ExchangeKind::Direct,
+            ExchangeDeclareOptions::default(),
             FieldTable::default(),
         )
         .await?;

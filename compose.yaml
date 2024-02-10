@@ -54,7 +54,7 @@ services:
     networks:
       - lobster-backend-net
     ports:
-      - "9200:9200"
+      - "3001:3001"
 
 volumes:
   pg-data:

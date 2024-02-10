@@ -40,6 +40,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .expect("HOSTING_ADDR must be a valid socket address");
 
     let app = Router::new()
+        .route("/hello", routing::get(|| async { "hello, world" }))
         .route("/users", routing::post(auth_handler::login))
         .route("/tokens", routing::post(auth_handler::refresh))
         .route("/invitations", routing::post(invitation::post))
