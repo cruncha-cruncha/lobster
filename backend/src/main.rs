@@ -1,6 +1,8 @@
 mod auth;
+mod rabbit;
 mod db_structs;
 mod user_level_handlers;
+mod test_level_handlers;
 
 use axum::{routing, Router};
 use sqlx::{postgres::PgPoolOptions, PgPool};
@@ -15,11 +17,14 @@ use user_level_handlers::{
 #[derive(Clone)]
 pub struct AppState {
     db: PgPool,
+    chan: lapin::Channel,
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     dotenvy::dotenv().expect("Failed to read .env file");
+
+    let (_rabbit_conn, rabbit_chan) = rabbit::setup::setup().await.expect("Failed to connect to rabbitMQ");
 
     let pg_connection_string = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let pool = PgPoolOptions::new()
@@ -27,7 +32,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .connect(&pg_connection_string)
         .await
         .expect("Failed to create pool.");
-    let shared_state = Arc::new(AppState { db: pool });
+    let shared_state = Arc::new(AppState { db: pool, chan: rabbit_chan });
 
     let hosting_addr_string = env::var("HOSTING_ADDR").expect("HOSTING_ADDR must be set");
     let hosting_addr = hosting_addr_string
@@ -87,7 +92,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
         )
         .route("/currencies", routing::get(currencies::get))
         .route("/languages", routing::get(languages::get))
-        .route("/countries", routing::get(countries::get));
+        .route("/countries", routing::get(countries::get))
+        .route("/read-invitation", routing::post(test_level_handlers::invitation::read_invitation_code))
+        .route("/read-reset-password", routing::post(test_level_handlers::password_reset::read_reset_password_code));
 
     #[cfg(feature = "cors")]
     let app = app.layer(

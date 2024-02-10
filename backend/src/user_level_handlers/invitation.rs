@@ -23,7 +23,7 @@ pub struct PostInvitationData {
 pub async fn post(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<PostInvitationData>,
-) -> Result<(StatusCode, String), (StatusCode, String)> {
+) -> Result<StatusCode, (StatusCode, String)> {
     let email = match encode_plain_email(&payload.email) {
         Some(email) => email,
         None => return Err((StatusCode::INTERNAL_SERVER_ERROR, String::from("auth_encode_plain_email"))),
@@ -72,5 +72,5 @@ pub async fn post(
 
     // TODO: send email with invitation code
 
-    Ok((StatusCode::OK, invite_code))
+    Ok(StatusCode::OK)
 }

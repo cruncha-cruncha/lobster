@@ -1,0 +1,3 @@
+FROM rabbitmq:3.12-alpine
+ENV RABBITMQ_DEFAULT_USER=mad-hatter
+ENV RABBITMQ_DEFAULT_PASS=24carrot

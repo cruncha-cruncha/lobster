@@ -39,3 +39,4 @@ sha2 = "0.10"
 rand = "0.8"
 aes-gcm = "0.10"
 hex = "0.4"
+lapin = { version = "2.3", features = ["rustls"] }

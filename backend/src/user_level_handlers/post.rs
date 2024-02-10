@@ -1,4 +1,6 @@
 use crate::db_structs::{comment, helpers, post, user};
+use crate::rabbit::helpers::send_post_changed_message;
+use crate::rabbit::post_change_msg::PostChangeMsg;
 use crate::AppState;
 use crate::auth::claims::Claims;
 use axum::{
@@ -164,6 +166,11 @@ pub async fn post(
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     };
 
+    if !payload.draft {
+        let message = PostChangeMsg::create(&row);
+        send_post_changed_message(&state.chan, &message.encode()).await.ok(); // ignore errors
+    }
+
     Ok(axum::Json(row))
 }
 
@@ -224,6 +231,9 @@ pub async fn delete(
         Ok(_) => {},
         Err(e) => { eprintln!("ERROR user_delete_post_update_comments_viewed, {}", e); },
     }
+
+    let message = PostChangeMsg::remove(&post_uuid);
+    send_post_changed_message(&state.chan, &message.encode()).await.ok(); // ignore errors
 
     return Ok(StatusCode::NO_CONTENT);
 }
@@ -315,6 +325,14 @@ pub async fn patch(
         Ok(_) => {},
         Err(e) => { eprintln!("ERROR user_patch_post_update_comments_viewed, {}", e); },
     }
+
+    let mut message = PostChangeMsg::update(&row);
+    if payload.draft {
+        message = PostChangeMsg::remove(&post_uuid);
+    }
+    // TODO: if the post was always a draft, we don't need to send any message.
+    send_post_changed_message(&state.chan, &message.encode()).await.ok(); // ignore errors
+
 
     Ok(axum::Json(row))
 }
