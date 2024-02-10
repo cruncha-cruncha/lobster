@@ -92,9 +92,9 @@ impl ClaimLevel {
 impl Into<ClaimLevel> for i32 {
     fn into(self) -> ClaimLevel {
         match self {
-            2 => ClaimLevel::Admin,
-            1 => ClaimLevel::Moderator,
-            0 => ClaimLevel::User,
+            3 => ClaimLevel::Admin,
+            2 => ClaimLevel::Moderator,
+            1 => ClaimLevel::User,
             _ => ClaimLevel::None,
         }
     }
