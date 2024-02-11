@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
-
-	"github.com/gofiber/fiber/v3"
+	"io"
+	"net/http"
 )
 
 type QueryArgs struct {
@@ -17,26 +17,38 @@ func main() {
 	defer rabbit.Close()
 	defer func() { shutdown <- true }()
 
-	app := fiber.New()
+	http.HandleFunc("/hello", func(w http.ResponseWriter, req *http.Request) {
+		if req.Method != "GET" {
+			http.Error(w, "Invalid request method", 405)
+			return
+		}
 
-	app.Get("/hello", func(c fiber.Ctx) error {
-		return c.SendString("hello, world")
+		io.WriteString(w, "hello, world\n")
 	})
 
-	app.Post("/search/posts", func(c fiber.Ctx) error {
-		queryArgs := new(QueryArgs)
-		body := c.Body()
-		if err := json.Unmarshal(body, queryArgs); err != nil {
-			return err
+	http.HandleFunc("/search/posts", func(w http.ResponseWriter, req *http.Request) {
+		if req.Method != "POST" {
+			http.Error(w, "Invalid request method", 405)
+			return
+		}
+
+		var queryArgs QueryArgs
+		decoder := json.NewDecoder(req.Body)
+		if err := decoder.Decode(&queryArgs); err != nil {
+			panic(err)
 		}
 
 		posts, err := elastic.basicPostsSearch(queryArgs.Term)
 		if err != nil {
-			return c.Status(500).SendString(err.Error())
+			http.Error(w, err.Error(), 500)
+			return
 		}
 
-		return c.JSON(posts)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(posts)
 	})
 
-	app.Listen(":3001")
+
+	err := http.ListenAndServe(":3001", nil)
+	panicOnError(err, "Failed to start server")
 }
