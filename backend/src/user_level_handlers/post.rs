@@ -1,8 +1,8 @@
+use crate::auth::claims::Claims;
 use crate::db_structs::{comment, helpers, post, user};
 use crate::rabbit::helpers::send_post_changed_message;
 use crate::rabbit::post_change_msg::PostChangeMsg;
 use crate::AppState;
-use crate::auth::claims::Claims;
 use axum::{
     extract::{Json, Path, State},
     http::StatusCode,
@@ -167,8 +167,10 @@ pub async fn post(
     };
 
     if !payload.draft {
-        let message = PostChangeMsg::create(&row);
-        send_post_changed_message(&state.chan, &message.encode()).await.ok(); // ignore errors
+        let message = PostChangeMsg::create(&row, 0);
+        send_post_changed_message(&state.chan, &message.encode())
+            .await
+            .ok(); // ignore errors
     }
 
     Ok(axum::Json(row))
@@ -227,13 +229,20 @@ pub async fn delete(
         WHERE comment.post_uuid = $1
         "#,
         post_uuid,
-    ).fetch_all(&state.db).await {
-        Ok(_) => {},
-        Err(e) => { eprintln!("ERROR user_delete_post_update_comments_viewed, {}", e); },
+    )
+    .fetch_all(&state.db)
+    .await
+    {
+        Ok(_) => {}
+        Err(e) => {
+            eprintln!("ERROR user_delete_post_update_comments_viewed, {}", e);
+        }
     }
 
     let message = PostChangeMsg::remove(&post_uuid);
-    send_post_changed_message(&state.chan, &message.encode()).await.ok(); // ignore errors
+    send_post_changed_message(&state.chan, &message.encode())
+        .await
+        .ok(); // ignore errors
 
     return Ok(StatusCode::NO_CONTENT);
 }
@@ -293,7 +302,7 @@ pub async fn patch(
         AND NOT EXISTS(
             SELECT * FROM sales sale
             WHERE sale.post_uuid = post.uuid)
-        RETURNING *
+        RETURNING *;
         "#,
         post_uuid,
         author_id,
@@ -314,25 +323,33 @@ pub async fn patch(
         Err(e) => return Err((StatusCode::NOT_FOUND, e.to_string())),
     };
 
-    match sqlx::query!(
+    let comment_count = match sqlx::query!(
         r#"
         UPDATE comments comment SET
             unread_by_author = COALESCE(unread_by_author, '[]'::JSONB) || '["post-edited"]'::JSONB
         WHERE comment.post_uuid = $1
+        AND deleted IS NOT TRUE
         "#,
         post_uuid,
-    ).fetch_all(&state.db).await {
-        Ok(_) => {},
-        Err(e) => { eprintln!("ERROR user_patch_post_update_comments_viewed, {}", e); },
-    }
+    )
+    .fetch_all(&state.db)
+    .await
+    {
+        Ok(q) => q.len(),
+        Err(e) => {
+            eprintln!("ERROR user_patch_post_update_comments_viewed, {}", e);
+            0
+        }
+    };
 
-    let mut message = PostChangeMsg::update(&row);
+    let mut message = PostChangeMsg::update(&row, comment_count as i32);
     if payload.draft {
         message = PostChangeMsg::remove(&post_uuid);
     }
     // TODO: if the post was always a draft, we don't need to send any message.
-    send_post_changed_message(&state.chan, &message.encode()).await.ok(); // ignore errors
-
+    send_post_changed_message(&state.chan, &message.encode())
+        .await
+        .ok(); // ignore errors
 
     Ok(axum::Json(row))
 }

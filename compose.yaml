@@ -4,36 +4,41 @@ services:
   #   ports:
   #     - "4173:4173"
 
-  lobster-backend:
-    build: ./backend
-    depends_on:
-      lobster-postgres:
-        condition: service_healthy
-      lobster-rabbit:
-        condition: service_healthy
-    ports:
-      - "3000:3000"
-    networks:
-      - lobster-backend-net
+  # lobster-backend:
+  #   build: ./backend
+  #   depends_on:
+  #     lobster-postgres:
+  #       condition: service_healthy
+  #     lobster-rabbit:
+  #       condition: service_healthy
+  #   ports:
+  #     - "3000:3000"
+  #   networks:
+  #     - lobster-backend-net
 
-  lobster-postgres:
-    build: ./sql
+  # lobster-postgres:
+  #   build: ./sql
+  #   volumes:
+  #     - "pg-data:/var/lib/postgresql/data"
+  #   networks:
+  #     - lobster-backend-net
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U captain -d lobster"]
+  #     interval: 10s
+  #     timeout: 30s
+  #     retries: 4
+
+  lobster-elastic:
+    build: ./elastic
     volumes:
-      - "pg-data:/var/lib/postgresql/data"
+      - "elastic-data:/usr/share/elasticsearch/data"
     networks:
       - lobster-backend-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U captain -d lobster"]
-      interval: 2s
-      timeout: 5s
-      retries: 5
-
-  # lobster-elastic:
-  #   build: ./elastic
-  #   volumes:
-  #     - "elastic-data:/usr/share/elasticsearch/data"
-  #   networks:
-  #     - lobster-backend-net
+      test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 30s
+      retries: 4
 
   lobster-rabbit:
     build: ./rabbitMQ
@@ -41,14 +46,15 @@ services:
       - lobster-backend-net
     healthcheck:
       test: [ "CMD", "nc", "-z", "localhost", "5672" ]
-      interval: 2s
-      timeout: 5s
-      retries: 5
+      interval: 10s
+      timeout: 30s
+      retries: 4
     
   lobster-search:
     build: ./search
     depends_on:
-      # - lobster-elastic
+      lobster-elastic:
+        condition: service_healthy
       lobster-rabbit:
         condition: service_healthy
     networks:

@@ -1,12 +1,19 @@
-use serde::{Deserialize, Serialize};
+use std::sync::Arc;
+
+use crate::auth::claims::Claims;
+use crate::AppState;
+use crate::{
+    db_structs::{comment, helpers},
+    rabbit::{
+        helpers::{send_post_changed_message, PostWithInfo},
+        post_change_msg::PostChangeMsg,
+    },
+};
 use axum::{
     extract::{Json, Path, State},
     http::StatusCode,
 };
-use std::sync::Arc;
-use crate::db_structs::{comment, helpers, post};
-use crate::AppState;
-use crate::auth::claims::Claims;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PostCommentData {
@@ -24,21 +31,28 @@ pub async fn post(
         None => return Err((StatusCode::BAD_REQUEST, String::from(""))),
     };
 
-    let post = match sqlx::query_as!(
-        post::Post,
+    let post_info = match sqlx::query_as!(
+        PostWithInfo,
         r#"
-        SELECT *
+        SELECT
+            post.*,
+            COALESCE(COUNT(comment.uuid), 0)::INT AS comment_count
         FROM posts post
+        LEFT JOIN comments comment ON comment.post_uuid = post.uuid
         WHERE post.uuid = $1
         AND post.deleted IS NOT TRUE
         AND NOT EXISTS(
             SELECT * FROM sales sale
             WHERE sale.post_uuid = post.uuid)
+        GROUP BY post.uuid
         "#,
         payload.post_uuid,
-    ).fetch_one(&state.db).await {
+    )
+    .fetch_one(&state.db)
+    .await
+    {
         Ok(row) => row,
-        Err(e) => return Err((StatusCode::NOT_FOUND, e.to_string())),
+        Err(_) => return Err((StatusCode::NOT_FOUND, String::from(""))),
     };
 
     let row = match sqlx::query_as!(
@@ -57,14 +71,14 @@ pub async fn post(
                 'content', comments.content,
                 'deleted', comments.deleted
             )),
-            unread_by_poster = COALESCE(comments.unread_by_poster, '[]'::JSONB) || '["comment-edited"]'::JSONB
+            unread_by_poster = COALESCE(comments.unread_by_poster, '[]'::JSONB) || '["new-comment"]'::JSONB
         RETURNING *;
         "#,
         uuid::Uuid::new_v4(),
         payload.post_uuid,
         author_id,
         payload.content,
-        post.author_id,
+        post_info.author_id,
     )
     .fetch_one(&state.db)
     .await
@@ -72,6 +86,12 @@ pub async fn post(
         Ok(row) => row,
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     };
+
+    let comment_count = post_info.comment_count.unwrap_or_default() + 1;
+    let message = PostChangeMsg::update(&post_info.into(), comment_count);
+    send_post_changed_message(&state.chan, &message.encode())
+        .await
+        .ok(); // ignore errors
 
     Ok(axum::Json(row))
 }
@@ -140,30 +160,44 @@ pub async fn delete(
         None => return Err((StatusCode::BAD_REQUEST, String::from(""))),
     };
 
+    let post_info = match sqlx::query_as!(
+        PostWithInfo,
+        r#"
+        SELECT
+            post.*,
+            COALESCE(COUNT(other_comment.uuid), 0)::INT AS comment_count
+        FROM comments comment
+        JOIN posts post ON post.uuid = comment.post_uuid
+        LEFT JOIN comments other_comment ON other_comment.post_uuid = post.uuid
+        WHERE comment.uuid = $1
+        AND post.deleted IS NOT TRUE
+        AND NOT EXISTS(
+            SELECT * FROM sales sale
+            WHERE sale.post_uuid = post.uuid)
+        GROUP BY post.uuid
+        "#,
+        comment_uuid,
+    )
+    .fetch_one(&state.db)
+    .await
+    {
+        Ok(row) => row,
+        Err(_) => return Err((StatusCode::NOT_FOUND, String::from(""))),
+    };
+
     match sqlx::query_as!(
         helpers::RowsReturned,
         r#"
-        WITH post AS (
-            SELECT post.author_id
-            FROM comments comment
-            JOIN posts post ON post.uuid = comment.post_uuid
-            WHERE comment.uuid = $1
-            AND post.deleted IS NOT TRUE
-            AND NOT EXISTS(
-                SELECT * FROM sales sale
-                WHERE sale.post_uuid = post.uuid)
-        ), updated AS (
+        WITH updated AS (
             UPDATE comments comment SET
                 deleted = true,
                 updated_at = NOW(),
-                unread_by_author = CASE WHEN comment.author_id = $2 THEN unread_by_author ELSE COALESCE(unread_by_author, '[]'::JSONB) || '["comment-deleted"]'::JSONB END,
-                unread_by_poster = CASE WHEN comment.author_id = $2 THEN COALESCE(unread_by_poster, '[]'::JSONB) || '["comment-deleted"]'::JSONB ELSE unread_by_poster END,
-                changes = changes || jsonb_build_array(jsonb_build_object(
+                unread_by_poster = COALESCE(unread_by_poster, '[]'::JSONB) || '["comment-deleted"]'::JSONB,
+                changes = comment.changes || jsonb_build_array(jsonb_build_object(
                     'who', $3::TEXT,
                     'when', NOW(),
                     'deleted', comment.deleted
                 )) 
-            FROM post
             WHERE comment.uuid = $1
             AND comment.author_id = $2
             RETURNING comment.uuid)
@@ -184,6 +218,12 @@ pub async fn delete(
         }
         Err(e) => return Err((StatusCode::NOT_FOUND, e.to_string())),
     };
+
+    let comment_count = post_info.comment_count.unwrap_or_default() - 1;
+    let message = PostChangeMsg::update(&post_info.into(), comment_count);
+    send_post_changed_message(&state.chan, &message.encode())
+        .await
+        .ok(); // ignore errors
 
     return Ok(StatusCode::NO_CONTENT);
 }

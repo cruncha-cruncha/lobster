@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::db_structs::post;
 
-
 pub enum Action {
     Hello = 1,
     Create = 2,
@@ -39,6 +38,7 @@ pub type Uuid = post::Uuid;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Info {
+    pub uuid: Uuid,
     pub author_id: AuthorId,
     pub title: Title,
     pub content: Content,
@@ -48,6 +48,7 @@ pub struct Info {
     pub longitude: Longitude,
     pub created_at: CreatedAt,
     pub updated_at: UpdatedAt,
+    pub comment_count: CommentCount,
 }
 
 pub type AuthorId = post::AuthorId;
@@ -59,6 +60,7 @@ pub type Latitude = post::Latitude;
 pub type Longitude = post::Longitude;
 pub type CreatedAt = post::CreatedAt;
 pub type UpdatedAt = post::UpdatedAt;
+pub type CommentCount = Option<i32>;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PostChangeMsg {
@@ -68,11 +70,12 @@ pub struct PostChangeMsg {
 }
 
 impl PostChangeMsg {
-    fn from_post(action: Action, post: &post::Post) -> Self {
+    fn from_post(action: Action, post: &post::Post, comment_count: i32) -> Self {
         Self {
             action: action.encode_numeric(),
             uuid: post.uuid.clone(),
             info: Some(Info {
+                uuid: post.uuid.clone(),
                 author_id: post.author_id,
                 title: post.title.clone(),
                 content: post.content.clone(),
@@ -82,6 +85,7 @@ impl PostChangeMsg {
                 longitude: post.longitude,
                 created_at: post.created_at.clone(),
                 updated_at: post.updated_at.clone(),
+                comment_count: Some(comment_count),
             }),
         }
     }
@@ -94,12 +98,12 @@ impl PostChangeMsg {
         }
     }
 
-    pub fn create(post: &post::Post) -> Self {
-        Self::from_post(Action::Create, post)
+    pub fn create(post: &post::Post, comment_count: i32) -> Self {
+        Self::from_post(Action::Create, post, comment_count)
     }
 
-    pub fn update(post: &post::Post) -> Self {
-        Self::from_post(Action::Update, post)
+    pub fn update(post: &post::Post, comment_count: i32) -> Self {
+        Self::from_post(Action::Update, post, comment_count)
     }
 
     pub fn remove(uuid: &Uuid) -> Self {

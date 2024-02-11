@@ -16,7 +16,7 @@ pub async fn setup() -> Result<(Connection, Channel)> {
     channel
         .exchange_declare(
             "post-changed",
-            ExchangeKind::Direct,
+            ExchangeKind::Fanout,
             ExchangeDeclareOptions::default(),
             FieldTable::default(),
         )

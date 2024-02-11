@@ -21,15 +21,17 @@ type PostChangeMessage struct {
 }
 
 type PostChangeInfo struct {
-	AuthorID  int     `json:"author_id"`
-	Title     string  `json:"title"`
-	Content   string  `json:"content"`
-	Price     float64 `json:"price"`
-	Currency  string  `json:"currency"`
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
-	CreatedAt string  `json:"created_at"`
-	UpdatedAt string  `json:"updated_at"`
+	UUID         string  `json:"uuid"`
+	AuthorID     int     `json:"author_id"`
+	Title        string  `json:"title"`
+	Content      string  `json:"content"`
+	Price        float64 `json:"price"`
+	Currency     string  `json:"currency"`
+	Latitude     float64 `json:"latitude"`
+	Longitude    float64 `json:"longitude"`
+	CreatedAt    string  `json:"created_at"`
+	UpdatedAt    string  `json:"updated_at"`
+	CommentCount int     `json:"comment_count"`
 }
 
 func panicOnError(err error, msg string) {
@@ -99,10 +101,10 @@ func NewRabbit() Rabbit {
 	}
 }
 
-func (rabbit Rabbit) Listen() chan bool {
+func (rabbit Rabbit) Listen(elastic Elastic) chan bool {
 	shutdown := make(chan bool)
 
-	go func(shutdown chan bool) {
+	go func(elastic Elastic, shutdown chan bool) {
 		for {
 			select {
 			case d := <-rabbit.msgs:
@@ -111,14 +113,14 @@ func (rabbit Rabbit) Listen() chan bool {
 				if err != nil {
 					log.Println("Failed to unmarshal to PostChangeMessage", err)
 				} else {
-					log.Println("Unmarshalled object:", data.Action, data.UUID, data.Info)
+					elastic.ingestPostChange(data)
 				}
 			case _ = <-shutdown:
 				log.Println("Received shutdown signal")
 				return
 			}
 		}
-	}(shutdown)
+	}(elastic, shutdown)
 
 	return shutdown
 }
