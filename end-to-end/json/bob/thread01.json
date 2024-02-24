@@ -1,0 +1,24 @@
+[
+    {
+        "type": "comment",
+        "post": "post_01",
+        "author": "user_bob",
+        "content": "This is a comment",
+        "meta": {
+            "id": "comment_01",
+            "timing": 1.1,
+            "expect": 200
+        }
+    },
+    {
+        "type": "reply",
+        "comment": "comment_01",
+        "author": "user_alice",
+        "content": "This is a reply",
+        "meta": {
+            "id": "reply_01",
+            "timing": 1.11,
+            "expect": 200
+        }
+    }
+]

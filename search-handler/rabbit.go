@@ -113,7 +113,18 @@ func (rabbit Rabbit) Listen(elastic Elastic) chan bool {
 				if err != nil {
 					log.Println("Failed to unmarshal to PostChangeMessage", err)
 				} else {
-					elastic.ingestPostChange(data)
+					switch data.Action {
+					case PCM_ACTION_HELLO:
+						log.Println("Hello!")
+					case PCM_ACTION_CREATE:
+						elastic.ingestPostChange(data)
+					case PCM_ACTION_UPDATE:
+						elastic.ingestPostChange(data)
+					case PCM_ACTION_DELETE:
+						elastic.removePost(data.UUID)
+					default:
+						log.Println("Unknown action", data.Action)
+					}
 				}
 			case _ = <-shutdown:
 				log.Println("Received shutdown signal")

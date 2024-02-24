@@ -1,7 +1,8 @@
 use serde::{Deserialize, Serialize};
-use super::user;
+use super::{post, user};
 
-pub type PostUuid = uuid::Uuid;
+pub type Uuid = uuid::Uuid;
+pub type PostUuid = post::Uuid;
 pub type BuyerId = user::Id;
 pub type CreatedAt = time::OffsetDateTime;
 pub type ReviewedAt = time::OffsetDateTime;
@@ -11,6 +12,7 @@ pub type Review = String;
 
 #[derive(Debug, sqlx::FromRow, sqlx::Type, Serialize, Deserialize)]
 pub struct Sale {
+    pub uuid: Uuid,
     pub post_uuid: PostUuid,
     pub buyer_id: BuyerId,
     pub created_at: CreatedAt,

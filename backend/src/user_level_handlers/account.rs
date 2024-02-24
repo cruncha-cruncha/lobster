@@ -1,4 +1,4 @@
-use crate::db_structs::{helpers, user};
+use crate::db_structs::user;
 use crate::auth::claims::Claims;
 use crate::AppState;
 use axum::{
@@ -123,20 +123,19 @@ pub async fn delete(
         return Err((StatusCode::UNAUTHORIZED, String::from("")));
     }
 
-    match sqlx::query_as!(
-        helpers::RowsReturned,
+    match sqlx::query!(
         r#"
-        WITH deleted AS (DELETE FROM users usr WHERE usr.id = $1 RETURNING *)
-        SELECT COUNT(*) as count
-        FROM deleted;
+        DELETE
+        FROM users usr
+        WHERE usr.id = $1;
         "#,
         user_id as i64
     )
-    .fetch_one(&state.db)
+    .execute(&state.db)
     .await
     {
-        Ok(row) => {
-            if row.count == None || row.count == Some(0) {
+        Ok(res) => {
+            if res.rows_affected() == 0 {
                 return Err((StatusCode::NOT_FOUND, String::from("")));
             }
         }

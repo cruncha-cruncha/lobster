@@ -36,6 +36,7 @@ pub fn generate_salt() -> [u8; 32] {
     rand::thread_rng().gen::<[u8; 32]>()
 }
 
+// TODO: make rounds an optional env var
 pub fn hash_password(password: &str, salt: &[u8]) -> [u8; 32] {
     let mut out = [0u8; 32];
     pbkdf2::pbkdf2_hmac::<sha2::Sha256>(password.as_bytes(), salt, 20000, &mut out);

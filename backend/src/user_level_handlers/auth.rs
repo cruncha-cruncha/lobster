@@ -3,11 +3,10 @@ use crate::auth::encryption::{encode_plain_email, generate_salt, hash_password};
 use crate::db_structs::{invitation, recovery_request, user};
 use crate::AppState;
 use axum::{
-    extract::{ConnectInfo, Json, Path, State},
+    extract::{Json, Path, State},
     http::StatusCode,
 };
 use serde::{Deserialize, Serialize};
-use std::net::SocketAddr;
 use std::sync::Arc;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -25,7 +24,6 @@ pub struct PostLoginData {
 }
 
 pub async fn login(
-    ConnectInfo(_sock): ConnectInfo<SocketAddr>,
     State(state): State<Arc<AppState>>,
     Json(payload): Json<PostLoginData>,
 ) -> Result<Json<Tokens>, (StatusCode, String)> {
@@ -94,27 +92,26 @@ pub async fn login(
     }
 
     let access_token =
-        match claims::get_access_token(&user.id.to_string(), claims::ClaimLevel::User) {
+        match claims::make_access_token(&user.id.to_string(), user.claim_level) {
             Ok(token) => token,
             Err((status, message)) => return Err((status, message)),
         };
 
     let refresh_token =
-        match claims::get_refresh_token(&user.id.to_string(), claims::ClaimLevel::User) {
+        match claims::make_refresh_token(&user.id.to_string(), user.claim_level) {
             Ok(token) => token,
             Err((status, message)) => return Err((status, message)),
         };
 
     Ok(axum::Json(Tokens {
         user_id: user.id,
-        claims_level: claims::ClaimLevel::User.encode_numeric(),
+        claims_level: user.claim_level.encode_numeric(),
         access_token: access_token,
         refresh_token: Some(refresh_token),
     }))
 }
 
 pub async fn refresh(
-    ConnectInfo(_sock): ConnectInfo<SocketAddr>,
     claims: claims::Claims,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<Tokens>, (StatusCode, String)> {
@@ -122,6 +119,8 @@ pub async fn refresh(
         Some(user_id) => user_id,
         None => return Err((StatusCode::BAD_REQUEST, String::from(""))),
     };
+
+    // TODO: check if user is banned?
 
     let user = match sqlx::query_as!(
         user::User,
@@ -157,7 +156,7 @@ pub async fn refresh(
     }
 
     let access_token =
-        match claims::get_access_token(&user.id.to_string(), claims::ClaimLevel::User) {
+        match claims::make_access_token(&user.id.to_string(), claims::ClaimLevel::User) {
             Ok(token) => token,
             Err((status, message)) => return Err((status, message)),
         };
@@ -243,7 +242,9 @@ pub async fn accept_invitation(
 
     match sqlx::query!(
         r#"
-        DELETE FROM invitations WHERE id = $1
+        DELETE
+        FROM invitations
+        WHERE id = $1
         "#,
         invitation.id
     )
@@ -257,13 +258,13 @@ pub async fn accept_invitation(
     };
 
     let access_token =
-        match claims::get_access_token(&user.id.to_string(), claims::ClaimLevel::User) {
+        match claims::make_access_token(&user.id.to_string(), claims::ClaimLevel::User) {
             Ok(token) => token,
             Err((status, message)) => return Err((status, message)),
         };
 
     let refresh_token =
-        match claims::get_refresh_token(&user.id.to_string(), claims::ClaimLevel::User) {
+        match claims::make_refresh_token(&user.id.to_string(), claims::ClaimLevel::User) {
             Ok(token) => token,
             Err((status, message)) => return Err((status, message)),
         };

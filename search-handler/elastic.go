@@ -74,6 +74,16 @@ func (elastic Elastic) ingestPostChange(data PostChangeMessage) error {
 	return err
 }
 
+func (elastic Elastic) removePost(uuid string) error {
+	log.Println("removing post", uuid)
+
+	req, _ := http.NewRequest("DELETE", fmt.Sprintf("http://lobster-elastic:9200/posts/_doc/%s", uuid), nil)
+
+	_, err := elastic.client.Do(req)
+
+	return err
+}
+
 func (elastic Elastic) basicPostsSearch(term string) ([]PostChangeInfo, error) {
 	log.Println("searching for posts with query:", term)
 

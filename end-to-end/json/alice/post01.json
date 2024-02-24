@@ -1,0 +1,26 @@
+[
+    {
+        "author": "user_alice",
+        "title": "Regular bike for sale",
+        "images": [],
+        "content": "This is a regular bike for sale",
+        "price": 100.0,
+        "currency": 1,
+        "latitude": 0.0,
+        "longitude": 0.0,
+        "draft": false,
+        "meta": {
+            "type": "define_post",
+            "id": "post_01",
+            "timing": 1.0
+        }
+    },
+    {
+        "id": "post_01",
+        "meta": {
+            "type": "create_post",
+            "id": "create_post_01",
+            "timing": 1.1
+        }
+    }
+]

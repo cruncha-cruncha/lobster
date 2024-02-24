@@ -2,7 +2,7 @@ mod auth;
 mod rabbit;
 mod db_structs;
 mod user_level_handlers;
-mod test_level_handlers;
+mod admin_level_handlers;
 
 use axum::{routing, Router};
 use sqlx::{postgres::PgPoolOptions, PgPool};
@@ -94,8 +94,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .route("/currencies", routing::get(currencies::get))
         .route("/languages", routing::get(languages::get))
         .route("/countries", routing::get(countries::get))
-        .route("/read-invitation", routing::post(test_level_handlers::invitation::read_invitation_code))
-        .route("/read-reset-password", routing::post(test_level_handlers::password_reset::read_reset_password_code));
+        .route("/admin/invitation", routing::post(admin_level_handlers::invitation::read_invitation_code))
+        .route("/admin/reset-password",  routing::post(admin_level_handlers::password_reset::read_reset_password_code))
+        .route("/admin/users/:user_id", routing::delete(admin_level_handlers::user::delete))
+        .route("/admin/posts/:post_uuid", routing::delete(admin_level_handlers::post::delete))
+        .route("/admin/comments/:comment_uuid", routing::delete(admin_level_handlers::comment::delete))
+        .route("/admin/replies/:reply_uuid", routing::delete(admin_level_handlers::reply::delete));
 
     #[cfg(feature = "cors")]
     let app = app.layer(

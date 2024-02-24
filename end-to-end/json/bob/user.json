@@ -1,0 +1,32 @@
+
+[
+    {
+        "name": "Bob",
+        "email": "bob@example.com",
+        "password": "arandompasswordforbob",
+        "language": 1,
+        "country": 1,
+        "meta": {
+            "type": "define_user",
+            "id": "user_bob",
+            "timing": 0.0
+        }
+    },
+    {
+        "user": "user_bob",
+        "meta": {
+            "type": "create_user",
+            "id": "create_user_bob",
+            "timing": 0.1
+        }
+    },
+    {
+        
+        "user": "user_bob",
+        "meta": {
+            "type": "delete_user",
+            "id": "delete_user_bob",
+            "timing": 100.0
+        }
+    }
+]

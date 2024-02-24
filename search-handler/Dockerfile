@@ -5,8 +5,8 @@ RUN go mod download
 
 COPY *.go ./
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /search
+RUN CGO_ENABLED=0 GOOS=linux go build -o /search-handler
 
 EXPOSE 9200
 
-CMD ["/search"]
+CMD ["/search-handler"]

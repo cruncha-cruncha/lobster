@@ -1,4 +1,4 @@
-module search
+module search-handler
 
 go 1.22
 

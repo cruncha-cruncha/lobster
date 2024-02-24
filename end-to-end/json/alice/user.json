@@ -1,0 +1,32 @@
+
+[
+    {
+        "name": "Alice",
+        "email": "alice@example.com",
+        "bio": "I'm a software engineer. I love to code and learn new things.",
+        "password": "arandompasswordforalice",
+        "language": 1,
+        "country": 1,
+        "meta": {
+            "type": "define_user",
+            "id": "user_alice",
+            "timing": 0.0
+        }
+    },
+    {
+        "id": "user_alice",
+        "meta": {
+            "type": "create_user",
+            "id": "create_user_alice",
+            "timing": 0.1
+        }
+    },
+    {
+        "id": "user_alice",
+        "meta": {
+            "type": "delete_user",
+            "id": "delete_user_alice",
+            "timing": 100.0
+        }
+    }
+]

@@ -42,6 +42,7 @@ CREATE TABLE users (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     claim_level INTEGER NOT NULL,
     first_name TEXT NOT NULL, -- TODO: external search index?
+    bio TEXT,
     email BYTEA NOT NULL,
     salt BYTEA NOT NULL,
     password BYTEA NOT NULL,
@@ -86,6 +87,7 @@ CREATE TABLE posts (
 CREATE INDEX IF NOT EXISTS idx_posts_author_id ON posts USING btree(author_id);
 
 CREATE TABLE sales (
+    uuid UUID NOT NULL,
     post_uuid UUID NOT NULL,
     buyer_id INTEGER NOT NULL,
     created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
@@ -93,9 +95,10 @@ CREATE TABLE sales (
     price TEXT,
     rating INTEGER,
     review TEXT,
-    PRIMARY KEY(post_uuid)
+    PRIMARY KEY(uuid)
 );
 
+CREATE INDEX IF NOT EXISTS idx_sales_post_uuid ON sales USING btree(post_uuid);
 CREATE INDEX IF NOT EXISTS idx_sales_buyer_id ON sales USING btree(buyer_id);
 
 CREATE TABLE resource_types (
