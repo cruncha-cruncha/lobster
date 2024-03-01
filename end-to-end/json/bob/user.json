@@ -24,8 +24,8 @@
         
         "user": "user_bob",
         "meta": {
-            "type": "delete_user",
-            "id": "delete_user_bob",
+            "type": "hard_delete_user",
+            "id": "hard_delete_user_bob",
             "timing": 100.0
         }
     }

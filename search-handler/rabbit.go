@@ -21,17 +21,20 @@ type PostChangeMessage struct {
 }
 
 type PostChangeInfo struct {
-	UUID         string  `json:"uuid"`
-	AuthorID     int     `json:"author_id"`
-	Title        string  `json:"title"`
-	Content      string  `json:"content"`
-	Price        float64 `json:"price"`
-	Currency     string  `json:"currency"`
-	Latitude     float64 `json:"latitude"`
-	Longitude    float64 `json:"longitude"`
-	CreatedAt    string  `json:"created_at"`
-	UpdatedAt    string  `json:"updated_at"`
-	CommentCount int     `json:"comment_count"`
+	UUID     string  `json:"uuid"`
+	AuthorID int     `json:"author_id"`
+	Title    string  `json:"title"`
+	Content  string  `json:"content"`
+	Price    float64 `json:"price"`
+	Currency int     `json:"currency"`
+	Country  int     `json:"country"`
+	Location struct {
+		Latitude  float64 `json:"lat"`
+		Longitude float64 `json:"lon"`
+	} `json:"location"`
+	CreatedAt    int `json:"created_at"`
+	UpdatedAt    int `json:"updated_at"`
+	CommentCount int `json:"comment_count"`
 }
 
 func panicOnError(err error, msg string) {
@@ -55,7 +58,7 @@ func NewRabbit() Rabbit {
 
 	err = ch.ExchangeDeclare(
 		"post-changed", // name
-		"direct",       // type
+		"fanout",       // type
 		false,          // durable
 		false,          // auto-deleted
 		false,          // internal
@@ -113,17 +116,23 @@ func (rabbit Rabbit) Listen(elastic Elastic) chan bool {
 				if err != nil {
 					log.Println("Failed to unmarshal to PostChangeMessage", err)
 				} else {
+					var err error
+
 					switch data.Action {
 					case PCM_ACTION_HELLO:
 						log.Println("Hello!")
 					case PCM_ACTION_CREATE:
-						elastic.ingestPostChange(data)
+						err = elastic.ingestPostChange(data)
 					case PCM_ACTION_UPDATE:
-						elastic.ingestPostChange(data)
+						err = elastic.ingestPostChange(data)
 					case PCM_ACTION_DELETE:
-						elastic.removePost(data.UUID)
+						err = elastic.removePost(data.UUID)
 					default:
 						log.Println("Unknown action", data.Action)
+					}
+
+					if err != nil {
+						log.Println("Rabbit handler error: ", err)
 					}
 				}
 			case _ = <-shutdown:

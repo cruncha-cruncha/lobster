@@ -10,7 +10,7 @@
         "meta": {
             "type": "define_user",
             "id": "user_alice",
-            "timing": 0.0
+            "timing": 0.09
         }
     },
     {
@@ -18,14 +18,22 @@
         "meta": {
             "type": "create_user",
             "id": "create_user_alice",
-            "timing": 0.1
+            "timing": -5.0
         }
     },
     {
         "id": "user_alice",
         "meta": {
-            "type": "delete_user",
-            "id": "delete_user_alice",
+            "type": "login_user",
+            "id": "login_user_alice",
+            "timing": 0.12
+        }
+    },
+    {
+        "id": "user_alice",
+        "meta": {
+            "type": "hard_delete_user",
+            "id": "hard_delete_user_alice",
             "timing": 100.0
         }
     }

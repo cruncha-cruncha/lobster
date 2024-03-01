@@ -140,6 +140,14 @@ impl Claims {
     pub fn subject_as_user_id(&self) -> Option<user::Id> {
         self.sub.parse::<user::Id>().ok()
     }
+
+    pub fn is_moderator(&self) -> bool {
+        self.level == ClaimLevel::Moderator
+    }
+
+    pub fn is_admin(&self) -> bool {
+        self.level == ClaimLevel::Admin
+    }
 }
 
 #[axum::async_trait]

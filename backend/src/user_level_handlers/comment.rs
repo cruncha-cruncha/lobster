@@ -127,7 +127,7 @@ pub async fn put(
             ))
         FROM posts post
         WHERE comment.uuid = $1
-        AND comment.author_id = $2
+        AND (comment.author_id = $2 OR $5)
         AND post.uuid = comment.post_uuid
         AND post.deleted IS NOT TRUE
         AND NOT EXISTS(
@@ -139,6 +139,7 @@ pub async fn put(
         author_id,
         claims.sub,
         payload.content,
+        claims.is_moderator(),
     )
     .fetch_one(&state.db)
     .await
@@ -199,7 +200,7 @@ pub async fn delete(
                     'deleted', comment.deleted
                 )) 
             WHERE comment.uuid = $1
-            AND comment.author_id = $2
+            AND (comment.author_id = $2 OR $4)
             RETURNING comment.uuid)
         SELECT COUNT(*) as count
         FROM updated;
@@ -207,6 +208,7 @@ pub async fn delete(
         comment_uuid,
         subject_id,
         claims.sub,
+        claims.is_moderator(),
     )
     .fetch_one(&state.db)
     .await

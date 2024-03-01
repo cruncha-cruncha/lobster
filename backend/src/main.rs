@@ -1,8 +1,8 @@
-mod auth;
-mod rabbit;
-mod db_structs;
-mod user_level_handlers;
 mod admin_level_handlers;
+mod auth;
+mod db_structs;
+mod rabbit;
+mod user_level_handlers;
 
 use axum::{routing, Router};
 use sqlx::{postgres::PgPoolOptions, PgPool};
@@ -24,7 +24,9 @@ pub struct AppState {
 async fn main() -> Result<(), Box<dyn Error>> {
     dotenvy::dotenv().expect("Failed to read .env file");
 
-    let (_rabbit_conn, rabbit_chan) = rabbit::setup::setup().await.expect("Failed to connect to rabbitMQ");
+    let (_rabbit_conn, rabbit_chan) = rabbit::setup::setup()
+        .await
+        .expect("Failed to connect to rabbitMQ");
 
     let pg_connection_string = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let pool = PgPoolOptions::new()
@@ -32,7 +34,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .connect(&pg_connection_string)
         .await
         .expect("Failed to create pool.");
-    let shared_state = Arc::new(AppState { db: pool, chan: rabbit_chan });
+    let shared_state = Arc::new(AppState {
+        db: pool,
+        chan: rabbit_chan,
+    });
 
     let hosting_addr_string = env::var("HOSTING_ADDR").expect("HOSTING_ADDR must be set");
     let hosting_addr = hosting_addr_string
@@ -94,12 +99,46 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .route("/currencies", routing::get(currencies::get))
         .route("/languages", routing::get(languages::get))
         .route("/countries", routing::get(countries::get))
-        .route("/admin/invitation", routing::post(admin_level_handlers::invitation::read_invitation_code))
-        .route("/admin/reset-password",  routing::post(admin_level_handlers::password_reset::read_reset_password_code))
-        .route("/admin/users/:user_id", routing::delete(admin_level_handlers::user::delete))
-        .route("/admin/posts/:post_uuid", routing::delete(admin_level_handlers::post::delete))
-        .route("/admin/comments/:comment_uuid", routing::delete(admin_level_handlers::comment::delete))
-        .route("/admin/replies/:reply_uuid", routing::delete(admin_level_handlers::reply::delete));
+        .route("/sales", routing::post(user_level_handlers::sale::post))
+        .route(
+            "/sales/:post_uuid",
+            routing::get(user_level_handlers::sale::get)
+                .patch(user_level_handlers::sale::patch),
+        )
+        .route(
+            "/reviews/:post_uuid",
+            routing::post(user_level_handlers::reviews::make)
+                .patch(user_level_handlers::reviews::make)
+                .delete(user_level_handlers::reviews::remove),
+        )
+        .route(
+            "/admin/invitation",
+            routing::post(admin_level_handlers::invitation::read_code)
+                .delete(admin_level_handlers::invitation::delete),
+        )
+        .route(
+            "/admin/reset-password",
+            routing::post(admin_level_handlers::password_reset::read_code)
+                .delete(admin_level_handlers::password_reset::delete),
+        )
+        .route(
+            "/admin/users/:user_id",
+            routing::delete(admin_level_handlers::user::delete)
+                .post(admin_level_handlers::auth::login),
+        )
+        .route(
+            "/admin/posts/:post_uuid",
+            routing::delete(admin_level_handlers::post::delete)
+                .patch(admin_level_handlers::post::touch),
+        )
+        .route(
+            "/admin/comments/:comment_uuid",
+            routing::delete(admin_level_handlers::comment::delete),
+        )
+        .route(
+            "/admin/replies/:reply_uuid",
+            routing::delete(admin_level_handlers::reply::delete),
+        );
 
     #[cfg(feature = "cors")]
     let app = app.layer(

@@ -1,6 +1,6 @@
 use crate::auth::claims::Claims;
 use crate::db_structs::user;
-use crate::{auth, AppState};
+use crate::AppState;
 use axum::{
     extract::{Path, State},
     http::StatusCode,
@@ -8,18 +8,18 @@ use axum::{
 use std::sync::Arc;
 
 pub async fn delete(
-    _claims: Claims,
+    claims: Claims,
     Path(user_id): Path<user::Id>,
     State(state): State<Arc<AppState>>,
 ) -> Result<StatusCode, (StatusCode, String)> {
-    if _claims.level != auth::claims::ClaimLevel::Admin {
+    if !claims.is_admin() {
         return Err((
             StatusCode::FORBIDDEN,
             String::from(""),
         ));
     }
 
-    if _claims.subject_as_user_id().unwrap_or_default() == user_id {
+    if claims.subject_as_user_id().unwrap_or_default() == user_id {
         return Err((
             StatusCode::FORBIDDEN,
             String::from("Can't delete yourself"),

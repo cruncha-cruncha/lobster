@@ -123,6 +123,8 @@ pub async fn delete(
         return Err((StatusCode::UNAUTHORIZED, String::from("")));
     }
 
+    // TODO: delete all user's posts, comments, replies, etc.
+
     match sqlx::query!(
         r#"
         DELETE

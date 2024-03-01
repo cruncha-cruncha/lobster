@@ -120,13 +120,15 @@ pub async fn put(
                 'when', NOW(),
                 'content', reply.content
             ))
-        WHERE uuid = $1 AND author_id = $2
+        WHERE uuid = $1
+        AND (author_id = $2 OR $5)
         RETURNING *
         "#,
         reply_uuid,
         author_id,
         claims.sub,
         payload.content,
+        claims.is_moderator(),
     )
     .fetch_one(&state.db)
     .await
@@ -176,12 +178,14 @@ pub async fn patch(
                 'when', NOW(),
                 'deleted', reply.deleted
             ))
-        WHERE uuid = $1 AND author_id = $2
+        WHERE uuid = $1
+        AND (author_id = $2 OR $4)
         RETURNING *
         "#,
         reply_uuid,
         author_id,
         claims.sub,
+        claims.is_moderator(),
     )
     .fetch_one(&state.db)
     .await
@@ -231,12 +235,14 @@ pub async fn delete(
                 'when', NOW(),
                 'deleted', reply.deleted
             ))
-        WHERE uuid = $1 AND author_id = $2
+        WHERE uuid = $1
+        AND (author_id = $2 OR $4)
         RETURNING *
         "#,
         reply_uuid,
         user_id,
         claims.sub,
+        claims.is_moderator(),
     )
     .fetch_one(&state.db)
     .await

@@ -6,8 +6,9 @@
         "content": "This is a regular bike for sale",
         "price": 100.0,
         "currency": 1,
-        "latitude": 0.0,
-        "longitude": 0.0,
+        "country": 1,
+        "latitude": 0.1,
+        "longitude": 0.1,
         "draft": false,
         "meta": {
             "type": "define_post",
@@ -18,9 +19,25 @@
     {
         "id": "post_01",
         "meta": {
-            "type": "create_post",
-            "id": "create_post_01",
+            "type": "make_post",
+            "id": "make_post_01",
             "timing": 1.1
+        }
+    },
+    {
+        "id": "post_01",
+        "meta": {
+            "type": "soft_delete_post",
+            "id": "soft_delete_post_01",
+            "timing": 50.0
+        }
+    },
+    {
+        "id": "post_01",
+        "meta": {
+            "type": "hard_delete_post",
+            "id": "hard_delete_post_01",
+            "timing": 75.0
         }
     }
 ]

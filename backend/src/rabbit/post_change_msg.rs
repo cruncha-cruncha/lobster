@@ -44,11 +44,17 @@ pub struct Info {
     pub content: Content,
     pub price: Price,
     pub currency: Currency,
-    pub latitude: Latitude,
-    pub longitude: Longitude,
+    pub country: Country,
+    pub location: Location,
     pub created_at: CreatedAt,
     pub updated_at: UpdatedAt,
     pub comment_count: CommentCount,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Location {
+    pub lat: Latitude,
+    pub lon: Longitude,
 }
 
 pub type AuthorId = post::AuthorId;
@@ -56,10 +62,11 @@ pub type Title = post::Title;
 pub type Content = post::Content;
 pub type Price = post::Price;
 pub type Currency = post::Currency;
+pub type Country = post::Country;
 pub type Latitude = post::Latitude;
 pub type Longitude = post::Longitude;
-pub type CreatedAt = post::CreatedAt;
-pub type UpdatedAt = post::UpdatedAt;
+pub type CreatedAt = i64;
+pub type UpdatedAt = i64;
 pub type CommentCount = Option<i32>;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -81,10 +88,13 @@ impl PostChangeMsg {
                 content: post.content.clone(),
                 price: post.price,
                 currency: post.currency,
-                latitude: post.latitude,
-                longitude: post.longitude,
-                created_at: post.created_at.clone(),
-                updated_at: post.updated_at.clone(),
+                country: post.country,
+                location: Location {
+                    lat: post.latitude,
+                    lon: post.longitude,
+                },
+                created_at: post.created_at.unix_timestamp(),
+                updated_at: post.updated_at.unix_timestamp(),
                 comment_count: Some(comment_count),
             }),
         }

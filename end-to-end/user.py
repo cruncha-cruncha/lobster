@@ -4,7 +4,7 @@ import json
 import time
 import jwt
 
-import constants
+import shared
 
 class User:
     def __init__(self, source):
@@ -24,7 +24,7 @@ class User:
             decoded_refresh = jwt.decode(self.refresh_token, options={"verify_signature": False})
             if decoded_refresh['exp'] - 60 > int(time.time()):
                 refresh = requests.post(
-                    constants.CAPTAIN_URL + 'tokens',
+                    shared.CAPTAIN_URL + 'tokens',
                     headers={'Authorization': 'Bearer ' + self.refresh_token},
                 )
 
@@ -39,7 +39,7 @@ class User:
                     return True
 
         login = requests.post(
-            constants.CAPTAIN_URL + 'users',
+            shared.CAPTAIN_URL + 'users',
             json={
                 'email': self.source['email'],
                 'password': self.source['password']
@@ -58,23 +58,23 @@ class User:
 
         return True
 
-    def create(self, user):
+    def create(self, super_user):
         create_invitation = requests.post(
-            constants.CAPTAIN_URL + 'invitations',
-            json={'email': user.source['email']}
+            shared.CAPTAIN_URL + 'invitations',
+            json={'email': self.source['email']}
         )
 
         if create_invitation.status_code != 200:
             logging.debug('Failed to create invitation: ' + str(create_invitation.status_code))
             return False
 
-        if not self.login():
+        if not super_user.login():
             return False
 
         invitation = requests.post(
-            constants.CAPTAIN_URL + 'admin/invitation',
-            headers={'Authorization': 'Bearer ' + self.access_token},
-            json={'email': user.source['email']}
+            shared.CAPTAIN_URL + 'admin/invitation',
+            headers={'Authorization': 'Bearer ' + super_user.access_token},
+            json={'email': self.source['email']}
         )
 
         if invitation.status_code != 200:
@@ -84,13 +84,13 @@ class User:
         invitation_code = invitation.text
 
         accept_invitation = requests.post(
-            constants.CAPTAIN_URL + 'invitations/' + invitation_code,
+            shared.CAPTAIN_URL + 'invitations/' + invitation_code,
             json={
-                'name': user.source['name'],
-                'email': user.source['email'],
-                'password': user.source['password'],
-                'language': user.source['language'],
-                'country': user.source['country']
+                'name': self.source['name'],
+                'email': self.source['email'],
+                'password': self.source['password'],
+                'language': self.source['language'],
+                'country': self.source['country']
             }
         )
 
@@ -100,20 +100,20 @@ class User:
 
         return True
 
-    def delete(self, user):
-        if not user.login():
-            return False
-
+    def hard_delete(self, super_user):
         if not self.login():
             return False
 
+        if not super_user.login():
+            return False
+
         delete_user = requests.delete(
-            constants.CAPTAIN_URL + 'admin/users/' + str(user.user_id),
-            headers={'Authorization': 'Bearer ' + self.access_token}
+            shared.CAPTAIN_URL + 'admin/users/' + str(self.user_id),
+            headers={'Authorization': 'Bearer ' + super_user.access_token}
         )
 
         if delete_user.status_code != 200:
-            logging.debug('Failed to delete user: ' + str(delete_user.status_code))
+            logging.debug('Failed to hard delete user: ' + str(delete_user.status_code))
             return False
 
         return True

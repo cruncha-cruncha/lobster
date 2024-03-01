@@ -70,7 +70,8 @@ CREATE TABLE posts (
     content TEXT NOT NULL,
     price REAL NOT NULL,
     currency INTEGER NOT NULL,
-    latitude REAL NOT NULL, -- TODO: spatial index
+    country INTEGER NOT NULL,
+    latitude REAL NOT NULL,
     longitude REAL NOT NULL,
     created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
@@ -87,18 +88,17 @@ CREATE TABLE posts (
 CREATE INDEX IF NOT EXISTS idx_posts_author_id ON posts USING btree(author_id);
 
 CREATE TABLE sales (
-    uuid UUID NOT NULL,
     post_uuid UUID NOT NULL,
     buyer_id INTEGER NOT NULL,
     created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     reviewed_at TIMESTAMPTZ,
     price TEXT,
-    rating INTEGER,
+    rating REAL,
     review TEXT,
-    PRIMARY KEY(uuid)
+    changes JSONB NOT NULL,
+    PRIMARY KEY(post_uuid)
 );
 
-CREATE INDEX IF NOT EXISTS idx_sales_post_uuid ON sales USING btree(post_uuid);
 CREATE INDEX IF NOT EXISTS idx_sales_buyer_id ON sales USING btree(buyer_id);
 
 CREATE TABLE resource_types (

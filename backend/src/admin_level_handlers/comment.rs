@@ -1,7 +1,7 @@
 use crate::auth::claims::Claims;
 use crate::db_structs::comment;
 use crate::rabbit;
-use crate::{auth, AppState};
+use crate::AppState;
 use axum::{
     extract::{Path, State},
     http::StatusCode,
@@ -9,11 +9,11 @@ use axum::{
 use std::sync::Arc;
 
 pub async fn delete(
-    _claims: Claims,
+    claims: Claims,
     Path(comment_uuid): Path<comment::Uuid>,
     State(state): State<Arc<AppState>>,
 ) -> Result<StatusCode, (StatusCode, String)> {
-    if _claims.level != auth::claims::ClaimLevel::Admin {
+    if !claims.is_admin() {
         return Err((StatusCode::FORBIDDEN, String::from("")));
     }
 
@@ -38,6 +38,15 @@ pub async fn delete(
         Err(_) => None, // ignore errors
     };
 
+    if post_info.is_some() {
+        let post_info = post_info.unwrap();
+        let comment_count = post_info.comment_count.unwrap_or_default() - 1;
+        let message = rabbit::post_change_msg::PostChangeMsg::update(&post_info.into(), comment_count);
+        rabbit::helpers::send_post_changed_message(&state.chan, &message.encode())
+            .await
+            .ok(); // ignore errors
+    }
+
     match sqlx::query!(
         r#"
         DELETE
@@ -58,15 +67,6 @@ pub async fn delete(
     };
 
     // don't delete the replies
-
-    if post_info.is_some() {
-        let post_info = post_info.unwrap();
-        let comment_count = post_info.comment_count.unwrap_or_default() - 1;
-        let message = rabbit::post_change_msg::PostChangeMsg::update(&post_info.into(), comment_count);
-        rabbit::helpers::send_post_changed_message(&state.chan, &message.encode())
-            .await
-            .ok(); // ignore errors
-    }
 
     Ok(StatusCode::OK)
 }

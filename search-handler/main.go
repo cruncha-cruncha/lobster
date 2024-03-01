@@ -6,10 +6,6 @@ import (
 	"net/http"
 )
 
-type QueryArgs struct {
-	Term string `json:"term"`
-}
-
 func main() {
 	elastic := NewElastic()
 	rabbit := NewRabbit()
@@ -32,13 +28,21 @@ func main() {
 			return
 		}
 
-		var queryArgs QueryArgs
+		var params PostSearchParams
 		decoder := json.NewDecoder(req.Body)
-		if err := decoder.Decode(&queryArgs); err != nil {
-			panic(err)
+		if err := decoder.Decode(&params); err != nil {
+			http.Error(w, "Invalid request body", 400)
+			return
 		}
 
-		posts, err := elastic.basicPostsSearch(queryArgs.Term)
+		var err error
+		var posts []PostChangeInfo
+		if !params.Full {
+			posts, err = elastic.basicPostsSearch(params.Term)
+		} else {
+			posts, err = elastic.fullPostsSearch(params)
+		}
+
 		if err != nil {
 			http.Error(w, err.Error(), 500)
 			return
@@ -47,7 +51,6 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(posts)
 	})
-
 
 	err := http.ListenAndServe(":3001", nil)
 	panicOnError(err, "Failed to start server")

@@ -96,6 +96,7 @@ pub struct PostPostData {
     pub content: post::Content,
     pub price: post::Price,
     pub currency: post::Currency,
+    pub country: post::Country,
     pub latitude: post::Latitude,
     pub longitude: post::Longitude,
     pub draft: post::Draft,
@@ -122,6 +123,7 @@ pub async fn post(
             content,
             price,
             currency,
+            country,
             latitude,
             longitude,
             draft,
@@ -141,6 +143,7 @@ pub async fn post(
             $8,
             $9,
             $10,
+            $11,
             NOW(),
             NOW(),
             false,
@@ -155,6 +158,7 @@ pub async fn post(
         payload.content,
         payload.price,
         payload.currency,
+        payload.country,
         payload.latitude,
         payload.longitude,
         payload.draft,
@@ -199,7 +203,7 @@ pub async fn delete(
                     'deleted', post.deleted
                 )) 
             WHERE post.uuid = $1
-            AND post.author_id = $2
+            AND (post.author_id = $2 OR $4)
             AND NOT EXISTS(
                 SELECT * FROM sales sale
                 WHERE sale.post_uuid = post.uuid)
@@ -210,6 +214,7 @@ pub async fn delete(
         post_uuid,
         author_id,
         claims.sub,
+        claims.is_moderator(),
     )
     .fetch_one(&state.db)
     .await
@@ -254,6 +259,7 @@ pub struct PatchPostData {
     pub content: post::Content,
     pub price: post::Price,
     pub currency: post::Currency,
+    pub country: post::Country,
     pub latitude: post::Latitude,
     pub longitude: post::Longitude,
     pub draft: post::Draft,
@@ -280,9 +286,10 @@ pub async fn patch(
             content = $6,
             price = $7,
             currency = $8,
-            latitude = $9,
-            longitude = $10,
-            draft = $11,
+            country = $9,
+            latitude = $10,
+            longitude = $11,
+            draft = $12,
             updated_at = NOW(),
             changes = changes || jsonb_build_array(jsonb_build_object(
                 'who', $3::TEXT,
@@ -292,12 +299,13 @@ pub async fn patch(
                 'content', post.content,
                 'price', post.price,
                 'currency', post.currency,
+                'country', post.country,
                 'latitude', post.latitude,
                 'longitude', post.longitude,
                 'draft', post.draft
             )) 
         WHERE post.uuid = $1
-        AND post.author_id = $2
+        AND (post.author_id = $2 OR $13)
         AND post.deleted IS NOT TRUE
         AND NOT EXISTS(
             SELECT * FROM sales sale
@@ -312,9 +320,11 @@ pub async fn patch(
         payload.content,
         payload.price,
         payload.currency,
+        payload.country,
         payload.latitude,
         payload.longitude,
         payload.draft,
+        claims.is_moderator(),
     )
     .fetch_one(&state.db)
     .await
