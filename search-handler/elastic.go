@@ -244,8 +244,9 @@ func (elastic Elastic) fullPostsSearch(params PostSearchParams) ([]PostChangeInf
 		queryString += `}`  // term
 		queryString += `},` // must_not
 	}
-	queryString += `"should":[`
 	if params.PriceRange.Valid {
+		queryString += `"minimum_should_match":1,`
+		queryString += `"should":[`
 		if !params.NoPrice.Only && !params.NoPrice.Exclude {
 			queryString += `{"term":{`
 			queryString += `"currency":0`
@@ -257,9 +258,8 @@ func (elastic Elastic) fullPostsSearch(params PostSearchParams) ([]PostChangeInf
 		queryString += `"lte":` + fmt.Sprint(params.PriceRange.Max)
 		queryString += `}`  // price
 		queryString += `}}` // range
+		queryString += `],` // should
 	}
-	queryString += `],` // should
-	queryString += `"minimum_should_match":1,`
 	queryString += `"filter":[`
 	queryString += `{"geo_distance":{`
 	queryString += `"distance":"` + fmt.Sprint(params.Radius) + `km",`

@@ -1,40 +1,16 @@
-
 [
-    {
-        "name": "Alice",
-        "email": "alice@example.com",
-        "bio": "I'm a software engineer. I love to code and learn new things.",
-        "password": "arandompasswordforalice",
-        "language": 1,
-        "country": 1,
-        "meta": {
-            "type": "define_user",
-            "id": "user_alice",
-            "timing": 0.09
-        }
-    },
-    {
-        "id": "user_alice",
-        "meta": {
-            "type": "create_user",
-            "id": "create_user_alice",
-            "timing": -5.0
-        }
-    },
-    {
-        "id": "user_alice",
-        "meta": {
-            "type": "login_user",
-            "id": "login_user_alice",
-            "timing": 0.12
-        }
-    },
-    {
-        "id": "user_alice",
-        "meta": {
-            "type": "hard_delete_user",
-            "id": "hard_delete_user_alice",
-            "timing": 100.0
-        }
+  {
+    "name": "Alice",
+    "email": "alice@example.com",
+    "bio": "I'm a software engineer. I love to code and learn new things.",
+    "password": "arandompasswordforalice",
+    "language": 1,
+    "country": 1,
+    "meta": {
+      "type": "define_user",
+      "id": "user_alice",
+      "expect": "success",
+      "timing": 0.0
     }
+  }
 ]

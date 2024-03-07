@@ -87,14 +87,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .route("/comments", routing::post(comment::post))
         .route(
             "/comments/:comment_uuid",
-            routing::put(comment::put).delete(comment::delete),
+            routing::patch(comment::patch).delete(comment::delete),
         )
         .route("/replies", routing::post(reply::post))
         .route(
             "/replies/:reply_uuid",
-            routing::put(reply::put)
-                .delete(reply::delete)
-                .patch(reply::patch),
+            routing::patch(reply::patch)
+                .delete(reply::delete),
         )
         .route("/currencies", routing::get(currencies::get))
         .route("/languages", routing::get(languages::get))

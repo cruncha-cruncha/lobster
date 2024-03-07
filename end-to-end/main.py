@@ -52,26 +52,57 @@ def merge_sorted_lists(listA, listB):
     return listA
 
 def handle_step(source, super_user):
-    logging.debug(source['meta']['type'] + ' : ' + source['meta']['id'] + ' @ ' + str(source['meta']['timing']))
+    source_type = source['meta']['type']
+    source_id = source['meta']['id']
+    logging.debug(source_type + ' : ' + source_id + ' @ ' + str(source['meta']['timing']))
     success = True
 
-    if source['meta']['type'] == 'define_user':
-        shared.GLOBAL_DATA[source['meta']['id']] = user.User(source)
-    elif source['meta']['type'] == 'create_user':
-        success = shared.GLOBAL_DATA[source['id']].create(super_user)
-    elif source['meta']['type'] == 'login_user':
-        success = shared.GLOBAL_DATA[source['id']].login()
-    elif source['meta']['type'] == 'hard_delete_user' \
-    or source['meta']['type'] == 'hard_delete_post':
-        success = shared.GLOBAL_DATA[source['id']].hard_delete(super_user)
-    elif source['meta']['type'] == 'define_post':
-        shared.GLOBAL_DATA[source['meta']['id']] = post.Post(source)
-    elif source['meta']['type'] == 'make_post':
-        success = shared.GLOBAL_DATA[source['id']].make()
-    elif source['meta']['type'] == 'soft_delete_post':
-        success = shared.GLOBAL_DATA[source['id']].soft_delete()
+    if source_type == 'define_user':
+        shared.GLOBAL_DATA[source_id] = user.User(source)
+    elif source_type == 'define_post':
+        shared.GLOBAL_DATA[source_id] = post.Post(source)
+    elif source_type == 'define_comment':
+        shared.GLOBAL_DATA[source_id] = comment.Comment(source)
+    elif source_type == 'define_reply':
+        shared.GLOBAL_DATA[source_id] = reply.Reply(source)
+    elif source_type == 'create_user':
+        success = shared.GLOBAL_DATA[source['user']].create(super_user)
+    elif source_type == 'login_user':
+        success = shared.GLOBAL_DATA[source['user']].login()
+    elif source_type == 'make_post':
+        success = shared.GLOBAL_DATA[source['post']].make()
+    elif source_type == 'make_comment':
+        success = shared.GLOBAL_DATA[source['comment']].make()
+    elif source_type == 'make_reply':
+        success = shared.GLOBAL_DATA[source['reply']].make()
+    elif source_type == 'find_post':
+        success = shared.GLOBAL_DATA[source['post']].find()
+    elif source_type == 'draft_post':
+        success = shared.GLOBAL_DATA[source['post']].draft()
+    elif source_type == 'publish_post':
+        success = shared.GLOBAL_DATA[source['post']].publish()
+    elif source_type == 'edit_post':
+        success = shared.GLOBAL_DATA[source['post']].edit(source)
+    elif source_type == 'edit_comment':
+        success = shared.GLOBAL_DATA[source['comment']].edit(source)
+    elif source_type == 'edit_reply':
+        success = shared.GLOBAL_DATA[source['reply']].edit(source)
+    elif source_type == 'soft_delete_post':
+        success = shared.GLOBAL_DATA[source['post']].soft_delete()
+    elif source_type == 'soft_delete_comment':
+        success = shared.GLOBAL_DATA[source['comment']].soft_delete()
+    elif source_type == 'soft_delete_reply':
+        success = shared.GLOBAL_DATA[source['reply']].soft_delete()
+    elif source_type == 'hard_delete_user':
+        success = shared.GLOBAL_DATA[source['user']].hard_delete(super_user)
+    elif source_type == 'hard_delete_post':
+        success = shared.GLOBAL_DATA[source['post']].hard_delete(super_user)
+    elif source_type == 'hard_delete_comment':
+        success = shared.GLOBAL_DATA[source['comment']].hard_delete(super_user)
+    elif source_type == 'hard_delete_reply':
+        success = shared.GLOBAL_DATA[source['reply']].hard_delete(super_user)
     else:
-        print('Unknown step type: ' + step['meta']['type'])   
+        print('Unknown step type: ' + source_type)   
 
     return success
 
@@ -86,6 +117,7 @@ def go():
         './json/alice/user.json',
         './json/alice/post01.json',
         # './json/bob/user.json',
+        # './json/bob/thread01.json',
     ]
 
     all_steps = []
@@ -94,13 +126,17 @@ def go():
         all_steps = merge_sorted_lists(all_steps, data)
 
     for step in all_steps:
-        if step['meta']['timing'] < 0:
-            continue
-        if step['meta']['timing'] > 1.2:
-            break
+        # if step['meta']['timing'] < 0:
+        #     continue
+        # if step['meta']['timing'] > 10:
+        #     break
         
-        if not handle_step(step, super_user):
-            print('failure')
+        success = handle_step(step, super_user)
+        if not success and step['meta']['expect'] == 'sucess':
+            print('unexpected success')
+            break
+        elif success and step['meta']['expect'] == 'failure':
+            print('unexpected failure')
             break
 
 if __name__ == "__main__":

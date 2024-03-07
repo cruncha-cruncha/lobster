@@ -24,7 +24,7 @@ class User:
             decoded_refresh = jwt.decode(self.refresh_token, options={"verify_signature": False})
             if decoded_refresh['exp'] - 60 > int(time.time()):
                 refresh = requests.post(
-                    shared.CAPTAIN_URL + 'tokens',
+                    shared.CAPTAIN_URL + '/tokens',
                     headers={'Authorization': 'Bearer ' + self.refresh_token},
                 )
 
@@ -39,7 +39,7 @@ class User:
                     return True
 
         login = requests.post(
-            shared.CAPTAIN_URL + 'users',
+            shared.CAPTAIN_URL + '/users',
             json={
                 'email': self.source['email'],
                 'password': self.source['password']
@@ -60,7 +60,7 @@ class User:
 
     def create(self, super_user):
         create_invitation = requests.post(
-            shared.CAPTAIN_URL + 'invitations',
+            shared.CAPTAIN_URL + '/invitations',
             json={'email': self.source['email']}
         )
 
@@ -72,7 +72,7 @@ class User:
             return False
 
         invitation = requests.post(
-            shared.CAPTAIN_URL + 'admin/invitation',
+            shared.CAPTAIN_URL + '/admin/invitation',
             headers={'Authorization': 'Bearer ' + super_user.access_token},
             json={'email': self.source['email']}
         )
@@ -84,7 +84,7 @@ class User:
         invitation_code = invitation.text
 
         accept_invitation = requests.post(
-            shared.CAPTAIN_URL + 'invitations/' + invitation_code,
+            shared.CAPTAIN_URL + '/invitations/' + invitation_code,
             json={
                 'name': self.source['name'],
                 'email': self.source['email'],
@@ -108,7 +108,7 @@ class User:
             return False
 
         delete_user = requests.delete(
-            shared.CAPTAIN_URL + 'admin/users/' + str(self.user_id),
+            shared.CAPTAIN_URL + '/admin/users/' + str(self.user_id),
             headers={'Authorization': 'Bearer ' + super_user.access_token}
         )
 

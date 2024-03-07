@@ -1,32 +1,15 @@
-
 [
-    {
-        "name": "Bob",
-        "email": "bob@example.com",
-        "password": "arandompasswordforbob",
-        "language": 1,
-        "country": 1,
-        "meta": {
-            "type": "define_user",
-            "id": "user_bob",
-            "timing": 0.0
-        }
-    },
-    {
-        "user": "user_bob",
-        "meta": {
-            "type": "create_user",
-            "id": "create_user_bob",
-            "timing": 0.1
-        }
-    },
-    {
-        
-        "user": "user_bob",
-        "meta": {
-            "type": "hard_delete_user",
-            "id": "hard_delete_user_bob",
-            "timing": 100.0
-        }
+  {
+    "name": "Bob",
+    "email": "bob@example.com",
+    "password": "arandompasswordforbob",
+    "language": 1,
+    "country": 1,
+    "meta": {
+      "type": "define_user",
+      "id": "user_bob",
+      "expect": "success",
+      "timing": 0.0
     }
+  }
 ]

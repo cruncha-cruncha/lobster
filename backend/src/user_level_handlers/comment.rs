@@ -101,7 +101,7 @@ pub struct PutCommentData {
     pub content: comment::Content,
 }
 
-pub async fn put(
+pub async fn patch(
     claims: Claims,
     Path(comment_uuid): Path<comment::Uuid>,
     State(state): State<Arc<AppState>>,
