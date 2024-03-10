@@ -16,7 +16,8 @@ export const formatData = (data) => {
       id: data.author_id,
       name: data.author_name,
     },
-    location: "123 Bender Street", // data.latitude, data.longitude
+    // maybe use a reverse geocoding lookup?
+    location: "123 Bender Street", // data.latitude, data.longitude, data.country
     price: data.price.toFixed(2), // data.currency
     edits: data.changes,
     myComment: data.my_comment,
@@ -43,7 +44,7 @@ export const usePost = () => {
 
     endpoints
       .getPost({
-        postUuid: uuid,
+        uuid,
         accessToken: auth.accessToken,
       })
       .then((res) => {
@@ -80,7 +81,7 @@ export const usePost = () => {
   };
 
   const viewOffers = () => {
-    router.goTo("/comments?postUuid=" + uuid, "left");
+    router.goTo("/comments?uuid=" + uuid, "left");
   };
 
   const viewLocation = () => {

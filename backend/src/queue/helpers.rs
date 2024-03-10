@@ -1,4 +1,4 @@
-use lapin::{options::*, publisher_confirm::PublisherConfirm, BasicProperties, Channel, Result};
+use lapin::{options::*, publisher_confirm::PublisherConfirm, BasicProperties, Channel};
 use serde::{Deserialize, Serialize};
 
 use crate::db_structs::post;
@@ -8,7 +8,7 @@ use super::post_change_msg::CommentCount;
 pub async fn send_post_changed_message(
     channel: &Channel,
     message: &[u8],
-) -> Result<PublisherConfirm> {
+) -> Result<PublisherConfirm, lapin::Error> {
     channel
         .basic_publish(
             "post-changed",

@@ -1,8 +1,8 @@
 services:
-  # lobster-frontend:
-  #   build: ./frontend
-  #   ports:
-  #     - "4173:4173"
+  lobster-frontend:
+    build: ./frontend
+    ports:
+      - "4173:4173"
 
   lobster-backend:
     build: ./backend

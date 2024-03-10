@@ -1,8 +1,9 @@
 mod admin_level_handlers;
+mod moderator_level_handlers;
+mod user_level_handlers;
 mod auth;
 mod db_structs;
-mod rabbit;
-mod user_level_handlers;
+mod queue;
 
 use axum::{routing, Router};
 use sqlx::{postgres::PgPoolOptions, PgPool};
@@ -24,7 +25,7 @@ pub struct AppState {
 async fn main() -> Result<(), Box<dyn Error>> {
     dotenvy::dotenv().expect("Failed to read .env file");
 
-    let (_rabbit_conn, rabbit_chan) = rabbit::setup::setup()
+    let (_rabbit_conn, queue_chan) = queue::setup::setup()
         .await
         .expect("Failed to connect to rabbitMQ");
 
@@ -36,7 +37,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .expect("Failed to create pool.");
     let shared_state = Arc::new(AppState {
         db: pool,
-        chan: rabbit_chan,
+        chan: queue_chan,
     });
 
     let hosting_addr_string = env::var("HOSTING_ADDR").expect("HOSTING_ADDR must be set");
@@ -112,12 +113,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
         )
         .route(
             "/admin/invitation",
-            routing::post(admin_level_handlers::invitation::read_code)
+            routing::post(moderator_level_handlers::invitation::read_code)
                 .delete(admin_level_handlers::invitation::delete),
         )
         .route(
             "/admin/reset-password",
-            routing::post(admin_level_handlers::password_reset::read_code)
+            routing::post(moderator_level_handlers::password_reset::read_code)
                 .delete(admin_level_handlers::password_reset::delete),
         )
         .route(

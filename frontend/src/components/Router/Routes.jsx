@@ -1,5 +1,5 @@
 import { Profile } from "../../pages/Profile";
-import { Search } from "../../pages/Search";
+import { Search } from "../../pages/search/Search";
 import { NewPost } from "../../pages/NewPost";
 import { Account } from "../../pages/Account";
 import { Login } from "../../pages/Login";

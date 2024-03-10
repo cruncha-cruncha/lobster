@@ -30,7 +30,7 @@ export const useLogin = () => {
     setIsLoading("login");
 
     const showErrModal = () =>
-      modal.open("Request failed. Incorrent email or password.", "error");
+      modal.open("Request failed. Incorrect email or password.", "error");
 
     endpoints
       .login({ email, password })
@@ -45,10 +45,12 @@ export const useLogin = () => {
 
           router.goTo(`/profile?userId=${res.data.user_id}`, "forward");
         } else {
+          console.log(res.status, res);
           showErrModal();
         }
       })
-      .catch(() => {
+      .catch((e) => {
+        console.log(e);
         showErrModal();
       })
       .finally(() => {

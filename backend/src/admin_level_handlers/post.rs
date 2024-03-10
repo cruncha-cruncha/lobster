@@ -1,7 +1,7 @@
 use crate::auth::claims::Claims;
 use crate::db_structs::post;
-use crate::rabbit::helpers::send_post_changed_message;
-use crate::rabbit::post_change_msg::PostChangeMsg;
+use crate::queue::helpers::send_post_changed_message;
+use crate::queue::post_change_msg::PostChangeMsg;
 use crate::AppState;
 use axum::{
     extract::{Path, State},

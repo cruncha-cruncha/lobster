@@ -90,6 +90,7 @@ export const useAccount = () => {
 
   const onSave = () => {
     if (havePasswords) {
+      // TODO: update password
       modal.open(
         "Request failed. Please check your current password and try again later",
         "error",
@@ -122,8 +123,8 @@ export const useAccount = () => {
     showNewPassword,
     showOldPassword,
     setName: (e) => dispatch({ type: "name", payload: e.target.value }),
-    setLanguage: (e) => dispatch({ type: "language", payload: e.target.value }),
-    setCountry: (e) => dispatch({ type: "country", payload: e.target.value }),
+    setLanguage: (e) => dispatch({ type: "language", payload: Number(e.target.value) }),
+    setCountry: (e) => dispatch({ type: "country", payload: Number(e.target.value) }),
     setOldPassword: (e) =>
       dispatch({ type: "oldPassword", payload: e.target.value }),
     setNewPassword,

@@ -1,7 +1,7 @@
 use crate::auth::claims::Claims;
 use crate::db_structs::{comment, helpers, post, user};
-use crate::rabbit::helpers::send_post_changed_message;
-use crate::rabbit::post_change_msg::PostChangeMsg;
+use crate::queue::helpers::send_post_changed_message;
+use crate::queue::post_change_msg::PostChangeMsg;
 use crate::AppState;
 use axum::{
     extract::{Json, Path, State},
@@ -22,6 +22,7 @@ pub struct GetPostData {
     pub currency: post::Currency,
     pub latitude: post::Latitude,
     pub longitude: post::Longitude,
+    pub country: post::Country,
     pub created_at: post::CreatedAt,
     pub updated_at: post::UpdatedAt,
     pub deleted: post::Deleted,
@@ -56,6 +57,7 @@ pub async fn get(
             post.currency,
             post.latitude,
             post.longitude,
+            post.country,
             post.created_at,
             post.updated_at,
             post.deleted,

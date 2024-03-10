@@ -21,13 +21,14 @@ type PostChangeMessage struct {
 }
 
 type PostChangeInfo struct {
-	UUID     string  `json:"uuid"`
-	AuthorID int     `json:"author_id"`
-	Title    string  `json:"title"`
-	Content  string  `json:"content"`
-	Price    float64 `json:"price"`
-	Currency int     `json:"currency"`
-	Country  int     `json:"country"`
+	UUID     string   `json:"uuid"`
+	AuthorID int      `json:"author_id"`
+	Title    string   `json:"title"`
+	Content  string   `json:"content"`
+	Images   []string `json:"images"`
+	Price    float64  `json:"price"`
+	Currency int      `json:"currency"`
+	Country  int      `json:"country"`
 	Location struct {
 		Latitude  float64 `json:"lat"`
 		Longitude float64 `json:"lon"`
@@ -43,13 +44,13 @@ func panicOnError(err error, msg string) {
 	}
 }
 
-type Rabbit struct {
+type Queue struct {
 	conn *amqp.Connection
 	ch   *amqp.Channel
 	msgs <-chan amqp.Delivery
 }
 
-func NewRabbit() Rabbit {
+func NewQueue() Queue {
 	conn, err := amqp.Dial("amqp://mad-hatter:24carrot@lobster-rabbit:5672")
 	panicOnError(err, "Failed to connect to RabbitMQ")
 
@@ -97,20 +98,20 @@ func NewRabbit() Rabbit {
 	)
 	panicOnError(err, "Failed to register a consumer for search-ingest")
 
-	return Rabbit{
+	return Queue{
 		conn: conn,
 		ch:   ch,
 		msgs: msgs,
 	}
 }
 
-func (rabbit Rabbit) Listen(elastic Elastic) chan bool {
+func (queue Queue) Listen(elastic Elastic) chan bool {
 	shutdown := make(chan bool)
 
 	go func(elastic Elastic, shutdown chan bool) {
 		for {
 			select {
-			case d := <-rabbit.msgs:
+			case d := <-queue.msgs:
 				data := PostChangeMessage{}
 				err := json.Unmarshal(d.Body, &data)
 				if err != nil {
@@ -145,7 +146,7 @@ func (rabbit Rabbit) Listen(elastic Elastic) chan bool {
 	return shutdown
 }
 
-func (rabbit Rabbit) Close() {
-	rabbit.ch.Close()
-	rabbit.conn.Close()
+func (queue Queue) Close() {
+	queue.ch.Close()
+	queue.conn.Close()
 }

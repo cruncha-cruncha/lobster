@@ -7,7 +7,6 @@ edition = "2021"
 
 [features]
 cors = []
-anyPassword = []
 
 [dependencies]
 axum = { version = "0.6", features = ["ws", "headers", "json"] }

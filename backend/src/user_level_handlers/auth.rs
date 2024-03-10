@@ -61,10 +61,8 @@ pub async fn login(
     }
     let user = user.unwrap();
 
-    #[cfg(not(feature = "anyPassword"))]
     let password = hash_password(&payload.password, &user.salt);
 
-    #[cfg(not(feature = "anyPassword"))]
     match sqlx::query!(
         r#"
         SELECT usr.id

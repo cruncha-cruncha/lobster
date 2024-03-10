@@ -132,12 +132,18 @@ class Post:
             return False
 
         data = results.json()
-        if len(data) > 1:
-            logging.debug('Find Post is insufficiently selective, found ', len(data))
+        found = []
+        if not 'found' in data:
+            logging.debug('Malformed response')
             return False
-        elif len(data) < 1:
+        found = data['found']
+
+        if len(found) > 1:
+            logging.debug('Find Post is insufficiently selective, found ', len(found))
+            return False
+        elif len(found) < 1:
             logging.debug('Unable to find post')
             return False
 
-        self.uuid = data[0]['uuid']
+        self.uuid = found[0]['uuid']
         return False

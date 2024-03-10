@@ -123,7 +123,7 @@ export const useComments = () => {
   }, [auth?.user, networkData]);
 
   const queryParams = getQueryParams();
-  const postUuid = queryParams.get("postUuid");
+  const postUuid = queryParams.get("uuid");
 
   const myComment = data.find(
     (comment) => comment.commenter.id == auth?.user?.userId,
@@ -201,7 +201,7 @@ export const useComments = () => {
     endpoints
       .getPostComments({
         accessToken: auth?.accessToken,
-        postUuid: postUuid,
+        uuid: postUuid,
       })
       .then((res) => {
         if (!mounted || res.status !== 200) return;
@@ -211,7 +211,7 @@ export const useComments = () => {
     endpoints
       .getPost({
         accessToken: auth?.accessToken,
-        postUuid: postUuid,
+        uuid: postUuid,
       })
       .then((res) => {
         if (!mounted || res.status !== 200) return;
@@ -250,7 +250,7 @@ export const useComments = () => {
     endpoints
       .updateReply({
         accessToken: auth.accessToken,
-        replyUuid: state.editing.uuid,
+        uuid: state.editing.uuid,
         data: {
           content: state.text,
         },
@@ -323,7 +323,7 @@ export const useComments = () => {
     endpoints
       .updateComment({
         accessToken: auth.accessToken,
-        commentUuid: state.editing.uuid,
+        uuid: state.editing.uuid,
         data: {
           content: state.text,
         },
@@ -595,14 +595,14 @@ export const useComments = () => {
       });
   };
 
-  const undeleteReply = (replyUuid) => {
+  const undeleteReply = (uuid) => {
     setData((prev) => {
       return prev.map((comment) => {
         if (comment.uuid == state.activeCommentUuid) {
           return {
             ...comment,
             replies: comment.replies.map((reply) => {
-              if (reply.uuid == replyUuid) {
+              if (reply.uuid == uuid) {
                 return {
                   ...reply,
                   loading: true,
@@ -619,7 +619,7 @@ export const useComments = () => {
     endpoints
       .undeleteReply({
         accessToken: auth.accessToken,
-        replyUuid,
+        uuid,
       })
       .then((res) => {
         if (res.status != 200) {
@@ -633,7 +633,7 @@ export const useComments = () => {
                 return {
                   ...comment,
                   replies: comment.replies.map((reply) => {
-                    if (reply.uuid == replyUuid) {
+                    if (reply.uuid == uuid) {
                       return {
                         ...reply,
                         loading: false,
@@ -653,7 +653,7 @@ export const useComments = () => {
                 return {
                   ...comment,
                   replies: comment.replies.map((reply) => {
-                    if (reply.uuid == replyUuid) {
+                    if (reply.uuid == uuid) {
                       return formatReply(
                         res.data,
                         comment.commenter.id,
@@ -671,13 +671,13 @@ export const useComments = () => {
       });
   };
 
-  const removeComment = (commentUuid) => {
-    if (state.activeCommentUuid == commentUuid) {
+  const removeComment = (uuid) => {
+    if (state.activeCommentUuid == uuid) {
       dispatch({ type: "clearAll" });
     }
     setData((prev) =>
       prev.map((comment) => {
-        if (comment.uuid == commentUuid) {
+        if (comment.uuid == uuid) {
           return {
             ...comment,
             loading: true,
@@ -689,7 +689,7 @@ export const useComments = () => {
     endpoints
       .removeComment({
         accessToken: auth?.accessToken,
-        commentUuid,
+        uuid,
       })
       .then((res) => {
         if (res.status !== 204) {
@@ -699,7 +699,7 @@ export const useComments = () => {
           );
           setData((prev) =>
             prev.map((comment) => {
-              if (comment.uuid == commentUuid) {
+              if (comment.uuid == uuid) {
                 return {
                   ...comment,
                   loading: false,
@@ -711,7 +711,7 @@ export const useComments = () => {
         } else {
           setData((prev) =>
             prev.map((comment) => {
-              if (comment.uuid == commentUuid) {
+              if (comment.uuid == uuid) {
                 return {
                   ...comment,
                   time: new Date(),
@@ -726,7 +726,7 @@ export const useComments = () => {
       });
   };
 
-  const removeReply = (replyUuid) => {
+  const removeReply = (uuid) => {
     if (
       state.editing.amEditing &&
       state.editing.uuid == action?.payload?.uuid
@@ -740,7 +740,7 @@ export const useComments = () => {
           return {
             ...comment,
             replies: comment.replies.map((reply) => {
-              if (reply.uuid == replyUuid) {
+              if (reply.uuid == uuid) {
                 return {
                   ...reply,
                   loading: true,
@@ -757,7 +757,7 @@ export const useComments = () => {
     endpoints
       .removeReply({
         accessToken: auth?.accessToken,
-        replyUuid,
+        uuid,
       })
       .then((res) => {
         if (res.status !== 204) {
@@ -771,7 +771,7 @@ export const useComments = () => {
                 return {
                   ...comment,
                   replies: comment.replies.map((reply) => {
-                    if (reply.uuid == replyUuid) {
+                    if (reply.uuid == uuid) {
                       return {
                         ...reply,
                         loading: false,
@@ -791,7 +791,7 @@ export const useComments = () => {
                 return {
                   ...comment,
                   replies: comment.replies.map((reply) => {
-                    if (reply.uuid == replyUuid) {
+                    if (reply.uuid == uuid) {
                       return {
                         ...reply,
                         time: new Date(),

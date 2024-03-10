@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
-
 )
 
 type Elastic struct {
@@ -34,6 +33,7 @@ func NewElastic() Elastic {
 					"author_id":     { "type": "integer" },
 					"title":         { "type": "text" },
 					"content":       { "type": "text" },
+					"images":        { "type": "keyword", "index": false },
 					"price":         { "type": "float" },
 					"currency":      { "type": "keyword" },
 					"country":       { "type": "integer" },
@@ -131,7 +131,7 @@ func (elastic Elastic) basicPostsSearch(term string) ([]PostChangeInfo, error) {
 		}
 	}`)
 
-	req, _ := http.NewRequest("POST", "http://lobster-elastic:9200/posts/_search", bytes.NewBuffer(query))
+	req, _ := http.NewRequest(http.MethodPost, "http://lobster-elastic:9200/posts/_search", bytes.NewBuffer(query))
 	req.Header.Set("Content-Type", "application/json")
 
 	res, err := elastic.client.Do(req)
@@ -164,13 +164,16 @@ type PostSearchParams struct {
 	Offset int  `json:"offset"`
 	Limit  int  `json:"limit"`
 	// 0 = relevance, 1 = price asc, 2 = price desc, 3 = date asc, 4 = date desc
-	SortBy    int     `json:"sort_by"`
-	Term      string  `json:"term"`
-	Countries []int   `json:"countries"`
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
-	Radius    float64 `json:"radius"`
-	NoPrice   struct {
+	SortBy    int    `json:"sort_by"`
+	Term      string `json:"term"`
+	Countries []int  `json:"countries"`
+	Location  struct {
+		Valid     bool    `json:"valid"`
+		Latitude  float64 `json:"latitude"`
+		Longitude float64 `json:"longitude"`
+		Radius    float64 `json:"radius"`
+	} `json:"location"`
+	NoPrice struct {
 		Only    bool `json:"only"`
 		Exclude bool `json:"exclude"`
 	} `json:"no_price"`
@@ -189,9 +192,12 @@ type PostSearchParams struct {
 	"sort_by": 0,
 	"term": "hello world",
 	"countries": [1, 2, 3],
-	"latitude": 0.0,
-	"longitude": 0.0,
-	"radius": 100.0,
+	"location": {
+		"valid": true,
+		"latitude": 0.0,
+		"longitude": 0.0,
+		"radius": 100.0,
+	},
 	"no_price": {
 		"only": false,
 		"exclude": false
@@ -261,13 +267,15 @@ func (elastic Elastic) fullPostsSearch(params PostSearchParams) ([]PostChangeInf
 		queryString += `],` // should
 	}
 	queryString += `"filter":[`
-	queryString += `{"geo_distance":{`
-	queryString += `"distance":"` + fmt.Sprint(params.Radius) + `km",`
-	queryString += `"location":{`
-	queryString += `"lat":"` + fmt.Sprint(params.Latitude) + `",`
-	queryString += `"lon":"` + fmt.Sprint(params.Longitude) + `"`
-	queryString += `}`   // location
-	queryString += `}},` // geo_distance
+	if params.Location.Valid {
+		queryString += `{"geo_distance":{`
+		queryString += `"distance":"` + fmt.Sprint(params.Location.Radius) + `km",`
+		queryString += `"location":{`
+		queryString += `"lat":"` + fmt.Sprint(params.Location.Latitude) + `",`
+		queryString += `"lon":"` + fmt.Sprint(params.Location.Longitude) + `"`
+		queryString += `}`   // location
+		queryString += `}},` // geo_distance
+	}
 	queryString += `{"terms":{`
 	queryString += `"country":`
 	queryString += strings.Join(strings.Fields(fmt.Sprint(params.Countries)), ",")
@@ -278,7 +286,7 @@ func (elastic Elastic) fullPostsSearch(params PostSearchParams) ([]PostChangeInf
 	queryString += `}`  // root
 	query := []byte(queryString)
 
-	req, _ := http.NewRequest("POST", "http://lobster-elastic:9200/posts/_search", bytes.NewBuffer(query))
+	req, _ := http.NewRequest(http.MethodPost, "http://lobster-elastic:9200/posts/_search", bytes.NewBuffer(query))
 	req.Header.Set("Content-Type", "application/json")
 
 	res, err := elastic.client.Do(req)

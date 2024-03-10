@@ -1,5 +1,6 @@
 use crate::auth::claims::Claims;
 use crate::auth::encryption::encode_plain_email;
+use crate::db_structs::invitation;
 use crate::AppState;
 use axum::{
     extract::{Json, State},
@@ -14,12 +15,12 @@ pub struct ReadInvitationCodeData {
     pub email: String,
 }
 
-pub async fn delete(
+pub async fn read_code(
     claims: Claims,
     State(state): State<Arc<AppState>>,
     Json(payload): Json<ReadInvitationCodeData>,
-) -> Result<StatusCode, (StatusCode, String)> {
-    if !claims.is_admin() {
+) -> Result<String, (StatusCode, String)> {
+    if !claims.is_moderator() && !claims.is_admin() {
         return Err((StatusCode::UNAUTHORIZED, String::from("Not an admin")));
     }
 
@@ -33,22 +34,24 @@ pub async fn delete(
         }
     };
 
-    match sqlx::query!(
+    let invitation = match sqlx::query_as!(
+        invitation::Invitation,
         r#"
-        DELETE FROM invitations WHERE email = $1
+        SELECT * FROM invitations WHERE email = $1
         "#,
         email
     )
-    .execute(&state.db)
+    .fetch_optional(&state.db)
     .await
     {
-        Ok(res) => {
-            if res.rows_affected() == 0 {
-                return Err((StatusCode::NOT_FOUND, String::from("")));
-            }
-        }
+        Ok(invitation) => invitation,
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     };
 
-    Ok(StatusCode::OK)
+    if invitation.is_none() {
+        return Err((StatusCode::NOT_FOUND, String::from("can't find code")));
+    }
+    let invitation = invitation.unwrap();
+
+    Ok(invitation.code)
 }

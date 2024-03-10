@@ -4,8 +4,11 @@ use crate::auth::claims::Claims;
 use crate::AppState;
 use crate::{
     db_structs::{comment, helpers},
-    rabbit::{
-        helpers::{send_post_changed_message, PostWithInfo},
+    queue::{
+        helpers::{
+            send_post_changed_message,
+            PostWithInfo
+        },
         post_change_msg::PostChangeMsg,
     },
 };

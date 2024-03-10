@@ -42,6 +42,7 @@ pub struct Info {
     pub author_id: AuthorId,
     pub title: Title,
     pub content: Content,
+    pub images: Images,
     pub price: Price,
     pub currency: Currency,
     pub country: Country,
@@ -60,6 +61,7 @@ pub struct Location {
 pub type AuthorId = post::AuthorId;
 pub type Title = post::Title;
 pub type Content = post::Content;
+pub type Images = post::Images;
 pub type Price = post::Price;
 pub type Currency = post::Currency;
 pub type Country = post::Country;
@@ -86,6 +88,7 @@ impl PostChangeMsg {
                 author_id: post.author_id,
                 title: post.title.clone(),
                 content: post.content.clone(),
+                images: post.images.clone(),
                 price: post.price,
                 currency: post.currency,
                 country: post.country,

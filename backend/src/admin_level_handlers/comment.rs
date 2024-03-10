@@ -1,6 +1,6 @@
 use crate::auth::claims::Claims;
 use crate::db_structs::comment;
-use crate::rabbit;
+use crate::queue;
 use crate::AppState;
 use axum::{
     extract::{Path, State},
@@ -18,7 +18,7 @@ pub async fn delete(
     }
 
     let post_info = match sqlx::query_as!(
-        rabbit::helpers::PostWithInfo,
+        queue::helpers::PostWithInfo,
         r#"
         SELECT
             post.*,
@@ -41,8 +41,8 @@ pub async fn delete(
     if post_info.is_some() {
         let post_info = post_info.unwrap();
         let comment_count = post_info.comment_count.unwrap_or_default() - 1;
-        let message = rabbit::post_change_msg::PostChangeMsg::update(&post_info.into(), comment_count);
-        rabbit::helpers::send_post_changed_message(&state.chan, &message.encode())
+        let message = queue::post_change_msg::PostChangeMsg::update(&post_info.into(), comment_count);
+        queue::helpers::send_post_changed_message(&state.chan, &message.encode())
             .await
             .ok(); // ignore errors
     }

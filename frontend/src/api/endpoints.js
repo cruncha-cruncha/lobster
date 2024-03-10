@@ -13,9 +13,11 @@ import {
   validateSingleComment,
   validatePostComments,
   validateSingleReply,
+  validatePostSearchResponse,
 } from "./schemas";
 
 const serverUrl = import.meta.env.VITE_SERVER_URL || "http://127.0.0.1:3000";
+const searchUrl = import.meta.env.VITE_SEARCH_URL || "http://127.0.0.1:3001";
 
 const handle = (url, params) => {
   return fetch(url, params)
@@ -139,8 +141,8 @@ export const refreshAccessToken = async ({ refreshToken }) => {
   return response;
 };
 
-export const getPost = async ({ postUuid, accessToken }) => {
-  const response = await handle(`${serverUrl}/posts/${postUuid}`, {
+export const getPost = async ({ uuid, accessToken }) => {
+  const response = await handle(`${serverUrl}/posts/${uuid}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -326,8 +328,8 @@ export const createNewComment = async ({ accessToken, data }) => {
   return response;
 }
 
-export const getPostComments = async ({ postUuid, accessToken }) => {
-  const response = await handle(`${serverUrl}/posts/${postUuid}/comments`, {
+export const getPostComments = async ({ uuid, accessToken }) => {
+  const response = await handle(`${serverUrl}/posts/${uuid}/comments`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -361,9 +363,9 @@ export const createNewReply = async ({ accessToken, data }) => {
   return response;
 }
 
-export const updateComment = async ({ accessToken, commentUuid, data }) => {
-  const response = await handle(`${serverUrl}/comments/${commentUuid}`, {
-    method: "PUT",
+export const updateComment = async ({ accessToken, uuid, data }) => {
+  const response = await handle(`${serverUrl}/comments/${uuid}`, {
+    method: "PATCH",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
@@ -379,9 +381,9 @@ export const updateComment = async ({ accessToken, commentUuid, data }) => {
   return response;
 }
 
-export const updateReply = async ({ accessToken, replyUuid, data }) => {
-  const response = await handle(`${serverUrl}/replies/${replyUuid}`, {
-    method: "PUT",
+export const updateReply = async ({ accessToken, uuid, data }) => {
+  const response = await handle(`${serverUrl}/replies/${uuid}`, {
+    method: "PATCH",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
@@ -397,8 +399,8 @@ export const updateReply = async ({ accessToken, replyUuid, data }) => {
   return response;
 }
 
-export const removeComment = async ({ accessToken, commentUuid }) => {
-  const response = await handle(`${serverUrl}/comments/${commentUuid}`, {
+export const removeComment = async ({ accessToken, uuid }) => {
+  const response = await handle(`${serverUrl}/comments/${uuid}`, {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
@@ -409,8 +411,8 @@ export const removeComment = async ({ accessToken, commentUuid }) => {
   return response;
 }
 
-export const removeReply = async ({ accessToken, replyUuid }) => {
-  const response = await handle(`${serverUrl}/replies/${replyUuid}`, {
+export const removeReply = async ({ accessToken, uuid }) => {
+  const response = await handle(`${serverUrl}/replies/${uuid}`, {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
@@ -421,8 +423,8 @@ export const removeReply = async ({ accessToken, replyUuid }) => {
   return response;
 }
 
-export const undeleteReply = async ({ accessToken, replyUuid }) => {
-  const response = await handle(`${serverUrl}/replies/${replyUuid}`, {
+export const undeleteReply = async ({ accessToken, uuid }) => {
+  const response = await handle(`${serverUrl}/replies/${uuid}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -432,6 +434,24 @@ export const undeleteReply = async ({ accessToken, replyUuid }) => {
 
   if (response.status === 200) {
     const valid = validateSingleReply(response.data);
+    if (!valid) return { status: null, data: null };
+  }
+
+  return response;
+}
+
+export const searchPosts = async ({ accessToken, data }) => {
+  const response = await handle(`${searchUrl}/search/posts`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (response.status === 200) {
+    const valid = validatePostSearchResponse(response.data);
     if (!valid) return { status: null, data: null };
   }
 
