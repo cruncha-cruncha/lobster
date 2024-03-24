@@ -1,9 +1,9 @@
 mod admin_level_handlers;
-mod moderator_level_handlers;
-mod user_level_handlers;
 mod auth;
 mod db_structs;
+mod moderator_level_handlers;
 mod queue;
+mod user_level_handlers;
 
 use axum::{routing, Router};
 use sqlx::{postgres::PgPoolOptions, PgPool};
@@ -59,6 +59,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             "/password-resets/:code",
             routing::post(auth_handler::reset_password),
         )
+        .route("/accounts", routing::post(account::get_multiple))
         .route(
             "/accounts/:user_id",
             routing::get(account::get)
@@ -93,8 +94,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .route("/replies", routing::post(reply::post))
         .route(
             "/replies/:reply_uuid",
-            routing::patch(reply::patch)
-                .delete(reply::delete),
+            routing::patch(reply::patch).delete(reply::delete),
         )
         .route("/currencies", routing::get(currencies::get))
         .route("/languages", routing::get(languages::get))
@@ -102,8 +102,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .route("/sales", routing::post(user_level_handlers::sale::post))
         .route(
             "/sales/:post_uuid",
-            routing::get(user_level_handlers::sale::get)
-                .patch(user_level_handlers::sale::patch),
+            routing::get(user_level_handlers::sale::get).patch(user_level_handlers::sale::patch),
         )
         .route(
             "/reviews/:post_uuid",

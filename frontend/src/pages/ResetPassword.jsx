@@ -99,7 +99,7 @@ export const PureResetPassword = (resetPassword) => {
   return (
     <>
       <PureInfoModal {...resetPassword?.modal} />
-      <div className="flex h-full items-center justify-center">
+      <div className="flex min-h-full items-center justify-center">
         <div className="flex w-full max-w-sm flex-col justify-center">
           <h1 className="mb-2 text-center text-lg">Reset Password</h1>
           <div className="m-2 rounded-sm border-b-2 border-stone-800">

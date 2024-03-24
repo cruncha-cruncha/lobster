@@ -14,6 +14,7 @@ import {
   validatePostComments,
   validateSingleReply,
   validatePostSearchResponse,
+  validateGetPeople,
 } from "./schemas";
 
 const serverUrl = import.meta.env.VITE_SERVER_URL || "http://127.0.0.1:3000";
@@ -452,6 +453,24 @@ export const searchPosts = async ({ accessToken, data }) => {
 
   if (response.status === 200) {
     const valid = validatePostSearchResponse(response.data);
+    if (!valid) return { status: null, data: null };
+  }
+
+  return response;
+}
+
+export const getPeople = async ({ accessToken, data }) => {
+  const response = await handle(`${serverUrl}/accounts`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (response.status === 200) {
+    const valid = validateGetPeople(response.data);
     if (!valid) return { status: null, data: null };
   }
 

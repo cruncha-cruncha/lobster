@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { parseDate } from "../api/parseDate";
-import { useRouter, getQueryParams } from "../components/router/Router";
+import { useRouter, getLastPathSegment } from "../components/router/Router";
 import { useAuth } from "../components/userAuth";
 import * as endpoints from "../api/endpoints";
 
@@ -31,8 +31,7 @@ export const usePost = () => {
   const [data, setData] = useState({});
   const [offer, setOffer] = useState("");
 
-  const queryParams = getQueryParams();
-  const uuid = queryParams.get("uuid");
+  const uuid = getLastPathSegment();
 
   const isMyPost = data?.author?.id === auth?.user?.userId;
   const canMakeOffer = !isMyPost && !data.myComment;
@@ -81,7 +80,7 @@ export const usePost = () => {
   };
 
   const viewOffers = () => {
-    router.goTo("/comments?uuid=" + uuid, "left");
+    router.goTo(`/comments/${uuid}`, "left");
   };
 
   const viewLocation = () => {
@@ -116,7 +115,7 @@ export const usePost = () => {
 
 export const PurePost = (post) => {
   return (
-    <div className="flex h-full justify-center">
+    <div className="flex min-h-full justify-center">
       <div className="flex max-w-3xl grow flex-col justify-between text-left">
         <div className="p-2">
           <h1

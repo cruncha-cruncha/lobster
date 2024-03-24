@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from "react";
 import { Map, ZoomControl, GeoJson } from "pigeon-maps";
 import { useRouter } from "../../components/router/Router";
 import { useAuth } from "../../components/userAuth";
-import * as endpoints from "../../api/endpoints";
 import { Slider, RangeSlider } from "../../components/Slider";
 import { circleToPolygon } from "./circletopolygon";
 
@@ -149,14 +148,6 @@ export const useSearch = () => {
     setReady(true);
   }, [window.location.search]);
 
-  const goToMyProfile = () => {
-    router.goTo(`/profile?userId=${auth.user.userId}`, "up");
-  };
-
-  const goToPost = () => {
-    router.goToWithBack("/post", "left");
-  };
-
   const calcRadius = (radius) => {
     const pow = Math.pow(10, radius) - 0.5;
     switch (true) {
@@ -182,51 +173,6 @@ export const useSearch = () => {
     }
   };
 
-  const onSearch = () => {
-    endpoints
-      .searchPosts({
-        accessToken: auth.accessToken,
-        data: {
-          full: true,
-          offset: state.page * 20,
-          limit: 20,
-          sort_by: state.sort,
-          term: state.term,
-          countries: state.countries,
-          location: {
-            valid: state.location.on,
-            latitude: state.location.latitude,
-            longitude: state.location.longitude,
-            radius: state.location.radius,
-          },
-          no_price: {
-            only: state.noPrice.only,
-            exclude: state.noPrice.exclude,
-          },
-          price_range: {
-            valid: state.priceRange.on,
-            min: state.priceRange.low,
-            max: state.priceRange.high,
-          },
-        },
-      })
-      .then((res) => {
-        if (res.status === 200) {
-          // show results on screen
-        } else {
-          console.log(res.status, res);
-          // showErrModal();
-        }
-      })
-      .catch((e) => {
-        console.log(e);
-        // showErrModal();
-      })
-      .finally(() => {
-        // setIsLoading("");
-      });
-  };
-
   return {
     ...state,
     ready,
@@ -239,6 +185,7 @@ export const useSearch = () => {
     initialLocation: { lat: 50.879, lon: 4.6997 },
     calcRadius,
     calcPriceRange,
+    setPage: (num) => updateParam("page", num),
     setTerm: (e) => updateParam("term", e.target.value),
     setCountries: (e) => {
       const arr = Object.values(e.target.selectedOptions).map(
@@ -300,200 +247,164 @@ export const useSearch = () => {
         updateParam("np-exclude", false);
       }
     },
-    goToMyProfile,
-    goToPost,
-    onSearch,
   };
 };
 
-export const PureSearch = (search) => {
+export const PureSearchForm = (search) => {
   return (
-    <div className="flex h-full justify-center">
-      <div className="flex w-full max-w-md flex-col justify-between py-2">
-        <div className="flex grow flex-col justify-center">
-          <div className="m-2 rounded-sm border-b-2 border-stone-800">
-            <input
-              type="text"
-              id="term"
-              placeholder="search"
-              value={search?.term}
-              onChange={(e) => search?.setTerm?.(e)}
-              className="w-full rounded-sm px-2 py-1 ring-sky-500 transition-shadow focus-visible:outline-none focus-visible:ring-2"
+    <>
+      <div className="m-2 rounded-sm border-b-2 border-stone-800">
+        <input
+          type="text"
+          id="term"
+          placeholder="search"
+          value={search?.term}
+          onChange={(e) => search?.setTerm?.(e)}
+          className="w-full rounded-sm px-2 py-1 ring-sky-500 transition-shadow focus-visible:outline-none focus-visible:ring-2"
+        />
+      </div>
+      <div
+        className="p-2"
+        onClick={() => search?.setPriceRangeValid?.(!search?.priceRange?.on)}
+      >
+        <input
+          readOnly // to please the linter
+          type="checkbox"
+          id="price-range-valid"
+          checked={search?.priceRange?.on}
+        />
+        <p className="ml-2 inline-block">
+          In price range{" "}
+          <span className={search?.priceRange?.on ? "" : "hidden"}>
+            [{search?.calcPriceRange?.(search?.priceRange?.low)},{" "}
+            {search?.calcPriceRange?.(search?.priceRange?.high)}]
+          </span>
+        </p>
+      </div>
+      {search?.ready && (
+        <div
+          className={
+            "overflow-hidden transition-max-height duration-500 ease-out" +
+            (!search?.priceRange?.on ? " max-h-0" : " max-h-12")
+          }
+        >
+          <div className="p-4 pt-3">
+            <RangeSlider
+              id="price-range"
+              min={search?.priceSliderMin}
+              max={search?.priceSliderMax}
+              step={0.01}
+              disabled={!search?.priceRange?.on}
+              defaultValue={[search?.priceRange?.low, search?.priceRange?.high]}
+              onChange={(range) => search?.tmpSetPriceRange?.(range)}
+              onChangeComplete={(range) => search?.finalizePriceRange?.(range)}
             />
-          </div>
-          <div
-            className="p-2"
-            onClick={() =>
-              search?.setPriceRangeValid?.(!search?.priceRange?.on)
-            }
-          >
-            <input
-              readOnly // to please the linter
-              type="checkbox"
-              id="price-range-valid"
-              checked={search?.priceRange?.on}
-            />
-            <p className="ml-2 inline-block">
-              In price range{" "}
-              <span className={search?.priceRange?.on ? "" : "hidden"}>
-                [{search?.calcPriceRange?.(search?.priceRange?.low)},{" "}
-                {search?.calcPriceRange?.(search?.priceRange?.high)}]
-              </span>
-            </p>
-          </div>
-          {search?.ready && (
-            <div
-              className={
-                "overflow-hidden transition-max-height duration-500 ease-out" +
-                (!search?.priceRange?.on ? " max-h-0" : " max-h-12")
-              }
-            >
-              <div className="p-4 pt-3">
-                <RangeSlider
-                  id="price-range"
-                  min={search?.priceSliderMin}
-                  max={search?.priceSliderMax}
-                  step={0.01}
-                  disabled={!search?.priceRange?.on}
-                  defaultValue={[
-                    search?.priceRange?.low,
-                    search?.priceRange?.high,
-                  ]}
-                  onChange={(range) => search?.tmpSetPriceRange?.(range)}
-                  onChangeComplete={(range) =>
-                    search?.finalizePriceRange?.(range)
-                  }
-                />
-              </div>
-            </div>
-          )}
-          <div className="flex flex-row flex-wrap">
-            <div
-              className="mr-2 p-2"
-              onClick={() => search?.setNeedPrice?.(!search?.noPrice?.exclude)}
-            >
-              <input
-                readOnly // for the linter
-                type="checkbox"
-                id="need-price"
-                checked={search?.noPrice?.exclude}
-              />
-              <p className="ml-2 inline-block">Must have a price</p>
-            </div>
-            <div
-              className="mr-2 p-2"
-              onClick={() => search?.setNoPriceOnly?.(!search?.noPrice?.only)}
-            >
-              <input
-                readOnly // for the linter
-                type="checkbox"
-                id="no-price-only"
-                checked={search?.noPrice?.only}
-              />
-              <p className="ml-2 inline-block">No Price only</p>
-            </div>
-          </div>
-          <div
-            className="p-2 pb-0"
-            onClick={() => search?.setLocationValid?.(!search?.location?.on)}
-          >
-            <input
-              readOnly // for the linter
-              type="checkbox"
-              id="location-valid"
-              checked={search?.location?.on}
-            />
-            <p className="ml-2 inline-block">With specific location</p>
-          </div>
-          {search?.ready && (
-            <div
-              className={
-                "overflow-hidden transition-max-height duration-500 ease-in-out" +
-                (!search?.location?.on ? " max-h-0" : " max-h-96")
-              }
-            >
-              <div className="p-4">
-                <Slider
-                  id="radius"
-                  min={search?.radiusSliderMin}
-                  max={search?.radiusSliderMax}
-                  step={0.01}
-                  disabled={!search?.location?.on}
-                  defaultValue={search?.location?.radius}
-                  onChange={(val) => search?.tmpSetRadius?.(val)}
-                  onChangeComplete={(val) => search?.finalizeRadius?.(val)}
-                />
-              </div>
-              <CustomMap
-                initialLocation={{
-                  lat: search?.location?.latitude,
-                  lon: search?.location?.longitude,
-                }}
-                initialZoom={search?.location?.zoom}
-                maxZoom={search?.maxZoom}
-                minZoom={search?.minZoom}
-                radius={search?.calcRadius?.(search?.location?.radius)}
-                setLocation={search?.setLocation}
-                setZoom={search?.setZoom}
-              />
-            </div>
-          )}
-          <div className="m-2 mt-4 flex flex-row">
-            <div className="flex grow flex-col items-center">
-              <p className="pb-1">Sort results by:</p>
-              <select
-                id="sort"
-                className="p-1 pl-2"
-                onChange={(e) => search?.setSort?.(e)}
-                value={search?.sort}
-              >
-                <option value="0">relevance</option>
-                <option value="1">price asc</option>
-                <option value="2">price desc</option>
-                <option value="3">date asc</option>
-                <option value="4">date desc</option>
-              </select>
-            </div>
-            <div className="flex grow flex-col items-center">
-              <p className="pb-1">Within Countries:</p>
-              <select
-                id="countries"
-                className="max-h-14"
-                onChange={(e) => search?.setCountries?.(e)}
-                value={search?.countries}
-                size={4}
-                multiple
-              >
-                <option value={1}>Canada</option>
-                <option value={2}>USA</option>
-              </select>
-            </div>
-          </div>
-          <div className="mt-2 flex justify-center">
-            <button
-              className="rounded-full bg-emerald-200 px-4 py-2 hover:bg-emerald-900 hover:text-white"
-              onClick={(e) => search?.onSearch?.(e)}
-            >
-              Search
-            </button>
           </div>
         </div>
-        <div className="flex justify-end gap-x-2 pr-2">
-          <button
-            className="rounded-full bg-sky-200 px-4 py-2 hover:bg-sky-900 hover:text-white"
-            onClick={(e) => search?.goToMyProfile?.(e)}
-          >
-            Profile
-          </button>
-          <button
-            className="rounded-full bg-emerald-200 px-4 py-2 hover:bg-emerald-900 hover:text-white"
-            onClick={(e) => search?.goToPost?.(e)}
-          >
-            See Post
-          </button>
+      )}
+      <div className="flex flex-row flex-wrap">
+        <div
+          className="mr-2 p-2"
+          onClick={() => search?.setNeedPrice?.(!search?.noPrice?.exclude)}
+        >
+          <input
+            readOnly // for the linter
+            type="checkbox"
+            id="need-price"
+            checked={search?.noPrice?.exclude}
+          />
+          <p className="ml-2 inline-block">Must have a price</p>
+        </div>
+        <div
+          className="mr-2 p-2"
+          onClick={() => search?.setNoPriceOnly?.(!search?.noPrice?.only)}
+        >
+          <input
+            readOnly // for the linter
+            type="checkbox"
+            id="no-price-only"
+            checked={search?.noPrice?.only}
+          />
+          <p className="ml-2 inline-block">No Price only</p>
         </div>
       </div>
-    </div>
+      <div
+        className="p-2 pb-0"
+        onClick={() => search?.setLocationValid?.(!search?.location?.on)}
+      >
+        <input
+          readOnly // for the linter
+          type="checkbox"
+          id="location-valid"
+          checked={search?.location?.on}
+        />
+        <p className="ml-2 inline-block">With specific location</p>
+      </div>
+      {search?.ready && (
+        <div
+          className={
+            "overflow-hidden transition-max-height duration-500 ease-in-out" +
+            (!search?.location?.on ? " max-h-0" : " max-h-96")
+          }
+        >
+          <div className="p-4">
+            <Slider
+              id="radius"
+              min={search?.radiusSliderMin}
+              max={search?.radiusSliderMax}
+              step={0.01}
+              disabled={!search?.location?.on}
+              defaultValue={search?.location?.radius}
+              onChange={(val) => search?.tmpSetRadius?.(val)}
+              onChangeComplete={(val) => search?.finalizeRadius?.(val)}
+            />
+          </div>
+          <CustomMap
+            initialLocation={{
+              lat: search?.location?.latitude,
+              lon: search?.location?.longitude,
+            }}
+            initialZoom={search?.location?.zoom}
+            maxZoom={search?.maxZoom}
+            minZoom={search?.minZoom}
+            radius={search?.calcRadius?.(search?.location?.radius)}
+            setLocation={search?.setLocation}
+            setZoom={search?.setZoom}
+          />
+        </div>
+      )}
+      <div className="m-2 mt-4 flex flex-row">
+        <div className="flex grow flex-col items-center">
+          <p className="pb-1">Sort results by:</p>
+          <select
+            id="sort"
+            className="p-1 pl-2"
+            onChange={(e) => search?.setSort?.(e)}
+            value={search?.sort}
+          >
+            <option value="0">relevance</option>
+            <option value="1">price asc</option>
+            <option value="2">price desc</option>
+            <option value="3">date asc</option>
+            <option value="4">date desc</option>
+          </select>
+        </div>
+        <div className="flex grow flex-col items-center">
+          <p className="pb-1">Within Countries:</p>
+          <select
+            id="countries"
+            className="max-h-14"
+            onChange={(e) => search?.setCountries?.(e)}
+            value={search?.countries}
+            size={4}
+            multiple
+          >
+            <option value={1}>Canada</option>
+            <option value={2}>USA</option>
+          </select>
+        </div>
+      </div>
+    </>
   );
 };
 

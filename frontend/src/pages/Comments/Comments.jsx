@@ -1,5 +1,5 @@
 import { useReducer, useState, useEffect } from "react";
-import { useRouter, getQueryParams } from "../../components/router/Router";
+import { useRouter, getLastPathSegment } from "../../components/router/Router";
 import { Comment } from "./Comment";
 import * as endpoints from "../../api/endpoints";
 import { useAuth } from "../../components/userAuth";
@@ -122,8 +122,7 @@ export const useComments = () => {
     setData(formatData(networkData, auth.user.userId));
   }, [auth?.user, networkData]);
 
-  const queryParams = getQueryParams();
-  const postUuid = queryParams.get("uuid");
+  const postUuid = getLastPathSegment();
 
   const myComment = data.find(
     (comment) => comment.commenter.id == auth?.user?.userId,
@@ -831,7 +830,7 @@ export const useComments = () => {
   };
 
   const onBack = () => {
-    router.goTo(`/post?uuid=${postUuid}`, "right");
+    router.goTo(`/post/${postUuid}`, "right");
   };
 
   return {
@@ -851,7 +850,7 @@ export const PureComments = (comments) => {
   return (
     <>
       <PureInfoModal {...comments?.modal} />
-      <div className="flex h-full justify-center">
+      <div className="flex min-h-full justify-center">
         <div className="flex min-h-full max-w-3xl grow flex-col justify-between pb-2">
           <div className="w-full">
             {comments?.data?.map((data, i) => (

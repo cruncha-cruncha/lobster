@@ -1,5 +1,5 @@
 import { useState, useEffect, useReducer } from "react";
-import { useRouter, getQueryParams } from "../components/router/Router";
+import { useRouter, getLastPathSegment } from "../components/router/Router";
 import { useInfoModal, PureInfoModal } from "../components/InfoModal";
 import { validatePassword } from "./Login";
 import { useAuth } from "../components/userAuth";
@@ -40,8 +40,7 @@ export const useAccount = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showOldPassword, setShowOldPassword] = useState(false);
 
-  const queryParams = getQueryParams();
-  const userId = queryParams.get("userId");
+  const userId = getLastPathSegment();
 
   useEffect(() => {
     let mounted = true;
@@ -133,7 +132,7 @@ export const useAccount = () => {
     isLoading: false,
     toggleShowNewPassword: () => setShowNewPassword((prev) => !prev),
     toggleShowOldPassword: () => setShowOldPassword((prev) => !prev),
-    onBack: () => router.goTo(`/profile?userId=${userId}`, "down"),
+    onBack: () => router.goTo(`/profile/${userId}`, "down"),
     onLogout,
     onSave,
     canSave,
@@ -174,7 +173,7 @@ export const PureAccount = (account) => {
   return (
     <>
       <PureInfoModal {...account.modal} />
-      <div className="flex h-full justify-center">
+      <div className="flex min-h-full justify-center">
         <div className="flex w-full max-w-md flex-col justify-between pb-2 pt-5">
           <div>
             <h1 className="mb-2 text-center text-lg">Account</h1>
@@ -338,7 +337,7 @@ export const PureAccount = (account) => {
             </p>
             <div className="flex">
               <button
-                className="rounded-full bg-sky-200 px-4 py-2 hover:bg-sky-900 hover:text-white"
+                className="rounded-full bg-orange-200 px-4 py-2 hover:bg-orange-900 hover:text-white"
                 onClick={(e) => account?.onLogout?.(e)}
               >
                 Logout

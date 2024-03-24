@@ -331,3 +331,10 @@ export const getQueryParams = () => {
   const url = new URL(window.location.href);
   return new URLSearchParams(url.search);
 }
+
+export const getLastPathSegment = () => {
+  const path = window.location.pathname;
+  const lastSlash = path.lastIndexOf("/");
+  if (lastSlash === -1) return "";
+  return path.substring(lastSlash + 1);
+};

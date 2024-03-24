@@ -56,7 +56,7 @@ export const useNewPost = () => {
   }, []);
 
   const onBack = () => {
-    router.goTo(`/profile?userId=${auth.user.userId}`, "back");
+    router.goTo(`/profile/${auth.user.userId}`, "back");
   };
 
   const onPublish = () => {
@@ -87,7 +87,7 @@ export const useNewPost = () => {
       }
     }).then((res) => {
       if (!res.status === 200) return;
-      router.goTo(`/post?uuid=${res.data.uuid}`, "back");
+      router.goTo(`/post/${res.data.uuid}`, "back");
     })
   };
 
@@ -110,7 +110,7 @@ export const useNewPost = () => {
 export const PureNewPost = (newPost) => {
   return (
     <>
-      <div className="flex h-full justify-center">
+      <div className="flex min-h-full justify-center">
         <div className="flex w-full max-w-md flex-col justify-between pb-2 pt-5">
           <div>
             <PureNewPostTitle {...newPost} />

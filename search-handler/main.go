@@ -5,9 +5,14 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"strings"
+
+	"github.com/golang-jwt/jwt/v4"
 )
 
 func main() {
+	publicKey := readPublicKey()
 	elastic := NewElastic()
 	queue := NewQueue()
 	shutdown := queue.Listen(elastic)
@@ -24,9 +29,8 @@ func main() {
 	})
 
 	http.HandleFunc("/search/posts", func(w http.ResponseWriter, req *http.Request) {
-		corsPreflight(w, req)
-
 		if req.Method == http.MethodOptions {
+			corsPreflight(w, req)
 			return
 		}
 		if req.Method != http.MethodPost {
@@ -34,6 +38,27 @@ func main() {
 			return
 		}
 
+		// check authentication
+		{
+			authHeader := req.Header.Get("Authorization")
+			if authHeader == "" {
+				http.Error(w, "Unauthorized", 401)
+				return
+			}
+			parts := strings.Split(authHeader, " ")
+			if len(parts) != 2 || parts[0] != "Bearer" {
+				http.Error(w, "Unauthorized", 401)
+				return
+			}
+			token, err := jwt.Parse(parts[1], func(token *jwt.Token) (interface{}, error) {
+				return publicKey, nil
+			})
+			if err != nil || !token.Valid {
+				http.Error(w, "Unauthorized", 401)
+				return
+			}
+		}
+		
 		var params PostSearchParams
 		decoder := json.NewDecoder(req.Body)
 		if err := decoder.Decode(&params); err != nil {
@@ -61,6 +86,9 @@ func main() {
 			Found: posts,
 		}
 
+		fmt.Println("Sending response")
+
+		corsPreflight(w, req)
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(out)
 	})
@@ -80,4 +108,16 @@ func corsPreflight(w http.ResponseWriter, r *http.Request) {
 	headers["Access-Control-Allow-Headers"] = reqHeadersRaw
 
 	headers["Access-Control-Allow-Methods"] = r.Header["Access-Control-Request-Method"]
+}
+
+func readPublicKey() interface{} {
+	dat, err := os.ReadFile("./public.pem")
+	panicOnError(err, "Failed to read public key")
+
+	key, err := jwt.ParseRSAPublicKeyFromPEM(dat)
+    if err != nil {
+        panicOnError(err, "Failed to parse public key")
+    }
+
+	return key
 }

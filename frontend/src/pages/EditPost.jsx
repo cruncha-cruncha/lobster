@@ -25,7 +25,7 @@ export const useEditPost = () => {
 export const PureEditPost = (editPost) => {
   return (
     <>
-      <div className="flex h-full justify-center">
+      <div className="flex min-h-full justify-center">
         <div className="flex w-full max-w-md flex-col justify-between pb-2 pt-5">
           <div>
             <PureEditPostTitle {...editPost} />

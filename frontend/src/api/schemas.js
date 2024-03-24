@@ -74,6 +74,7 @@ const accountSchema = {
     email: { type: "string" },
     language: { type: "integer" },
     country: { type: "integer" },
+    banned_until: { type: ["string", "null"] },
   },
   required: ["id", "name", "email", "language", "country"],
 };
@@ -323,6 +324,15 @@ const getPostSchema = {
   required: ["author_name", "my_comment"],
 };
 
+const getPeopleSchema = {
+  type: "object",
+  $id: "#getPeople",
+  properties: {
+    people: { type: "array", items: { $ref: "#account" } },
+  },
+  required: ["people"],
+};
+
 const makeLazyValidator = (schema) => {
   let validate = null;
   return (data) => {
@@ -407,4 +417,9 @@ export const validateSingleReply = makeLazyValidator([
 export const validatePostSearchResponse = makeLazyValidator([
   singlePostSearchResult,
   postSearchResults,
+]);
+
+export const validateGetPeople = makeLazyValidator([
+  accountSchema,
+  getPeopleSchema,
 ]);

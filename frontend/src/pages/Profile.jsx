@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { parseDate } from "../api/parseDate";
-import { useRouter, getQueryParams } from "../components/router/Router";
+import { useRouter, getLastPathSegment } from "../components/router/Router";
 import { useAuth } from "../components/userAuth";
 import * as endpoints from "../api/endpoints";
 
@@ -68,8 +68,7 @@ export const useProfile = () => {
   const router = useRouter();
   const auth = useAuth();
 
-  const queryParams = getQueryParams();
-  const userId = queryParams.get("userId");
+  const userId = getLastPathSegment();
 
   useEffect(() => {
     let mounted = true;
@@ -151,11 +150,11 @@ export const useProfile = () => {
   };
 
   const viewFirstPost = () => {
-    router.goToWithBack(`/post?uuid=${history.oldestPost.uuid}`, "left")
+    router.goToWithBack(`/post/${history.oldestPost.uuid}`, "left");
   };
 
   const viewMostRecentPost = () => {
-    router.goToWithBack(`/post?uuid=${history.newestPost.uuid}`, "left")
+    router.goToWithBack(`/post/${history.newestPost.uuid}`, "left");
   };
 
   const onNewPost = () => {
@@ -167,7 +166,7 @@ export const useProfile = () => {
   };
 
   const onAccount = () => {
-    router.goTo(`/account?userId=${userId}`, "up");
+    router.goTo(`/account/${userId}`, "up");
   };
 
   return {
@@ -195,7 +194,7 @@ export const useProfile = () => {
 
 export const PureProfile = (profile) => {
   return (
-    <div className="flex h-full justify-center">
+    <div className="flex min-h-full justify-center">
       <div className="flex w-full max-w-md flex-col justify-between pb-2 pt-5">
         <div>
           <div
@@ -483,6 +482,12 @@ export const PureProfile = (profile) => {
               Account
             </button>
           )}
+          <button
+            className="rounded-full bg-sky-200 px-4 py-2 hover:bg-sky-900 hover:text-white"
+            onClick={(e) => profile?.onSearch?.(e)}
+          >
+            Search
+          </button>
           {profile?.canMakeNewPost && (
             <button
               className="rounded-full bg-emerald-200 px-4 py-2 transition-colors hover:bg-emerald-900 hover:text-white"
@@ -491,12 +496,6 @@ export const PureProfile = (profile) => {
               New
             </button>
           )}
-          <button
-            className="rounded-full bg-emerald-200 px-4 py-2 transition-colors hover:bg-emerald-900 hover:text-white"
-            onClick={(e) => profile?.onSearch?.(e)}
-          >
-            Search
-          </button>
         </div>
       </div>
     </div>
