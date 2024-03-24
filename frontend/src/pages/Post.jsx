@@ -180,9 +180,9 @@ export const PurePost = (post) => {
             </div>
           </div>
         </div>
-        <div className="my-2 flex flex-row justify-between">
+        <div className="hide-while-sliding my-2 flex flex-row justify-between">
           <button
-            className="hide-while-sliding relative ml-2 cursor-pointer px-4 py-4"
+            className="relative ml-2 cursor-pointer px-4 py-4"
             onClick={(e) => post?.onBack?.(e)}
           >
             <p className="absolute left-0 right-0 -translate-y-1/2 text-lg font-bold">

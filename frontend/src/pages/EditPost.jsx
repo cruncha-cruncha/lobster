@@ -181,9 +181,9 @@ export const PureEditPostFooter = (editPost) => {
     : editPost?.onSave;
 
   return (
-    <div className="flex justify-between">
+    <div className="hide-while-sliding flex justify-between">
       <p
-        className="hide-while-sliding cursor-pointer p-2 text-lg font-bold"
+        className="cursor-pointer p-2 text-lg font-bold"
         onClick={(e) => editPost?.onBack?.(e)}
       >
         {"<"}

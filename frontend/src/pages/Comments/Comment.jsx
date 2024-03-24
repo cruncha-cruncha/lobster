@@ -167,7 +167,7 @@ const PureComment = (comment) => {
       </div>
       <div
         className={
-          "transition-height duration-300 ease-out " +
+          "transition-max-height duration-300 ease-out " +
           (comment?.isActive
             ? "max-h-96 overflow-y-scroll"
             : "max-h-0 overflow-y-hidden")

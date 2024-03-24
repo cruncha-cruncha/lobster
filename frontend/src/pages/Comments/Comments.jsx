@@ -863,10 +863,10 @@ export const PureComments = (comments) => {
               />
             ))}
           </div>
-          <div className="flex px-2">
+          <div className="hide-while-sliding flex px-2">
             <div className="mr-2">
               <p
-                className="hide-while-sliding relative top-2 cursor-pointer pr-2 text-lg font-bold"
+                className="relative top-2 cursor-pointer pr-2 text-lg font-bold"
                 onClick={(e) => comments?.onBack?.(e)}
               >
                 {"<"}

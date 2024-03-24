@@ -93,8 +93,13 @@
   overflow: hidden;
 }
 
+.hide-while-sliding {
+  transition: opacity 0.1s ease-out;
+  opacity: 1;
+}
+
 .sliding .hide-while-sliding {
-  visibility: hidden;
+  opacity: 0;
 }
 
 .slide-left {

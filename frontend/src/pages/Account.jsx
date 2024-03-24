@@ -122,8 +122,10 @@ export const useAccount = () => {
     showNewPassword,
     showOldPassword,
     setName: (e) => dispatch({ type: "name", payload: e.target.value }),
-    setLanguage: (e) => dispatch({ type: "language", payload: Number(e.target.value) }),
-    setCountry: (e) => dispatch({ type: "country", payload: Number(e.target.value) }),
+    setLanguage: (e) =>
+      dispatch({ type: "language", payload: Number(e.target.value) }),
+    setCountry: (e) =>
+      dispatch({ type: "country", payload: Number(e.target.value) }),
     setOldPassword: (e) =>
       dispatch({ type: "oldPassword", payload: e.target.value }),
     setNewPassword,
@@ -328,9 +330,9 @@ export const PureAccount = (account) => {
               </div>
             </div>
           </div>
-          <div className="flex justify-between">
+          <div className="hide-while-sliding flex justify-between">
             <p
-              className="hide-while-sliding cursor-pointer p-2 text-lg font-bold"
+              className="cursor-pointer p-2 text-lg font-bold"
               onClick={(e) => account?.onBack?.(e)}
             >
               {"<"}

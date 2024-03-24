@@ -6,7 +6,7 @@ import {
   useRef,
 } from "react";
 import { INITIAL_PATH, ROUTES } from "./Routes";
-import "./Slider.css";
+import "./Transition.css";
 
 const parsePageKeyFromPath = (path) => {
   const matches = path.match(/\/([^\/\?]+)/);

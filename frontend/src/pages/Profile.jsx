@@ -473,7 +473,7 @@ export const PureProfile = (profile) => {
             </p>
           </div>
         </div>
-        <div className="flex justify-end gap-x-2 pr-2">
+        <div className="hide-while-sliding flex justify-end gap-x-2 pr-2">
           {profile?.canGoToAccount && (
             <button
               className="rounded-full bg-sky-200 px-4 py-2 transition-colors hover:bg-sky-900 hover:text-white"
