@@ -1,0 +1,11 @@
+[
+  {
+    "user": "user_bob",
+    "meta": {
+      "type": "create_user",
+      "id": "create_user_bob",
+      "expect": "success",
+      "timing": 0.1
+    }
+  }
+]

@@ -30,7 +30,7 @@ export const useLogin = () => {
     setIsLoading("login");
 
     const showErrModal = () =>
-      modal.open("Request failed. Incorrent email or password.", "error");
+      modal.open("Request failed. Incorrect email or password.", "error");
 
     endpoints
       .login({ email, password })
@@ -43,12 +43,14 @@ export const useLogin = () => {
             refreshToken: res.data.refresh_token,
           });
 
-          router.goTo(`/profile?userId=${res.data.user_id}`, "forward");
+          router.goTo(`/profile/${res.data.user_id}`, "forward");
         } else {
+          console.log(res.status, res);
           showErrModal();
         }
       })
-      .catch(() => {
+      .catch((e) => {
+        console.log(e);
         showErrModal();
       })
       .finally(() => {
@@ -141,7 +143,7 @@ export const PureLogin = (login) => {
   return (
     <>
       <PureInfoModal {...login?.modal} />
-      <div className="flex h-full items-center justify-center">
+      <div className="flex min-h-full items-center justify-center">
         <div className="flex w-full max-w-sm flex-col justify-center">
           <h1 className="mb-2 text-center text-xl">Lobster</h1>
           <div className="m-2 rounded-sm border-b-2 border-stone-800">

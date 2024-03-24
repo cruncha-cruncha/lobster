@@ -14,6 +14,7 @@ pub async fn get(
         r#"
         SELECT *
         FROM currencies
+        WHERE symbol <> ''
         "#
     )
     .fetch_all(&state.db)

@@ -1,0 +1,15 @@
+[
+  {
+    "name": "Bob",
+    "email": "bob@example.com",
+    "password": "arandompasswordforbob",
+    "language": 1,
+    "country": 1,
+    "meta": {
+      "type": "define_user",
+      "id": "user_bob",
+      "expect": "success",
+      "timing": 0.0
+    }
+  }
+]

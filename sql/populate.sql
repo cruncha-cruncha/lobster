@@ -5,7 +5,7 @@ INSERT INTO languages (name)
 VALUES ('English'), ('French');
 
 INSERT INTO currencies (name, symbol)
-VALUES ('Canadian Dollar', 'CAD');
+VALUES ('void', ''), ('Canadian Dollar', 'CAD');
 
 INSERT INTO resource_types (name)   
 VALUES ('user'), ('post'), ('comment'), ('reply'), ('sale'), ('review');

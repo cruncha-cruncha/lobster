@@ -1,5 +1,5 @@
 import { Profile } from "../../pages/Profile";
-import { Search } from "../../pages/Search";
+import { Results } from "../../pages/search/Results";
 import { NewPost } from "../../pages/NewPost";
 import { Account } from "../../pages/Account";
 import { Login } from "../../pages/Login";
@@ -21,5 +21,5 @@ export const ROUTES = {
   "new-post": NewPost,
   "edit-post": EditPost,
   comments: Comments,
-  search: Search,
+  search: Results,
 };

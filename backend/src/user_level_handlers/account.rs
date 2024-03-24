@@ -1,5 +1,6 @@
-use crate::db_structs::{helpers, user};
 use crate::auth::claims::Claims;
+use crate::auth::encryption::decode_email;
+use crate::db_structs::user;
 use crate::AppState;
 use axum::{
     extract::{Json, Path, State},
@@ -7,7 +8,6 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use crate::auth::encryption::decode_email;
 #[derive(Debug, sqlx::FromRow, Serialize, Deserialize)]
 pub struct GetUserData {
     pub id: user::Id,
@@ -15,6 +15,7 @@ pub struct GetUserData {
     pub email: String,
     pub language: user::Language,
     pub country: user::Country,
+    pub banned_until: Option<time::OffsetDateTime>,
 }
 
 pub async fn get(
@@ -49,7 +50,66 @@ pub async fn get(
         email: decode_email(&row.email).unwrap_or_default(),
         language: row.language,
         country: row.country,
+        banned_until: row.banned_until,
     }))
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GetMultipleData {
+    pub ids: Vec<user::Id>,
+}
+
+#[derive(Debug, sqlx::FromRow, Serialize, Deserialize)]
+pub struct GetMultipleResponse {
+    pub people: Vec<GetUserData>,
+}
+
+pub async fn get_multiple(
+    _claims: Claims,
+    State(state): State<Arc<AppState>>,
+    Json(payload): Json<GetMultipleData>,
+) -> Result<Json<GetMultipleResponse>, (StatusCode, String)> {
+    if payload.ids.is_empty() {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            String::from("Not enough ids. Min 1."),
+        ));
+    } else if payload.ids.len() > 128 {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            String::from("Too many ids. Max 128."),
+        ));
+    }
+
+    let users = match sqlx::query_as!(
+        user::User,
+        r#"
+        SELECT *
+        FROM users usr
+        WHERE usr.id = ANY($1)
+        "#,
+        &payload.ids,
+    )
+    .fetch_all(&state.db)
+    .await
+    {
+        Ok(row) => row,
+        Err(_) => return Err((StatusCode::NOT_FOUND, String::from(""))),
+    };
+
+    let mut people: Vec<GetUserData> = Vec::with_capacity(users.len());
+    for user in users {
+        people.push(GetUserData {
+            id: user.id,
+            name: user.first_name,
+            email: decode_email(&user.email).unwrap_or_default(),
+            language: user.language,
+            country: user.country,
+            banned_until: user.banned_until,
+        });
+    }
+
+    Ok(axum::Json(GetMultipleResponse { people }))
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -111,6 +171,7 @@ pub async fn patch(
         email: decode_email(&row.email).unwrap_or_default(),
         language: row.language,
         country: row.country,
+        banned_until: row.banned_until,
     }))
 }
 
@@ -123,20 +184,21 @@ pub async fn delete(
         return Err((StatusCode::UNAUTHORIZED, String::from("")));
     }
 
-    match sqlx::query_as!(
-        helpers::RowsReturned,
+    // TODO: delete all user's posts, comments, replies, etc.
+
+    match sqlx::query!(
         r#"
-        WITH deleted AS (DELETE FROM users usr WHERE usr.id = $1 RETURNING *)
-        SELECT COUNT(*) as count
-        FROM deleted;
+        DELETE
+        FROM users usr
+        WHERE usr.id = $1;
         "#,
         user_id as i64
     )
-    .fetch_one(&state.db)
+    .execute(&state.db)
     .await
     {
-        Ok(row) => {
-            if row.count == None || row.count == Some(0) {
+        Ok(res) => {
+            if res.rows_affected() == 0 {
                 return Err((StatusCode::NOT_FOUND, String::from("")));
             }
         }

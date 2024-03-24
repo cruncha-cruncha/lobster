@@ -1,5 +1,8 @@
+mod admin_level_handlers;
 mod auth;
 mod db_structs;
+mod moderator_level_handlers;
+mod queue;
 mod user_level_handlers;
 
 use axum::{routing, Router};
@@ -15,11 +18,16 @@ use user_level_handlers::{
 #[derive(Clone)]
 pub struct AppState {
     db: PgPool,
+    chan: lapin::Channel,
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     dotenvy::dotenv().expect("Failed to read .env file");
+
+    let (_rabbit_conn, queue_chan) = queue::setup::setup()
+        .await
+        .expect("Failed to connect to rabbitMQ");
 
     let pg_connection_string = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let pool = PgPoolOptions::new()
@@ -27,7 +35,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .connect(&pg_connection_string)
         .await
         .expect("Failed to create pool.");
-    let shared_state = Arc::new(AppState { db: pool });
+    let shared_state = Arc::new(AppState {
+        db: pool,
+        chan: queue_chan,
+    });
 
     let hosting_addr_string = env::var("HOSTING_ADDR").expect("HOSTING_ADDR must be set");
     let hosting_addr = hosting_addr_string
@@ -35,6 +46,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .expect("HOSTING_ADDR must be a valid socket address");
 
     let app = Router::new()
+        .route("/hello", routing::get(|| async { "hello, world" }))
         .route("/users", routing::post(auth_handler::login))
         .route("/tokens", routing::post(auth_handler::refresh))
         .route("/invitations", routing::post(invitation::post))
@@ -47,6 +59,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             "/password-resets/:code",
             routing::post(auth_handler::reset_password),
         )
+        .route("/accounts", routing::post(account::get_multiple))
         .route(
             "/accounts/:user_id",
             routing::get(account::get)
@@ -76,18 +89,55 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .route("/comments", routing::post(comment::post))
         .route(
             "/comments/:comment_uuid",
-            routing::put(comment::put).delete(comment::delete),
+            routing::patch(comment::patch).delete(comment::delete),
         )
         .route("/replies", routing::post(reply::post))
         .route(
             "/replies/:reply_uuid",
-            routing::put(reply::put)
-                .delete(reply::delete)
-                .patch(reply::patch),
+            routing::patch(reply::patch).delete(reply::delete),
         )
         .route("/currencies", routing::get(currencies::get))
         .route("/languages", routing::get(languages::get))
-        .route("/countries", routing::get(countries::get));
+        .route("/countries", routing::get(countries::get))
+        .route("/sales", routing::post(user_level_handlers::sale::post))
+        .route(
+            "/sales/:post_uuid",
+            routing::get(user_level_handlers::sale::get).patch(user_level_handlers::sale::patch),
+        )
+        .route(
+            "/reviews/:post_uuid",
+            routing::post(user_level_handlers::reviews::make)
+                .patch(user_level_handlers::reviews::make)
+                .delete(user_level_handlers::reviews::remove),
+        )
+        .route(
+            "/admin/invitation",
+            routing::post(moderator_level_handlers::invitation::read_code)
+                .delete(admin_level_handlers::invitation::delete),
+        )
+        .route(
+            "/admin/reset-password",
+            routing::post(moderator_level_handlers::password_reset::read_code)
+                .delete(admin_level_handlers::password_reset::delete),
+        )
+        .route(
+            "/admin/users/:user_id",
+            routing::delete(admin_level_handlers::user::delete)
+                .post(admin_level_handlers::auth::login),
+        )
+        .route(
+            "/admin/posts/:post_uuid",
+            routing::delete(admin_level_handlers::post::delete)
+                .patch(admin_level_handlers::post::touch),
+        )
+        .route(
+            "/admin/comments/:comment_uuid",
+            routing::delete(admin_level_handlers::comment::delete),
+        )
+        .route(
+            "/admin/replies/:reply_uuid",
+            routing::delete(admin_level_handlers::reply::delete),
+        );
 
     #[cfg(feature = "cors")]
     let app = app.layer(

@@ -97,7 +97,7 @@ pub struct PutReplyData {
     pub content: reply::Content,
 }
 
-pub async fn put(
+pub async fn patch(
     claims: Claims,
     Path(reply_uuid): Path<reply::Uuid>,
     State(state): State<Arc<AppState>>,
@@ -120,68 +120,15 @@ pub async fn put(
                 'when', NOW(),
                 'content', reply.content
             ))
-        WHERE uuid = $1 AND author_id = $2
+        WHERE uuid = $1
+        AND (author_id = $2 OR $5)
         RETURNING *
         "#,
         reply_uuid,
         author_id,
         claims.sub,
         payload.content,
-    )
-    .fetch_one(&state.db)
-    .await
-    {
-        Ok(row) => row,
-        Err(e) => return Err((StatusCode::NOT_FOUND, e.to_string())),
-    };
-
-    match sqlx::query!(
-        r#"
-        UPDATE comments comment SET
-            unread_by_author = CASE WHEN comment.author_id = $2 THEN unread_by_author ELSE COALESCE(unread_by_author, '[]'::JSONB) || '["reply-edited"]'::JSONB END,
-            unread_by_poster = CASE WHEN comment.author_id = $2 THEN COALESCE(unread_by_poster, '[]'::JSONB) || '["reply-edited"]'::JSONB ELSE unread_by_poster END
-        FROM replies reply
-        WHERE reply.uuid = $1
-        AND comment.uuid = reply.comment_uuid
-        "#,
-        reply_uuid,
-        author_id,
-    ).fetch_all(&state.db).await {
-        Ok(_) => {},
-        Err(e) => { eprintln!("ERROR user_update_reply_update_comment_viewed, {}", e); },
-    }
-
-    Ok(axum::Json(row))
-}
-
-pub async fn patch(
-    claims: Claims,
-    Path(reply_uuid): Path<reply::Uuid>,
-    State(state): State<Arc<AppState>>,
-) -> Result<Json<reply::Reply>, (StatusCode, String)> {
-    let author_id = match claims.subject_as_user_id() {
-        Some(id) => id,
-        None => return Err((StatusCode::BAD_REQUEST, String::from(""))),
-    };
-
-    let row = match sqlx::query_as!(
-        reply::Reply,
-        r#"
-        UPDATE replies reply
-        SET
-            deleted = FALSE,
-            updated_at = NOW(),
-            changes = changes || jsonb_build_array(jsonb_build_object(
-                'who', $3::TEXT,
-                'when', NOW(),
-                'deleted', reply.deleted
-            ))
-        WHERE uuid = $1 AND author_id = $2
-        RETURNING *
-        "#,
-        reply_uuid,
-        author_id,
-        claims.sub,
+        claims.is_moderator(),
     )
     .fetch_one(&state.db)
     .await
@@ -231,12 +178,14 @@ pub async fn delete(
                 'when', NOW(),
                 'deleted', reply.deleted
             ))
-        WHERE uuid = $1 AND author_id = $2
+        WHERE uuid = $1
+        AND (author_id = $2 OR $4)
         RETURNING *
         "#,
         reply_uuid,
         user_id,
         claims.sub,
+        claims.is_moderator(),
     )
     .fetch_one(&state.db)
     .await

@@ -42,6 +42,7 @@ CREATE TABLE users (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     claim_level INTEGER NOT NULL,
     first_name TEXT NOT NULL, -- TODO: external search index?
+    bio TEXT,
     email BYTEA NOT NULL,
     salt BYTEA NOT NULL,
     password BYTEA NOT NULL,
@@ -69,7 +70,8 @@ CREATE TABLE posts (
     content TEXT NOT NULL,
     price REAL NOT NULL,
     currency INTEGER NOT NULL,
-    latitude REAL NOT NULL, -- TODO: spatial index
+    country INTEGER NOT NULL,
+    latitude REAL NOT NULL,
     longitude REAL NOT NULL,
     created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
@@ -91,8 +93,9 @@ CREATE TABLE sales (
     created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     reviewed_at TIMESTAMPTZ,
     price TEXT,
-    rating INTEGER,
+    rating REAL,
     review TEXT,
+    changes JSONB NOT NULL,
     PRIMARY KEY(post_uuid)
 );
 

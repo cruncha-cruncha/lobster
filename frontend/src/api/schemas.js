@@ -74,6 +74,7 @@ const accountSchema = {
     email: { type: "string" },
     language: { type: "integer" },
     country: { type: "integer" },
+    banned_until: { type: ["string", "null"] },
   },
   required: ["id", "name", "email", "language", "country"],
 };
@@ -238,6 +239,7 @@ const singlePostSchema = {
     currency: { type: "number" },
     latitude: { type: "number" },
     longitude: { type: "number" },
+    country: { type: "number" },
     created_at: { type: "string" },
     updated_at: { type: "string" },
     deleted: { type: "boolean" },
@@ -262,6 +264,54 @@ const singlePostSchema = {
   ],
 };
 
+const singlePostSearchResult = {
+  type: "object",
+  $id: "#singlePostSearchResult",
+  properties: {
+    uuid: { type: "string" },
+    author_id: { type: "integer" },
+    title: { type: "string" },
+    content: { type: "string" },
+    images: { type: "array", items: { type: "string" } },
+    price: { type: "number" },
+    currency: { type: "number" },
+    country: { type: "number" },
+    location: {
+      type: "object",
+      properties: {
+        lat: { type: "number" },
+        lon: { type: "number" },
+      },
+      required: ["lat", "lon"],
+    },
+    created_at: { type: "number" },
+    updated_at: { type: "number" },
+    comment_count: { type: "number" },
+  },
+  required: [
+    "uuid",
+    "author_id",
+    "title",
+    "images",
+    "content",
+    "price",
+    "currency",
+    "location",
+    "created_at",
+    "updated_at",
+    "comment_count",
+  ],
+};
+
+const postSearchResults = {
+  type: "object",
+  $id: "#postSearchResults",
+  properties: {
+    found: { type: "array", items: { $ref: "#singlePostSearchResult" } },
+  },
+  required: ["found"],
+};
+
 const getPostSchema = {
   allOf: [{ $ref: "#singlePost" }],
   type: "object",
@@ -272,6 +322,15 @@ const getPostSchema = {
     comment_count: { type: "integer" },
   },
   required: ["author_name", "my_comment"],
+};
+
+const getPeopleSchema = {
+  type: "object",
+  $id: "#getPeople",
+  properties: {
+    people: { type: "array", items: { $ref: "#account" } },
+  },
+  required: ["people"],
 };
 
 const makeLazyValidator = (schema) => {
@@ -353,4 +412,14 @@ export const validatePostComments = makeLazyValidator([
 export const validateSingleReply = makeLazyValidator([
   singleChangeSchema,
   singleReplySchema,
+]);
+
+export const validatePostSearchResponse = makeLazyValidator([
+  singlePostSearchResult,
+  postSearchResults,
+]);
+
+export const validateGetPeople = makeLazyValidator([
+  accountSchema,
+  getPeopleSchema,
 ]);

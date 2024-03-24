@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::user;
+use super::{country, user};
 
 pub type Uuid = uuid::Uuid;
 pub type AuthorId = user::Id;
@@ -9,6 +9,7 @@ pub type Images = Vec<String>;
 pub type Content = String;
 pub type Price = f32;
 pub type Currency = i32;
+pub type Country = country::Id;
 pub type Latitude = f32;
 pub type Longitude = f32;
 pub type CreatedAt = time::OffsetDateTime;
@@ -27,6 +28,7 @@ pub struct Post {
     pub content: Content,
     pub price: Price,
     pub currency: Currency,
+    pub country: Country,
     pub latitude: Latitude,
     pub longitude: Longitude,
     pub created_at: CreatedAt,

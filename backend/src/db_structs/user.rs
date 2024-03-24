@@ -5,6 +5,7 @@ use crate::auth::claims;
 pub type Id = i32;
 pub type ClaimLevel = claims::ClaimLevel;
 pub type FirstName = String;
+pub type Bio = Option<String>;
 pub type Email = Vec<u8>;
 pub type Salt = Vec<u8>;
 pub type Password = Vec<u8>;
@@ -20,6 +21,7 @@ pub struct User {
     pub id: Id,
     pub claim_level: ClaimLevel,
     pub first_name: FirstName,
+    pub bio: Bio,
     pub email: Email,
     pub salt: Salt,
     pub password: Password,

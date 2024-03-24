@@ -114,7 +114,7 @@ export const useAcceptInvitation = (props) => {
             refreshToken: res.data.refresh_token,
           });
 
-          router.goTo(`/profile?userId=${res.data.user_id}`, "back");
+          router.goTo(`/profile/${res.data.user_id}`, "back");
         }
       }, showErrModal)
       .finally(() => {
@@ -150,7 +150,7 @@ export const PureAcceptInvitation = (acceptInvitation) => {
   return (
     <>
       <PureInfoModal {...acceptInvitation?.modal} />
-      <div className="flex h-full items-center justify-center p-2">
+      <div className="flex min-h-full items-center justify-center p-2">
         <div className="flex w-full max-w-sm flex-col justify-center">
           <h1 className="mb-2 text-center text-lg">Accept Invitation</h1>
           <div className="m-2 rounded-sm border-b-2 border-stone-800">

@@ -1,0 +1,42 @@
+[
+  {
+    "post": "post_01",
+    "author": "user_bob",
+    "content": "This is a comment",
+    "meta": {
+      "type": "define_comment",
+      "id": "comment_01",
+      "expect": "success",
+      "timing": 0.0
+    }
+  },
+  {
+    "comment": "comment_01",
+    "meta": {
+      "type": "make_comment",
+      "id": "make_comment_01",
+      "expect": "success",
+      "timing": 1.1
+    }
+  },
+  {
+    "comment": "comment_01",
+    "author": "user_alice",
+    "content": "This is a reply",
+    "meta": {
+      "type": "define_reply",
+      "id": "reply_01",
+      "expect": "success",
+      "timing": 0.0
+    }
+  },
+  {
+    "reply": "reply_01",
+    "meta": {
+      "type": "make_reply",
+      "id": "make_reply_01",
+      "expect": "success",
+      "timing": 1.11
+    }
+  }
+]

@@ -7,7 +7,10 @@ services:
   lobster-backend:
     build: ./backend
     depends_on:
-      - lobster-postgres
+      lobster-postgres:
+        condition: service_healthy
+      lobster-rabbit:
+        condition: service_healthy
     ports:
       - "3000:3000"
     networks:
@@ -19,13 +22,55 @@ services:
       - "pg-data:/var/lib/postgresql/data"
     networks:
       - lobster-backend-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U captain -d lobster"]
+      interval: 10s
+      timeout: 30s
+      retries: 4
+
+  lobster-elastic:
+    build: ./elastic
+    volumes:
+      - "elastic-data:/usr/share/elasticsearch/data"
+    networks:
+      - lobster-backend-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 30s
+      retries: 4
+
+  lobster-rabbit:
+    build: ./rabbitMQ
+    networks:
+      - lobster-backend-net
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "localhost", "5672" ]
+      interval: 10s
+      timeout: 30s
+      retries: 4
+    
+  lobster-search:
+    build: ./search-handler
+    depends_on:
+      lobster-elastic:
+        condition: service_healthy
+      lobster-rabbit:
+        condition: service_healthy
+    networks:
+      - lobster-backend-net
+    ports:
+      - "3001:3001"
 
 volumes:
   pg-data:
+    driver: local
+  elastic-data:
     driver: local
 
 networks:
   lobster-backend-net: {}
 
+# docker-compose build --no-cache
 # docker-compose up -d
 # docker-compose down

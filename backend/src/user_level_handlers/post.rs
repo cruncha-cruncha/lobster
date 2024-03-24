@@ -1,6 +1,8 @@
-use crate::db_structs::{comment, helpers, post, user};
-use crate::AppState;
 use crate::auth::claims::Claims;
+use crate::db_structs::{comment, helpers, post, user};
+use crate::queue::helpers::send_post_changed_message;
+use crate::queue::post_change_msg::PostChangeMsg;
+use crate::AppState;
 use axum::{
     extract::{Json, Path, State},
     http::StatusCode,
@@ -20,6 +22,7 @@ pub struct GetPostData {
     pub currency: post::Currency,
     pub latitude: post::Latitude,
     pub longitude: post::Longitude,
+    pub country: post::Country,
     pub created_at: post::CreatedAt,
     pub updated_at: post::UpdatedAt,
     pub deleted: post::Deleted,
@@ -54,6 +57,7 @@ pub async fn get(
             post.currency,
             post.latitude,
             post.longitude,
+            post.country,
             post.created_at,
             post.updated_at,
             post.deleted,
@@ -94,6 +98,7 @@ pub struct PostPostData {
     pub content: post::Content,
     pub price: post::Price,
     pub currency: post::Currency,
+    pub country: post::Country,
     pub latitude: post::Latitude,
     pub longitude: post::Longitude,
     pub draft: post::Draft,
@@ -120,6 +125,7 @@ pub async fn post(
             content,
             price,
             currency,
+            country,
             latitude,
             longitude,
             draft,
@@ -139,6 +145,7 @@ pub async fn post(
             $8,
             $9,
             $10,
+            $11,
             NOW(),
             NOW(),
             false,
@@ -153,6 +160,7 @@ pub async fn post(
         payload.content,
         payload.price,
         payload.currency,
+        payload.country,
         payload.latitude,
         payload.longitude,
         payload.draft,
@@ -163,6 +171,13 @@ pub async fn post(
         Ok(row) => row,
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     };
+
+    if !payload.draft {
+        let message = PostChangeMsg::create(&row, 0);
+        send_post_changed_message(&state.chan, &message.encode())
+            .await
+            .ok(); // ignore errors
+    }
 
     Ok(axum::Json(row))
 }
@@ -190,7 +205,7 @@ pub async fn delete(
                     'deleted', post.deleted
                 )) 
             WHERE post.uuid = $1
-            AND post.author_id = $2
+            AND (post.author_id = $2 OR $4)
             AND NOT EXISTS(
                 SELECT * FROM sales sale
                 WHERE sale.post_uuid = post.uuid)
@@ -201,6 +216,7 @@ pub async fn delete(
         post_uuid,
         author_id,
         claims.sub,
+        claims.is_moderator(),
     )
     .fetch_one(&state.db)
     .await
@@ -220,10 +236,20 @@ pub async fn delete(
         WHERE comment.post_uuid = $1
         "#,
         post_uuid,
-    ).fetch_all(&state.db).await {
-        Ok(_) => {},
-        Err(e) => { eprintln!("ERROR user_delete_post_update_comments_viewed, {}", e); },
+    )
+    .fetch_all(&state.db)
+    .await
+    {
+        Ok(_) => {}
+        Err(e) => {
+            eprintln!("ERROR user_delete_post_update_comments_viewed, {}", e);
+        }
     }
+
+    let message = PostChangeMsg::remove(&post_uuid);
+    send_post_changed_message(&state.chan, &message.encode())
+        .await
+        .ok(); // ignore errors
 
     return Ok(StatusCode::NO_CONTENT);
 }
@@ -235,6 +261,7 @@ pub struct PatchPostData {
     pub content: post::Content,
     pub price: post::Price,
     pub currency: post::Currency,
+    pub country: post::Country,
     pub latitude: post::Latitude,
     pub longitude: post::Longitude,
     pub draft: post::Draft,
@@ -261,9 +288,10 @@ pub async fn patch(
             content = $6,
             price = $7,
             currency = $8,
-            latitude = $9,
-            longitude = $10,
-            draft = $11,
+            country = $9,
+            latitude = $10,
+            longitude = $11,
+            draft = $12,
             updated_at = NOW(),
             changes = changes || jsonb_build_array(jsonb_build_object(
                 'who', $3::TEXT,
@@ -273,17 +301,18 @@ pub async fn patch(
                 'content', post.content,
                 'price', post.price,
                 'currency', post.currency,
+                'country', post.country,
                 'latitude', post.latitude,
                 'longitude', post.longitude,
                 'draft', post.draft
             )) 
         WHERE post.uuid = $1
-        AND post.author_id = $2
+        AND (post.author_id = $2 OR $13)
         AND post.deleted IS NOT TRUE
         AND NOT EXISTS(
             SELECT * FROM sales sale
             WHERE sale.post_uuid = post.uuid)
-        RETURNING *
+        RETURNING *;
         "#,
         post_uuid,
         author_id,
@@ -293,9 +322,11 @@ pub async fn patch(
         payload.content,
         payload.price,
         payload.currency,
+        payload.country,
         payload.latitude,
         payload.longitude,
         payload.draft,
+        claims.is_moderator(),
     )
     .fetch_one(&state.db)
     .await
@@ -304,17 +335,33 @@ pub async fn patch(
         Err(e) => return Err((StatusCode::NOT_FOUND, e.to_string())),
     };
 
-    match sqlx::query!(
+    let comment_count = match sqlx::query!(
         r#"
         UPDATE comments comment SET
             unread_by_author = COALESCE(unread_by_author, '[]'::JSONB) || '["post-edited"]'::JSONB
         WHERE comment.post_uuid = $1
+        AND deleted IS NOT TRUE
         "#,
         post_uuid,
-    ).fetch_all(&state.db).await {
-        Ok(_) => {},
-        Err(e) => { eprintln!("ERROR user_patch_post_update_comments_viewed, {}", e); },
+    )
+    .fetch_all(&state.db)
+    .await
+    {
+        Ok(q) => q.len(),
+        Err(e) => {
+            eprintln!("ERROR user_patch_post_update_comments_viewed, {}", e);
+            0
+        }
+    };
+
+    let mut message = PostChangeMsg::update(&row, comment_count as i32);
+    if payload.draft {
+        message = PostChangeMsg::remove(&post_uuid);
     }
+    // TODO: if the post was always a draft, we don't need to send any message.
+    send_post_changed_message(&state.chan, &message.encode())
+        .await
+        .ok(); // ignore errors
 
     Ok(axum::Json(row))
 }

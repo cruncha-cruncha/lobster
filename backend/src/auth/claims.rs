@@ -12,7 +12,7 @@ use time::Duration;
 #[allow(dead_code)]
 const HEADER: Lazy<jsonwebtoken::Header> = Lazy::new(|| jsonwebtoken::Header::new(ALGORITHM));
 
-pub fn get_refresh_token(
+pub fn make_refresh_token(
     sub: &str,
     level: ClaimLevel,
 ) -> Result<String, (StatusCode, String)> {
@@ -30,7 +30,7 @@ pub fn get_refresh_token(
     let claims = Claims {
         sub: sub.to_string(),
         level,
-        is_access: true,
+        purpose: ClaimPurpose::Refresh,
         exp: expiry.unix_timestamp(),
         iat: now.unix_timestamp(),
     };
@@ -41,7 +41,7 @@ pub fn get_refresh_token(
     }
 }
 
-pub fn get_access_token(
+pub fn make_access_token(
     sub: &str,
     level: ClaimLevel,
 ) -> Result<String, (StatusCode, String)> {
@@ -59,7 +59,7 @@ pub fn get_access_token(
     let claims = Claims {
         sub: sub.to_string(),
         level,
-        is_access: true,
+        purpose: ClaimPurpose::Access,
         exp: expiry.unix_timestamp(),
         iat: now.unix_timestamp(),
     };
@@ -70,7 +70,7 @@ pub fn get_access_token(
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Copy, Clone)]
 pub enum ClaimLevel {
     Admin = 3,
     Moderator = 2,
@@ -100,11 +100,38 @@ impl Into<ClaimLevel> for i32 {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize, PartialEq, Copy, Clone)]
+pub enum ClaimPurpose {
+    Refresh = 2,
+    Access = 1,
+    None = 0,
+}
+
+impl ClaimPurpose {
+    pub fn encode_numeric(&self) -> i32 {
+        match self {
+            ClaimPurpose::Refresh => 2,
+            ClaimPurpose::Access => 1,
+            ClaimPurpose::None => 0,
+        }
+    }
+}
+
+impl Into<ClaimPurpose> for i32 {
+    fn into(self) -> ClaimPurpose {
+        match self {
+            2 => ClaimPurpose::Refresh,
+            1 => ClaimPurpose::Access,
+            _ => ClaimPurpose::None,
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
     pub sub: String,
     pub level: ClaimLevel,
-    pub is_access: bool,
+    pub purpose: ClaimPurpose,
     pub exp: i64,
     pub iat: i64,
 }
@@ -112,6 +139,14 @@ pub struct Claims {
 impl Claims {
     pub fn subject_as_user_id(&self) -> Option<user::Id> {
         self.sub.parse::<user::Id>().ok()
+    }
+
+    pub fn is_moderator(&self) -> bool {
+        self.level == ClaimLevel::Moderator
+    }
+
+    pub fn is_admin(&self) -> bool {
+        self.level == ClaimLevel::Admin
     }
 }
 
