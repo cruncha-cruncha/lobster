@@ -117,7 +117,7 @@ CREATE TABLE abuse_status (
 
 CREATE TABLE abuses (
     uuid UUID NOT NULL,
-    resource_uuid UUID NOT NULL,
+    resource_uuid UUID,
     resource_type INTEGER NOT NULL,
     offender_id INTEGER NOT NULL,
     reporter_id INTEGER NOT NULL,
@@ -125,7 +125,6 @@ CREATE TABLE abuses (
     created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     status INTEGER NOT NULL,
-    comments JSONB NOT NULL,
     PRIMARY KEY (uuid),
     CONSTRAINT fk_resource_type
       FOREIGN KEY(resource_type)
@@ -137,6 +136,15 @@ CREATE TABLE abuses (
 
 CREATE INDEX IF NOT EXISTS idx_abuses_offender_id ON abuses USING btree(offender_id);
 CREATE INDEX IF NOT EXISTS idx_abuses_reporter_id ON abuses USING btree(reporter_id);
+
+CREATE TABLE abuse_comments (
+    uuid UUID NOT NULL,
+    abuse_uuid UUID NOT NULL,
+    author_id INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
+    PRIMARY KEY (uuid)
+);
 
 CREATE TABLE comments (
     uuid UUID NOT NULL,

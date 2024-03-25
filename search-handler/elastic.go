@@ -224,9 +224,9 @@ func (elastic Elastic) fullPostsSearch(params PostSearchParams) ([]PostChangeInf
 	case 2:
 		queryString += `{"price":{"order":"desc"}},`
 	case 3:
-		queryString += `{"created_at":{"order":"asc"}},`
+		queryString += `{"updated_at":{"order":"asc"}},`
 	case 4:
-		queryString += `{"created_at":{"order":"desc"}},`
+		queryString += `{"updated_at":{"order":"desc"}},`
 	}
 	queryString += `{"_score":{"order":"desc"}}`
 	queryString += `],` // sort

@@ -14,6 +14,63 @@ use std::sync::Arc;
 use crate::AppState;
 use crate::auth::claims::Claims;
 
+const PAGE_SIZE: i64 = 20;
+
+pub async fn get(
+    _claims: Claims,
+    Path(reply_uuid): Path<reply::Uuid>,
+    State(state): State<Arc<AppState>>,
+) -> Result<Json<reply::Reply>, (StatusCode, String)> {
+    let row = match sqlx::query_as!(
+        reply::Reply,
+        r#"
+        SELECT *
+        FROM replies reply
+        WHERE reply.uuid = $1
+        "#,
+        reply_uuid,
+    )
+    .fetch_one(&state.db)
+    .await
+    {
+        Ok(row) => row,
+        Err(e) => return Err((StatusCode::NOT_FOUND, e.to_string())),
+    };
+
+    Ok(axum::Json(row))
+}
+
+pub async fn get_comment_scoped(
+    _claims: Claims,
+    Path(comment_uuid): Path<comment::Uuid>,
+    Path(page): Path<i64>,
+    State(state): State<Arc<AppState>>,
+) -> Result<Json<Vec<reply::Reply>>, (StatusCode, String)> {
+    let rows = match sqlx::query_as!(
+        reply::Reply,
+        r#"
+        SELECT *
+        FROM replies reply
+        WHERE reply.comment_uuid = $1
+        AND reply.deleted = false
+        ORDER BY reply.created_at ASC
+        LIMIT $2
+        OFFSET $3
+        "#,
+        comment_uuid,
+        PAGE_SIZE,
+        page * PAGE_SIZE
+    )
+    .fetch_all(&state.db)
+    .await
+    {
+        Ok(row) => row,
+        Err(e) => return Err((StatusCode::NOT_FOUND, e.to_string())),
+    };
+
+    Ok(axum::Json(rows))
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PostReplyData {
     pub comment_uuid: reply::CommentUuid,

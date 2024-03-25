@@ -1,3 +1,6 @@
+pub mod abuse_comment;
+pub mod abuse_status;
+pub mod abuse;
 pub mod comment;
 pub mod country;
 pub mod currency;
@@ -7,5 +10,6 @@ pub mod language;
 pub mod post;
 pub mod recovery_request;
 pub mod reply;
+pub mod resource_type;
 pub mod sale;
 pub mod user;

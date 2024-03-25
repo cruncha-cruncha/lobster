@@ -118,8 +118,6 @@ pub async fn refresh(
         None => return Err((StatusCode::BAD_REQUEST, String::from(""))),
     };
 
-    // TODO: check if user is banned?
-
     let user = match sqlx::query_as!(
         user::User,
         r#"

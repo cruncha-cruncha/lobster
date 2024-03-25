@@ -358,7 +358,8 @@ pub async fn patch(
     if payload.draft {
         message = PostChangeMsg::remove(&post_uuid);
     }
-    // TODO: if the post was always a draft, we don't need to send any message.
+
+    // if the post was always a draft, sending this is redundant
     send_post_changed_message(&state.chan, &message.encode())
         .await
         .ok(); // ignore errors

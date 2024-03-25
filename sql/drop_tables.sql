@@ -1,5 +1,6 @@
 DROP TABLE IF EXISTS replies;
 DROP TABLE IF EXISTS comments;
+DROP TABLE IF EXISTS abuse_comments; 
 DROP TABLE IF EXISTS abuses;
 DROP TABLE IF EXISTS abuse_status;
 DROP TABLE IF EXISTS resource_types;

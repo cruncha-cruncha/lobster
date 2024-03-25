@@ -70,7 +70,5 @@ pub async fn post(
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     };
 
-    // TODO: send email with invitation code
-
     Ok(StatusCode::OK)
 }

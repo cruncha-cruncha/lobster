@@ -9,3 +9,6 @@ VALUES ('void', ''), ('Canadian Dollar', 'CAD');
 
 INSERT INTO resource_types (name)   
 VALUES ('user'), ('post'), ('comment'), ('reply'), ('sale'), ('review');
+
+INSERT INTO abuse_status (name)
+VALUES ('opened'), ('investigating'), ('closed');

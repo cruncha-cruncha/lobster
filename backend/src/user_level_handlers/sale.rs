@@ -28,22 +28,22 @@ pub async fn post(
 
     match sqlx::query!(
         r#"
-        SELECT * FROM posts
-        WHERE uuid = $1 AND author_id = $2
+        UPDATE posts
+        SET sold = true
+        WHERE uuid = $1
+        AND author_id = $2
+        AND sold = false
         "#,
         payload.post_uuid,
         caller_id,
-    )
-    .fetch_optional(&state.db)
-    .await
-    {
-        Ok(row) => {
-            if row.is_none() {
+    ).execute(&state.db).await {
+        Ok(res) => {
+            if res.rows_affected() == 0 {
                 return Err((StatusCode::NOT_FOUND, String::from("")));
             }
         }
-        Err(_) => return Err((StatusCode::INTERNAL_SERVER_ERROR, String::from(""))),
-    }
+        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+    };
 
     let row = match sqlx::query_as!(
         sale::Sale,

@@ -20,7 +20,7 @@ pub async fn read_code(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<ReadInvitationCodeData>,
 ) -> Result<String, (StatusCode, String)> {
-    if !claims.is_moderator() && !claims.is_admin() {
+    if !claims.is_moderator() {
         return Err((StatusCode::UNAUTHORIZED, String::from("Not an admin")));
     }
 

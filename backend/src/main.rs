@@ -10,10 +10,6 @@ use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::{env, error::Error, net::SocketAddr, sync::Arc};
 #[cfg(feature = "cors")]
 use tower_http::cors::CorsLayer;
-use user_level_handlers::{
-    account, auth as auth_handler, comment, countries, currencies, invitation, languages,
-    password_reset, post, post_comments, profile, reply,
-};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -47,58 +43,160 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let app = Router::new()
         .route("/hello", routing::get(|| async { "hello, world" }))
-        .route("/users", routing::post(auth_handler::login))
-        .route("/tokens", routing::post(auth_handler::refresh))
-        .route("/invitations", routing::post(invitation::post))
+        .route("/users", routing::post(user_level_handlers::auth::login))
+        .route("/tokens", routing::post(user_level_handlers::auth::refresh))
+        .route(
+            "/invitations",
+            routing::post(user_level_handlers::invitation::post),
+        )
         .route(
             "/invitations/:code",
-            routing::post(auth_handler::accept_invitation),
+            routing::post(user_level_handlers::auth::accept_invitation),
         )
-        .route("/password-resets", routing::post(password_reset::post))
+        .route(
+            "/password-resets",
+            routing::post(user_level_handlers::password_reset::post),
+        )
         .route(
             "/password-resets/:code",
-            routing::post(auth_handler::reset_password),
+            routing::post(user_level_handlers::auth::reset_password),
         )
-        .route("/accounts", routing::post(account::get_multiple))
+        .route(
+            "/accounts",
+            routing::post(user_level_handlers::account::get_multiple)
+                .delete(user_level_handlers::account::delete),
+        )
         .route(
             "/accounts/:user_id",
-            routing::get(account::get)
-                .patch(account::patch)
-                .delete(account::delete),
+            routing::get(user_level_handlers::account::get)
+                .patch(user_level_handlers::account::patch),
         )
-        .route("/profiles/:user_id", routing::get(profile::get))
+        .route(
+            "/profiles/:user_id",
+            routing::get(user_level_handlers::profile::get),
+        )
         .route(
             "/profiles/:user_id/historical-data",
-            routing::get(profile::get_history),
+            routing::get(user_level_handlers::profile::get_history),
+        )
+        .route(
+            "/users/:user_id/all-posts/:page",
+            routing::get(user_level_handlers::user_scoped::get_all_posts),
+        )
+        .route(
+            "/users/:user_id/active-posts/:page",
+            routing::get(user_level_handlers::user_scoped::get_active_posts),
+        )
+        .route(
+            "/users/:user_id/sold-posts/:page",
+            routing::get(user_level_handlers::user_scoped::get_sold_posts),
+        )
+        .route(
+            "/users/:user_id/deleted-posts/:page",
+            routing::get(user_level_handlers::user_scoped::get_deleted_posts),
+        )
+        .route(
+            "/users/:user_id/draft-posts/:page",
+            routing::get(user_level_handlers::user_scoped::get_draft_posts),
+        )
+        .route(
+            "/users/:user_id/all-comments/:page",
+            routing::get(user_level_handlers::user_scoped::get_all_comments),
+        )
+        .route(
+            "/users/:user_id/open-comments/:page",
+            routing::get(user_level_handlers::user_scoped::get_open_comments),
+        )
+        .route(
+            "/users/:user_id/hit-comments/:page",
+            routing::get(user_level_handlers::user_scoped::get_hit_comments),
+        )
+        .route(
+            "/users/:user_id/missed-comments/:page",
+            routing::get(user_level_handlers::user_scoped::get_missed_comments),
+        )
+        .route(
+            "/users/:user_id/lost-comments/:page",
+            routing::get(user_level_handlers::user_scoped::get_lost_comments),
+        )
+        .route(
+            "/users/:user_id/deleted-comments/:page",
+            routing::get(user_level_handlers::user_scoped::get_deleted_comments),
+        )
+        .route(
+            "/users/:user_id/abuse_reports/:page",
+            routing::get(user_level_handlers::abuse::get_reported_by),
+        )
+        .route(
+            "/users/:user_id/abuse_offences/:page",
+            routing::get(user_level_handlers::abuse::get_offended_by),
         )
         .route(
             "/unread-activity/:user_id",
-            routing::get(profile::get_unread),
+            routing::get(user_level_handlers::profile::get_unread),
         )
-        .route("/posts", routing::post(post::post))
+        .route("/abuses", routing::post(user_level_handlers::abuse::post))
+        .route(
+            "/abuses/:abuse_uuid",
+            routing::get(user_level_handlers::abuse::get)
+                .patch(user_level_handlers::abuse::comment),
+        )
+        .route(
+            "/abuses/:abuse_uuid/comments/:page",
+            routing::get(user_level_handlers::abuse::get_comments),
+        )
+        .route("/posts", routing::post(user_level_handlers::post::post))
         .route(
             "/posts/:post_uuid",
-            routing::get(post::get)
-                .patch(post::patch)
-                .delete(post::delete),
+            routing::get(user_level_handlers::post::get)
+                .patch(user_level_handlers::post::patch)
+                .delete(user_level_handlers::post::delete),
         )
         .route(
-            "/posts/:post_uuid/comments",
-            routing::get(post_comments::get),
+            "/posts/:post_uuid/comments/:page",
+            routing::get(user_level_handlers::comment::get_post_scoped),
         )
-        .route("/comments", routing::post(comment::post))
+        .route(
+            "/comments",
+            routing::post(user_level_handlers::comment::post),
+        )
         .route(
             "/comments/:comment_uuid",
-            routing::patch(comment::patch).delete(comment::delete),
+            routing::get(user_level_handlers::comment::get)
+                .patch(user_level_handlers::comment::patch)
+                .delete(user_level_handlers::comment::delete),
         )
-        .route("/replies", routing::post(reply::post))
+        .route(
+            "/comments/:comment_uuid/replies/:page",
+            routing::get(user_level_handlers::reply::get_comment_scoped),
+        )
+        .route("/replies", routing::post(user_level_handlers::reply::post))
         .route(
             "/replies/:reply_uuid",
-            routing::patch(reply::patch).delete(reply::delete),
+            routing::get(user_level_handlers::reply::get)
+                .patch(user_level_handlers::reply::patch)
+                .delete(user_level_handlers::reply::delete),
         )
-        .route("/currencies", routing::get(currencies::get))
-        .route("/languages", routing::get(languages::get))
-        .route("/countries", routing::get(countries::get))
+        .route(
+            "/currencies",
+            routing::get(user_level_handlers::currencies::get),
+        )
+        .route(
+            "/languages",
+            routing::get(user_level_handlers::languages::get),
+        )
+        .route(
+            "/countries",
+            routing::get(user_level_handlers::countries::get),
+        )
+        .route(
+            "/resource-options",
+            routing::get(user_level_handlers::abuse::get_resource_options),
+        )
+        .route(
+            "/abuse-statuses",
+            routing::get(user_level_handlers::abuse::get_status_options),
+        )
         .route("/sales", routing::post(user_level_handlers::sale::post))
         .route(
             "/sales/:post_uuid",
@@ -109,6 +207,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
             routing::post(user_level_handlers::reviews::make)
                 .patch(user_level_handlers::reviews::make)
                 .delete(user_level_handlers::reviews::remove),
+        )
+        .route(
+            "/admin/abuse/:abuse_uuid",
+            routing::patch(moderator_level_handlers::abuse::comment),
         )
         .route(
             "/admin/invitation",
@@ -126,9 +228,17 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 .post(admin_level_handlers::auth::login),
         )
         .route(
+            "/admin/users/:user_id/ban",
+            routing::post(moderator_level_handlers::user::ban),
+        )
+        .route(
             "/admin/posts/:post_uuid",
             routing::delete(admin_level_handlers::post::delete)
-                .patch(admin_level_handlers::post::touch),
+                .patch(moderator_level_handlers::post::touch),
+        )
+        .route(
+            "/admin/sales/:post_uuid",
+            routing::delete(admin_level_handlers::sale::delete),
         )
         .route(
             "/admin/comments/:comment_uuid",

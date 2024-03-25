@@ -5,10 +5,7 @@ use crate::AppState;
 use crate::{
     db_structs::{comment, helpers},
     queue::{
-        helpers::{
-            send_post_changed_message,
-            PostWithInfo
-        },
+        helpers::{send_post_changed_message, PostWithInfo},
         post_change_msg::PostChangeMsg,
     },
 };
@@ -17,6 +14,114 @@ use axum::{
     http::StatusCode,
 };
 use serde::{Deserialize, Serialize};
+
+const PAGE_SIZE: i64 = 20;
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GetCommentData {
+    pub uuid: comment::Uuid,
+    pub post_uuid: comment::PostUuid,
+    pub author_id: comment::AuthorId,
+    pub poster_id: comment::PosterId,
+    pub content: comment::Content,
+    pub created_at: comment::CreatedAt,
+    pub updated_at: comment::UpdatedAt,
+    pub deleted: comment::Deleted,
+    pub changes: comment::Changes,
+    pub unread_by_author: comment::UnreadByAuthor,
+    pub unread_by_poster: comment::UnreadByPoster,
+    pub reply_count: Option<i64>,
+}
+
+pub async fn get(
+    _claims: Claims,
+    Path(comment_uuid): Path<comment::Uuid>,
+    State(state): State<Arc<AppState>>,
+) -> Result<Json<GetCommentData>, (StatusCode, String)> {
+    let comment = match sqlx::query_as!(
+        GetCommentData,
+        r#"
+        SELECT
+            comment.uuid,
+            comment.post_uuid,
+            comment.author_id,
+            comment.poster_id,
+            comment.content,
+            comment.created_at,
+            comment.updated_at,
+            comment.deleted,
+            comment.changes,
+            comment.unread_by_author,
+            comment.unread_by_poster,
+            COALESCE(COUNT(reply.uuid), 0)::INT AS "reply_count: i64"
+        FROM comments comment
+        LEFT JOIN replies reply ON reply.comment_uuid = comment.uuid
+        WHERE comment.post_uuid = $1
+        GROUP BY comment.uuid
+        "#,
+        comment_uuid
+    )
+    .fetch_optional(&state.db)
+    .await
+    {
+        Ok(row) => row,
+        Err(_) => return Err((StatusCode::NOT_FOUND, String::from(""))),
+    };
+
+    match comment {
+        Some(comment) => Ok(axum::Json(comment)),
+        None => Err((StatusCode::NOT_FOUND, String::from(""))),
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GetPostCommentsData {
+    comments: Vec<GetCommentData>,
+}
+
+pub async fn get_post_scoped(
+    _claims: Claims,
+    Path(post_uuid): Path<comment::PostUuid>,
+    Path(page): Path<i64>,
+    State(state): State<Arc<AppState>>,
+) -> Result<Json<GetPostCommentsData>, (StatusCode, String)> {
+    let comments = match sqlx::query_as!(
+        GetCommentData,
+        r#"
+        SELECT
+            comment.uuid,
+            comment.post_uuid,
+            comment.author_id,
+            comment.poster_id,
+            comment.content,
+            comment.created_at,
+            comment.updated_at,
+            comment.deleted,
+            comment.changes,
+            comment.unread_by_author,
+            comment.unread_by_poster,
+            COALESCE(COUNT(reply.uuid), 0)::INT AS "reply_count: i64"
+        FROM comments comment
+        LEFT JOIN replies reply ON reply.comment_uuid = comment.uuid
+        WHERE comment.post_uuid = $1
+        GROUP BY comment.uuid
+        ORDER BY comment.created_at DESC
+        LIMIT $2
+        OFFSET $3
+        "#,
+        post_uuid,
+        PAGE_SIZE,
+        page * PAGE_SIZE
+    )
+    .fetch_all(&state.db)
+    .await
+    {
+        Ok(rows) => rows,
+        Err(_) => return Err((StatusCode::NOT_FOUND, String::from(""))),
+    };
+
+    Ok(axum::Json(GetPostCommentsData { comments }))
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PostCommentData {

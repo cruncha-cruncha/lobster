@@ -177,20 +177,37 @@ pub async fn patch(
 
 pub async fn delete(
     claims: Claims,
-    Path(user_id): Path<u32>,
     State(state): State<Arc<AppState>>,
 ) -> Result<StatusCode, (StatusCode, String)> {
-    if claims.sub != user_id.to_string() {
-        return Err((StatusCode::UNAUTHORIZED, String::from("")));
-    }
-
-    // TODO: delete all user's posts, comments, replies, etc.
+    let user_id = match claims.subject_as_user_id() {
+        Some(id) => id,
+        None => return Err((StatusCode::BAD_REQUEST, String::from(""))),
+    };
 
     match sqlx::query!(
         r#"
         DELETE
         FROM users usr
         WHERE usr.id = $1;
+        "#,
+        user_id as i64
+    )
+    .execute(&state.db)
+    .await
+    {
+        Ok(res) => {
+            if res.rows_affected() == 0 {
+                return Err((StatusCode::NOT_FOUND, String::from("")));
+            }
+        }
+        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+    };
+
+    match sqlx::query!(
+        r#"
+        DELETE
+        FROM posts 
+        WHERE author_id = $1;
         "#,
         user_id as i64
     )
