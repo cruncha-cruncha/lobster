@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE comments comment SET\n            unread_by_author = CASE WHEN comment.author_id = $2 THEN unread_by_author ELSE COALESCE(unread_by_author, '[]'::JSONB) || '[\"reply-deleted\"]'::JSONB END,\n            unread_by_poster = CASE WHEN comment.author_id = $2 THEN COALESCE(unread_by_poster, '[]'::JSONB) || '[\"reply-deleted\"]'::JSONB ELSE unread_by_poster END\n        FROM replies reply\n        WHERE reply.uuid = $1\n        AND comment.uuid = reply.comment_uuid\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "908f1c8647bdcdc1da8453c6c90af30c06c48481c1ba34f9477fb95a5819e98c"
+}

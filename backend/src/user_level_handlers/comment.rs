@@ -1,14 +1,10 @@
 use std::sync::Arc;
 
 use crate::auth::claims::Claims;
+use crate::broadcast::post_change_msg::{Action, PostChangeMsg};
+use crate::broadcast::post_with_comment_count::PostWithCommentCount;
+use crate::db_structs::{comment, helpers};
 use crate::AppState;
-use crate::{
-    db_structs::{comment, helpers},
-    queue::{
-        helpers::{send_post_changed_message, PostWithInfo},
-        post_change_msg::PostChangeMsg,
-    },
-};
 use axum::{
     extract::{Json, Path, State},
     http::StatusCode,
@@ -140,7 +136,7 @@ pub async fn post(
     };
 
     let post_info = match sqlx::query_as!(
-        PostWithInfo,
+        PostWithCommentCount,
         r#"
         SELECT
             post.*,
@@ -195,11 +191,8 @@ pub async fn post(
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     };
 
-    let comment_count = post_info.comment_count.unwrap_or_default() + 1;
-    let message = PostChangeMsg::update(&post_info.into(), comment_count);
-    send_post_changed_message(&state.chan, &message.encode())
-        .await
-        .ok(); // ignore errors
+    let message = PostChangeMsg::from_pwcc(Action::Update, &post_info);
+    state.p2p.send_post_changed_message(&message); // ignore errors
 
     Ok(axum::Json(row))
 }
@@ -270,7 +263,7 @@ pub async fn delete(
     };
 
     let post_info = match sqlx::query_as!(
-        PostWithInfo,
+        PostWithCommentCount,
         r#"
         SELECT
             post.*,
@@ -329,11 +322,8 @@ pub async fn delete(
         Err(e) => return Err((StatusCode::NOT_FOUND, e.to_string())),
     };
 
-    let comment_count = post_info.comment_count.unwrap_or_default() - 1;
-    let message = PostChangeMsg::update(&post_info.into(), comment_count);
-    send_post_changed_message(&state.chan, &message.encode())
-        .await
-        .ok(); // ignore errors
+    let message = PostChangeMsg::from_pwcc(Action::Update, &post_info);
+    state.p2p.send_post_changed_message(&message);
 
     return Ok(StatusCode::NO_CONTENT);
 }

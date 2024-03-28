@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        DELETE\n        FROM invitations\n        WHERE id = $1\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ae95c88bca21b33ad4a98cbfc808ccd1cdd7efaa9908c0b8b0073a24dae90d0d"
+}

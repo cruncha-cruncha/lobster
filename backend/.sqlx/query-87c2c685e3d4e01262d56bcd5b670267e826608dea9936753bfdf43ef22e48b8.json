@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT \n            comment.author_id AS commenter_id,\n            post.author_id AS poster_id\n        FROM comments comment\n        LEFT JOIN posts post ON post.uuid = comment.post_uuid\n        WHERE comment.uuid = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "commenter_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "poster_id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "87c2c685e3d4e01262d56bcd5b670267e826608dea9936753bfdf43ef22e48b8"
+}

@@ -1,0 +1,68 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE replies reply\n        SET\n            content = $4,\n            updated_at = NOW(),\n            changes = changes || jsonb_build_array(jsonb_build_object(\n                'who', $3::TEXT,\n                'when', NOW(),\n                'content', reply.content\n            ))\n        WHERE uuid = $1\n        AND (author_id = $2 OR $5)\n        RETURNING *\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "uuid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "comment_uuid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "author_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "content",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "deleted",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
+        "name": "changes",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4",
+        "Text",
+        "Text",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "89b6bde6acb9f5009dc9ae0d9c09f31076d78485e20df0f8d168cb750dcbd56b"
+}

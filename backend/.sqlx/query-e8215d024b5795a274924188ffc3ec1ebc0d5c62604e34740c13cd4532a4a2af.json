@@ -1,0 +1,75 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO abuses (uuid, resource_uuid, resource_type, offender_id, reporter_id, content, status)\n        VALUES ($1, $2, $3, $4, $5, $6, 1)\n        RETURNING *;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "uuid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "resource_uuid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "resource_type",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "offender_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "reporter_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "content",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "status",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e8215d024b5795a274924188ffc3ec1ebc0d5c62604e34740c13cd4532a4a2af"
+}

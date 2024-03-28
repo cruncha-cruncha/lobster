@@ -1,0 +1,86 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO comments (uuid, post_uuid, author_id, content, poster_id, created_at, updated_at, deleted, changes, unread_by_author, unread_by_poster)\n        VALUES ($1, $2, $3, $4, $5, NOW(), NOW(), FALSE, '[]'::JSONB, '[]'::JSONB, '[\"new-comment\"]'::JSONB)\n        ON CONFLICT (author_id, post_uuid)\n        DO UPDATE SET\n            content = $4,\n            updated_at = NOW(),\n            deleted = FALSE,\n            changes = comments.changes || jsonb_build_array(jsonb_build_object(\n                'who', $3::TEXT,\n                'when', NOW(),\n                'content', comments.content,\n                'deleted', comments.deleted\n            )),\n            unread_by_poster = COALESCE(comments.unread_by_poster, '[]'::JSONB) || '[\"new-comment\"]'::JSONB\n        RETURNING *;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "uuid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "post_uuid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "poster_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "author_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "content",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "deleted",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 8,
+        "name": "changes",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 9,
+        "name": "unread_by_author",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 10,
+        "name": "unread_by_poster",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Int4",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e039d700cb674cdbb41fb59b27effc465339127da331cf63518d24fe2412763d"
+}
