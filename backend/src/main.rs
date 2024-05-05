@@ -2,28 +2,35 @@ mod admin_level_handlers;
 mod auth;
 mod db_structs;
 mod moderator_level_handlers;
-mod queue;
+mod broadcast;
 mod user_level_handlers;
 
 use axum::{routing, Router};
+use broadcast::comm::ZeroConfControl;
 use sqlx::{postgres::PgPoolOptions, PgPool};
-use std::{env, error::Error, net::SocketAddr, sync::Arc};
+use std::{env, error::Error, net::SocketAddr, sync::Arc, thread};
 #[cfg(feature = "cors")]
 use tower_http::cors::CorsLayer;
 
 #[derive(Clone)]
 pub struct AppState {
     db: PgPool,
-    chan: lapin::Channel,
+    p2p: Arc<ZeroConfControl>,
 }
 
+// #[tokio::main(worker_threads = 4)]
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    println!("Starting server...");
+    
     dotenvy::dotenv().expect("Failed to read .env file");
 
-    let (_rabbit_conn, queue_chan) = queue::setup::setup()
-        .await
-        .expect("Failed to connect to rabbitMQ");
+    let zero_conf_control = Arc::new(ZeroConfControl::setup());
+    let zero_copy = Arc::clone(&zero_conf_control);
+
+    thread::spawn(move || {
+        broadcast::comm::handle_sync_messages(&zero_copy);
+    });
 
     let pg_connection_string = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let pool = PgPoolOptions::new()
@@ -33,8 +40,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .expect("Failed to create pool.");
     let shared_state = Arc::new(AppState {
         db: pool,
-        chan: queue_chan,
-    });
+        p2p: zero_conf_control,
+    }); // TODO: why do we need Arc here? Do we still need to derive Clone for AppState?
 
     let hosting_addr_string = env::var("HOSTING_ADDR").expect("HOSTING_ADDR must be set");
     let hosting_addr = hosting_addr_string
@@ -247,6 +254,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .route(
             "/admin/replies/:reply_uuid",
             routing::delete(admin_level_handlers::reply::delete),
+        )
+        .route(
+            "/admin/comm-diagnostics",
+            routing::get(admin_level_handlers::comm::get),
         );
 
     #[cfg(feature = "cors")]
@@ -269,7 +280,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let app = app.with_state(shared_state);
 
     axum::Server::bind(&hosting_addr)
-        .serve(app.into_make_service_with_connect_info::<SocketAddr>())
+        .serve(app.into_make_service())
         .await
         .expect("server failed to start");
 

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE posts\n        SET sold = true\n        WHERE uuid = $1\n        AND author_id = $2\n        AND sold = false\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "44993aa442b01ed0089f38d4deb693f73194485eb2ff03bde0c271286cb301c5"
+}

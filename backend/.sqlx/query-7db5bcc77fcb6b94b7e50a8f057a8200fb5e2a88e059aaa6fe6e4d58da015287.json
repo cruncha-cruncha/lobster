@@ -1,0 +1,76 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT abuse.*, COUNT(comment) AS comment_count\n        FROM abuses abuse\n        LEFT JOIN abuse_comments comment ON abuse.uuid = comment.abuse_uuid\n        WHERE abuse.uuid = $1\n        GROUP BY abuse.uuid;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "uuid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "resource_uuid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "resource_type",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "offender_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "reporter_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "content",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "status",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "comment_count",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "7db5bcc77fcb6b94b7e50a8f057a8200fb5e2a88e059aaa6fe6e4d58da015287"
+}

@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE sales sale\n        SET price = NULL,\n            rating = NULL,\n            review = NULL,\n            reviewed_at = NULL,\n            changes = changes || jsonb_build_array(jsonb_build_object(\n                'who', $2::TEXT,\n                'when', NOW(),\n                'price', sale.price,\n                'rating', sale.rating,\n                'review', sale.review,\n                'reviewed_at', sale.reviewed_at\n            ))\n        WHERE post_uuid = $1\n        AND buyer_id = $3\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c53d7ba3ff1dbdc2190028329c6c644c15e2738acf4fa6255f9f079c9ed66baa"
+}

@@ -1,0 +1,112 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            usr.id,\n            usr.first_name AS name,\n            usr.language,\n            country.name AS country,\n            usr.banned_until,\n            usr.changes,\n            COALESCE(COUNT(post), 0) AS all_posts,\n            COALESCE(COUNT(post) FILTER (WHERE post.deleted), 0) AS deleted_posts,\n            COALESCE(COUNT(post) FILTER (WHERE post.deleted IS NOT TRUE AND post.draft), 0) AS draft_posts,\n            COALESCE(COUNT(post) FILTER (WHERE post.sold), 0) AS sold_posts,\n            COALESCE(COUNT(comment), 0) AS all_comments,\n            COALESCE(COUNT(comment) FILTER (WHERE comment.deleted), 0) AS deleted_comments,\n            COALESCE(COUNT(comment) FILTER (WHERE comment.deleted IS NOT TRUE AND want.deleted IS TRUE), 0) AS lost_comments,\n            COALESCE(COUNT(comment) FILTER (WHERE comment.deleted IS NOT TRUE AND want.deleted IS NOT TRUE AND want.sold IS NOT TRUE), 0) AS active_comments,\n            COALESCE(COUNT(comment) FILTER (WHERE comment.deleted IS NOT TRUE AND sale.buyer_id <> $1), 0) AS missed_comments,\n            COALESCE(COUNT(comment) FILTER (WHERE sale.buyer_id = $1), 0) AS bought_comments\n        FROM users usr\n        LEFT JOIN countries country ON country.id = usr.country\n        -- as a seller\n        LEFT JOIN posts post ON post.author_id = usr.id\n        -- as a buyer\n        LEFT JOIN comments comment ON comment.author_id = usr.id\n        LEFT JOIN posts want ON want.uuid = comment.post_uuid\n        LEFT JOIN sales sale ON sale.post_uuid = want.uuid\n        WHERE usr.id = $1\n        GROUP BY usr.id, country.name\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "language",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "country",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "banned_until",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "changes",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 6,
+        "name": "all_posts",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "deleted_posts",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 8,
+        "name": "draft_posts",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 9,
+        "name": "sold_posts",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 10,
+        "name": "all_comments",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 11,
+        "name": "deleted_comments",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 12,
+        "name": "lost_comments",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 13,
+        "name": "active_comments",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 14,
+        "name": "missed_comments",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 15,
+        "name": "bought_comments",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "dbae3a2c9db4307e6cef385e457daa43687ce31128d0044e7ed4f25b1a743655"
+}

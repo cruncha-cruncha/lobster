@@ -1,5 +1,6 @@
 import requests
 import logging
+import time
 import json
 import jwt
 import sys
@@ -76,7 +77,8 @@ def handle_step(source, super_user):
     elif source_type == 'make_reply':
         success = shared.GLOBAL_DATA[source['reply']].make()
     elif source_type == 'find_post':
-        success = shared.GLOBAL_DATA[source['post']].find()
+        local_user = shared.GLOBAL_DATA[source['user']]
+        success = shared.GLOBAL_DATA[source['post']].find(local_user)
     elif source_type == 'draft_post':
         success = shared.GLOBAL_DATA[source['post']].draft()
     elif source_type == 'publish_post':
@@ -101,6 +103,8 @@ def handle_step(source, super_user):
         success = shared.GLOBAL_DATA[source['comment']].hard_delete(super_user)
     elif source_type == 'hard_delete_reply':
         success = shared.GLOBAL_DATA[source['reply']].hard_delete(super_user)
+    elif source_type == 'pause':
+        time.sleep(source['duration'])
     else:
         print('Unknown step type: ' + source_type)   
 

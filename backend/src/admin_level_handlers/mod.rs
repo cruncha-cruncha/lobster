@@ -1,4 +1,5 @@
 pub mod auth;
+pub mod comm;
 pub mod comment;
 pub mod invitation;
 pub mod password_reset;

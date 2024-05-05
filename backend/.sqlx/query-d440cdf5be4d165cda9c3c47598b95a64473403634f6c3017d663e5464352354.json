@@ -1,0 +1,86 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE comments comment\n        SET\n            content = $4,\n            unread_by_poster = COALESCE(comment.unread_by_poster, '[]'::JSONB) || '[\"comment-edited\"]'::JSONB,\n            updated_at = NOW(),\n            changes = comment.changes || jsonb_build_array(jsonb_build_object(\n                'who', $3::TEXT,\n                'when', NOW(),\n                'content', comment.content\n            ))\n        FROM posts post\n        WHERE comment.uuid = $1\n        AND (comment.author_id = $2 OR $5)\n        AND post.uuid = comment.post_uuid\n        AND post.deleted IS NOT TRUE\n        AND NOT EXISTS(\n            SELECT * FROM sales sale\n            WHERE sale.post_uuid = post.uuid)\n        RETURNING comment.*\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "uuid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "post_uuid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "poster_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "author_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "content",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "deleted",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 8,
+        "name": "changes",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 9,
+        "name": "unread_by_author",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 10,
+        "name": "unread_by_poster",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4",
+        "Text",
+        "Text",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "d440cdf5be4d165cda9c3c47598b95a64473403634f6c3017d663e5464352354"
+}

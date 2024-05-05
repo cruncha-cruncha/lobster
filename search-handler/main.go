@@ -4,20 +4,26 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	fmt.Println("Starting server...")
+	
+	godotenv.Load()
+	
 	publicKey := readPublicKey()
 	elastic := NewElastic()
-	queue := NewQueue()
-	shutdown := queue.Listen(elastic)
-	defer queue.Close()
-	defer func() { shutdown <- true }()
+	comm := NewComm()
+
+	go comm.Listen(elastic)
+	defer comm.Close()
 
 	http.HandleFunc("/hello", func(w http.ResponseWriter, req *http.Request) {
 		if req.Method != http.MethodGet {
@@ -86,8 +92,6 @@ func main() {
 			Found: posts,
 		}
 
-		fmt.Println("Sending response")
-
 		corsPreflight(w, req)
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(out)
@@ -120,4 +124,10 @@ func readPublicKey() interface{} {
     }
 
 	return key
+}
+
+func panicOnError(err error, msg string) {
+	if err != nil {
+		log.Panicf("%s: %s", msg, err)
+	}
 }

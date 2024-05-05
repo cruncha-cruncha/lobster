@@ -1,0 +1,88 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            comment.uuid,\n            comment.post_uuid,\n            comment.author_id,\n            comment.poster_id,\n            comment.content,\n            comment.created_at,\n            comment.updated_at,\n            comment.deleted,\n            comment.changes,\n            comment.unread_by_author,\n            comment.unread_by_poster,\n            COALESCE(COUNT(reply.uuid), 0)::INT AS \"reply_count: i64\"\n        FROM comments comment\n        LEFT JOIN replies reply ON reply.comment_uuid = comment.uuid\n        WHERE comment.post_uuid = $1\n        GROUP BY comment.uuid\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "uuid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "post_uuid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "author_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "poster_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "content",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "deleted",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 8,
+        "name": "changes",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 9,
+        "name": "unread_by_author",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 10,
+        "name": "unread_by_poster",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 11,
+        "name": "reply_count: i64",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "fddde8d76d3050de3c6615a913230972708e385b6bc7ae94db7d5d4ecb0d16a5"
+}

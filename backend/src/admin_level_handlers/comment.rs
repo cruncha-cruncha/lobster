@@ -1,6 +1,8 @@
 use crate::auth::claims::Claims;
+use crate::broadcast::post_change_msg::Action;
+use crate::broadcast::post_change_msg::PostChangeMsg;
 use crate::db_structs::comment;
-use crate::queue;
+use crate::broadcast;
 use crate::AppState;
 use axum::{
     extract::{Path, State},
@@ -17,8 +19,8 @@ pub async fn delete(
         return Err((StatusCode::FORBIDDEN, String::from("")));
     }
 
-    let post_info = match sqlx::query_as!(
-        queue::helpers::PostWithInfo,
+    let post = match sqlx::query_as!(
+        broadcast::post_with_comment_count::PostWithCommentCount,
         r#"
         SELECT
             post.*,
@@ -38,13 +40,9 @@ pub async fn delete(
         Err(_) => None, // ignore errors
     };
 
-    if post_info.is_some() {
-        let post_info = post_info.unwrap();
-        let comment_count = post_info.comment_count.unwrap_or_default() - 1;
-        let message = queue::post_change_msg::PostChangeMsg::update(&post_info.into(), comment_count);
-        queue::helpers::send_post_changed_message(&state.chan, &message.encode())
-            .await
-            .ok(); // ignore errors
+    if post.is_some() {
+        let message = PostChangeMsg::from_pwcc(Action::Update, &post.unwrap());
+        state.p2p.send_post_changed_message(&message);
     }
 
     match sqlx::query!(
