@@ -80,6 +80,8 @@ impl ZeroConfControl {
             .set_read_timeout(None)
             .expect("Failed to set read timeout");
 
+        println!("Listening on {}", listen_addr);
+
         ZeroConfControl {
             last_sync: Mutex::new(0),
             socket: RwLock::new(socket),
@@ -168,7 +170,7 @@ impl ZeroConfControl {
             })
             .ok();
 
-        consumers.insert(key, attempts + 1);
+        consumers.insert(key, attempts + 30);
     }
 
     fn send_sync_messages(&self) {
@@ -187,9 +189,20 @@ impl ZeroConfControl {
 
             let buf = self.encode();
             let mut captains = self.captains.write().unwrap();
-            captains.retain(|_, attempts| *attempts < 5 && *attempts > -5);
+            captains.retain(|name, attempts| {
+                if *attempts > 120 {
+                    println!("Removing captain {} with too many attempts ({})", name, attempts);
+                    return false;
+                } else if *attempts < 0 {
+                    *attempts = 0;
+                } else {
+                    *attempts -= 1;
+                }
+
+                return true;            
+            });
             for (captain, attempts) in captains.iter_mut() {
-                *attempts += 1;
+                *attempts += 30;
                 self.socket
                     .read()
                     .unwrap()
@@ -203,7 +216,18 @@ impl ZeroConfControl {
             drop(captains);
 
             let mut consumers = self.consumers.write().unwrap();
-            consumers.retain(|_, attempts| *attempts < 5 && *attempts > -5);
+            consumers.retain(|name, attempts| {
+                if *attempts > 120 {
+                    println!("Removing consumer {} with too many attempts ({})", name, attempts);
+                    return false;
+                } else if *attempts < 0 {
+                    *attempts = 0;
+                } else {
+                    *attempts -= 1;
+                }
+
+                return true;            
+            });
         } else {
             drop(last_sync);
         }
@@ -218,6 +242,7 @@ pub fn handle_sync_messages(control: &ZeroConfControl) {
         let message = ZeroConfControl::decode(buf);
 
         if message.meaning == Meaning::HasData.encode_numeric() {
+            println!("Sync message with data from {}", src);
             let ack = ZeroConfControl::ack();
             control
                 .socket
@@ -235,6 +260,7 @@ pub fn handle_sync_messages(control: &ZeroConfControl) {
                 match captains.get(&captain) {
                     Some(_) => {}
                     None => {
+                        println!("Adding captain {}", &captain);
                         captains.insert(captain, 0);
                     }
                 }
@@ -246,23 +272,26 @@ pub fn handle_sync_messages(control: &ZeroConfControl) {
                 match consumers.get(&consumer) {
                     Some(_) => {}
                     None => {
+                        println!("Adding consumer {}", &consumer);
                         consumers.insert(consumer, 0);
                     }
                 }
             }
         } else if message.meaning == Meaning::CaptainAck.encode_numeric() {
+            println!("Captain ack from {}", src);
             let key = src.to_string();
             let mut captains = control.captains.write().unwrap();
             captains
                 .entry(key)
-                .and_modify(|attempts| *attempts -= 1)
+                .and_modify(|attempts| *attempts -= 30)
                 .or_insert(0);
         } else if message.meaning == Meaning::ConsumerAck.encode_numeric() {
+            println!("Consumer ack from {}", src);
             let key = src.to_string();
             let mut consumers = control.consumers.write().unwrap();
             consumers
                 .entry(key)
-                .and_modify(|attempts| *attempts -= 1)
+                .and_modify(|attempts| *attempts -= 30)
                 .or_insert(0);
         }
     }
