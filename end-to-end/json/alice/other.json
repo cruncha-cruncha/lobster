@@ -9,17 +9,7 @@
     }
   },
   {
-    "duration": 2.0,
-    "meta": {
-      "type": "pause",
-      "id": "pause_01",
-      "expect": "success",
-      "timing": 2.0
-    }
-  },
-  {
     "post": "post_01",
-    "user": "user_alice",
     "meta": {
       "type": "find_post",
       "id": "find_post_01",
@@ -50,7 +40,6 @@
     "meta": {
       "type": "create_user",
       "id": "create_user_alice",
-      "expect": "success",
       "timing": 0.1
     }
   },
@@ -59,7 +48,6 @@
     "meta": {
       "type": "login_user",
       "id": "login_user_alice",
-      "expect": "success",
       "timing": 0.2
     }
   },
@@ -68,7 +56,6 @@
     "meta": {
       "type": "hard_delete_user",
       "id": "hard_delete_user_alice",
-      "expect": "success",
       "timing": 100.0
     }
   }

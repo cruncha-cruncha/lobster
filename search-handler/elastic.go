@@ -11,7 +11,6 @@ import (
 	"strings"
 )
 
-// is thread-safe
 type Elastic struct {
 	client http.Client
 }
@@ -23,6 +22,7 @@ func NewElastic() Elastic {
 	// req, _ := http.NewRequest("DELETE", "http://lobster-elastic:9200/posts", nil)
 	// client.Do(req)
 
+	// not thread-safe
 	if res, err := client.Head("http://lobster-elastic:9200/posts"); err != nil {
 		log.Println("Failed to determine if index exists:", err)
 	} else if res.StatusCode != http.StatusOK {

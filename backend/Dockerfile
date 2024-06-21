@@ -7,16 +7,10 @@ RUN cargo build -F cors
 
 FROM debian:buster-slim
 WORKDIR /app
-
-RUN apt-get update && apt-get install -y curl
-
 COPY --from=builder /app/.env ./.env
 COPY --from=builder /app/private.pem ./private.pem
 COPY --from=builder /app/public.pem ./public.pem
 COPY --from=builder /app/target/debug/lobster-tail ./lobster-tail
-
-EXPOSE 28/udp
-
 CMD ["/app/lobster-tail"]
 
 # with Postgres running:

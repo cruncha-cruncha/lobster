@@ -1,6 +1,7 @@
 use crate::auth::claims::Claims;
 use crate::db_structs::{comment, helpers, post, user};
-use crate::broadcast::post_change_msg::{Action, PostChangeMsg};
+use crate::queue::helpers::send_post_changed_message;
+use crate::queue::post_change_msg::PostChangeMsg;
 use crate::AppState;
 use axum::{
     extract::{Json, Path, State},
@@ -172,8 +173,10 @@ pub async fn post(
     };
 
     if !payload.draft {
-        let message = PostChangeMsg::from_post(Action::Create, &row, 0);
-        state.p2p.send_post_changed_message(&message);
+        let message = PostChangeMsg::create(&row, 0);
+        send_post_changed_message(&state.chan, &message.encode())
+            .await
+            .ok(); // ignore errors
     }
 
     Ok(axum::Json(row))
@@ -244,7 +247,9 @@ pub async fn delete(
     }
 
     let message = PostChangeMsg::remove(&post_uuid);
-    state.p2p.send_post_changed_message(&message);
+    send_post_changed_message(&state.chan, &message.encode())
+        .await
+        .ok(); // ignore errors
 
     return Ok(StatusCode::NO_CONTENT);
 }
@@ -349,13 +354,15 @@ pub async fn patch(
         }
     };
 
-    let mut message = PostChangeMsg::from_post(Action::Update, &row, comment_count as i32);
+    let mut message = PostChangeMsg::update(&row, comment_count as i32);
     if payload.draft {
         message = PostChangeMsg::remove(&post_uuid);
     }
 
     // if the post was always a draft, sending this is redundant
-    state.p2p.send_post_changed_message(&message); // ignore errors
+    send_post_changed_message(&state.chan, &message.encode())
+        .await
+        .ok(); // ignore errors
 
     Ok(axum::Json(row))
 }

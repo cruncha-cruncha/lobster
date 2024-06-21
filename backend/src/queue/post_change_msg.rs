@@ -4,8 +4,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::db_structs::post;
 
-use super::post_with_comment_count::PostWithCommentCount;
-
 pub enum Action {
     Hello = 1,
     Create = 2,
@@ -81,31 +79,7 @@ pub struct PostChangeMsg {
 }
 
 impl PostChangeMsg {
-    pub fn from_pwcc(action: Action, post: &PostWithCommentCount) -> Self {
-        Self {
-            action: action.encode_numeric(),
-            uuid: post.uuid.clone(),
-            info: Some(Info {
-                uuid: post.uuid.clone(),
-                author_id: post.author_id,
-                title: post.title.clone(),
-                content: post.content.clone(),
-                images: post.images.clone(),
-                price: post.price,
-                currency: post.currency,
-                country: post.country,
-                location: Location {
-                    lat: post.latitude,
-                    lon: post.longitude,
-                },
-                created_at: post.created_at.unix_timestamp(),
-                updated_at: post.updated_at.unix_timestamp(),
-                comment_count: post.comment_count,
-            }),
-        }
-    }
-
-    pub fn from_post(action: Action, post: &post::Post, comment_count: i32) -> Self {
+    fn from_post(action: Action, post: &post::Post, comment_count: i32) -> Self {
         Self {
             action: action.encode_numeric(),
             uuid: post.uuid.clone(),
@@ -129,13 +103,20 @@ impl PostChangeMsg {
         }
     }
 
-    #[allow(dead_code)]
     pub fn hello() -> Self {
         Self {
             action: Action::Hello.encode_numeric(),
             uuid: Uuid::new_v4(),
             info: None,
         }
+    }
+
+    pub fn create(post: &post::Post, comment_count: i32) -> Self {
+        Self::from_post(Action::Create, post, comment_count)
+    }
+
+    pub fn update(post: &post::Post, comment_count: i32) -> Self {
+        Self::from_post(Action::Update, post, comment_count)
     }
 
     pub fn remove(uuid: &Uuid) -> Self {

@@ -102,12 +102,9 @@ class Post:
 
         return True
 
-    def find(self, user):
-        user.login()
-
+    def find(self):
         results = requests.post(
             shared.SEARCH_URL + '/search/posts',
-            headers={'Authorization': 'Bearer ' + user.access_token},
             json={
                 'full': True,
                 'offset': 0,

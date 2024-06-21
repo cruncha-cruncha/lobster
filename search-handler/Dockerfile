@@ -5,10 +5,9 @@ RUN go mod download
 
 COPY *.go ./
 COPY public.pem ./
-ADD .env.docker .env
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /search-handler
 
-EXPOSE 28/udp
+EXPOSE 9200
 
 CMD ["/search-handler"]

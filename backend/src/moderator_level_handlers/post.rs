@@ -1,6 +1,7 @@
 use crate::auth::claims::Claims;
 use crate::db_structs::post;
-use crate::broadcast::post_change_msg::{Action, PostChangeMsg};
+use crate::queue::helpers::send_post_changed_message;
+use crate::queue::post_change_msg::PostChangeMsg;
 use crate::AppState;
 use axum::{
     extract::{Path, State},
@@ -51,12 +52,14 @@ pub async fn touch(
         }
     };
 
-    let mut message = PostChangeMsg::from_post(Action::Update, &row, comment_count as i32);
+    let mut message = PostChangeMsg::update(&row, comment_count as i32);
     if row.draft || row.deleted {
         message = PostChangeMsg::remove(&post_uuid);
     }
     
-    state.p2p.send_post_changed_message(&message);
+    send_post_changed_message(&state.chan, &message.encode())
+        .await
+        .ok(); // ignore errors
 
     Ok(StatusCode::OK)
 }

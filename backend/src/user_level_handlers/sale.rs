@@ -1,6 +1,7 @@
 use crate::auth::claims::Claims;
 use crate::db_structs::{post, sale, user};
-use crate::broadcast::post_change_msg::PostChangeMsg;
+use crate::queue::helpers::send_post_changed_message;
+use crate::queue::post_change_msg::PostChangeMsg;
 use crate::AppState;
 use axum::{
     extract::{Json, Path, State},
@@ -62,7 +63,9 @@ pub async fn post(
     };
 
     let message = PostChangeMsg::remove(&payload.post_uuid);
-    state.p2p.send_post_changed_message(&message);
+    send_post_changed_message(&state.chan, &message.encode())
+        .await
+        .ok(); // ignore errors
 
     return Ok(axum::Json(row));
 }

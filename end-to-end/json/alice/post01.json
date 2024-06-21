@@ -20,29 +20,10 @@
   {
     "post": "post_01",
     "meta": {
-      "type": "make_post",
-      "id": "make_post_01",
-      "expect": "success",
-      "timing": 1.0
-    }
-  },
-  {
-    "duration": 2.0,
-    "meta": {
-      "type": "pause",
-      "id": "pause_01",
-      "expect": "success",
-      "timing": 2.0
-    }
-  },
-  {
-    "post": "post_01",
-    "user": "user_alice",
-    "meta": {
       "type": "find_post",
       "id": "find_post_01",
       "expect": "success",
-      "timing": 3.0
+      "timing": 1.0
     }
   }
 ]
