@@ -2,10 +2,11 @@ mod admin_level_handlers;
 mod auth;
 mod db_structs;
 mod moderator_level_handlers;
-mod queue;
+mod rabbit;
 mod user_level_handlers;
 
 use axum::{routing, Router};
+use rabbit::communicator::Communicator;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::{env, error::Error, net::SocketAddr, sync::Arc};
 #[cfg(feature = "cors")]
@@ -14,14 +15,14 @@ use tower_http::cors::CorsLayer;
 #[derive(Clone)]
 pub struct AppState {
     db: PgPool,
-    chan: lapin::Channel,
+    comm: Communicator,
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     dotenvy::dotenv().expect("Failed to read .env file");
 
-    let (_rabbit_conn, queue_chan) = queue::setup::setup()
+    let (_rabbit_conn, communicator) = rabbit::communicator::init()
         .await
         .expect("Failed to connect to rabbitMQ");
 
@@ -33,7 +34,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .expect("Failed to create pool.");
     let shared_state = Arc::new(AppState {
         db: pool,
-        chan: queue_chan,
+        comm: communicator,
     });
 
     let hosting_addr_string = env::var("HOSTING_ADDR").expect("HOSTING_ADDR must be set");

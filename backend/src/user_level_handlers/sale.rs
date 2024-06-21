@@ -1,7 +1,7 @@
 use crate::auth::claims::Claims;
 use crate::db_structs::{post, sale, user};
-use crate::queue::helpers::send_post_changed_message;
-use crate::queue::post_change_msg::PostChangeMsg;
+use crate::rabbit::communicator::send_post_changed_message;
+use crate::rabbit::post_change_msg::PostChangeMsg;
 use crate::AppState;
 use axum::{
     extract::{Json, Path, State},
@@ -36,7 +36,10 @@ pub async fn post(
         "#,
         payload.post_uuid,
         caller_id,
-    ).execute(&state.db).await {
+    )
+    .execute(&state.db)
+    .await
+    {
         Ok(res) => {
             if res.rows_affected() == 0 {
                 return Err((StatusCode::NOT_FOUND, String::from("")));
@@ -63,9 +66,7 @@ pub async fn post(
     };
 
     let message = PostChangeMsg::remove(&payload.post_uuid);
-    send_post_changed_message(&state.chan, &message.encode())
-        .await
-        .ok(); // ignore errors
+    send_post_changed_message(&state.comm, &message).await.ok(); // ignore errors
 
     return Ok(axum::Json(row));
 }
@@ -102,7 +103,7 @@ pub async fn patch(
                 return Err((StatusCode::NOT_FOUND, String::from("")));
             }
             row.unwrap()
-        },
+        }
         Err(_) => return Err((StatusCode::INTERNAL_SERVER_ERROR, String::from(""))),
     };
 
@@ -118,12 +119,15 @@ pub async fn patch(
         "#,
         original_sale.post_uuid,
         caller_id,
-    ).fetch_optional(&state.db).await {
+    )
+    .fetch_optional(&state.db)
+    .await
+    {
         Ok(row) => {
             if row.is_none() {
                 return Err((StatusCode::NOT_FOUND, String::from("")));
             }
-        },
+        }
         Err(_) => return Err((StatusCode::INTERNAL_SERVER_ERROR, String::from(""))),
     };
 
@@ -173,5 +177,3 @@ pub async fn get(
         Err(_) => Err((StatusCode::NOT_FOUND, String::from(""))),
     }
 }
-
-
