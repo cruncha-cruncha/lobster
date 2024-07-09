@@ -23,7 +23,13 @@ pub async fn init() -> Result<(Connection, Communicator), lapin::Error> {
         .exchange_declare(
             "post-changed",
             ExchangeKind::Fanout,
-            ExchangeDeclareOptions::default(),
+            ExchangeDeclareOptions {
+                passive: false,
+                durable: true,
+                auto_delete: false,
+                internal: false,
+                nowait: false,
+            },
             FieldTable::default(),
         )
         .await?;
