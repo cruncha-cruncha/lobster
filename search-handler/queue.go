@@ -60,7 +60,7 @@ func NewQueue() Queue {
 	err = ch.ExchangeDeclare(
 		"post-changed", // name
 		"fanout",       // type
-		false,          // durable
+		true,           // durable
 		false,          // auto-deleted
 		false,          // internal
 		false,          // no-wait
@@ -70,7 +70,7 @@ func NewQueue() Queue {
 
 	q, err := ch.QueueDeclare(
 		"search-ingest", // name
-		false,           // durable
+		true,            // durable
 		false,           // delete when unused
 		false,           // exclusive
 		false,           // no-wait

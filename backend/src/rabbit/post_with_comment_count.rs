@@ -1,27 +1,11 @@
-use lapin::{options::*, publisher_confirm::PublisherConfirm, BasicProperties, Channel};
 use serde::{Deserialize, Serialize};
 
 use crate::db_structs::post;
 
 use super::post_change_msg::CommentCount;
 
-pub async fn send_post_changed_message(
-    channel: &Channel,
-    message: &[u8],
-) -> Result<PublisherConfirm, lapin::Error> {
-    channel
-        .basic_publish(
-            "post-changed",
-            "",
-            BasicPublishOptions::default(),
-            message,
-            BasicProperties::default(),
-        )
-        .await
-}
-
 #[derive(Debug, sqlx::FromRow, Serialize, Deserialize)]
-pub struct PostWithInfo {
+pub struct PostWithCommentCount {
     pub uuid: post::Uuid,
     pub author_id: post::AuthorId,
     pub title: post::Title,
@@ -41,7 +25,7 @@ pub struct PostWithInfo {
     pub comment_count: CommentCount,
 }
 
-impl Into<post::Post> for PostWithInfo {
+impl Into<post::Post> for PostWithCommentCount {
     fn into(self) -> post::Post {
         post::Post {
             uuid: self.uuid,

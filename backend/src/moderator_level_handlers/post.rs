@@ -1,8 +1,7 @@
-use crate::auth::claims::Claims;
 use crate::db_structs::post;
-use crate::queue::helpers::send_post_changed_message;
-use crate::queue::post_change_msg::PostChangeMsg;
+use crate::rabbit::post_change_msg::PostChangeMsg;
 use crate::AppState;
+use crate::{auth::claims::Claims, rabbit::communicator::send_post_changed_message};
 use axum::{
     extract::{Path, State},
     http::StatusCode,
@@ -56,10 +55,8 @@ pub async fn touch(
     if row.draft || row.deleted {
         message = PostChangeMsg::remove(&post_uuid);
     }
-    
-    send_post_changed_message(&state.chan, &message.encode())
-        .await
-        .ok(); // ignore errors
+
+    send_post_changed_message(&state.comm, &message).await.ok(); // ignore errors
 
     Ok(StatusCode::OK)
 }

@@ -1,13 +1,11 @@
 use std::sync::Arc;
 
 use crate::auth::claims::Claims;
+use crate::rabbit::communicator::send_post_changed_message;
 use crate::AppState;
 use crate::{
     db_structs::{comment, helpers},
-    queue::{
-        helpers::{send_post_changed_message, PostWithInfo},
-        post_change_msg::PostChangeMsg,
-    },
+    rabbit::{post_change_msg::PostChangeMsg, post_with_comment_count::PostWithCommentCount},
 };
 use axum::{
     extract::{Json, Path, State},
@@ -140,7 +138,7 @@ pub async fn post(
     };
 
     let post_info = match sqlx::query_as!(
-        PostWithInfo,
+        PostWithCommentCount,
         r#"
         SELECT
             post.*,
@@ -197,9 +195,7 @@ pub async fn post(
 
     let comment_count = post_info.comment_count.unwrap_or_default() + 1;
     let message = PostChangeMsg::update(&post_info.into(), comment_count);
-    send_post_changed_message(&state.chan, &message.encode())
-        .await
-        .ok(); // ignore errors
+    send_post_changed_message(&state.comm, &message).await.ok(); // ignore errors
 
     Ok(axum::Json(row))
 }
@@ -270,7 +266,7 @@ pub async fn delete(
     };
 
     let post_info = match sqlx::query_as!(
-        PostWithInfo,
+        PostWithCommentCount,
         r#"
         SELECT
             post.*,
@@ -331,9 +327,7 @@ pub async fn delete(
 
     let comment_count = post_info.comment_count.unwrap_or_default() - 1;
     let message = PostChangeMsg::update(&post_info.into(), comment_count);
-    send_post_changed_message(&state.chan, &message.encode())
-        .await
-        .ok(); // ignore errors
+    send_post_changed_message(&state.comm, &message).await.ok(); // ignore errors
 
     return Ok(StatusCode::NO_CONTENT);
 }
