@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        DELETE\n        FROM users usr\n        WHERE usr.id = $1\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0762a6118a8c8e36ba1bcc24d4ff118063c12b89bc11ac757837506f4da7f78f"
+}

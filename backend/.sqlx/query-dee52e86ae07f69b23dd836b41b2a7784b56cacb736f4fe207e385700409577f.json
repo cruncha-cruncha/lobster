@@ -1,0 +1,183 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            post.uuid,\n            post.author_id,\n            COALESCE(usr.first_name, '') AS author_name,\n            post.title,\n            post.images,\n            post.content,\n            post.price,\n            post.currency,\n            post.latitude,\n            post.longitude,\n            post.country,\n            post.created_at,\n            post.updated_at,\n            post.deleted,\n            post.draft,\n            post.sold,\n            post.changes,\n            my_comment AS \"my_comment: comment::Comment\",\n            COALESCE(COUNT(comment.*), 0) AS comment_count\n        FROM posts post\n        LEFT JOIN users usr ON usr.id = post.author_id\n        LEFT JOIN comments my_comment ON my_comment.post_uuid = post.uuid AND my_comment.author_id = $2\n        LEFT JOIN comments comment ON comment.post_uuid = post.uuid\n        WHERE post.uuid = $1\n        GROUP BY post.uuid, usr.first_name, my_comment.*\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "uuid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "author_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "author_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "images",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 5,
+        "name": "content",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "price",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 7,
+        "name": "currency",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "latitude",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 9,
+        "name": "longitude",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 10,
+        "name": "country",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 11,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 12,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 13,
+        "name": "deleted",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 14,
+        "name": "draft",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 15,
+        "name": "sold",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 16,
+        "name": "changes",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 17,
+        "name": "my_comment: comment::Comment",
+        "type_info": {
+          "Custom": {
+            "name": "comments",
+            "kind": {
+              "Composite": [
+                [
+                  "uuid",
+                  "Uuid"
+                ],
+                [
+                  "post_uuid",
+                  "Uuid"
+                ],
+                [
+                  "poster_id",
+                  "Int4"
+                ],
+                [
+                  "author_id",
+                  "Int4"
+                ],
+                [
+                  "content",
+                  "Text"
+                ],
+                [
+                  "created_at",
+                  "Timestamptz"
+                ],
+                [
+                  "updated_at",
+                  "Timestamptz"
+                ],
+                [
+                  "deleted",
+                  "Bool"
+                ],
+                [
+                  "changes",
+                  "Jsonb"
+                ],
+                [
+                  "unread_by_author",
+                  "Jsonb"
+                ],
+                [
+                  "unread_by_poster",
+                  "Jsonb"
+                ]
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 18,
+        "name": "comment_count",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "dee52e86ae07f69b23dd836b41b2a7784b56cacb736f4fe207e385700409577f"
+}

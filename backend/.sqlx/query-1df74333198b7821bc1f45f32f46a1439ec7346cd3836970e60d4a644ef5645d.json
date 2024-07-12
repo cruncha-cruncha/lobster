@@ -1,0 +1,124 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE posts post\n        SET\n            title = $4,\n            images = $5,\n            content = $6,\n            price = $7,\n            currency = $8,\n            country = $9,\n            latitude = $10,\n            longitude = $11,\n            draft = $12,\n            updated_at = NOW(),\n            changes = changes || jsonb_build_array(jsonb_build_object(\n                'who', $3::TEXT,\n                'when', NOW(),\n                'title', post.title,\n                'images', post.images,\n                'content', post.content,\n                'price', post.price,\n                'currency', post.currency,\n                'country', post.country,\n                'latitude', post.latitude,\n                'longitude', post.longitude,\n                'draft', post.draft\n            )) \n        WHERE post.uuid = $1\n        AND (post.author_id = $2 OR $13)\n        AND post.deleted IS NOT TRUE\n        AND NOT EXISTS(\n            SELECT * FROM sales sale\n            WHERE sale.post_uuid = post.uuid)\n        RETURNING *;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "uuid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "author_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "images",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 4,
+        "name": "content",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "price",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 6,
+        "name": "currency",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "country",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "latitude",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 9,
+        "name": "longitude",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 10,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 11,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 12,
+        "name": "draft",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 13,
+        "name": "deleted",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 14,
+        "name": "sold",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 15,
+        "name": "changes",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4",
+        "Text",
+        "Text",
+        "TextArray",
+        "Text",
+        "Float4",
+        "Int4",
+        "Int4",
+        "Float4",
+        "Float4",
+        "Bool",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "1df74333198b7821bc1f45f32f46a1439ec7346cd3836970e60d4a644ef5645d"
+}
