@@ -72,7 +72,7 @@ export const useAccount = () => {
 
   const onLogout = () => {
     auth.logout();
-    router.goTo("/login", "back");
+    router.goTo("/login", "back", true);
   };
 
   const havePasswords = state.oldPassword && state.newPassword;

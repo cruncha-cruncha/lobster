@@ -292,10 +292,11 @@ const singlePostSearchResult = {
     "uuid",
     "author_id",
     "title",
-    "images",
     "content",
+    "images",
     "price",
     "currency",
+    "country",
     "location",
     "created_at",
     "updated_at",
@@ -310,6 +311,53 @@ const postSearchResults = {
     found: { type: "array", items: { $ref: "#singlePostSearchResult" } },
   },
   required: ["found"],
+};
+
+const singlePostListItem = {
+  type: "object",
+  $id: "#singlePostListItem",
+  properties: {
+    uuid: { type: "string" },
+    author_id: { type: "integer" },
+    changes: { type: "array", items: { $ref: "#singleChange" } },
+    title: { type: "string" },
+    content: { type: "string" },
+    images: { type: "array", items: { type: "string" } },
+    price: { type: "number" },
+    currency: { type: "number" },
+    country: { type: "number" },
+    latitude: { type: "number" },
+    longitude: { type: "number" },
+    sold: { type: "boolean" },
+    created_at: { type: "string" },
+    updated_at: { type: "string" },
+  },
+  required: [
+    "uuid",
+    "author_id",
+    "changes",
+    "title",
+    "content",
+    "images",
+    "price",
+    "currency",
+    "country",
+    "latitude",
+    "longitude",
+    "sold",
+    "created_at",
+    "updated_at",
+  ],
+};
+
+const listOfPosts = {
+  type: "object",
+  $id: "#listOfPosts",
+  properties: {
+    author_name: { type: "string" },
+    posts: { type: "array", items: { $ref: "#singlePostListItem" } },
+  },
+  required: ["author_name", "posts"],
 };
 
 const getPostSchema = {
@@ -417,6 +465,12 @@ export const validateSingleReply = makeLazyValidator([
 export const validatePostSearchResponse = makeLazyValidator([
   singlePostSearchResult,
   postSearchResults,
+]);
+
+export const validateListOfPosts = makeLazyValidator([
+  singleChangeSchema,
+  singlePostListItem,
+  listOfPosts,
 ]);
 
 export const validateGetPeople = makeLazyValidator([

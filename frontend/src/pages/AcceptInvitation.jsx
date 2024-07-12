@@ -52,22 +52,24 @@ export const useAcceptInvitation = (props) => {
     let mounted = true;
 
     endpoints.getLanguages().then((res) => {
-      if (res.status === 200) {
-        const options = res.data.map((lang) => ({
-          value: lang.id,
-          label: lang.name,
-        }));
-        mounted && setLanguageOptions(options);
+      if (res.status === 200 && mounted) {
+        setLanguageOptions(
+          res.data.map((lang) => ({
+            value: lang.id,
+            label: lang.name,
+          })),
+        );
       }
     });
 
     endpoints.getCountries().then((res) => {
-      if (res.status === 200) {
-        const options = res.data.map((country) => ({
-          value: country.id,
-          label: country.name,
-        }));
-        mounted && setCountryOptions(options);
+      if (res.status === 200 && mounted) {
+        setCountryOptions(
+          res.data.map((country) => ({
+            value: country.id,
+            label: country.name,
+          })),
+        );
       }
     });
 
@@ -114,7 +116,7 @@ export const useAcceptInvitation = (props) => {
             refreshToken: res.data.refresh_token,
           });
 
-          router.goTo(`/profile/${res.data.user_id}`, "back");
+          router.goTo(`/profile/${res.data.user_id}`, "back", true);
         }
       }, showErrModal)
       .finally(() => {

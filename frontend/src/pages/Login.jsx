@@ -4,7 +4,6 @@ import { useAuth } from "../components/userAuth";
 import { useRouter } from "../components/router/Router";
 import { useInfoModal, PureInfoModal } from "../components/InfoModal";
 import * as endpoints from "../api/endpoints";
-import { set } from "date-fns";
 
 export const validateEmail = (email) => {
   return new RegExp(/^.+@.+\..+$/).test(email);
@@ -43,7 +42,7 @@ export const useLogin = () => {
             refreshToken: res.data.refresh_token,
           });
 
-          router.goTo(`/profile/${res.data.user_id}`, "forward");
+          router.goTo(`/profile/${res.data.user_id}`, "forward", true);
         } else {
           console.log(res.status, res);
           showErrModal();
@@ -73,7 +72,7 @@ export const useLogin = () => {
         if (res.status !== 200) {
           showErrModal();
         } else {
-          modal.open("You will receive an email when your account is ready.");
+          modal.open("Invitation request sent. Please contact a moderator for next steps.");
         }
       }, showErrModal)
       .finally(() => {
@@ -97,7 +96,7 @@ export const useLogin = () => {
           showErrModal();
         } else {
           modal.open(
-            "You will receive an email with a link to reset your password.",
+            "Password reset request sent. Please contact a moderator for next steps.",
           );
         }
       }, showErrModal)

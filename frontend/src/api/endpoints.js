@@ -15,6 +15,7 @@ import {
   validateSingleReply,
   validatePostSearchResponse,
   validateGetPeople,
+  validateListOfPosts,
 } from "./schemas";
 
 const serverUrl = import.meta.env.VITE_SERVER_URL || "http://127.0.0.1:3000";
@@ -66,7 +67,7 @@ export const login = async ({ email, password }) => {
     if (!valid) return { status: null, data: null };
   }
 
-  return response; 
+  return response;
 };
 
 export const requestInvitation = async ({ email }) => {
@@ -242,13 +243,16 @@ export const getUnreadActivity = async ({ userId, accessToken }) => {
 };
 
 export const getProfileHistory = async ({ userId, accessToken }) => {
-  const response = await handle(`${serverUrl}/profiles/${userId}/historical-data`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
+  const response = await handle(
+    `${serverUrl}/profiles/${userId}/historical-data`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
     },
-  });
+  );
 
   if (response.status === 200) {
     const valid = validateProfileHistory(response.data);
@@ -256,7 +260,7 @@ export const getProfileHistory = async ({ userId, accessToken }) => {
   }
 
   return response;
-}
+};
 
 export const getAccount = async ({ userId, accessToken }) => {
   const response = await handle(`${serverUrl}/accounts/${userId}`, {
@@ -273,7 +277,7 @@ export const getAccount = async ({ userId, accessToken }) => {
   }
 
   return response;
-}
+};
 
 export const createNewPost = async ({ accessToken, data }) => {
   const response = await handle(`${serverUrl}/posts`, {
@@ -291,7 +295,7 @@ export const createNewPost = async ({ accessToken, data }) => {
   }
 
   return response;
-}
+};
 
 export const updateAccount = async ({ userId, accessToken, data }) => {
   const response = await handle(`${serverUrl}/accounts/${userId}`, {
@@ -309,7 +313,7 @@ export const updateAccount = async ({ userId, accessToken, data }) => {
   }
 
   return response;
-}
+};
 
 export const createNewComment = async ({ accessToken, data }) => {
   const response = await handle(`${serverUrl}/comments`, {
@@ -327,7 +331,7 @@ export const createNewComment = async ({ accessToken, data }) => {
   }
 
   return response;
-}
+};
 
 export const getPostComments = async ({ uuid, accessToken }) => {
   const response = await handle(`${serverUrl}/posts/${uuid}/comments`, {
@@ -344,7 +348,7 @@ export const getPostComments = async ({ uuid, accessToken }) => {
   }
 
   return response;
-}
+};
 
 export const createNewReply = async ({ accessToken, data }) => {
   const response = await handle(`${serverUrl}/replies`, {
@@ -362,7 +366,7 @@ export const createNewReply = async ({ accessToken, data }) => {
   }
 
   return response;
-}
+};
 
 export const updateComment = async ({ accessToken, uuid, data }) => {
   const response = await handle(`${serverUrl}/comments/${uuid}`, {
@@ -380,7 +384,7 @@ export const updateComment = async ({ accessToken, uuid, data }) => {
   }
 
   return response;
-}
+};
 
 export const updateReply = async ({ accessToken, uuid, data }) => {
   const response = await handle(`${serverUrl}/replies/${uuid}`, {
@@ -398,7 +402,7 @@ export const updateReply = async ({ accessToken, uuid, data }) => {
   }
 
   return response;
-}
+};
 
 export const removeComment = async ({ accessToken, uuid }) => {
   const response = await handle(`${serverUrl}/comments/${uuid}`, {
@@ -410,7 +414,7 @@ export const removeComment = async ({ accessToken, uuid }) => {
   });
 
   return response;
-}
+};
 
 export const removeReply = async ({ accessToken, uuid }) => {
   const response = await handle(`${serverUrl}/replies/${uuid}`, {
@@ -422,7 +426,7 @@ export const removeReply = async ({ accessToken, uuid }) => {
   });
 
   return response;
-}
+};
 
 export const undeleteReply = async ({ accessToken, uuid }) => {
   const response = await handle(`${serverUrl}/replies/${uuid}`, {
@@ -439,7 +443,7 @@ export const undeleteReply = async ({ accessToken, uuid }) => {
   }
 
   return response;
-}
+};
 
 export const searchPosts = async ({ accessToken, data }) => {
   const response = await handle(`${searchUrl}/search/posts`, {
@@ -457,7 +461,7 @@ export const searchPosts = async ({ accessToken, data }) => {
   }
 
   return response;
-}
+};
 
 export const getPeople = async ({ accessToken, data }) => {
   const response = await handle(`${serverUrl}/accounts`, {
@@ -475,4 +479,104 @@ export const getPeople = async ({ accessToken, data }) => {
   }
 
   return response;
-}
+};
+
+export const getAllUsersPosts = async ({ accessToken, userId, page }) => {
+  const response = await handle(
+    `${serverUrl}/users/${userId}/all-posts/${page}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  );
+
+  if (response.status === 200) {
+    const valid = validateListOfPosts(response.data);
+    if (!valid) return { status: null, data: null };
+  }
+
+  return response;
+};
+
+export const getUsersActivePosts = async ({ accessToken, userId, page }) => {
+  const response = await handle(
+    `${serverUrl}/users/${userId}/active-posts/${page}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  );
+
+  if (response.status === 200) {
+    const valid = validateListOfPosts(response.data);
+    if (!valid) return { status: null, data: null };
+  }
+
+  return response;
+};
+
+export const getUsersSoldPosts = async ({ accessToken, userId, page }) => {
+  const response = await handle(
+    `${serverUrl}/users/${userId}/sold-posts/${page}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  );
+
+  if (response.status === 200) {
+    const valid = validateListOfPosts(response.data);
+    if (!valid) return { status: null, data: null };
+  }
+
+  return response;
+};
+
+export const getUsersDeletedPosts = async ({ accessToken, userId, page }) => {
+  const response = await handle(
+    `${serverUrl}/users/${userId}/deleted-posts/${page}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  );
+
+  if (response.status === 200) {
+    const valid = validateListOfPosts(response.data);
+    if (!valid) return { status: null, data: null };
+  }
+
+  return response;
+};
+
+export const getUsersDraftPosts = async ({ accessToken, userId, page }) => {
+  const response = await handle(
+    `${serverUrl}/users/${userId}/draft-posts/${page}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  );
+
+  if (response.status === 200) {
+    const valid = validateListOfPosts(response.data);
+    if (!valid) return { status: null, data: null };
+  }
+
+  return response;
+};

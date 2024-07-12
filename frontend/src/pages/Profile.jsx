@@ -79,8 +79,8 @@ export const useProfile = () => {
         accessToken: auth.accessToken,
       })
       .then((res) => {
-        if (res.status === 200) {
-          mounted && setData(formatData(res.data));
+        if (res.status === 200 && mounted) {
+          setData(formatData(res.data));
         }
       });
 
@@ -90,8 +90,8 @@ export const useProfile = () => {
         accessToken: auth.accessToken,
       })
       .then((res) => {
-        if (res.status === 200) {
-          mounted && setHistory(formatHistory(res.data));
+        if (res.status === 200 && mounted) {
+          setHistory(formatHistory(res.data));
         }
       });
 
@@ -101,8 +101,8 @@ export const useProfile = () => {
         accessToken: auth.accessToken,
       })
       .then((res) => {
-        if (res.status === 200) {
-          mounted && setUnreadActivity(res.data);
+        if (res.status === 200 && mounted) {
+          setUnreadActivity(res.data);
         }
       });
 
@@ -134,31 +134,35 @@ export const useProfile = () => {
   };
 
   const viewAllPosts = () => {
-    console.log("all posts");
+    router.goTo(`/all-user-posts/${userId}`, "left");
   };
 
   const viewActivePosts = () => {
-    console.log("active posts");
+    router.goTo(`/active-user-posts/${userId}`, "left");
   };
 
   const viewSoldPosts = () => {
-    console.log("sold posts");
+    router.goTo(`/sold-user-posts/${userId}`, "left");
   };
 
   const viewDraftPosts = () => {
-    console.log("draft posts");
+    router.goTo(`/draft-user-posts/${userId}`, "left");
   };
 
   const viewFirstPost = () => {
-    router.goToWithBack(`/post/${history.oldestPost.uuid}`, "left");
+    router.goTo(`/post/${history.oldestPost.uuid}`, "left");
   };
 
   const viewMostRecentPost = () => {
-    router.goToWithBack(`/post/${history.newestPost.uuid}`, "left");
+    router.goTo(`/post/${history.newestPost.uuid}`, "left");
+  };
+
+  const viewDeletedPosts = () => {
+    router.goTo(`/deleted-user-posts/${userId}`, "left");
   };
 
   const onNewPost = () => {
-    router.goToWithBack("/new-post", "forward");
+    router.goTo("/new-post", "forward");
   };
 
   const onSearch = () => {
@@ -167,6 +171,12 @@ export const useProfile = () => {
 
   const onAccount = () => {
     router.goTo(`/account/${userId}`, "up");
+  };
+
+  const canGoBack = ["post", "comments"].includes(router.prevPage);
+
+  const onBack = () => {
+    router.goBack();
   };
 
   return {
@@ -184,11 +194,14 @@ export const useProfile = () => {
     viewDraftPosts,
     viewFirstPost,
     viewMostRecentPost,
+    viewDeletedPosts,
     onNewPost,
     onSearch,
     onAccount,
+    onBack,
     canMakeNewPost: isMyProfile,
     canGoToAccount: isMyProfile,
+    canGoBack,
   };
 };
 
@@ -467,35 +480,55 @@ export const PureProfile = (profile) => {
                   : ""}
               </span>
             </p>
-            <p className="flex justify-between border-b-2 border-stone-200 p-2">
+            <p
+              className={
+                "flex justify-between border-b-2 border-stone-200 p-2" +
+                (profile?.data?.posts?.deleted?.length > 0
+                  ? " cursor-pointer"
+                  : "")
+              }
+              onClick={(e) => profile?.viewDeletedPosts?.(e)}
+            >
               <span>deleted</span>
               <span>{profile?.data?.posts?.deleted}</span>
             </p>
           </div>
         </div>
-        <div className="hide-while-sliding flex justify-end gap-x-2 pr-2">
-          {profile?.canGoToAccount && (
+        <div className="hide-while-sliding my-2 flex flex-row justify-between">
+          {profile?.canGoBack && (
             <button
-              className="rounded-full bg-sky-200 px-4 py-2 transition-colors hover:bg-sky-900 hover:text-white"
-              onClick={(e) => profile?.onAccount?.(e)}
+              className="relative ml-2 cursor-pointer px-4 py-4"
+              onClick={(e) => profile?.onBack?.(e)}
             >
-              Account
+              <p className="absolute left-0 right-0 -translate-y-1/2 text-lg font-bold">
+                {"<"}
+              </p>
             </button>
           )}
-          <button
-            className="rounded-full bg-sky-200 px-4 py-2 hover:bg-sky-900 hover:text-white"
-            onClick={(e) => profile?.onSearch?.(e)}
-          >
-            Search
-          </button>
-          {profile?.canMakeNewPost && (
+          <div className="flex grow justify-end gap-x-2 pr-2">
+            {profile?.canGoToAccount && (
+              <button
+                className="rounded-full bg-sky-200 px-4 py-2 transition-colors hover:bg-sky-900 hover:text-white"
+                onClick={(e) => profile?.onAccount?.(e)}
+              >
+                Account
+              </button>
+            )}
             <button
-              className="rounded-full bg-emerald-200 px-4 py-2 transition-colors hover:bg-emerald-900 hover:text-white"
-              onClick={(e) => profile?.onNewPost?.(e)}
+              className="rounded-full bg-sky-200 px-4 py-2 hover:bg-sky-900 hover:text-white"
+              onClick={(e) => profile?.onSearch?.(e)}
             >
-              New
+              Search
             </button>
-          )}
+            {profile?.canMakeNewPost && (
+              <button
+                className="rounded-full bg-emerald-200 px-4 py-2 transition-colors hover:bg-emerald-900 hover:text-white"
+                onClick={(e) => profile?.onNewPost?.(e)}
+              >
+                New
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

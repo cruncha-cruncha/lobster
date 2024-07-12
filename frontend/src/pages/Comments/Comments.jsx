@@ -830,7 +830,11 @@ export const useComments = () => {
   };
 
   const onBack = () => {
-    router.goTo(`/post/${postUuid}`, "right");
+    if (router.canGoBack) {
+      router.goBack();
+    } else {
+      router.goTo(`/post/${postUuid}`, "right");
+    }
   };
 
   return {

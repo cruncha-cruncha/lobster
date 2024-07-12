@@ -17,7 +17,7 @@ export const formatData = (data) => {
       name: data.author_name,
     },
     // maybe use a reverse geocoding lookup?
-    location: "123 Bender Street", // data.latitude, data.longitude, data.country
+    location: "near 123 Bender Street", // data.latitude, data.longitude, data.country
     price: data.price.toFixed(2), // data.currency
     edits: data.changes,
     myComment: data.my_comment,
@@ -65,7 +65,7 @@ export const usePost = () => {
   };
 
   const viewAuthor = () => {
-    console.log("author");
+    router.goTo(`/profile/${data?.author?.id}`, "up");
   };
 
   const onOffer = () => {
@@ -89,7 +89,7 @@ export const usePost = () => {
 
   const onBack = () => {
     if (router.canGoBack) {
-      router.goBack("right");
+      router.goBack();
     } else {
       router.goTo("/search", "right");
     }

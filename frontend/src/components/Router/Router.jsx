@@ -5,22 +5,21 @@ import {
   useContext,
   useRef,
 } from "react";
-import { INITIAL_PATH, ROUTES } from "./Routes";
+import { ROUTES } from "./Routes";
 import "./Transition.css";
 
 const parsePageKeyFromPath = (path) => {
-  const matches = path.match(/\/([^\/\?]+)/);
+  const matches = (path || "").match(/\/([^\/\?]+)/);
   if (matches) return matches[1];
   return "";
 };
 
 const INITIAL_ROUTER = {
-  path: INITIAL_PATH,
-  pageKey: parsePageKeyFromPath(INITIAL_PATH),
+  pageKey: "",
   prev: [],
   slider: {
     activeSide: "flip",
-    flipKey: parsePageKeyFromPath(INITIAL_PATH),
+    flipKey: "",
     flopKey: "",
     inTransition: false,
     direction: "",
@@ -55,11 +54,9 @@ const reducer = (state, action) => {
     case "set": {
       const newPageKey = parsePageKeyFromPath(action?.payload?.path);
       if (newPageKey === state.pageKey) return state;
-      window.history.pushState({}, "", action?.payload?.path);
 
-      return {
+      const out = {
         ...state,
-        path: action?.payload?.path,
         pageKey: newPageKey,
         slider: {
           ...state.slider,
@@ -70,22 +67,26 @@ const reducer = (state, action) => {
           direction: "",
         },
       };
+
+      return out;
     }
 
     case "push": {
-      const futurePageKey = parsePageKeyFromPath(action?.payload?.path);
+      const futurePageKey = parsePageKeyFromPath(action?.payload?.newPath);
       if (futurePageKey === state.pageKey) return state;
-      window.history.pushState({}, "", action?.payload?.path);
 
-      return {
+      const out = {
         ...state,
-        path: action?.payload?.path,
         prev: [
           ...state.prev,
-          {
-            path: state.path,
-            direction: action?.payload?.direction,
-          },
+          ...(!action?.payload?.noHistory
+            ? [
+                {
+                  path: action?.payload?.currentPath,
+                  direction: action?.payload?.direction,
+                },
+              ]
+            : []),
         ],
         slider: {
           ...state.slider,
@@ -100,42 +101,19 @@ const reducer = (state, action) => {
           direction: action?.payload?.direction,
         },
       };
-    }
 
-    case "pushNoHistory": {
-      const futurePageKey = parsePageKeyFromPath(action?.payload?.path);
-      if (futurePageKey === state.pageKey) return state;
-      window.history.pushState({}, "", action?.payload?.path);
-
-      return {
-        ...state,
-        path: action?.payload?.path,
-        slider: {
-          ...state.slider,
-          flipKey:
-            state.slider.activeSide === "flip"
-              ? state.slider.flipKey
-              : futurePageKey,
-          flopKey:
-            state.slider.activeSide === "flip"
-              ? futurePageKey
-              : state.slider.flopKey,
-          direction: action?.payload?.direction,
-        },
-      };
+      return out;
     }
 
     case "pop": {
       const prevState = state.prev[state.prev.length - 1];
-      window.history.pushState({}, "", prevState?.path);
       const prevPageKey = parsePageKeyFromPath(prevState?.path);
       const direction =
         action?.payload?.direction ||
         getOppositeDirection(prevState?.direction);
 
-      return {
+      const out = {
         ...state,
-        path: prevState?.path,
         prev: state.prev.slice(0, state.prev.length - 1),
         slider: {
           ...state.slider,
@@ -150,6 +128,10 @@ const reducer = (state, action) => {
           direction,
         },
       };
+
+      console.log("pop", { prev: state, next: out})
+
+      return out;
     }
 
     case "startTransition": {
@@ -192,8 +174,8 @@ export const Router = () => {
   const animationRef = useRef();
 
   useEffect(() => {
-    const splits = window.location.href.split("/");
-    const path = "/" + splits[splits.length - 1];
+    const path = getCurrentFullPath();
+    window.history.pushState({}, "", path);
     dispatch({ type: "set", payload: { path } });
   }, []);
 
@@ -303,23 +285,32 @@ export const useRouter = () => {
   const dispatch = useContext(RouterDispatchContext);
   const canGoBack = !router.slider.inTransition && router.prev.length > 0;
 
-  const goTo = (path, direction) => {
-    dispatch({ type: "pushNoHistory", payload: { path, direction } });
+  const goTo = (path, direction, noHistory = false) => {
+    const currentPath = getCurrentFullPath();
+    window.history.pushState({}, "", path);
+    dispatch({
+      type: "push",
+      payload: {
+        currentPath,
+        newPath: path,
+        direction,
+        noHistory,
+      },
+    });
   };
 
-  const goToWithBack = (path, direction) => {
-    dispatch({ type: "push", payload: { path, direction } });
-  };
-
-  const goBack = (direction) => {
+  const goBack = (direction = "") => {
+    const prevState = router.prev[router.prev.length - 1];
+    if (!prevState) return;
+    window.history.pushState({}, "", prevState?.path);
     dispatch({ type: "pop", payload: { direction } });
   };
 
   return {
-    path: router.path,
     slider: { ...router.slider },
+    pageKey: router.pageKey,
+    prevPage: parsePageKeyFromPath(router.prev[router.prev.length - 1]?.path),
     goTo,
-    goToWithBack,
     goBack,
     canGoBack,
   };
@@ -330,11 +321,17 @@ export const EmptyPage = () => <></>;
 export const getQueryParams = () => {
   const url = new URL(window.location.href);
   return new URLSearchParams(url.search);
-}
+};
 
 export const getLastPathSegment = () => {
   const path = window.location.pathname;
   const lastSlash = path.lastIndexOf("/");
   if (lastSlash === -1) return "";
   return path.substring(lastSlash + 1);
+};
+
+export const getCurrentFullPath = () => {
+  return `${
+    window.location.pathname + window.location.search + window.location.hash
+  }`;
 };

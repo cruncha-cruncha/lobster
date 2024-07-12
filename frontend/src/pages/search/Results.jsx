@@ -1,4 +1,4 @@
-import { PureSearchForm, useSearch, PAGE_SIZE } from "./Search";
+import { PureSearchForm, useSearch, GET_PAGE_SIZE } from "./Search";
 import { useRouter } from "../../components/router/Router";
 import { useAuth } from "../../components/userAuth";
 import { PureInfoModal } from "../../components/InfoModal";
@@ -22,7 +22,7 @@ export const useResults = () => {
   };
 
   const goToPost = (uuid) => {
-    router.goToWithBack(`/post/${uuid}` + window.location.search, "left");
+    router.goTo(`/post/${uuid}`, "left");
   };
 
   const goToMyProfile = () => {
@@ -32,7 +32,7 @@ export const useResults = () => {
   return {
     search,
     hasPrev: search.page > 0,
-    hasNext: search.results.length >= PAGE_SIZE,
+    hasNext: search.results.length >= GET_PAGE_SIZE(),
     searchDisabled: search.isLoading || search.term === "",
     onNext,
     onPrev,
@@ -109,15 +109,15 @@ export const PureResults = (results) => {
   );
 };
 
-const PureSingleResult = ({ post, goToPost }) => {
+export const PureSingleResult = ({ post, goToPost }) => {
   return (
     <div className="cursor-pointer" onClick={() => goToPost()}>
       <p>title: {post?.title}</p>
       <p>price: {post?.price}</p>
       <p>currency: {post?.currency}</p>
-      <p>comment count: {post?.comment_count}</p>
-      <p>author id: {post?.author_id}</p>
-      <p>author name: {post?.author_name}</p>
+      <p>comment count: {post?.commentCount}</p>
+      <p>author id: {post?.authorId}</p>
+      <p>author name: {post?.authorName}</p>
       <p>country: {post?.country}</p>
     </div>
   );

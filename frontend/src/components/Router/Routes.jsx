@@ -8,8 +8,7 @@ import { ResetPassword } from "../../pages/ResetPassword";
 import { Post } from "../../pages/Post";
 import { Comments } from "../../pages/comments/Comments";
 import { EditPost } from "../../pages/EditPost";
-
-export const INITIAL_PATH = "/login";
+import { List } from "../../pages/somePosts/List";
 
 export const ROUTES = {
   profile: Profile,
@@ -22,4 +21,9 @@ export const ROUTES = {
   "edit-post": EditPost,
   comments: Comments,
   search: Results,
+  "all-user-posts": List,
+  "active-user-posts": List,
+  "draft-user-posts": List,
+  "sold-user-posts": List,
+  "deleted-user-posts": List,
 };

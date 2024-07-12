@@ -87,7 +87,7 @@ export const useNewPost = () => {
       }
     }).then((res) => {
       if (!res.status === 200) return;
-      router.goTo(`/post/${res.data.uuid}`, "back");
+      router.goTo(`/post/${res.data.uuid}`, "back", true);
     })
   };
 
