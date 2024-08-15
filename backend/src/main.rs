@@ -254,15 +254,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let app = app.layer(
         CorsLayer::new()
             .allow_methods([
-                hyper::Method::GET,
-                hyper::Method::POST,
-                hyper::Method::PATCH,
-                hyper::Method::PUT,
-                hyper::Method::DELETE,
+                axum::http::Method::GET,
+                axum::http::Method::POST,
+                axum::http::Method::PATCH,
+                axum::http::Method::PUT,
+                axum::http::Method::DELETE,
             ])
             .allow_headers(vec![
-                hyper::header::AUTHORIZATION,
-                hyper::header::CONTENT_TYPE,
+                axum::http::header::AUTHORIZATION,
+                axum::http::header::CONTENT_TYPE
             ])
             .allow_origin(tower_http::cors::Any),
     );

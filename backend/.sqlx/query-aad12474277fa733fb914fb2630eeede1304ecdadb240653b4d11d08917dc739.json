@@ -20,53 +20,53 @@
       },
       {
         "ordinal": 3,
+        "name": "bio",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
         "name": "email",
         "type_info": "Bytea"
       },
       {
-        "ordinal": 4,
+        "ordinal": 5,
         "name": "salt",
         "type_info": "Bytea"
       },
       {
-        "ordinal": 5,
+        "ordinal": 6,
         "name": "password",
         "type_info": "Bytea"
       },
       {
-        "ordinal": 6,
+        "ordinal": 7,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 7,
+        "ordinal": 8,
         "name": "updated_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 8,
+        "ordinal": 9,
         "name": "banned_until",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 9,
+        "ordinal": 10,
         "name": "language",
         "type_info": "Int4"
       },
       {
-        "ordinal": 10,
+        "ordinal": 11,
         "name": "country",
         "type_info": "Int4"
       },
       {
-        "ordinal": 11,
+        "ordinal": 12,
         "name": "changes",
         "type_info": "Jsonb"
-      },
-      {
-        "ordinal": 12,
-        "name": "bio",
-        "type_info": "Text"
       }
     ],
     "parameters": {
@@ -84,6 +84,7 @@
       false,
       false,
       false,
+      true,
       false,
       false,
       false,
@@ -92,8 +93,7 @@
       true,
       false,
       false,
-      false,
-      true
+      false
     ]
   },
   "hash": "aad12474277fa733fb914fb2630eeede1304ecdadb240653b4d11d08917dc739"

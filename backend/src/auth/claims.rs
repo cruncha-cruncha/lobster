@@ -158,7 +158,7 @@ where
     type Rejection = (StatusCode, String);
 
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
-        use hyper::header::AUTHORIZATION;
+        use axum::http::header::AUTHORIZATION;
         use jsonwebtoken::decode;
 
         let header_value = match parts.headers.get(AUTHORIZATION) {

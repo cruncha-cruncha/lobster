@@ -20,7 +20,7 @@ pub async fn ban(
     Json(payload): Json<BanUserData>,
 ) -> Result<Json<user::User>, (StatusCode, String)> {
     if !claims.is_moderator() {
-        return Err((StatusCode::UNAUTHORIZED, String::from("Not an admin")));
+        return Err((StatusCode::UNAUTHORIZED, String::from("Not a moderator")));
     }
 
     let row = match sqlx::query_as!(

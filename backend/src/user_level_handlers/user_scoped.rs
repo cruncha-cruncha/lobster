@@ -235,6 +235,7 @@ pub async fn get_sold_posts(
 
 #[derive(Debug, sqlx::FromRow, Serialize, Deserialize)]
 pub struct GetCommentsData {
+    author_name: String,
     comments: Vec<comment::Comment>,
 }
 
@@ -264,7 +265,19 @@ pub async fn get_all_comments(
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     };
 
-    Ok(axum::Json(GetCommentsData { comments: rows }))
+    let first_name =
+        match sqlx::query!("SELECT first_name FROM users WHERE id = $1", user_id as i64)
+            .fetch_one(&state.db)
+            .await
+        {
+            Ok(row) => row.first_name,
+            Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+        };
+
+    Ok(axum::Json(GetCommentsData {
+        author_name: first_name,
+        comments: rows,
+    }))
 }
 
 pub async fn get_open_comments(
@@ -297,7 +310,19 @@ pub async fn get_open_comments(
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     };
 
-    Ok(axum::Json(GetCommentsData { comments: rows }))
+    let first_name =
+        match sqlx::query!("SELECT first_name FROM users WHERE id = $1", user_id as i64)
+            .fetch_one(&state.db)
+            .await
+        {
+            Ok(row) => row.first_name,
+            Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+        };
+
+    Ok(axum::Json(GetCommentsData {
+        author_name: first_name,
+        comments: rows,
+    }))
 }
 
 pub async fn get_hit_comments(
@@ -327,7 +352,19 @@ pub async fn get_hit_comments(
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     };
 
-    Ok(axum::Json(GetCommentsData { comments: rows }))
+    let first_name =
+        match sqlx::query!("SELECT first_name FROM users WHERE id = $1", user_id as i64)
+            .fetch_one(&state.db)
+            .await
+        {
+            Ok(row) => row.first_name,
+            Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+        };
+
+    Ok(axum::Json(GetCommentsData {
+        author_name: first_name,
+        comments: rows,
+    }))
 }
 
 pub async fn get_deleted_comments(
@@ -357,7 +394,19 @@ pub async fn get_deleted_comments(
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     };
 
-    Ok(axum::Json(GetCommentsData { comments: rows }))
+    let first_name =
+        match sqlx::query!("SELECT first_name FROM users WHERE id = $1", user_id as i64)
+            .fetch_one(&state.db)
+            .await
+        {
+            Ok(row) => row.first_name,
+            Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+        };
+
+    Ok(axum::Json(GetCommentsData {
+        author_name: first_name,
+        comments: rows,
+    }))
 }
 
 pub async fn get_missed_comments(
@@ -389,7 +438,19 @@ pub async fn get_missed_comments(
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     };
 
-    Ok(axum::Json(GetCommentsData { comments: rows }))
+    let first_name =
+        match sqlx::query!("SELECT first_name FROM users WHERE id = $1", user_id as i64)
+            .fetch_one(&state.db)
+            .await
+        {
+            Ok(row) => row.first_name,
+            Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+        };
+
+    Ok(axum::Json(GetCommentsData {
+        author_name: first_name,
+        comments: rows,
+    }))
 }
 
 pub async fn get_lost_comments(
@@ -421,5 +482,17 @@ pub async fn get_lost_comments(
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     };
 
-    Ok(axum::Json(GetCommentsData { comments: rows }))
+    let first_name =
+        match sqlx::query!("SELECT first_name FROM users WHERE id = $1", user_id as i64)
+            .fetch_one(&state.db)
+            .await
+        {
+            Ok(row) => row.first_name,
+            Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+        };
+
+    Ok(axum::Json(GetCommentsData {
+        author_name: first_name,
+        comments: rows,
+    }))
 }
