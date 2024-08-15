@@ -580,3 +580,123 @@ export const getUsersDraftPosts = async ({ accessToken, userId, page }) => {
 
   return response;
 };
+
+export const getAllUsersComments = async ({ accessToken, userId, page }) => {
+  const response = await handle(
+    `${serverUrl}/users/${userId}/all-comments/${page}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  );
+
+  if (response.status === 200) {
+    const valid = validateListOfComments(response.data);
+    if (!valid) return { status: null, data: null };
+  }
+
+  return response;
+};
+
+export const getUsersOpenComments = async ({ accessToken, userId, page }) => {
+  const response = await handle(
+    `${serverUrl}/users/${userId}/open-comments/${page}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  );
+
+  if (response.status === 200) {
+    const valid = validateListOfComments(response.data);
+    if (!valid) return { status: null, data: null };
+  }
+
+  return response;
+};
+
+export const getUsersHitComments = async ({ accessToken, userId, page }) => {
+  const response = await handle(
+    `${serverUrl}/users/${userId}/hit-comments/${page}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  );
+
+  if (response.status === 200) {
+    const valid = validateListOfComments(response.data);
+    if (!valid) return { status: null, data: null };
+  }
+
+  return response;
+};
+
+export const getUsersDeletedComments = async ({ accessToken, userId, page }) => {
+  const response = await handle(
+    `${serverUrl}/users/${userId}/deleted-comments/${page}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  );
+
+  if (response.status === 200) {
+    const valid = validateListOfComments(response.data);
+    if (!valid) return { status: null, data: null };
+  }
+
+  return response;
+};
+
+export const getUsersMissedComments = async ({ accessToken, userId, page }) => {
+  const response = await handle(
+    `${serverUrl}/users/${userId}/missed-comments/${page}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  );
+
+  if (response.status === 200) {
+    const valid = validateListOfComments(response.data);
+    if (!valid) return { status: null, data: null };
+  }
+
+  return response;
+}
+
+export const getUsersLostComments = async ({ accessToken, userId, page }) => {
+  const response = await handle(
+    `${serverUrl}/users/${userId}/lost-comments/${page}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  );
+
+  if (response.status === 200) {
+    const valid = validateListOfComments(response.data);
+    if (!valid) return { status: null, data: null };
+  }
+
+  return response;
+}

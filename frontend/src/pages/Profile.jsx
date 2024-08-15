@@ -109,7 +109,7 @@ export const useProfile = () => {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [userId, auth.accessToken]);
 
   const isMyProfile = auth.user.userId != null && userId == auth.user.userId;
 
@@ -118,19 +118,35 @@ export const useProfile = () => {
   };
 
   const viewAllOffers = () => {
-    console.log("all offers");
+    router.goTo(`/all-user-offers/${userId}`, "left");
   };
 
   const viewOpenOffers = () => {
-    console.log("open offers");
+    router.goTo(`/open-user-offers/${userId}`, "left");
   };
 
   const viewHitOffers = () => {
-    console.log("hit offers");
+    router.goTo(`/hit-user-offers/${userId}`, "left");
   };
 
   const viewMissedOffers = () => {
-    console.log("missed offers");
+    router.goTo(`/missed-user-offers/${userId}`, "left");
+  };
+
+  const viewLostOffers = () => {
+    router.goTo(`/lost-user-offers/${userId}`, "left");
+  };
+
+  const viewDeletedOffers = () => {
+    router.goTo(`/deleted-user-offers/${userId}`, "left");
+  };
+
+  const viewFirstOffer = () => {
+    router.goTo(`/comments/${history.oldestComment.uuid}`, "left");
+  };
+
+  const viewMostRecentOffer = () => {
+    router.goTo(`/comments/${history.newestComment.uuid}`, "left");
   };
 
   const viewAllPosts = () => {
@@ -188,6 +204,10 @@ export const useProfile = () => {
     viewOpenOffers,
     viewHitOffers,
     viewMissedOffers,
+    viewLostOffers,
+    viewDeletedOffers,
+    viewFirstOffer,
+    viewMostRecentOffer,
     viewAllPosts,
     viewActivePosts,
     viewSoldPosts,
@@ -303,7 +323,7 @@ export const PureProfile = (profile) => {
                   ? ""
                   : " cursor-pointer")
               }
-              onClick={(e) => profile?.viewFirstComment?.(e)}
+              onClick={(e) => profile?.viewFirstOffer?.(e)}
             >
               <span>first</span>
               <span>
@@ -319,7 +339,7 @@ export const PureProfile = (profile) => {
                   ? ""
                   : " cursor-pointer")
               }
-              onClick={(e) => profile?.viewMostRecentComment?.(e)}
+              onClick={(e) => profile?.viewMostRecentOffer?.(e)}
             >
               <span>most recent</span>
               <span>
@@ -494,7 +514,7 @@ export const PureProfile = (profile) => {
             </p>
           </div>
         </div>
-        <div className="hide-while-sliding my-2 flex flex-row justify-between">
+        <div className="hide-while-sliding flex flex-row justify-between">
           {profile?.canGoBack && (
             <button
               className="relative ml-2 cursor-pointer px-4 py-4"
@@ -515,7 +535,7 @@ export const PureProfile = (profile) => {
               </button>
             )}
             <button
-              className="rounded-full bg-sky-200 px-4 py-2 hover:bg-sky-900 hover:text-white"
+              className="rounded-full bg-emerald-200 px-4 py-2 hover:bg-sky-900 hover:text-white"
               onClick={(e) => profile?.onSearch?.(e)}
             >
               Search

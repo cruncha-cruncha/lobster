@@ -1,4 +1,5 @@
 import { PureSearchForm, useSearch, GET_PAGE_SIZE } from "./Search";
+import { useCurrencies } from "../../components/useCurrencies";
 import { useRouter } from "../../components/router/Router";
 import { useAuth } from "../../components/userAuth";
 import { PureInfoModal } from "../../components/InfoModal";
@@ -110,15 +111,29 @@ export const PureResults = (results) => {
 };
 
 export const PureSingleResult = ({ post, goToPost }) => {
+  const { currencies } = useCurrencies();
+  const currencySymbol = currencies.find(
+    (c) => c.id === post?.currency,
+  )?.symbol;
+
   return (
-    <div className="cursor-pointer" onClick={() => goToPost()}>
-      <p>title: {post?.title}</p>
-      <p>price: {post?.price}</p>
-      <p>currency: {post?.currency}</p>
-      <p>comment count: {post?.commentCount}</p>
-      <p>author id: {post?.authorId}</p>
-      <p>author name: {post?.authorName}</p>
-      <p>country: {post?.country}</p>
+    <div className="m-2 cursor-pointer" onClick={() => goToPost()}>
+      <div className="flex">
+        <div className="mr-2 h-20 w-20 shrink-0 grow-0 basis-20 bg-pink-500"></div>
+        <div>
+          <p className="text-lg">{post?.title}</p>
+          <p>
+            {post?.price} {currencySymbol}, {post?.authorName}
+          </p>
+          <p>
+            {post?.latitude}, {post?.longitude} (aka how far away)
+          </p>
+          <p>
+            {post?.commentCount}{" "}
+            {post?.commentCount == 1 ? "comment" : "comments"}
+          </p>
+        </div>
+      </div>
     </div>
   );
 };

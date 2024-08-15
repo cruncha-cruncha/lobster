@@ -390,7 +390,7 @@ export const useSearch = () => {
 export const PureSearchForm = (search) => {
   return (
     <div onKeyUp={(e) => search?.handleKeyUp?.(e)}>
-      <div className="m-2 rounded-sm border-b-2 border-stone-800">
+      <div className="m-2 mt-0 rounded-sm border-b-2 border-stone-800">
         <div className="relative flex items-center rounded-sm ring-sky-500 transition-shadow focus-within:ring-2">
           <input
             type="text"

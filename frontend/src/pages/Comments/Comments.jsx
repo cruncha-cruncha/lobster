@@ -829,11 +829,17 @@ export const useComments = () => {
     }
   };
 
+  const showGoToPost = router.prevPage !== "post";
+
+  const goToPost = () => {
+    router.goTo(`/post/${postUuid}`, "right");
+  }
+
   const onBack = () => {
     if (router.canGoBack) {
       router.goBack();
     } else {
-      router.goTo(`/post/${postUuid}`, "right");
+      goToPost();
     }
   };
 
@@ -844,6 +850,8 @@ export const useComments = () => {
     activeCommentUuid: state.activeCommentUuid,
     textControls,
     text: state.text,
+    showGoToPost,
+    goToPost,
     setText,
     onSubmitText,
     onBack,
@@ -856,6 +864,14 @@ export const PureComments = (comments) => {
       <PureInfoModal {...comments?.modal} />
       <div className="flex min-h-full justify-center">
         <div className="flex min-h-full max-w-3xl grow flex-col justify-between pb-2">
+          {comments?.showGoToPost && (
+            <button
+              className="cursor-pointer px-4 py-4"
+              onClick={(e) => comments?.goToPost?.(e)}
+            >
+              <p className="text-lg font-bold">{"<"} go to Post</p>
+            </button>
+          )}
           <div className="w-full">
             {comments?.data?.map((data, i) => (
               <Comment
@@ -867,19 +883,19 @@ export const PureComments = (comments) => {
               />
             ))}
           </div>
-          <div className="hide-while-sliding flex px-2">
-            <div className="mr-2">
-              <p
-                className="relative top-2 cursor-pointer pr-2 text-lg font-bold"
-                onClick={(e) => comments?.onBack?.(e)}
-              >
+          <div className="hide-while-sliding flex">
+            <button
+              className="relative ml-2 cursor-pointer px-4 py-4"
+              onClick={(e) => comments?.onBack?.(e)}
+            >
+              <p className="absolute left-0 right-0 -translate-y-1/2 text-lg font-bold">
                 {"<"}
               </p>
-            </div>
+            </button>
             <form className="flex grow flex-row">
               <input
                 className={
-                  "mr-2 grow rounded-sm border-b-2 border-stone-800 p-2 ring-sky-500 focus-visible:outline-none focus-visible:ring-2" +
+                  "mr-2 grow rounded-sm border-b-2 border-stone-800 p-2 pb-1 ring-sky-500 focus-visible:outline-none focus-visible:ring-2" +
                   (comments?.textControls?.inputDisabled
                     ? " text-neutral-500"
                     : "")
@@ -894,7 +910,7 @@ export const PureComments = (comments) => {
               />
               <button
                 className={
-                  "rounded-full px-4 py-2 transition-colors" +
+                  "mr-2 rounded-full px-4 py-2 transition-colors" +
                   (comments?.textControls?.submitDisabled
                     ? " bg-stone-300 text-white"
                     : " bg-emerald-200 hover:bg-emerald-900 hover:text-white")

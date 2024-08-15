@@ -4,6 +4,8 @@ import { useInfoModal, PureInfoModal } from "../components/InfoModal";
 import { validatePassword } from "./Login";
 import { useAuth } from "../components/userAuth";
 import * as endpoints from "../api/endpoints";
+import { useCountries } from "../components/useCountries";
+import { useLanguages } from "../components/useLanguages";
 
 const initialState = {
   name: "",
@@ -39,6 +41,8 @@ export const useAccount = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showOldPassword, setShowOldPassword] = useState(false);
+  const { countries } = useCountries();
+  const { languages } = useLanguages();
 
   const userId = getLastPathSegment();
 
@@ -68,7 +72,7 @@ export const useAccount = () => {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [userId, auth.accessToken]);
 
   const onLogout = () => {
     auth.logout();
@@ -129,8 +133,8 @@ export const useAccount = () => {
     setOldPassword: (e) =>
       dispatch({ type: "oldPassword", payload: e.target.value }),
     setNewPassword,
-    languageOptions: [],
-    countryOptions: [],
+    languageOptions: languages,
+    countryOptions: countries,
     isLoading: false,
     toggleShowNewPassword: () => setShowNewPassword((prev) => !prev),
     toggleShowOldPassword: () => setShowOldPassword((prev) => !prev),
@@ -228,9 +232,11 @@ export const PureAccount = (account) => {
                 <option value="0" disabled className="placeholder">
                   Language
                 </option>
-                <option value="1">English</option>
-                <option value="2">Spanish</option>
-                <option value="3">French</option>
+                {account?.languageOptions?.map((language) => (
+                  <option key={language.id} value={language.id}>
+                    {language.name}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="flex">
@@ -254,8 +260,11 @@ export const PureAccount = (account) => {
                 <option value="0" disabled className="placeholder">
                   Country
                 </option>
-                <option value="1">Canada</option>
-                <option value="2">USA</option>
+                {account?.countryOptions?.map((country) => (
+                  <option key={country.id} value={country.id}>
+                    {country.name}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="flex">
@@ -331,13 +340,15 @@ export const PureAccount = (account) => {
             </div>
           </div>
           <div className="hide-while-sliding flex justify-between">
-            <p
-              className="cursor-pointer p-2 text-lg font-bold"
+            <button
+              className="relative ml-2 cursor-pointer px-4 py-4"
               onClick={(e) => account?.onBack?.(e)}
             >
-              {"<"}
-            </p>
-            <div className="flex">
+              <p className="absolute left-0 right-0 -translate-y-1/2 text-lg font-bold">
+                {"<"}
+              </p>
+            </button>
+            <div className="flex grow justify-end gap-x-2 pr-2">
               <button
                 className="rounded-full bg-orange-200 px-4 py-2 hover:bg-orange-900 hover:text-white"
                 onClick={(e) => account?.onLogout?.(e)}
@@ -346,7 +357,7 @@ export const PureAccount = (account) => {
               </button>
               <button
                 className={
-                  "ml-2 rounded-full px-4 py-2 transition-colors" +
+                  "rounded-full px-4 py-2 transition-colors" +
                   (account?.canSave
                     ? " bg-emerald-200 hover:bg-emerald-900 hover:text-white"
                     : " bg-stone-300 text-white")

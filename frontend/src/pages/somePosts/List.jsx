@@ -1,6 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
-import { getLastPathSegment, useRouter } from "../../components/router/Router";
+import { useState, useEffect } from "react";
+import {
+  getLastPathSegment,
+  useRouter,
+  getPageKeyFromWindow,
+} from "../../components/router/Router";
 import { useAuth } from "../../components/userAuth";
+import { useCurrencies } from "../../components/useCurrencies";
 import * as endpoints from "../../api/endpoints";
 
 // page size is set in the backend and can't be changed
@@ -35,9 +40,10 @@ export const useList = () => {
   const auth = useAuth();
 
   const userId = getLastPathSegment(router.path);
+  const pageKey = getPageKeyFromWindow();
 
   const [title, endpoint] = (() => {
-    switch (router.pageKey) {
+    switch (pageKey) {
       case "all-user-posts":
         return [`All Posts (${authorName})`, endpoints.getAllUsersPosts];
       case "active-user-posts":
@@ -47,15 +53,42 @@ export const useList = () => {
       case "sold-user-posts":
         return [`Sold Posts (${authorName})`, endpoints.getUsersSoldPosts];
       case "deleted-user-posts":
-        return [`Deleted Posts (${authorName})`, endpoints.getUsersDeletedPosts];
+        return [
+          `Deleted Posts (${authorName})`,
+          endpoints.getUsersDeletedPosts,
+        ];
+      case "all-user-offers":
+        return [`All Offers (${authorName})`, endpoints.getAllUsersComments];
+      case "open-user-offers":
+        return [
+          `Open Offers (${authorName})`,
+          endpoints.getUsersOpenComments,
+        ];
+      case "hit-user-offers":
+        return [`Hit Offers (${authorName})`, endpoints.getUsersHitComments];
+      case "deleted-user-offers":
+        return [
+          `Deleted Offers (${authorName})`,
+          endpoints.getUsersDeletedComments,
+        ];
+      case "missed-user-offers":
+        return [
+          `Missed Offers (${authorName})`,
+          endpoints.getUsersMissedComments,
+        ];
+      case "lost-user-offers":
+        return [
+          `Lost Offers (${authorName})`,
+          endpoints.getUsersLostComments,
+        ];
       default:
-        return ["", null];
+        return ["Posts", null];
     }
   })();
 
   useEffect(() => {
-    if (!endpoint) return;
     let mounted = true;
+    if (!endpoint) return;
 
     endpoint({
       userId: userId,
@@ -111,6 +144,8 @@ export const useList = () => {
     title,
     hasPrev: page > 0,
     hasNext: data.length >= GET_PAGE_SIZE(),
+    markSold: pageKey === "all-user-posts",
+    markDeleted: pageKey === "all-user-posts",
     onNext,
     onPrev,
     goToPost,
@@ -124,22 +159,26 @@ export const PureList = (list) => {
       <div className="flex min-h-full justify-center">
         <div className="flex w-full max-w-md flex-col justify-between py-2">
           <div>
-            <p>{list?.title}</p>
+            <p className="mb-2 text-center text-xl">{list?.title}</p>
             {list?.data?.map((post) => (
               <PureSingleListItem
-                key={post.uuid}
+                key={post?.uuid}
                 post={post}
-                goToPost={() => list.goToPost(post.uuid)}
+                goToPost={() => list?.goToPost?.(post?.uuid)}
+                markSold={list?.showSold}
+                markDeleted={list?.markDeleted}
               />
             ))}
           </div>
           <div className="hide-while-sliding flex justify-between">
-            <p
-              className="cursor-pointer p-2 text-lg font-bold"
+            <button
+              className="relative ml-2 cursor-pointer px-4 py-4"
               onClick={(e) => list?.onBack?.(e)}
             >
-              {"<"}
-            </p>
+              <p className="absolute left-0 right-0 -translate-y-1/2 text-lg font-bold">
+                {"<"}
+              </p>
+            </button>
             <div className="flex gap-x-2 pr-2">
               <button
                 className={
@@ -173,13 +212,42 @@ export const PureList = (list) => {
   );
 };
 
-export const PureSingleListItem = ({ post, goToPost }) => {
+export const PureSingleListItem = ({
+  post,
+  goToPost,
+  markSold,
+  markDeleted,
+}) => {
+  const { currencies } = useCurrencies();
+  const currencySymbol = currencies.find(
+    (c) => c.id === post?.currency,
+  )?.symbol;
+
+  const status = () => {
+    if ((markDeleted || markSold) && post?.deleted) {
+      return "Deleted";
+    } else if (markSold && post?.sold) {
+      return "Sold";
+    } else {
+      return "";
+    }
+  };
+
   return (
-    <div className="cursor-pointer" onClick={() => goToPost()}>
-      <p>title: {post?.title}</p>
-      <p>price: {post?.price}</p>
-      <p>currency: {post?.currency}</p>
-      <p>country: {post?.country}</p>
+    <div className="m-2 cursor-pointer" onClick={() => goToPost()}>
+      <div className="flex">
+        <div className="mr-2 h-20 w-20 shrink-0 grow-0 basis-20 bg-pink-500"></div>
+        <div>
+          <p className="mb-1 text-lg">{post?.title}</p>
+          <p className="mb-1">
+            {post?.price} {currencySymbol}
+          </p>
+          <p className="mb-1">
+            {post?.latitude}, {post?.longitude} (aka how far away)
+          </p>
+          <p>{status}</p>
+        </div>
+      </div>
     </div>
   );
 };

@@ -129,8 +129,6 @@ const reducer = (state, action) => {
         },
       };
 
-      console.log("pop", { prev: state, next: out})
-
       return out;
     }
 
@@ -328,6 +326,11 @@ export const getLastPathSegment = () => {
   const lastSlash = path.lastIndexOf("/");
   if (lastSlash === -1) return "";
   return path.substring(lastSlash + 1);
+};
+
+export const getPageKeyFromWindow = () => {
+  const path = window.location.pathname;
+  return parsePageKeyFromPath(path);
 };
 
 export const getCurrentFullPath = () => {

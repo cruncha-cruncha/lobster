@@ -26,4 +26,9 @@ export const ROUTES = {
   "draft-user-posts": List,
   "sold-user-posts": List,
   "deleted-user-posts": List,
+  "all-user-offers": List,
+  "open-user-offers": List,
+  "hit-user-offers": List,
+  "deleted-user-offers": List,
+  "missed-user-offers": List,
 };

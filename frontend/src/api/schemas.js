@@ -176,6 +176,16 @@ const singleCommentSchema = {
   ],
 };
 
+const listOfComments = {
+  type: "object",
+  $id: "#listOfComments",
+  properties: {
+    author_name: { type: "string" },
+    comments: { type: "array", items: { $ref: "#singleComment" } },
+  },
+  required: ["author_name", "comments"],
+};
+
 const unreadActivitySchema = {
   type: "object",
   $id: "#unreadActivity",
@@ -313,49 +323,12 @@ const postSearchResults = {
   required: ["found"],
 };
 
-const singlePostListItem = {
-  type: "object",
-  $id: "#singlePostListItem",
-  properties: {
-    uuid: { type: "string" },
-    author_id: { type: "integer" },
-    changes: { type: "array", items: { $ref: "#singleChange" } },
-    title: { type: "string" },
-    content: { type: "string" },
-    images: { type: "array", items: { type: "string" } },
-    price: { type: "number" },
-    currency: { type: "number" },
-    country: { type: "number" },
-    latitude: { type: "number" },
-    longitude: { type: "number" },
-    sold: { type: "boolean" },
-    created_at: { type: "string" },
-    updated_at: { type: "string" },
-  },
-  required: [
-    "uuid",
-    "author_id",
-    "changes",
-    "title",
-    "content",
-    "images",
-    "price",
-    "currency",
-    "country",
-    "latitude",
-    "longitude",
-    "sold",
-    "created_at",
-    "updated_at",
-  ],
-};
-
 const listOfPosts = {
   type: "object",
   $id: "#listOfPosts",
   properties: {
     author_name: { type: "string" },
-    posts: { type: "array", items: { $ref: "#singlePostListItem" } },
+    posts: { type: "array", items: { $ref: "#singlePost" } },
   },
   required: ["author_name", "posts"],
 };
@@ -469,8 +442,14 @@ export const validatePostSearchResponse = makeLazyValidator([
 
 export const validateListOfPosts = makeLazyValidator([
   singleChangeSchema,
-  singlePostListItem,
+  singlePostSchema,
   listOfPosts,
+]);
+
+export const validateListOfComments = makeLazyValidator([
+  singleChangeSchema,
+  singleCommentSchema,
+  listOfComments,
 ]);
 
 export const validateGetPeople = makeLazyValidator([
