@@ -79,12 +79,12 @@ class Reply:
 
         return True
 
-    def hard_delete(self, super_user):
-        super_user.login()
+    def hard_delete(self, admin_user):
+        admin_user.login()
 
         reply = requests.delete(
             shared.CAPTAIN_URL + '/admin/replies/' + self.uuid,
-            headers={'Authorization': 'Bearer ' + super_user.access_token},
+            headers={'Authorization': 'Bearer ' + admin_user.access_token},
         )
 
         if reply.status_code != 200:

@@ -88,12 +88,12 @@ class Post:
 
         return True
 
-    def hard_delete(self, super_user):
-        super_user.login()
+    def hard_delete(self, admin_user):
+        admin_user.login()
 
         post = requests.delete(
             shared.CAPTAIN_URL + '/admin/posts/' + self.uuid,
-            headers={'Authorization': 'Bearer ' + super_user.access_token},
+            headers={'Authorization': 'Bearer ' + admin_user.access_token},
         )
 
         if post.status_code != 200:

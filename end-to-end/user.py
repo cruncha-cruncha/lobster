@@ -58,7 +58,7 @@ class User:
 
         return True
 
-    def create(self, super_user):
+    def create(self, moderator_user):
         create_invitation = requests.post(
             shared.CAPTAIN_URL + '/invitations',
             json={'email': self.source['email']}
@@ -68,12 +68,12 @@ class User:
             logging.debug('Failed to create invitation: ' + str(create_invitation.status_code))
             return False
 
-        if not super_user.login():
+        if not moderator_user.login():
             return False
 
         invitation = requests.post(
             shared.CAPTAIN_URL + '/admin/invitation',
-            headers={'Authorization': 'Bearer ' + super_user.access_token},
+            headers={'Authorization': 'Bearer ' + moderator_user.access_token},
             json={'email': self.source['email']}
         )
 
@@ -100,16 +100,16 @@ class User:
 
         return True
 
-    def hard_delete(self, super_user):
+    def hard_delete(self, admin_user):
         if not self.login():
             return False
 
-        if not super_user.login():
+        if not admin_user.login():
             return False
 
         delete_user = requests.delete(
             shared.CAPTAIN_URL + '/admin/users/' + str(self.user_id),
-            headers={'Authorization': 'Bearer ' + super_user.access_token}
+            headers={'Authorization': 'Bearer ' + admin_user.access_token}
         )
 
         if delete_user.status_code != 200:

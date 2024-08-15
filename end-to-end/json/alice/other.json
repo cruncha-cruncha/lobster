@@ -40,6 +40,7 @@
     "meta": {
       "type": "create_user",
       "id": "create_user_alice",
+      "expect": "success",
       "timing": 0.1
     }
   },
