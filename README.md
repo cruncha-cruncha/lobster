@@ -1,5 +1,5 @@
 # Lobster
-This is a playground for practicing full-stack development. When it's finished (never will be), it'll be a local buy/sell/trade site similar to [Kijiji](https://www.kijiji.ca/).
+This is a playground for practicing full-stack micro-architecture development. When it's finished (never will be), it'll be a local buy/sell/trade site similar to [Kijiji](https://www.kijiji.ca/).
 
 ## Components
 - React frontend
@@ -8,6 +8,7 @@ This is a playground for practicing full-stack development. When it's finished (
 - Searchable content ingestion: Rust -> RabbitMQ -> Golang -> ElasticSearch
 - Searching: Golang <-> ElasticSearch
 - Custom test suite written in Python
+- Docker-compose to wrangle it all
 
 ## Details
 - Users can publish, draft, and delete posts (advertising something for sale)
@@ -25,3 +26,6 @@ This is a playground for practicing full-stack development. When it's finished (
 - add admin and moderator screens
 - new activity notifications
 - i18n on the frontend
+
+## Setup
+- todo

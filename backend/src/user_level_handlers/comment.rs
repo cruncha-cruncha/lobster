@@ -26,8 +26,6 @@ pub struct GetCommentData {
     pub updated_at: comment::UpdatedAt,
     pub deleted: comment::Deleted,
     pub changes: comment::Changes,
-    pub unread_by_author: comment::UnreadByAuthor,
-    pub unread_by_poster: comment::UnreadByPoster,
     pub reply_count: Option<i64>,
 }
 
@@ -49,8 +47,6 @@ pub async fn get(
             comment.updated_at,
             comment.deleted,
             comment.changes,
-            comment.unread_by_author,
-            comment.unread_by_poster,
             COALESCE(COUNT(reply.uuid), 0)::INT AS "reply_count: i64"
         FROM comments comment
         LEFT JOIN replies reply ON reply.comment_uuid = comment.uuid
@@ -96,8 +92,6 @@ pub async fn get_post_scoped(
             comment.updated_at,
             comment.deleted,
             comment.changes,
-            comment.unread_by_author,
-            comment.unread_by_poster,
             COALESCE(COUNT(reply.uuid), 0)::INT AS "reply_count: i64"
         FROM comments comment
         LEFT JOIN replies reply ON reply.comment_uuid = comment.uuid
@@ -164,8 +158,8 @@ pub async fn post(
     let row = match sqlx::query_as!(
         comment::Comment,
         r#"
-        INSERT INTO comments (uuid, post_uuid, author_id, content, poster_id, created_at, updated_at, deleted, changes, unread_by_author, unread_by_poster)
-        VALUES ($1, $2, $3, $4, $5, NOW(), NOW(), FALSE, '[]'::JSONB, '[]'::JSONB, '["new-comment"]'::JSONB)
+        INSERT INTO comments (uuid, post_uuid, author_id, content, poster_id, created_at, updated_at, deleted, changes)
+        VALUES ($1, $2, $3, $4, $5, NOW(), NOW(), FALSE, '[]'::JSONB)
         ON CONFLICT (author_id, post_uuid)
         DO UPDATE SET
             content = $4,
@@ -176,8 +170,7 @@ pub async fn post(
                 'when', NOW(),
                 'content', comments.content,
                 'deleted', comments.deleted
-            )),
-            unread_by_poster = COALESCE(comments.unread_by_poster, '[]'::JSONB) || '["new-comment"]'::JSONB
+            ))
         RETURNING *;
         "#,
         uuid::Uuid::new_v4(),
@@ -196,6 +189,8 @@ pub async fn post(
     let comment_count = post_info.comment_count.unwrap_or_default() + 1;
     let message = PostChangeMsg::update(&post_info.into(), comment_count);
     send_post_changed_message(&state.comm, &message).await.ok(); // ignore errors
+
+    // TODO: send notification to the post author
 
     Ok(axum::Json(row))
 }
@@ -222,7 +217,6 @@ pub async fn patch(
         UPDATE comments comment
         SET
             content = $4,
-            unread_by_poster = COALESCE(comment.unread_by_poster, '[]'::JSONB) || '["comment-edited"]'::JSONB,
             updated_at = NOW(),
             changes = comment.changes || jsonb_build_array(jsonb_build_object(
                 'who', $3::TEXT,
@@ -251,6 +245,8 @@ pub async fn patch(
         Ok(row) => row,
         Err(e) => return Err((StatusCode::NOT_FOUND, e.to_string())),
     };
+
+    // TODO: send notification to the post author
 
     Ok(axum::Json(row))
 }
@@ -297,7 +293,6 @@ pub async fn delete(
             UPDATE comments comment SET
                 deleted = true,
                 updated_at = NOW(),
-                unread_by_poster = COALESCE(unread_by_poster, '[]'::JSONB) || '["comment-deleted"]'::JSONB,
                 changes = comment.changes || jsonb_build_array(jsonb_build_object(
                     'who', $3::TEXT,
                     'when', NOW(),
@@ -328,6 +323,8 @@ pub async fn delete(
     let comment_count = post_info.comment_count.unwrap_or_default() - 1;
     let message = PostChangeMsg::update(&post_info.into(), comment_count);
     send_post_changed_message(&state.comm, &message).await.ok(); // ignore errors
+
+    // TODO: send notification to the post author
 
     return Ok(StatusCode::NO_CONTENT);
 }

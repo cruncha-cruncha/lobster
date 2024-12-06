@@ -95,17 +95,6 @@ export const useProfile = () => {
         }
       });
 
-    endpoints
-      .getUnreadActivity({
-        userId: userId,
-        accessToken: auth.accessToken,
-      })
-      .then((res) => {
-        if (res.status === 200 && mounted) {
-          setUnreadActivity(res.data);
-        }
-      });
-
     return () => {
       mounted = false;
     };

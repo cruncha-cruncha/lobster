@@ -156,8 +156,6 @@ CREATE TABLE comments (
     updated_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     deleted BOOLEAN NOT NULL,
     changes JSONB NOT NULL,
-    unread_by_author JSONB NOT NULL,
-    unread_by_poster JSONB NOT NULL,
     PRIMARY KEY (uuid),
     UNIQUE (post_uuid, author_id)
 );

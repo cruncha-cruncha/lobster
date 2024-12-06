@@ -225,23 +225,6 @@ export const getProfile = async ({ userId, accessToken }) => {
   return response;
 };
 
-export const getUnreadActivity = async ({ userId, accessToken }) => {
-  const response = await handle(`${serverUrl}/unread-activity/${userId}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-
-  if (response.status === 200) {
-    const valid = validateUnreadActivity(response.data);
-    if (!valid) return { status: null, data: null };
-  }
-
-  return response;
-};
-
 export const getProfileHistory = async ({ userId, accessToken }) => {
   const response = await handle(
     `${serverUrl}/profiles/${userId}/historical-data`,

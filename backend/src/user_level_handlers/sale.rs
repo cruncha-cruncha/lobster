@@ -68,6 +68,8 @@ pub async fn post(
     let message = PostChangeMsg::remove(&payload.post_uuid);
     send_post_changed_message(&state.comm, &message).await.ok(); // ignore errors
 
+    // TODO: send notifications to commenters
+
     return Ok(axum::Json(row));
 }
 
@@ -154,6 +156,8 @@ pub async fn patch(
         Ok(row) => row,
         Err(e) => return Err((StatusCode::NOT_FOUND, e.to_string())),
     };
+
+    // TODO: send notification to buyer(s)
 
     return Ok(axum::Json(sale));
 }

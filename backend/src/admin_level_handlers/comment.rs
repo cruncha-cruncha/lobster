@@ -1,6 +1,7 @@
 use crate::auth::claims::Claims;
 use crate::db_structs::comment;
 use crate::rabbit;
+use crate::rabbit::post_with_comment_count::PostWithCommentCount;
 use crate::AppState;
 use axum::{
     extract::{Path, State},
@@ -18,7 +19,7 @@ pub async fn delete(
     }
 
     let post_info = match sqlx::query_as!(
-        rabbit::post_with_comment_count::PostWithCommentCount,
+        PostWithCommentCount,
         r#"
         SELECT
             post.*,

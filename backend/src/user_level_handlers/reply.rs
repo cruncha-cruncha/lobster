@@ -132,19 +132,7 @@ pub async fn post(
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     };
 
-    match sqlx::query!(
-        r#"
-        UPDATE comments comment SET
-            unread_by_author = CASE WHEN $2 THEN unread_by_author ELSE COALESCE(unread_by_author, '[]'::JSONB) || '["new-reply"]'::JSONB END,
-            unread_by_poster = CASE WHEN $2 THEN COALESCE(unread_by_poster, '[]'::JSONB) || '["new-reply"]'::JSONB ELSE unread_by_poster END
-        WHERE comment.uuid = $1
-        "#,
-        payload.comment_uuid,
-        author_id == auth.commenter_id,
-    ).fetch_all(&state.db).await {
-        Ok(_) => {},
-        Err(e) => { eprintln!("ERROR user_create_reply_update_comment_viewed, {}", e); },
-    }
+    // TODO: send notification to the post author
 
     Ok(axum::Json(row))
 }
@@ -194,21 +182,7 @@ pub async fn patch(
         Err(e) => return Err((StatusCode::NOT_FOUND, e.to_string())),
     };
 
-    match sqlx::query!(
-        r#"
-        UPDATE comments comment SET
-            unread_by_author = CASE WHEN comment.author_id = $2 THEN unread_by_author ELSE COALESCE(unread_by_author, '[]'::JSONB) || '["reply-edited"]'::JSONB END,
-            unread_by_poster = CASE WHEN comment.author_id = $2 THEN COALESCE(unread_by_poster, '[]'::JSONB) || '["reply-edited"]'::JSONB ELSE unread_by_poster END
-        FROM replies reply
-        WHERE reply.uuid = $1
-        AND comment.uuid = reply.comment_uuid
-        "#,
-        reply_uuid,
-        author_id,
-    ).fetch_all(&state.db).await {
-        Ok(_) => {},
-        Err(e) => { eprintln!("ERROR user_update_reply_update_comment_viewed, {}", e); },
-    }
+    // TODO: send notification to the post author
 
     Ok(axum::Json(row))
 }
@@ -251,21 +225,7 @@ pub async fn delete(
         Err(e) => return Err((StatusCode::NOT_FOUND, e.to_string())),
     };
 
-    match sqlx::query!(
-        r#"
-        UPDATE comments comment SET
-            unread_by_author = CASE WHEN comment.author_id = $2 THEN unread_by_author ELSE COALESCE(unread_by_author, '[]'::JSONB) || '["reply-deleted"]'::JSONB END,
-            unread_by_poster = CASE WHEN comment.author_id = $2 THEN COALESCE(unread_by_poster, '[]'::JSONB) || '["reply-deleted"]'::JSONB ELSE unread_by_poster END
-        FROM replies reply
-        WHERE reply.uuid = $1
-        AND comment.uuid = reply.comment_uuid
-        "#,
-        reply_uuid,
-        user_id,
-    ).fetch_all(&state.db).await {
-        Ok(_) => {},
-        Err(e) => { eprintln!("ERROR user_delete_reply_update_comment_viewed, {}", e); },
-    }
+    // TODO: send notification to the post author
 
     return Ok(StatusCode::NO_CONTENT);
 }

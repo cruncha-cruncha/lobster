@@ -10,8 +10,6 @@ pub type CreatedAt = time::OffsetDateTime;
 pub type UpdatedAt = time::OffsetDateTime;
 pub type Deleted = bool;
 pub type Changes = serde_json::Value;
-pub type UnreadByAuthor = serde_json::Value;
-pub type UnreadByPoster = serde_json::Value;
 
 #[derive(Debug, sqlx::FromRow, sqlx::Type, Serialize, Deserialize)]
 pub struct Comment {
@@ -24,6 +22,4 @@ pub struct Comment {
     pub updated_at: UpdatedAt,
     pub deleted: Deleted,
     pub changes: Changes,
-    pub unread_by_author: UnreadByAuthor,
-    pub unread_by_poster: UnreadByPoster,
 }

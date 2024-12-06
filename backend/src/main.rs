@@ -132,10 +132,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
             "/users/:user_id/abuse_offences/:page",
             routing::get(user_level_handlers::abuse::get_offended_by),
         )
-        .route(
-            "/unread-activity/:user_id",
-            routing::get(user_level_handlers::profile::get_unread),
-        )
         .route("/abuses", routing::post(user_level_handlers::abuse::post))
         .route(
             "/abuses/:abuse_uuid",

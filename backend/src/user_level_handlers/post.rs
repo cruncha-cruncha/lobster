@@ -227,22 +227,7 @@ pub async fn delete(
         Err(e) => return Err((StatusCode::NOT_FOUND, e.to_string())),
     };
 
-    match sqlx::query!(
-        r#"
-        UPDATE comments comment SET
-            unread_by_author = COALESCE(unread_by_author, '[]'::JSONB) || '["post-deleted"]'::JSONB
-        WHERE comment.post_uuid = $1
-        "#,
-        post_uuid,
-    )
-    .fetch_all(&state.db)
-    .await
-    {
-        Ok(_) => {}
-        Err(e) => {
-            eprintln!("ERROR user_delete_post_update_comments_viewed, {}", e);
-        }
-    }
+    // TODO: send notifications to commenters
 
     let message = PostChangeMsg::remove(&post_uuid);
     send_post_changed_message(&state.comm, &message).await.ok(); // ignore errors
@@ -333,27 +318,25 @@ pub async fn patch(
 
     let comment_count = match sqlx::query!(
         r#"
-        UPDATE comments comment SET
-            unread_by_author = COALESCE(unread_by_author, '[]'::JSONB) || '["post-edited"]'::JSONB
+        SELECT COUNT(*) as count
+        FROM comments comment
         WHERE comment.post_uuid = $1
-        AND deleted IS NOT TRUE
         "#,
         post_uuid,
     )
-    .fetch_all(&state.db)
+    .fetch_one(&state.db)
     .await
     {
-        Ok(q) => q.len(),
-        Err(e) => {
-            eprintln!("ERROR user_patch_post_update_comments_viewed, {}", e);
-            0
-        }
+        Ok(row) => row.count.unwrap_or(0),
+        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     };
 
     let mut message = PostChangeMsg::update(&row, comment_count as i32);
     if payload.draft {
         message = PostChangeMsg::remove(&post_uuid);
     }
+
+    // TODO: send notifications to commenters
 
     // if the post was always a draft, sending this is redundant
     send_post_changed_message(&state.comm, &message).await.ok(); // ignore errors
