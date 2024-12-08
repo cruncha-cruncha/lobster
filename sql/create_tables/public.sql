@@ -1,7 +1,8 @@
 CREATE TABLE public.library_information (
     uuid UUID DEFAULT gen_random_uuid() NOT NULL,
     name TEXT NOT NULL,
-    maximum_rental_period INTEGER,
+    maximum_rental_period INTEGER NOT NULL,
+    maximum_future INTEGER NOT NULL,
     PRIMARY KEY (uuid)
 );
 
@@ -18,12 +19,10 @@ CREATE TABLE public.users (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     username TEXT NOT NULL,
     status INTEGER NOT NULL,
-    email BYTEA NOT NULL,
-    salt BYTEA NOT NULL,
-    password BYTEA NOT NULL,
+    key UUID DEFAULT gen_random_uuid() NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     PRIMARY KEY (id),
     UNIQUE (username),
-    UNIQUE (email),
     CONSTRAINT fk_status
       FOREIGN KEY(status)
         REFERENCES fixed.user_statuses(id)
@@ -67,22 +66,24 @@ CREATE TABLE public.stores (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     name TEXT NOT NULL,
     status INTEGER NOT NULL,
+    location TEXT NOT NULL,
+    hours TEXT NOT NULL,
     description TEXT NOT NULL,
     PRIMARY KEY (id),
     UNIQUE (name),
     CONSTRAINT fk_status
       FOREIGN KEY(status)
         REFERENCES fixed.store_statuses(id)
-)
+);
 
 CREATE TABLE public.rental_categories (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     name TEXT NOT NULL,
-    description TEXT NOT NULL,
+    synonyms TEXT[] NOT NULL,
+    description TEXT,
     default_rental_period INTEGER,
-    PRIMARY KEY (id),
-    UNIQUE (name),
-)
+    PRIMARY KEY (id)
+);
 
 CREATE TABLE public.rental_category_relationships (
     parent_id INTEGER NOT NULL,
@@ -94,18 +95,17 @@ CREATE TABLE public.rental_category_relationships (
     CONSTRAINT fk_child
       FOREIGN KEY(child_id)
         REFERENCES public.rental_categories(id)
-)
+);
 
 CREATE TABLE public.tools (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
-    real_id TEXT NOT NULL,
+    real_id TEXT,
     store_id INTEGER NOT NULL,
-    category_id INTEGER NOT NULL,
+    category_id INTEGER,
     default_rental_period INTEGER,
-    description TEXT NOT NULL,
+    description TEXT,
     pictures TEXT[] NOT NULL,
     status INTEGER NOT NULL,
-    -- TODO: optional extras, attachments, implements, parts, etc.
     PRIMARY KEY (id),
     CONSTRAINT fk_status
       FOREIGN KEY(status)
@@ -129,7 +129,7 @@ CREATE TABLE public.rentals (
     CONSTRAINT fk_status
       FOREIGN KEY(status)
         REFERENCES fixed.rental_statuses(id)
-)
+);
 
 CREATE INDEX IF NOT EXISTS idx_rentals_tool_id ON public.rentals USING btree(tool_id);
 CREATE INDEX IF NOT EXISTS idx_rentals_renter_id ON public.rentals USING btree(renter_id);
@@ -138,6 +138,7 @@ CREATE TABLE public.grievances (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     author_id INTEGER NOT NULL,
     accused_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
     description TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     status INTEGER NOT NULL,
@@ -145,4 +146,4 @@ CREATE TABLE public.grievances (
     CONSTRAINT fk_status
       FOREIGN KEY(status)
         REFERENCES fixed.grievance_statuses(id)
-)
+);
