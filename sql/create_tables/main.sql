@@ -1,4 +1,6 @@
-CREATE TABLE public.library_information (
+CREATE SCHEMA main;
+
+CREATE TABLE main.library_information (
     uuid UUID DEFAULT gen_random_uuid() NOT NULL,
     key UUID DEFAULT gen_random_uuid() NOT NULL,
     name TEXT NOT NULL,
@@ -7,7 +9,7 @@ CREATE TABLE public.library_information (
     PRIMARY KEY (uuid)
 );
 
-CREATE TABLE public.password_reset_requests (
+CREATE TABLE main.password_reset_requests (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     email BYTEA NOT NULL,
     code TEXT NOT NULL,
@@ -16,7 +18,7 @@ CREATE TABLE public.password_reset_requests (
     UNIQUE (email)
 );
 
-CREATE TABLE public.users (
+CREATE TABLE main.users (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     username TEXT NOT NULL,
     status INTEGER NOT NULL,
@@ -29,7 +31,7 @@ CREATE TABLE public.users (
         REFERENCES fixed.user_statuses(id)
 );
 
-CREATE TABLE public.library_permissions (
+CREATE TABLE main.library_permissions (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     user_id INTEGER NOT NULL,
     role_id INTEGER NOT NULL,
@@ -43,9 +45,9 @@ CREATE TABLE public.library_permissions (
         REFERENCES fixed.permission_statuses(id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_library_permissions_user_id ON public.library_permissions USING btree(user_id);
+CREATE INDEX IF NOT EXISTS idx_library_permissions_user_id ON main.library_permissions USING btree(user_id);
 
-CREATE TABLE public.vendor_permissions (
+CREATE TABLE main.vendor_permissions (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     user_id INTEGER NOT NULL,
     role_id INTEGER NOT NULL,
@@ -60,10 +62,10 @@ CREATE TABLE public.vendor_permissions (
         REFERENCES fixed.permission_statuses(id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_vendor_permissions_user_id ON public.vendor_permissions USING btree(user_id);
-CREATE INDEX IF NOT EXISTS idx_vendor_permissions_store_id ON public.vendor_permissions USING btree(store_id);
+CREATE INDEX IF NOT EXISTS idx_vendor_permissions_user_id ON main.vendor_permissions USING btree(user_id);
+CREATE INDEX IF NOT EXISTS idx_vendor_permissions_store_id ON main.vendor_permissions USING btree(store_id);
 
-CREATE TABLE public.stores (
+CREATE TABLE main.stores (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     name TEXT NOT NULL,
     status INTEGER NOT NULL,
@@ -77,7 +79,7 @@ CREATE TABLE public.stores (
         REFERENCES fixed.store_statuses(id)
 );
 
-CREATE TABLE public.rental_categories (
+CREATE TABLE main.rental_categories (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     name TEXT NOT NULL,
     synonyms TEXT[] NOT NULL,
@@ -86,19 +88,19 @@ CREATE TABLE public.rental_categories (
     PRIMARY KEY (id)
 );
 
-CREATE TABLE public.rental_category_relationships (
+CREATE TABLE main.rental_category_relationships (
     parent_id INTEGER NOT NULL,
     child_id INTEGER NOT NULL,
     PRIMARY KEY (parent_id, child_id),
     CONSTRAINT fk_parent
       FOREIGN KEY(parent_id)
-        REFERENCES public.rental_categories(id),
+        REFERENCES main.rental_categories(id),
     CONSTRAINT fk_child
       FOREIGN KEY(child_id)
-        REFERENCES public.rental_categories(id)
+        REFERENCES main.rental_categories(id)
 );
 
-CREATE TABLE public.tools (
+CREATE TABLE main.tools (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     real_id TEXT,
     store_id INTEGER NOT NULL,
@@ -113,10 +115,10 @@ CREATE TABLE public.tools (
         REFERENCES fixed.tool_statuses(id)
 )
 
-CREATE INDEX IF NOT EXISTS idx_tools_store_id ON public.tools USING btree(store_id);
-CREATE INDEX IF NOT EXISTS idx_tools_category_id ON public.tools USING btree(category_id);
+CREATE INDEX IF NOT EXISTS idx_tools_store_id ON main.tools USING btree(store_id);
+CREATE INDEX IF NOT EXISTS idx_tools_category_id ON main.tools USING btree(category_id);
 
-CREATE TABLE public.rentals (
+CREATE TABLE main.rentals (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     tool_id INTEGER NOT NULL,
     renter_id INTEGER NOT NULL,
@@ -132,10 +134,10 @@ CREATE TABLE public.rentals (
         REFERENCES fixed.rental_statuses(id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_rentals_tool_id ON public.rentals USING btree(tool_id);
-CREATE INDEX IF NOT EXISTS idx_rentals_renter_id ON public.rentals USING btree(renter_id);
+CREATE INDEX IF NOT EXISTS idx_rentals_tool_id ON main.rentals USING btree(tool_id);
+CREATE INDEX IF NOT EXISTS idx_rentals_renter_id ON main.rentals USING btree(renter_id);
 
-CREATE TABLE public.grievances (
+CREATE TABLE main.grievances (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     author_id INTEGER NOT NULL,
     accused_id INTEGER NOT NULL,
