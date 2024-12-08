@@ -1,4 +1,4 @@
-CREATE TABLE public.library (
+CREATE TABLE public.library_information (
     uuid UUID DEFAULT gen_random_uuid() NOT NULL,
     name TEXT NOT NULL,
     maximum_rental_period INTEGER,
