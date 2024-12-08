@@ -1,0 +1,10 @@
+DROP TABLE IF EXISTS public.password_reset_requests;
+DROP TABLE IF EXISTS public.users;
+DROP TABLE IF EXISTS public.library_permissions;
+DROP TABLE IF EXISTS public.vendor_permissions;
+DROP TABLE IF EXISTS public.stores;
+DROP TABLE IF EXISTS public.rental_categories;
+DROP TABLE IF EXISTS public.rental_category_relationships;
+DROP TABLE IF EXISTS public.tools;
+DROP TABLE IF EXISTS public.rentals;
+DROP TABLE IF EXISTS public.grievances;

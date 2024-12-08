@@ -1,0 +1,6 @@
+DROP TABLE IF EXISTS edits.users;
+DROP TABLE IF EXISTS edits.rentals;
+DROP TABLE IF EXISTS edits.stores;
+DROP TABLE IF EXISTS edits.tools;
+
+DROP SCHEMA IF EXISTS edits;
