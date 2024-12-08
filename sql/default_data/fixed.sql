@@ -13,6 +13,9 @@ VALUES ('active'), ('inactive'), ('pending'), ('closed'), ('deleted'), ('suspend
 INSERT INTO fixed.tool_statuses (name)
 VALUES ('available'), ('rented'), ('maintenance'), ('broken'), ('lost'), ('stolen'), ('retired');
 
+INSERT INTO fixed.rental_statuses (name)
+VALUES ('pending'), ('cancelled'), ('rented'), ('returned'), ('bad'), ('forgiven');
+
 INSERT INTO fixed.grievance_statuses (name)
 VALUES ('open'), ('closed'), ('resolved'), ('dismissed'), ('ban'), ('suspension');
 

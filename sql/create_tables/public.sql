@@ -1,3 +1,10 @@
+CREATE TABLE public.library (
+    uuid UUID DEFAULT gen_random_uuid() NOT NULL,
+    name TEXT NOT NULL,
+    maximum_rental_period INTEGER,
+    PRIMARY KEY (uuid)
+);
+
 CREATE TABLE public.password_reset_requests (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     email BYTEA NOT NULL,
@@ -9,16 +16,17 @@ CREATE TABLE public.password_reset_requests (
 
 CREATE TABLE public.users (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
-    first_name TEXT NOT NULL,
+    username TEXT NOT NULL,
     status INTEGER NOT NULL,
     email BYTEA NOT NULL,
     salt BYTEA NOT NULL,
     password BYTEA NOT NULL,
     PRIMARY KEY (id),
+    UNIQUE (username),
     UNIQUE (email),
     CONSTRAINT fk_status
       FOREIGN KEY(status)
-        REFERENCES user_statuses(id)
+        REFERENCES fixed.user_statuses(id)
 );
 
 CREATE TABLE public.library_permissions (
@@ -59,7 +67,7 @@ CREATE TABLE public.stores (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     name TEXT NOT NULL,
     status INTEGER NOT NULL,
-    -- TODO: hours, late fee policies, etc.
+    description TEXT NOT NULL,
     PRIMARY KEY (id),
     UNIQUE (name),
     CONSTRAINT fk_status
@@ -71,6 +79,7 @@ CREATE TABLE public.rental_categories (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     name TEXT NOT NULL,
     description TEXT NOT NULL,
+    default_rental_period INTEGER,
     PRIMARY KEY (id),
     UNIQUE (name),
 )
@@ -92,10 +101,15 @@ CREATE TABLE public.tools (
     real_id TEXT NOT NULL,
     store_id INTEGER NOT NULL,
     category_id INTEGER NOT NULL,
+    default_rental_period INTEGER,
     description TEXT NOT NULL,
     pictures TEXT[] NOT NULL,
+    status INTEGER NOT NULL,
     -- TODO: optional extras, attachments, implements, parts, etc.
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    CONSTRAINT fk_status
+      FOREIGN KEY(status)
+        REFERENCES fixed.tool_statuses(id)
 )
 
 CREATE INDEX IF NOT EXISTS idx_tools_store_id ON public.tools USING btree(store_id);
@@ -112,6 +126,9 @@ CREATE TABLE public.rentals (
     return_date TIMESTAMPTZ,
     status INTEGER NOT NULL,
     PRIMARY KEY (id),
+    CONSTRAINT fk_status
+      FOREIGN KEY(status)
+        REFERENCES fixed.rental_statuses(id)
 )
 
 CREATE INDEX IF NOT EXISTS idx_rentals_tool_id ON public.rentals USING btree(tool_id);
@@ -125,4 +142,7 @@ CREATE TABLE public.grievances (
     created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     status INTEGER NOT NULL,
     PRIMARY KEY (id),
+    CONSTRAINT fk_status
+      FOREIGN KEY(status)
+        REFERENCES fixed.grievance_statuses(id)
 )
