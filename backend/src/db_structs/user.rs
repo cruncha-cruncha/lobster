@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 use crate::auth::claims;
 
 pub type Id = i32;
-pub type ClaimLevel = claims::ClaimLevel;
 pub type FirstName = String;
 pub type Bio = Option<String>;
 pub type Email = Vec<u8>;

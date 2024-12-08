@@ -14,7 +14,6 @@ const HEADER: Lazy<jsonwebtoken::Header> = Lazy::new(|| jsonwebtoken::Header::ne
 
 pub fn make_refresh_token(
     sub: &str,
-    level: ClaimLevel,
 ) -> Result<String, (StatusCode, String)> {
     let now = time::OffsetDateTime::now_utc();
     let expiry = match now.checked_add(Duration::days(14)) {
@@ -29,7 +28,6 @@ pub fn make_refresh_token(
 
     let claims = Claims {
         sub: sub.to_string(),
-        level,
         purpose: ClaimPurpose::Refresh,
         exp: expiry.unix_timestamp(),
         iat: now.unix_timestamp(),
@@ -43,7 +41,6 @@ pub fn make_refresh_token(
 
 pub fn make_access_token(
     sub: &str,
-    level: ClaimLevel,
 ) -> Result<String, (StatusCode, String)> {
     let now = time::OffsetDateTime::now_utc();
     let expiry = match now.checked_add(Duration::minutes(20)) {
@@ -58,7 +55,6 @@ pub fn make_access_token(
 
     let claims = Claims {
         sub: sub.to_string(),
-        level,
         purpose: ClaimPurpose::Access,
         exp: expiry.unix_timestamp(),
         iat: now.unix_timestamp(),
@@ -67,36 +63,6 @@ pub fn make_access_token(
     match jsonwebtoken::encode(&HEADER, &claims, &PRIVATE_KEY) {
         Ok(token) => Ok(token),
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Copy, Clone)]
-pub enum ClaimLevel {
-    Admin = 3,
-    Moderator = 2,
-    User = 1,
-    None = 0,
-}
-
-impl ClaimLevel {
-    pub fn encode_numeric(&self) -> i32 {
-        match self {
-            ClaimLevel::Admin => 3,
-            ClaimLevel::Moderator => 2,
-            ClaimLevel::User => 1,
-            ClaimLevel::None => 0,
-        }
-    }
-}
-
-impl Into<ClaimLevel> for i32 {
-    fn into(self) -> ClaimLevel {
-        match self {
-            3 => ClaimLevel::Admin,
-            2 => ClaimLevel::Moderator,
-            1 => ClaimLevel::User,
-            _ => ClaimLevel::None,
-        }
     }
 }
 
@@ -130,7 +96,6 @@ impl Into<ClaimPurpose> for i32 {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
     pub sub: String,
-    pub level: ClaimLevel,
     pub purpose: ClaimPurpose,
     pub exp: i64,
     pub iat: i64,
@@ -139,14 +104,6 @@ pub struct Claims {
 impl Claims {
     pub fn subject_as_user_id(&self) -> Option<user::Id> {
         self.sub.parse::<user::Id>().ok()
-    }
-
-    pub fn is_moderator(&self) -> bool {
-        self.level == ClaimLevel::Moderator
-    }
-
-    pub fn is_admin(&self) -> bool {
-        self.level == ClaimLevel::Admin
     }
 }
 

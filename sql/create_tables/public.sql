@@ -1,5 +1,6 @@
 CREATE TABLE public.library_information (
     uuid UUID DEFAULT gen_random_uuid() NOT NULL,
+    key UUID DEFAULT gen_random_uuid() NOT NULL,
     name TEXT NOT NULL,
     maximum_rental_period INTEGER NOT NULL,
     maximum_future INTEGER NOT NULL,
@@ -19,7 +20,7 @@ CREATE TABLE public.users (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     username TEXT NOT NULL,
     status INTEGER NOT NULL,
-    key UUID DEFAULT gen_random_uuid() NOT NULL,
+    email BYTEA NOT NULL,
     created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     PRIMARY KEY (id),
     UNIQUE (username),
