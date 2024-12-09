@@ -10,28 +10,20 @@ pub const ALGORITHM: jsonwebtoken::Algorithm = jsonwebtoken::Algorithm::RS256;
 
 #[allow(dead_code)]
 pub const PUBLIC_KEY: Lazy<jsonwebtoken::DecodingKey> = Lazy::new(|| {
-    let bytes = get_jwt_public_key_pem_bytes();
+    let bytes = get_pem_bytes(&PUBLIC_FILE_PATH);
     return DecodingKey::from_rsa_pem(&bytes).expect("Failed to make public key");
 });
 
 #[allow(dead_code)]
 pub const PRIVATE_KEY: Lazy<jsonwebtoken::EncodingKey> = Lazy::new(|| {
-    let bytes = get_jwt_private_key_pem_bytes();
+    let bytes = get_pem_bytes(&PRIVATE_FILE_PATH);
     return EncodingKey::from_rsa_pem(&bytes).expect("Failed to make private key");
 });
 
-pub fn get_jwt_public_key_pem_bytes() -> Vec<u8> {
+fn get_pem_bytes(path: &str) -> Vec<u8> {
     let mut buffer = Vec::new();
-    let mut f = fs::File::open(PUBLIC_FILE_PATH).expect(&format!("Failed to open file {}", PUBLIC_FILE_PATH));
-    f.read_to_end(&mut buffer).expect(&format!("Failed to read file {}", PUBLIC_FILE_PATH));
-
-    buffer
-}
-
-pub fn get_jwt_private_key_pem_bytes() -> Vec<u8> {
-    let mut buffer = Vec::new();
-    let mut f = fs::File::open(PRIVATE_FILE_PATH).expect(&format!("Failed to open file {}", PRIVATE_FILE_PATH));
-    f.read_to_end(&mut buffer).expect(&format!("Failed to read file {}", PRIVATE_FILE_PATH));
+    let mut f = fs::File::open(path).expect(&format!("Failed to open file {}", path));
+    f.read_to_end(&mut buffer).expect(&format!("Failed to read file {}", path));
 
     buffer
 }

@@ -1,4 +1,6 @@
-use super::signing::{PUBLIC_KEY, PRIVATE_KEY, ALGORITHM};
+use std::collections::HashMap;
+
+use super::signing::{ALGORITHM, PRIVATE_KEY, PUBLIC_KEY};
 use crate::db_structs::user;
 use axum::{
     extract::FromRequestParts,
@@ -12,11 +14,17 @@ use time::Duration;
 #[allow(dead_code)]
 const HEADER: Lazy<jsonwebtoken::Header> = Lazy::new(|| jsonwebtoken::Header::new(ALGORITHM));
 
-pub fn make_refresh_token(
+const REFRESH_EXPIRY_DURATION: Duration = Duration::days(14);
+const ACCESS_EXPIRY_DURATION: Duration = Duration::minutes(20);
+
+fn make_token(
     sub: &str,
+    exp: Duration,
+    purpose: ClaimPurpose,
+    permissions: &ClaimPermissions,
 ) -> Result<String, (StatusCode, String)> {
     let now = time::OffsetDateTime::now_utc();
-    let expiry = match now.checked_add(Duration::days(14)) {
+    let expiry = match now.checked_add(exp) {
         Some(expiry) => expiry,
         None => {
             return Err((
@@ -28,7 +36,8 @@ pub fn make_refresh_token(
 
     let claims = Claims {
         sub: sub.to_string(),
-        purpose: ClaimPurpose::Refresh,
+        purpose: purpose,
+        permissions: permissions.clone(),
         exp: expiry.unix_timestamp(),
         iat: now.unix_timestamp(),
     };
@@ -39,31 +48,12 @@ pub fn make_refresh_token(
     }
 }
 
-pub fn make_access_token(
-    sub: &str,
-) -> Result<String, (StatusCode, String)> {
-    let now = time::OffsetDateTime::now_utc();
-    let expiry = match now.checked_add(Duration::minutes(20)) {
-        Some(expiry) => expiry,
-        None => {
-            return Err((
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Failed to calculate expiry".to_string(),
-            ))
-        }
-    };
+pub fn make_refresh_token(sub: &str, permissions: &ClaimPermissions) -> Result<String, (StatusCode, String)> {
+    make_token(sub, REFRESH_EXPIRY_DURATION, ClaimPurpose::Refresh, permissions)
+}
 
-    let claims = Claims {
-        sub: sub.to_string(),
-        purpose: ClaimPurpose::Access,
-        exp: expiry.unix_timestamp(),
-        iat: now.unix_timestamp(),
-    };
-
-    match jsonwebtoken::encode(&HEADER, &claims, &PRIVATE_KEY) {
-        Ok(token) => Ok(token),
-        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
-    }
+pub fn make_access_token(sub: &str, permissions: &ClaimPermissions) -> Result<String, (StatusCode, String)> {
+    make_token(sub, ACCESS_EXPIRY_DURATION, ClaimPurpose::Access, permissions)
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Copy, Clone)]
@@ -97,13 +87,42 @@ impl Into<ClaimPurpose> for i32 {
 pub struct Claims {
     pub sub: String,
     pub purpose: ClaimPurpose,
+    pub permissions: ClaimPermissions,
     pub exp: i64,
     pub iat: i64,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ClaimPermissions {
+    pub library: Vec<i64>,
+    pub store: HashMap<i64, Vec<i64>>,
+}
+
+// assumes that 1 = 'library_admin', 2 = 'user_admin', 3 = 'store_admin', 4 = 'store_rep', and 5 = 'tool_manager'
+// in the fixed.roles database table
 impl Claims {
     pub fn subject_as_user_id(&self) -> Option<user::Id> {
         self.sub.parse::<user::Id>().ok()
+    }
+
+    pub fn is_library_admin(&self) -> bool {
+        self.permissions.library.contains(&1)
+    }
+
+    pub fn is_user_admin(&self) -> bool {
+        self.permissions.library.contains(&2)
+    }
+
+    pub fn is_store_admin(&self) -> bool {
+        self.permissions.library.contains(&3)
+    }
+
+    pub fn is_store_rep(&self, store_id: i64) -> bool {
+        self.permissions.store.get(&store_id).map_or(false, |perms| perms.contains(&4))
+    }
+
+    pub fn is_tool_manager(&self, store_id: i64) -> bool {
+        self.permissions.store.get(&store_id).map_or(false, |perms| perms.contains(&5))
     }
 }
 

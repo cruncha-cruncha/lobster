@@ -2,7 +2,7 @@ CREATE SCHEMA main;
 
 CREATE TABLE main.library_information (
     uuid UUID DEFAULT gen_random_uuid() NOT NULL,
-    key UUID DEFAULT gen_random_uuid() NOT NULL,
+    salt BYTEA NOT NULL,
     name TEXT NOT NULL,
     maximum_rental_period INTEGER NOT NULL,
     maximum_future INTEGER NOT NULL,
