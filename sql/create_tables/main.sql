@@ -113,7 +113,7 @@ CREATE TABLE main.tools (
     CONSTRAINT fk_status
       FOREIGN KEY(status)
         REFERENCES fixed.tool_statuses(id)
-)
+);
 
 CREATE INDEX IF NOT EXISTS idx_tools_store_id ON main.tools USING btree(store_id);
 CREATE INDEX IF NOT EXISTS idx_tools_category_id ON main.tools USING btree(category_id);

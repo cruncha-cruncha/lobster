@@ -1,0 +1,18 @@
+use serde::{Deserialize, Serialize};
+
+pub type Id = i32;
+pub type Name = String;
+pub type Status = i32;
+pub type Location = String;
+pub type Hours = String;
+pub type Description = String;
+
+#[derive(Debug, sqlx::FromRow, Serialize, Deserialize)]
+pub struct Store {
+    pub id: Id,
+    pub name: Name,
+    pub status: Status,
+    pub location: Location,
+    pub hours: Hours,
+    pub description: Description,
+}
