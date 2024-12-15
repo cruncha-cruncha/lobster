@@ -1,7 +1,6 @@
 pub mod grievance;
 pub mod library_information;
 pub mod library_permission;
-pub mod password_reset_request;
 pub mod rental;
 pub mod rental_category;
 pub mod rental_category_relationship;

@@ -9,15 +9,6 @@ CREATE TABLE main.library_information (
     PRIMARY KEY (uuid)
 );
 
-CREATE TABLE main.password_reset_requests (
-    id INTEGER GENERATED ALWAYS AS IDENTITY,
-    email BYTEA NOT NULL,
-    code TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
-    PRIMARY KEY (id),
-    UNIQUE (email)
-);
-
 CREATE TABLE main.users (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     username TEXT NOT NULL,
@@ -72,6 +63,7 @@ CREATE TABLE main.stores (
     location TEXT NOT NULL,
     hours TEXT NOT NULL,
     description TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     PRIMARY KEY (id),
     UNIQUE (name),
     CONSTRAINT fk_status

@@ -4,6 +4,8 @@ mod db_structs;
 mod moderator_level_handlers;
 mod rabbit;
 mod user_level_handlers;
+mod handlers;
+mod queries;
 
 use axum::{routing, Router};
 use rabbit::communicator::Communicator;

@@ -6,6 +6,7 @@ pub type Status = i32;
 pub type Location = String;
 pub type Hours = String;
 pub type Description = String;
+pub type CreatedAt = time::OffsetDateTime;
 
 #[derive(Debug, sqlx::FromRow, Serialize, Deserialize)]
 pub struct Store {
@@ -15,4 +16,5 @@ pub struct Store {
     pub location: Location,
     pub hours: Hours,
     pub description: Description,
+    pub created_at: CreatedAt,
 }

@@ -48,12 +48,28 @@ fn make_token(
     }
 }
 
-pub fn make_refresh_token(sub: &str, permissions: &ClaimPermissions) -> Result<String, (StatusCode, String)> {
-    make_token(sub, REFRESH_EXPIRY_DURATION, ClaimPurpose::Refresh, permissions)
+pub fn make_refresh_token(sub: &str) -> Result<String, (StatusCode, String)> {
+    make_token(
+        sub,
+        REFRESH_EXPIRY_DURATION,
+        ClaimPurpose::Refresh,
+        &ClaimPermissions {
+            library: vec![],
+            store: HashMap::new(),
+        },
+    )
 }
 
-pub fn make_access_token(sub: &str, permissions: &ClaimPermissions) -> Result<String, (StatusCode, String)> {
-    make_token(sub, ACCESS_EXPIRY_DURATION, ClaimPurpose::Access, permissions)
+pub fn make_access_token(
+    sub: &str,
+    permissions: &ClaimPermissions,
+) -> Result<String, (StatusCode, String)> {
+    make_token(
+        sub,
+        ACCESS_EXPIRY_DURATION,
+        ClaimPurpose::Access,
+        permissions,
+    )
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Copy, Clone)]
@@ -94,8 +110,8 @@ pub struct Claims {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ClaimPermissions {
-    pub library: Vec<i64>,
-    pub store: HashMap<i64, Vec<i64>>,
+    pub library: Vec<i32>,
+    pub store: HashMap<i32, Vec<i32>>,
 }
 
 // assumes that 1 = 'library_admin', 2 = 'user_admin', 3 = 'store_admin', 4 = 'store_rep', and 5 = 'tool_manager'
@@ -117,12 +133,18 @@ impl Claims {
         self.permissions.library.contains(&3)
     }
 
-    pub fn is_store_rep(&self, store_id: i64) -> bool {
-        self.permissions.store.get(&store_id).map_or(false, |perms| perms.contains(&4))
+    pub fn is_store_rep(&self, store_id: i32) -> bool {
+        self.permissions
+            .store
+            .get(&store_id)
+            .map_or(false, |perms| perms.contains(&4))
     }
 
-    pub fn is_tool_manager(&self, store_id: i64) -> bool {
-        self.permissions.store.get(&store_id).map_or(false, |perms| perms.contains(&5))
+    pub fn is_tool_manager(&self, store_id: i32) -> bool {
+        self.permissions
+            .store
+            .get(&store_id)
+            .map_or(false, |perms| perms.contains(&5))
     }
 }
 

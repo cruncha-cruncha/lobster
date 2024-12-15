@@ -57,3 +57,15 @@ CREATE TABLE edits.tools (
 
 CREATE INDEX IF NOT EXISTS idx_tool_edits_tool_id ON edits.tools USING btree(tool_id);
 CREATE INDEX IF NOT EXISTS idx_tool_edits_editor_id ON edits.tools USING btree(editor_id);
+
+CREATE TABLE edits.grievances (
+    id INTEGER GENERATED ALWAYS AS IDENTITY,
+    grievance_id INTEGER NOT NULL,
+    editor_id INTEGER NOT NULL,
+    changes JSONB NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
+    PRIMARY KEY (id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_grievance_edits_grievance_id ON edits.grievances USING btree(grievance_id);
+CREATE INDEX IF NOT EXISTS idx_grievance_edits_editor_id ON edits.grievances USING btree(editor_id);
