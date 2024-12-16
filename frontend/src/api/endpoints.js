@@ -55,6 +55,16 @@ const handle = (url, params) => {
     });
 };
 
+export const createLibrary = async ({ name }) => {
+  const response = await handle(`${serverUrl}/library`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+
+  return response;
+};
+
 export const login = async ({ email, password }) => {
   const response = await handle(`${serverUrl}/users`, {
     method: "POST",
