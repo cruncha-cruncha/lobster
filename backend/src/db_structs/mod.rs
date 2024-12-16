@@ -1,10 +1,9 @@
 pub mod grievance;
 pub mod library_information;
-pub mod library_permission;
+pub mod permission;
 pub mod rental;
 pub mod rental_category;
 pub mod rental_category_relationship;
 pub mod store;
 pub mod tool;
 pub mod user;
-pub mod vendor_permission;

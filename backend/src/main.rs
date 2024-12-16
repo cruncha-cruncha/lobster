@@ -49,7 +49,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .route(
             "/library",
             routing::get(handlers::library::get_info).post(handlers::library::create_library),
-        );
+        )
+        .route("/login", routing::post(handlers::auth::login));
 
     #[cfg(feature = "cors")]
     let app = app.layer(

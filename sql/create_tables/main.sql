@@ -22,10 +22,13 @@ CREATE TABLE main.users (
         REFERENCES fixed.user_statuses(id)
 );
 
-CREATE TABLE main.library_permissions (
+CREATE INDEX IF NOT EXISTS idx_users_email ON main.users USING btree(email);
+
+CREATE TABLE main.permissions (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     user_id INTEGER NOT NULL,
     role_id INTEGER NOT NULL,
+    store_id INTEGER,
     status INTEGER NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT fk_role
@@ -36,25 +39,24 @@ CREATE TABLE main.library_permissions (
         REFERENCES fixed.permission_statuses(id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_library_permissions_user_id ON main.library_permissions USING btree(user_id);
+CREATE INDEX IF NOT EXISTS idx_permissions_user_id ON main.permissions USING btree(user_id);
+CREATE INDEX IF NOT EXISTS idx_permissions_role_id ON main.permissions USING btree(role_id);
+CREATE INDEX IF NOT EXISTS idx_permissions_store_id ON main.permissions USING btree(store_id);
 
-CREATE TABLE main.vendor_permissions (
+CREATE TABLE main.future_permissions (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
-    user_id INTEGER NOT NULL,
+    email TEXT NOT NULL,
     role_id INTEGER NOT NULL,
-    store_id INTEGER NOT NULL,
-    status INTEGER NOT NULL,
+    store_id INTEGER,
     PRIMARY KEY (id),
     CONSTRAINT fk_role
       FOREIGN KEY(role_id)
-        REFERENCES fixed.roles(id),
-    CONSTRAINT fk_status
-      FOREIGN KEY(status)
-        REFERENCES fixed.permission_statuses(id)
+        REFERENCES fixed.roles(id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_vendor_permissions_user_id ON main.vendor_permissions USING btree(user_id);
-CREATE INDEX IF NOT EXISTS idx_vendor_permissions_store_id ON main.vendor_permissions USING btree(store_id);
+CREATE INDEX IF NOT EXISTS idx_future_permissions_email ON main.future_permissions USING btree(email);
+CREATE INDEX IF NOT EXISTS idx_future_permissions_role_id ON main.future_permissions USING btree(role_id);
+CREATE INDEX IF NOT EXISTS idx_future_permissions_store_id ON main.future_permissions USING btree(store_id);
 
 CREATE TABLE main.stores (
     id INTEGER GENERATED ALWAYS AS IDENTITY,

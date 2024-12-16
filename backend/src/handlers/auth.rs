@@ -15,31 +15,39 @@ pub struct Tokens {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct PostLoginData {
+pub struct LoginData {
     pub email: String,
 }
 
-// TODO: this is a STUB, need to use OAuth2 to login
 pub async fn login(
     State(state): State<Arc<AppState>>,
-    Json(payload): Json<PostLoginData>,
+    Json(payload): Json<LoginData>,
 ) -> Result<Json<Tokens>, (StatusCode, String)> {
-    let user = user::select_by_email(&payload.email, &state.db)
-        .await
-        .map_err(|e| (StatusCode::FORBIDDEN, e.to_string()))?;
+    let user_id = match user::select_by_email(&payload.email, &state.db).await {
+        Ok(u) => u.id,
+        Err(_) => {
+            match user::insert("", 1, &payload.email, &state.db).await {
+                Ok(id) => {
+                    // if any future_permissions associated with this email, make them into full permissions
+                    id
+                },
+                Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+            }
+        }
+    };
 
     // if user banned then...
 
-    let permissions = permissions::select_by_user(&user.id, &state.db)
+    let permissions = permissions::select_by_user(&user_id, &state.db)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    let access_token = match claims::make_access_token(&user.id.to_string(), &permissions) {
+    let access_token = match claims::make_access_token(&user_id.to_string(), &permissions) {
         Ok(token) => token,
         Err((status, message)) => return Err((status, message)),
     };
 
-    let refresh_token = match claims::make_refresh_token(&user.id.to_string()) {
+    let refresh_token = match claims::make_refresh_token(&user_id.to_string()) {
         Ok(token) => token,
         Err((status, message)) => return Err((status, message)),
     };

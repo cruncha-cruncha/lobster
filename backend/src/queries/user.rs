@@ -1,13 +1,13 @@
 use super::library::select_information;
 use crate::auth::encryption::hash_email;
-use crate::db_structs::{store, user, vendor_permission};
+use crate::db_structs::{store, user, permission};
 use crate::queries::common;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct StoreUser {
     pub user: user::Id,
-    pub permissions: Vec<vendor_permission::RoleId>,
+    pub permissions: Vec<permission::RoleId>,
 }
 
 pub async fn select_statuses(
@@ -79,15 +79,41 @@ pub async fn select_by_store(
         r#"
         SELECT
             mu.id as user,
-            ARRAY_AGG(vp.role_id) as "permissions!: _"
+            ARRAY_AGG(p.role_id) as "permissions!: _"
         FROM main.users mu
-        JOIN main.vendor_permissions vp ON mu.id = vp.user_id
-        WHERE vp.store_id = $1
+        JOIN main.permissions p ON mu.id = p.user_id
+        WHERE p.store_id = $1
         GROUP BY mu.id;
         "#,
         store_id,
     )
     .fetch_all(db)
     .await
+    .map_err(|e| e.to_string())
+}
+
+pub async fn insert(
+    username: &str,
+    status: i32,
+    email: &str,
+    db: &sqlx::Pool<sqlx::Postgres>,
+) -> Result<user::Id, String> {
+    let library_information = select_information(db).await?;
+
+    let email = hash_email(&email, &library_information.salt);
+
+    sqlx::query!(
+        r#"
+        INSERT INTO main.users (username, status, email)
+        VALUES ($1, $2, $3)
+        RETURNING id;
+        "#,
+        username,
+        status,
+        &email,
+    )
+    .fetch_one(db)
+    .await
+    .map(|row| row.id)
     .map_err(|e| e.to_string())
 }

@@ -14,25 +14,13 @@ export const validatePassword = (password) => {
 };
 
 export const useLogin = () => {
-  const auth = useAuth();
-  const router = useRouter();
-  const modal = useInfoModal();
   const [email, _setEmail] = useState("");
-  const [password, _setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState("");
 
   const validEmail = validateEmail(email);
-  const validPassword = validatePassword(password);
 
   const onLogin = async () => {
-    setIsLoading("login");
-
-    const showErrModal = () =>
-      modal.open("Request failed. Incorrect email or password.", "error");
-
     endpoints
-      .login({ email, password })
+      .login({ email })
       .then((res) => {
         if (res.status === 200) {
           auth.login({
@@ -57,85 +45,16 @@ export const useLogin = () => {
       });
   };
 
-  const onSignUp = async () => {
-    setIsLoading("signUp");
-
-    const showErrModal = () =>
-      modal.open(
-        "Request failed. There may already be a user with this email address.",
-        "error",
-      );
-
-    endpoints
-      .requestInvitation({ email })
-      .then((res) => {
-        if (res.status !== 200) {
-          showErrModal();
-        } else {
-          modal.open("Invitation request sent. Please contact a moderator for next steps.");
-        }
-      }, showErrModal)
-      .finally(() => {
-        setIsLoading("");
-      });
-  };
-
-  const onRecover = async () => {
-    setIsLoading("recover");
-
-    const showErrModal = () =>
-      modal.open(
-        "Request failed. Please check your email address and try again later.",
-        "error",
-      );
-
-    endpoints
-      .requestPasswordReset({ email })
-      .then((res) => {
-        if (res.status !== 200) {
-          showErrModal();
-        } else {
-          modal.open(
-            "Password reset request sent. Please contact a moderator for next steps.",
-          );
-        }
-      }, showErrModal)
-      .finally(() => {
-        setIsLoading("");
-      });
-  };
-
   const setEmail = (e) => {
     _setEmail(e.target.value);
-  };
-
-  const setPassword = (e) => {
-    _setPassword(e.target.value);
   };
 
   return {
     email,
     setEmail,
-    password,
-    setPassword,
-    canLogin: validEmail && validPassword && !isLoading,
-    canSignUp: validEmail && !password && !isLoading,
-    canRecover: validEmail && !isLoading,
     onLogin,
-    onSignUp,
-    onRecover,
-    loginLoading: isLoading === "login",
-    signUpLoading: isLoading === "signUp",
-    recoverLoading: isLoading === "recover",
-    showPassword,
-    toggleShowPassword: () => setShowPassword((prev) => !prev),
-    modal,
+    canLogin: validEmail,
   };
-};
-
-export const Login = (props) => {
-  const login = useLogin(props);
-  return <PureLogin {...login} />;
 };
 
 export const PureLogin = (login) => {
@@ -233,4 +152,9 @@ export const PureLogin = (login) => {
       </div>
     </>
   );
+};
+
+export const Login = (props) => {
+  const login = useLogin(props);
+  return <PureLogin {...login} />;
 };

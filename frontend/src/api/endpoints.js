@@ -65,7 +65,7 @@ export const createLibrary = async ({ name }) => {
   return response;
 };
 
-export const login = async ({ email, password }) => {
+export const login = async ({ email }) => {
   const response = await handle(`${serverUrl}/users`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
