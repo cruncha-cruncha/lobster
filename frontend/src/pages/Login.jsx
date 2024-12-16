@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { CenteredLoadingDots } from "../components/loading/LoadingDots";
 import { useAuth } from "../components/userAuth";
-import { useRouter } from "../components/router/Router";
 import { useInfoModal, PureInfoModal } from "../components/InfoModal";
 import * as endpoints from "../api/endpoints";
 
@@ -23,25 +22,19 @@ export const useLogin = () => {
       .login({ email })
       .then((res) => {
         if (res.status === 200) {
-          auth.login({
-            userId: res.data.user_id,
-            claimsLevel: res.data.claims_level,
-            accessToken: res.data.access_token,
-            refreshToken: res.data.refresh_token,
-          });
+          // auth.login({
+          //   accessToken: res.data.access_token,
+          //   refreshToken: res.data.refresh_token,
+          // });
 
-          router.goTo(`/profile/${res.data.user_id}`, "forward", true);
+          // router.goTo(`/profile/${res.data.user_id}`, "forward", true);
+          console.log("success", res.data);
         } else {
-          console.log(res.status, res);
-          showErrModal();
+          console.error(res.status, res);
         }
       })
       .catch((e) => {
-        console.log(e);
-        showErrModal();
-      })
-      .finally(() => {
-        setIsLoading("");
+        console.error(e);
       });
   };
 
@@ -63,7 +56,7 @@ export const PureLogin = (login) => {
       <PureInfoModal {...login?.modal} />
       <div className="flex min-h-full items-center justify-center">
         <div className="flex w-full max-w-sm flex-col justify-center">
-          <h1 className="mb-2 text-center text-xl">Lobster</h1>
+          <h1 className="mb-2 text-center text-xl">Title</h1>
           <div className="m-2 rounded-sm border-b-2 border-stone-800">
             <input
               type="text"
@@ -72,27 +65,6 @@ export const PureLogin = (login) => {
               value={login?.email}
               className="w-full rounded-sm px-2 py-1 ring-sky-500 transition-shadow focus-visible:outline-none focus-visible:ring-2"
             />
-          </div>
-          <div className="m-2 rounded-sm border-b-2 border-stone-800">
-            <div className="relative flex items-center rounded-sm ring-sky-500 transition-shadow focus-within:ring-2">
-              <input
-                id="password"
-                type={login?.showPassword ? "text" : "password"}
-                className="grow rounded-md py-1 pl-2 focus-visible:outline-none"
-                placeholder="Password"
-                value={login?.password}
-                onChange={(e) => login?.setPassword?.(e)}
-              />
-              <div
-                className="relative cursor-pointer"
-                onClick={(e) => login?.toggleShowPassword?.(e)}
-              >
-                <div className="absolute -left-4 h-full w-4 bg-gradient-to-l from-white to-transparent" />
-                <span className="py-1 pl-1 pr-2 text-sm text-stone-400">
-                  {login?.showPassword ? "hide" : "show"}
-                </span>
-              </div>
-            </div>
           </div>
           <div className="m-2 mt-4 flex justify-between">
             <button
@@ -111,40 +83,6 @@ export const PureLogin = (login) => {
               {login?.loginLoading && <CenteredLoadingDots />}
               <span className={login?.loginLoading ? " invisible" : ""}>
                 Login
-              </span>
-            </button>
-            <button
-              className={
-                "rounded-full px-4 py-2 transition-colors" +
-                (login?.canRecover || login.recoverLoading
-                  ? " bg-sky-200"
-                  : " bg-stone-300 text-white") +
-                (login?.canRecover ? " hover:bg-sky-900 hover:text-white" : "")
-              }
-              onClick={(e) => login?.onRecover?.(e)}
-              disabled={!login?.canRecover}
-            >
-              {login?.recoverLoading && <CenteredLoadingDots />}
-              <span className={login?.recoverLoading ? " invisible" : ""}>
-                Recover
-              </span>
-            </button>
-            <button
-              className={
-                "rounded-full px-4 py-2 transition-colors" +
-                (login?.canSignUp || login.signUpLoading
-                  ? " bg-emerald-200"
-                  : " bg-stone-300 text-white") +
-                (login?.canSignUp
-                  ? " hover:bg-emerald-900 hover:text-white"
-                  : "")
-              }
-              onClick={(e) => login?.onSignUp?.(e)}
-              disabled={!login?.canSignUp}
-            >
-              {login?.signUpLoading && <CenteredLoadingDots />}
-              <span className={login?.signUpLoading ? " invisible" : ""}>
-                Sign Up
               </span>
             </button>
           </div>

@@ -1,11 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { UserAuth } from "./components/userAuth";
-import { Router } from "./components/router/Router";
 import { loadCountries } from "./components/useCountries";
-import { loadCurrencies } from "./components/useCurrencies";
 import { loadLanguages } from "./components/useLanguages";
 import { SetupLibrary } from "./pages/SetupLibrary";
+import { Login } from "./pages/Login";
 import "./index.css";
 
 const Init = ({ children }) => {
@@ -29,5 +28,6 @@ const Init = ({ children }) => {
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <SetupLibrary />
+    <Login />
   </React.StrictMode>,
 );

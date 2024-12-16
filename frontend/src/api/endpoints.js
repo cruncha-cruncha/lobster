@@ -1,6 +1,6 @@
 import {
   validateTokens,
-  validateRefreshAccessToken,
+  validateRefreshedTokens,
   validateGetPost,
   validateLanguages,
   validateCurrencies,
@@ -66,10 +66,10 @@ export const createLibrary = async ({ name }) => {
 };
 
 export const login = async ({ email }) => {
-  const response = await handle(`${serverUrl}/users`, {
+  const response = await handle(`${serverUrl}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email }),
   });
 
   if (response.status === 200) {
@@ -146,7 +146,7 @@ export const refreshAccessToken = async ({ refreshToken }) => {
   });
 
   if (response.status === 200) {
-    const valid = validateRefreshAccessToken(response.data);
+    const valid = validateRefreshedTokens(response.data);
     if (!valid) return { status: null, data: null };
   }
 

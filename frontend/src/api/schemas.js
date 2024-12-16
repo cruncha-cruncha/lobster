@@ -6,24 +6,20 @@ const tokensSchema = {
   type: "object",
   $id: "#tokens",
   properties: {
-    user_id: { type: "integer" },
-    claims_level: { type: "integer" },
     access_token: { type: "string" },
     refresh_token: { type: "string" },
   },
-  required: ["user_id", "claims_level", "access_token", "refresh_token"],
+  required: ["access_token", "refresh_token"],
 };
 
-const refreshAccessTokenSchema = {
+const refreshedTokensSchema = {
   type: "object",
   $id: "#refreshAccessToken",
   properties: {
-    user_id: { type: "integer" },
-    claims_level: { type: "integer" },
     access_token: { type: "string" },
     refresh_token: { type: "null" },
   },
-  required: ["user_id", "claims_level", "access_token"],
+  required: ["access_token"],
 };
 
 const countriesSchema = {
@@ -379,8 +375,8 @@ const makeLazyValidator = (schema) => {
 
 export const validateTokens = makeLazyValidator(tokensSchema);
 
-export const validateRefreshAccessToken = makeLazyValidator(
-  refreshAccessTokenSchema,
+export const validateRefreshedTokens = makeLazyValidator(
+  refreshedTokensSchema,
 );
 
 export const validateGetPost = makeLazyValidator([

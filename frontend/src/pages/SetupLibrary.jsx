@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { CenteredLoadingDots } from "../components/loading/LoadingDots";
 import { useAuth } from "../components/userAuth";
-import { useRouter } from "../components/router/Router";
 import { useInfoModal, PureInfoModal } from "../components/InfoModal";
 import * as endpoints from "../api/endpoints";
 
