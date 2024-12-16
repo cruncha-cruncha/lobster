@@ -1,10 +1,7 @@
 use std::env;
 
-use super::post_change_msg::PostChangeMsg;
-
 use lapin::{
-    options::*, publisher_confirm::PublisherConfirm, types::FieldTable, BasicProperties, Channel,
-    Connection, ConnectionProperties, ExchangeKind,
+    options::*, protocol::exchange, publisher_confirm::PublisherConfirm, types::FieldTable, BasicProperties, Channel, Connection, ConnectionProperties, ExchangeKind
 };
 
 #[derive(Debug, Clone)]
@@ -39,37 +36,30 @@ pub async fn init() -> Result<(Connection, Communicator), lapin::Error> {
     - do we want a shared pool of channels, or just use the same one? How do we access it?
     - do we want to use rabbitMQ to send off unread notifications too, so a different service can handle the websockets?
     - what events do we need to send for search?
-        - post created
-        - post edited
-        - post sold
-        - post deleted
-        - post published -> draft
-        - post draft -> published
-        - when a user is banned
-        - when a user is unbanned
     */
 
     let communicator = Communicator { channel };
 
-    let message = PostChangeMsg::hello();
-    send_post_changed_message(&communicator, &message).await?;
+    // let message = PostChangeMsg::hello();
+    // send_post_changed_message(&communicator, &message).await?;
 
     // Have to pass conn as well, even if it's never used.
     // Otherwise it'll be closed when it goes out of scope, and the channel gets closed with it.
     return Ok((conn, communicator));
 }
 
-pub async fn send_post_changed_message(
+pub async fn send_message(
+    exchange: &str,
+    payload: &[u8],
     communicator: &Communicator,
-    message: &PostChangeMsg,
 ) -> Result<PublisherConfirm, lapin::Error> {
     communicator
         .channel
         .basic_publish(
-            "post-changed",
+            exchange,
             "",
             BasicPublishOptions::default(),
-            &message.encode(),
+            payload,
             BasicProperties::default(),
         )
         .await

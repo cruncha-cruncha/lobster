@@ -11,3 +11,9 @@ pub struct UserWithName {
     pub id: user::Id,
     pub username: user::Username,
 }
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, sqlx::FromRow, sqlx::Type)]
+pub struct DateBetween {
+    pub start: Option<time::OffsetDateTime>,
+    pub end: Option<time::OffsetDateTime>,
+}

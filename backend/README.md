@@ -10,4 +10,5 @@ Every table/relation has a corresponding file in the db_structs folder, as well 
 
 CORS is optionally supported by the cargo feature / build flag "cors".
 
-I'm surprised by how many crates I had to import, and that none of them are stable, bet that seems to be the way of things.
+I'm surprised by how many crates I had to import, and that none of them are stable, but that seems to be the way of things.
+

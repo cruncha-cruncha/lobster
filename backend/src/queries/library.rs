@@ -25,18 +25,14 @@ pub async fn select_information(
         LIMIT 1;
         "#,
     )
-    .fetch_optional(db)
+    .fetch_one(db)
     .await
     {
         Ok(row) => row,
         Err(e) => return Err(e.to_string()),
     };
 
-    if info.is_none() {
-        return Err(String::from("no library information"));
-    }
-
-    Ok(info.unwrap())
+    Ok(info)
 }
 
 pub async fn update_information(
@@ -54,6 +50,29 @@ pub async fn update_information(
             maximum_future = COALESCE($3, li.maximum_future);
         "#,
         name,
+        maximum_rental_period,
+        maximum_future,
+    )
+    .execute(db)
+    .await
+    .map(|_| ())
+    .map_err(|e| e.to_string())
+}
+
+pub async fn insert_information(
+    name: &str,
+    salt: &[u8; 32],
+    maximum_rental_period: i32,
+    maximum_future: i32,
+    db: &sqlx::Pool<sqlx::Postgres>,
+) -> Result<(), String> {
+    sqlx::query!(
+        r#"
+        INSERT INTO main.library_information (name, salt, maximum_rental_period, maximum_future)
+        VALUES ($1, $2, $3, $4);
+        "#,
+        name,
+        salt,
         maximum_rental_period,
         maximum_future,
     )

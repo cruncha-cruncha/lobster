@@ -1,8 +1,9 @@
+use super::user;
 use serde::{Deserialize, Serialize};
 
 pub type Id = i32;
 pub type ToolId = i32;
-pub type RenterId = i32;
+pub type RenterId = user::Id;
 pub type CreatedAt = time::OffsetDateTime;
 pub type StartDate = time::OffsetDateTime;
 pub type EndDate = time::OffsetDateTime;
