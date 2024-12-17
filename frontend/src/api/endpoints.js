@@ -16,43 +16,75 @@ import {
   validatePostSearchResponse,
   validateGetPeople,
   validateListOfPosts,
+  validateLibraryInformation,
 } from "./schemas";
 
 const serverUrl = import.meta.env.VITE_SERVER_URL || "http://127.0.0.1:3000";
 const searchUrl = import.meta.env.VITE_SEARCH_URL || "http://127.0.0.1:3001";
 
-const handle = (url, params) => {
-  return fetch(url, params)
-    .then((res) => {
-      if (!res.ok) {
-        return {
-          status: res.status,
-          data: null,
-        };
-      }
+// const handle = (url, params) => {
+//   return fetch(url, params)
+//     .then((res) => {
+//       if (!res.ok) {
+//         return {
+//           status: res.status,
+//           data: null,
+//         };
+//       }
 
-      return res
-        .json()
-        .then((data) => {
-          return {
-            status: res.status,
-            data: data,
-          };
-        })
-        .catch(() => {
-          return {
-            status: res.status,
-            data: null,
-          };
-        });
-    })
-    .catch(() => {
-      // unrecoverable
-      return {
-        status: null,
-        data: null,
-      };
-    });
+//       return res
+//         .json()
+//         .then((data) => {
+//           return {
+//             status: res.status,
+//             data: data,
+//           };
+//         })
+//         .catch(() => {
+//           return {
+//             status: res.status,
+//             data: null,
+//           };
+//         });
+//     })
+//     .catch(() => {
+//       // unrecoverable
+//       return {
+//         status: null,
+//         data: null,
+//       };
+//     });
+// };
+
+const handle = (url, params) => {
+  return fetch(url, params).then((res) => {
+    if (!res.ok) {
+      throw new Error(res.status);
+    }
+
+    return res.json();
+  }).catch((e) => {
+    const message = e.message;
+    if (message.length === 3 && parseInt(message, 10) !== NaN) {
+      throw new Error(parseInt(message, 10));
+    } else {
+      throw new Error(500);
+    }
+  });
+};
+
+export const getLibraryInformation = async () => {
+  // throw new Error("Not implemented");
+  const response = await handle(`${serverUrl}/library`, {
+    method: "GET",
+  });
+
+  if (response.status === 200) {
+    const valid = validateLibraryInformation(response.data);
+    if (!valid) return { status: null, data: null };
+  }
+
+  return response;
 };
 
 export const createLibrary = async ({ name }) => {
@@ -634,7 +666,11 @@ export const getUsersHitComments = async ({ accessToken, userId, page }) => {
   return response;
 };
 
-export const getUsersDeletedComments = async ({ accessToken, userId, page }) => {
+export const getUsersDeletedComments = async ({
+  accessToken,
+  userId,
+  page,
+}) => {
   const response = await handle(
     `${serverUrl}/users/${userId}/deleted-comments/${page}`,
     {
@@ -672,7 +708,7 @@ export const getUsersMissedComments = async ({ accessToken, userId, page }) => {
   }
 
   return response;
-}
+};
 
 export const getUsersLostComments = async ({ accessToken, userId, page }) => {
   const response = await handle(
@@ -692,4 +728,4 @@ export const getUsersLostComments = async ({ accessToken, userId, page }) => {
   }
 
   return response;
-}
+};

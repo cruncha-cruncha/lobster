@@ -29,7 +29,7 @@ pub async fn select_statuses(
 pub async fn select(
     params: SelectParams,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<store::Store, String> {
+) -> Result<Vec<store::Store>, String> {
     sqlx::query_as!(
         store::Store,
         r#"
@@ -48,7 +48,7 @@ pub async fn select(
         params.offset,
         params.limit,
     )
-    .fetch_one(db)
+    .fetch_all(db)
     .await
     .map_err(|e| e.to_string())
 }

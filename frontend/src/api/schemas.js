@@ -14,13 +14,32 @@ const tokensSchema = {
 
 const refreshedTokensSchema = {
   type: "object",
-  $id: "#refreshAccessToken",
+  $id: "#refreshedTokens",
   properties: {
     access_token: { type: "string" },
     refresh_token: { type: "null" },
   },
   required: ["access_token"],
 };
+
+const libraryInfoSchema = {
+  type: "object",
+  $id: "#libraryInfo",
+  properties: {
+    uuid: { type: "string" },
+    name: { type: "string" },
+    maximum_rental_period: { type: "number" },
+    maximum_future: { type: "number" },
+  },
+  required: ["uuid", "name", "maximum_rental_period", "maximum_future"],
+};
+
+
+
+
+
+
+
 
 const countriesSchema = {
   type: "array",
@@ -377,6 +396,10 @@ export const validateTokens = makeLazyValidator(tokensSchema);
 
 export const validateRefreshedTokens = makeLazyValidator(
   refreshedTokensSchema,
+);
+
+export const validateLibraryInformation = makeLazyValidator(
+  libraryInfoSchema,
 );
 
 export const validateGetPost = makeLazyValidator([

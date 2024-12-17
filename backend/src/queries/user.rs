@@ -28,7 +28,7 @@ pub async fn select_statuses(
 pub async fn select(
     user_id: &user::Id,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<user::User, String> {
+) -> Result<Option<user::User>, String> {
     sqlx::query_as!(
         user::User,
         r#"
@@ -38,7 +38,7 @@ pub async fn select(
         "#,
         &user_id,
     )
-    .fetch_one(db)
+    .fetch_optional(db)
     .await
     .map_err(|e| e.to_string())
 }
@@ -46,8 +46,16 @@ pub async fn select(
 pub async fn select_by_email(
     plain_email: &str,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<user::User, String> {
-    let library_information = select_information(db).await?;
+) -> Result<Option<user::User>, String> {
+    let library_information = match select_information(db).await {
+        Ok(info) => {
+            if info.is_none() {
+                return Ok(None);
+            }
+            info.unwrap()
+        },
+        Err(e) => return Err(e),
+    };
 
     let email = hash_email(&plain_email, &library_information.salt);
 
@@ -60,7 +68,7 @@ pub async fn select_by_email(
         "#,
         &email,
     )
-    .fetch_one(db)
+    .fetch_optional(db)
     .await
     {
         Ok(row) => row,
@@ -98,7 +106,15 @@ pub async fn insert(
     email: &str,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<user::Id, String> {
-    let library_information = select_information(db).await?;
+    let library_information = match select_information(db).await {
+        Ok(info) => {
+            if info.is_none() {
+                return Err(String::from("Library information not found"));
+            }
+            info.unwrap()
+        },
+        Err(e) => return Err(e),
+    };
 
     let email = hash_email(&email, &library_information.salt);
 

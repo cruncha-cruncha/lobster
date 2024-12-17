@@ -16,7 +16,7 @@ pub async fn select_roles(db: &sqlx::Pool<sqlx::Postgres>) -> Result<Vec<common:
 
 pub async fn select_information(
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<LibraryInformation, String> {
+) -> Result<Option<LibraryInformation>, String> {
     let info = match sqlx::query_as!(
         LibraryInformation,
         r#"
@@ -25,7 +25,7 @@ pub async fn select_information(
         LIMIT 1;
         "#,
     )
-    .fetch_one(db)
+    .fetch_optional(db)
     .await
     {
         Ok(row) => row,

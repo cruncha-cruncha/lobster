@@ -24,23 +24,28 @@ pub async fn login(
     Json(payload): Json<LoginData>,
 ) -> Result<Json<Tokens>, (StatusCode, String)> {
     let user_id = match user::select_by_email(&payload.email, &state.db).await {
-        Ok(u) => u.id,
-        Err(_) => {
-            match user::insert("", 1, &payload.email, &state.db).await {
-                Ok(id) => {
-                    // if any future_permissions associated with this email, make them into full permissions
-                    id
-                },
-                Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+        Ok(u) => {
+            if u.is_some() {
+                u.unwrap().id
+            } else {
+                match user::insert("", 1, &payload.email, &state.db).await {
+                    Ok(id) => {
+                        // TODO: if this is the only user, give them all the permissions
+                        // TODO: if any future_permissions associated with this email, make them into full permissions
+                        id
+                    }
+                    Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
+                }
             }
         }
+        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     };
 
     // if user banned then...
 
     let permissions = permissions::select_by_user(&user_id, &state.db)
         .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
 
     let access_token = match claims::make_access_token(&user_id.to_string(), &permissions) {
         Ok(token) => token,
@@ -67,15 +72,21 @@ pub async fn refresh(
         None => return Err((StatusCode::BAD_REQUEST, String::from(""))),
     };
 
-    let user = user::select(&user_id, &state.db)
-        .await
-        .map_err(|e| (StatusCode::FORBIDDEN, e.to_string()))?;
+    let user = match user::select(&user_id, &state.db).await {
+        Ok(u) => {
+            if u.is_none() {
+                return Err((StatusCode::NOT_FOUND, String::from("no user found")));
+            }
+            u.unwrap()
+        }
+        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
+    };
 
     // TODO: if user is banned...
 
     let permissions = permissions::select_by_user(&user_id, &state.db)
         .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
 
     let access_token = match claims::make_access_token(&user.id.to_string(), &permissions) {
         Ok(token) => token,

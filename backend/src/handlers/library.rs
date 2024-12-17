@@ -48,7 +48,15 @@ pub async fn get_info(
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<PublicLibraryInfo>, (StatusCode, String)> {
     let info = match library::select_information(&state.db).await {
-        Ok(info) => info,
+        Ok(info) => {
+            if info.is_none() {
+                return Err((
+                    StatusCode::NOT_FOUND,
+                    String::from("Library information not found"),
+                ));
+            }
+            info.unwrap()
+        }
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     };
 
@@ -73,15 +81,30 @@ pub async fn create_library(
     Json(payload): Json<CreateLibraryInfo>,
 ) -> Result<(), (StatusCode, String)> {
     match library::select_information(&state.db).await {
-        Ok(_) => return Err((StatusCode::BAD_REQUEST, String::from("Library already exists"))),
-        Err(_) => (),
+        Ok(info) => {
+            if info.is_some() {
+                return Err((
+                    StatusCode::BAD_REQUEST,
+                    String::from("Library already exists"),
+                ));
+            }
+        }
+        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     };
 
     let salt = generate_salt();
     let maximum_rental_period = 336;
     let maximum_future = 60;
 
-    match library::insert_information(&payload.name, &salt, maximum_rental_period, maximum_future, &state.db).await {
+    match library::insert_information(
+        &payload.name,
+        &salt,
+        maximum_rental_period,
+        maximum_future,
+        &state.db,
+    )
+    .await
+    {
         Ok(_) => Ok(()),
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     }
