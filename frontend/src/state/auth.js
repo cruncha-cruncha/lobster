@@ -13,7 +13,7 @@ import { jwtDecode } from "jwt-decode";
 
 import * as endpoints from "../api/endpoints";
 
-const userIdAtom = atom("");
+const userIdAtom = atom(0);
 const userPermissionsAtom = atom([]);
 const accessTokenAtom = atom("");
 const refreshTokenAtom = atom("");
@@ -67,39 +67,30 @@ export const useAuth = ({ mustBeLoggedIn = true } = {}) => {
   }
 
   const login = useCallback(({ email }) => {
-    endpoints
-      .login({ email })
-      .then((res) => {
-        if (res.status === 200) {
-          setAccessToken(res.data.access_token);
-          setRefreshToken(res.data.refresh_token);
-          const decoded = jwtDecode(res.data.access_token);
-          setUserId(decoded.user_id);
-          setPermissions(decoded.permissions);
-        } else {
-          console.error(res.status, res);
-        }
-      })
-      .catch((e) => {
-        console.error(e);
-      });
+    return endpoints.login({ email }).then((data) => {
+      setAccessToken(data.access_token);
+      setRefreshToken(data.refresh_token);
+      const decoded = jwtDecode(data.access_token);
+      setUserId(parseInt(decoded.sub));
+      setPermissions(decoded.permissions);
+    });
   }, []);
 
   const refresh = useCallback((refreshToken) => {
-    endpoints
-      .refresh({ refresh_token: refreshToken })
-      .then((res) => {
-        if (res.status === 200) {
-          setAccessToken(res.data.access_token);
-          const decoded = jwtDecode(res.data.access_token);
-          setUserId(decoded.user_id);
-          setPermissions(decoded.permissions);
-        } else {
-          console.error(res.status, res);
-        }
+    return endpoints
+      .refresh({ refreshToken })
+      .then((data) => {
+        setAccessToken(data.access_token);
+        const decoded = jwtDecode(data.access_token);
+        setUserId(parseInt(decoded.sub));
+        setPermissions(decoded.permissions);
       })
       .catch((e) => {
-        console.error(e);
+        setAccessToken("");
+        setRefreshToken("");
+        setUserId("");
+        setPermissions([]);
+        throw e;
       });
   }, []);
 

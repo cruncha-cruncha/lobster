@@ -54,8 +54,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <BrowserRouter>
       <Init>
         <Routes>
-          <Route path="/" element={<ToolSearch />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/tools" element={<ToolSearch />} />
           {/* <Route path="dashboard" element={<Dashboard />}>
         <Route index element={<RecentActivity />} />
         <Route path="project/:id" element={<Project />} />

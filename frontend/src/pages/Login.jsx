@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import useSWR from "swr";
+import { useNavigate } from "react-router";
 import { CenteredLoadingDots } from "../components/loading/LoadingDots";
 // import { useAuth } from "../state/auth";
 import { useInfoModal, PureInfoModal } from "../components/InfoModal";
 import * as endpoints from "../api/endpoints";
 import { useLibraryInfo } from "../state/libraryInfo";
+import { useAuth } from "../state/auth";
 
 export const validateEmail = (email) => {
   return new RegExp(/^.+@.+\..+$/).test(email);
@@ -12,6 +14,8 @@ export const validateEmail = (email) => {
 
 export const useLogin = () => {
   const libraryInfo = useLibraryInfo();
+  const navigate = useNavigate();
+  const auth = useAuth({ mustBeLoggedIn: false });
   const [email, _setEmail] = useState("");
 
   const validEmail = validateEmail(email);
@@ -23,20 +27,12 @@ export const useLogin = () => {
   // );
 
   const onLogin = async () => {
-    endpoints
-      .login({ email })
-      .then((res) => {
-        if (res.status === 200) {
-          // auth.login({
-          //   accessToken: res.data.access_token,
-          //   refreshToken: res.data.refresh_token,
-          // });
-
-          // router.goTo(`/profile/${res.data.user_id}`, "forward", true);
-          console.log("success", res.data);
-        } else {
-          console.error(res.status, res);
-        }
+    auth
+      .login({
+        email,
+      })
+      .then(() => {
+        navigate("/tools");
       })
       .catch((e) => {
         console.error(e);

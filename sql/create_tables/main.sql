@@ -16,7 +16,7 @@ CREATE TABLE main.users (
     email BYTEA NOT NULL,
     created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     PRIMARY KEY (id),
-    UNIQUE (username),
+    UNIQUE (email),
     CONSTRAINT fk_status
       FOREIGN KEY(status)
         REFERENCES fixed.user_statuses(id)
@@ -42,21 +42,6 @@ CREATE TABLE main.permissions (
 CREATE INDEX IF NOT EXISTS idx_permissions_user_id ON main.permissions USING btree(user_id);
 CREATE INDEX IF NOT EXISTS idx_permissions_role_id ON main.permissions USING btree(role_id);
 CREATE INDEX IF NOT EXISTS idx_permissions_store_id ON main.permissions USING btree(store_id);
-
-CREATE TABLE main.future_permissions (
-    id INTEGER GENERATED ALWAYS AS IDENTITY,
-    email TEXT NOT NULL,
-    role_id INTEGER NOT NULL,
-    store_id INTEGER,
-    PRIMARY KEY (id),
-    CONSTRAINT fk_role
-      FOREIGN KEY(role_id)
-        REFERENCES fixed.roles(id)
-);
-
-CREATE INDEX IF NOT EXISTS idx_future_permissions_email ON main.future_permissions USING btree(email);
-CREATE INDEX IF NOT EXISTS idx_future_permissions_role_id ON main.future_permissions USING btree(role_id);
-CREATE INDEX IF NOT EXISTS idx_future_permissions_store_id ON main.future_permissions USING btree(store_id);
 
 CREATE TABLE main.stores (
     id INTEGER GENERATED ALWAYS AS IDENTITY,

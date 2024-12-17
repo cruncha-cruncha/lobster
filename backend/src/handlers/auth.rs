@@ -1,4 +1,4 @@
-use crate::queries::user;
+use crate::queries::{common, user};
 use crate::AppState;
 use crate::{auth::claims, queries::permissions};
 use axum::{
@@ -25,13 +25,39 @@ pub async fn login(
 ) -> Result<Json<Tokens>, (StatusCode, String)> {
     let user_id = match user::select_by_email(&payload.email, &state.db).await {
         Ok(u) => {
+            println!("{:?}", u);
             if u.is_some() {
                 u.unwrap().id
             } else {
-                match user::insert("", 1, &payload.email, &state.db).await {
+                match user::insert("random", 1, &payload.email, &state.db).await {
                     Ok(id) => {
-                        // TODO: if this is the only user, give them all the permissions
-                        // TODO: if any future_permissions associated with this email, make them into full permissions
+                        match user::count(
+                            user::SelectParams {
+                                ids: vec![],
+                                statuses: vec![],
+                                usernames: vec![],
+                                emails: vec![],
+                                created_at: common::DateBetween {
+                                    start: None,
+                                    end: None,
+                                },
+                                offset: 0,
+                                limit: 2,
+                            },
+                            &state.db,
+                        )
+                        .await
+                        {
+                            Ok(count) => {
+                                if count <= 1 {
+                                    permissions::insert(id, 1, None, 1, &state.db).await.ok();
+                                    permissions::insert(id, 2, None, 1, &state.db).await.ok();
+                                    permissions::insert(id, 3, None, 1, &state.db).await.ok();
+                                }
+                            }
+                            Err(_) => (),
+                        }
+
                         id
                     }
                     Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
@@ -72,7 +98,7 @@ pub async fn refresh(
         None => return Err((StatusCode::BAD_REQUEST, String::from(""))),
     };
 
-    let user = match user::select(&user_id, &state.db).await {
+    let user = match user::select_by_id(user_id, &state.db).await {
         Ok(u) => {
             if u.is_none() {
                 return Err((StatusCode::NOT_FOUND, String::from("no user found")));

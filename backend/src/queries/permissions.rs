@@ -18,7 +18,7 @@ pub async fn select_statuses(
     .map_err(|e| e.to_string())
 }
 
-pub async fn insert_permission(
+pub async fn insert(
     user_id: permission::UserId,
     role_id: permission::RoleId,
     store_id: Option<permission::StoreId>,
@@ -42,7 +42,7 @@ pub async fn insert_permission(
     .map_err(|e| e.to_string())
 }
 
-pub async fn update_permission_status(
+pub async fn update_status(
     permission_id: permission::Id,
     status: permission::Status,
     db: &sqlx::Pool<sqlx::Postgres>,

@@ -1,6 +1,5 @@
 DROP TABLE IF EXISTS main.library_information;
 DROP TABLE IF EXISTS main.grievances;
-DROP TABLE IF EXISTS main.future_permissions;
 DROP TABLE IF EXISTS main.permissions;
 DROP TABLE IF EXISTS main.users;
 DROP TABLE IF EXISTS main.rental_category_relationships;
