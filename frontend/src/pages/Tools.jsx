@@ -1,6 +1,6 @@
 import { useAuth } from "../state/auth";
 
-export const ToolSearch = () => {
+export const Tools = () => {
   useAuth();
   return (
     <div>

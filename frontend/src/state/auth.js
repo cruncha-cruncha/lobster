@@ -1,14 +1,6 @@
-import {
-  useReducer,
-  createContext,
-  useContext,
-  useCallback,
-  useState,
-  useEffect,
-} from "react";
+import { useCallback, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { atom, useAtom } from "jotai";
-import useSWR from "swr";
 import { jwtDecode } from "jwt-decode";
 
 import * as endpoints from "../api/endpoints";

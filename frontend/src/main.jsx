@@ -1,18 +1,19 @@
-import React, { useEffect } from "react";
+import React from "react";
 import ReactDOM from "react-dom/client";
-// import { UserAuth } from "./state/auth";
-import { loadCountries } from "./components/useCountries";
-import { loadLanguages } from "./components/useLanguages";
+import { BrowserRouter, Routes, Route } from "react-router";
 import { SetupLibrary } from "./pages/SetupLibrary";
 import { Login } from "./pages/Login";
 import { Layout } from "./components/Layout";
-import * as endpoints from "./api/endpoints";
-import "./index.css";
 import { LoadingScreen } from "./components/loading/LoadingScreen";
 import { useLibraryInfo } from "./state/libraryInfo";
-import { BrowserRouter, Routes, Route } from "react-router";
-import { ToolSearch } from "./pages/ToolSearch";
+import { Tools } from "./pages/Tools";
+import { People } from "./pages/People";
+import { Grievances } from "./pages/Grievances";
+import { Rentals } from "./pages/Rentals";
+import { Stores } from "./pages/Stores";
+import { Library } from "./pages/Library";
 import { useSetupAuth } from "./state/auth";
+import "./index.css";
 
 const Init = ({ children }) => {
   const libraryInfo = useLibraryInfo();
@@ -40,16 +41,6 @@ const Init = ({ children }) => {
   }
 };
 
-// ReactDOM.createRoot(document.getElementById("root")).render(
-//   <React.StrictMode>
-//     <UserAuth>
-//       <Init>
-//         <Router />
-//       </Init>
-//     </UserAuth>
-//   </React.StrictMode>,
-// );
-
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
@@ -57,12 +48,13 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route element={<Layout />}>
-            <Route path="/tools" element={<ToolSearch />} />
+            <Route path="/people" element={<People />} />
+            <Route path="/grievances" element={<Grievances />} />
+            <Route path="/rentals" element={<Rentals />} />
+            <Route path="/tools" element={<Tools />} />
+            <Route path="/stores" element={<Stores />} />
+            <Route path="/library" element={<Library />} />
           </Route>
-          {/* <Route path="dashboard" element={<Dashboard />}>
-        <Route index element={<RecentActivity />} />
-        <Route path="project/:id" element={<Project />} />
-      </Route> */}
         </Routes>
       </Init>
     </BrowserRouter>
