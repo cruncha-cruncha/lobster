@@ -5,6 +5,7 @@ import { loadCountries } from "./components/useCountries";
 import { loadLanguages } from "./components/useLanguages";
 import { SetupLibrary } from "./pages/SetupLibrary";
 import { Login } from "./pages/Login";
+import { Layout } from "./components/Layout";
 import * as endpoints from "./api/endpoints";
 import "./index.css";
 import { LoadingScreen } from "./components/loading/LoadingScreen";
@@ -55,7 +56,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <Init>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/tools" element={<ToolSearch />} />
+          <Route element={<Layout />}>
+            <Route path="/tools" element={<ToolSearch />} />
+          </Route>
           {/* <Route path="dashboard" element={<Dashboard />}>
         <Route index element={<RecentActivity />} />
         <Route path="project/:id" element={<Project />} />

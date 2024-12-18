@@ -25,7 +25,6 @@ pub async fn login(
 ) -> Result<Json<Tokens>, (StatusCode, String)> {
     let user_id = match user::select_by_email(&payload.email, &state.db).await {
         Ok(u) => {
-            println!("{:?}", u);
             if u.is_some() {
                 u.unwrap().id
             } else {

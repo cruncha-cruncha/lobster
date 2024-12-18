@@ -52,8 +52,6 @@ pub async fn select(
         Err(e) => return Err(e),
     };
 
-    print!("params: {:?}", params);
-
     let emails = params
         .emails
         .iter()
@@ -148,7 +146,6 @@ pub async fn select_by_email(
         db,
     ).await {
         Ok(mut users) => {
-            println!("users: {:?}", users.len());
             if users.len() == 0 {
                 Ok(None)
             } else {

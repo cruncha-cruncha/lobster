@@ -64,35 +64,37 @@ export const PureLogin = (login) => {
           <div className="flex w-full max-w-sm flex-col justify-center">
             <div className="p-2">
               <h1 className="text-left text-xl">Login</h1>
-              <div className="my-2 border-2 border-stone-800">
-                <input
-                  type="text"
-                  placeholder="email address"
-                  onChange={(e) => login?.setEmail?.(e)}
-                  value={login?.email}
-                  className="w-full px-2 py-1 ring-sky-500 transition-shadow focus-visible:outline-none focus-visible:ring-2"
-                />
-              </div>
-              <div className="mt-4 flex justify-end">
-                <button
-                  className={
-                    "rounded-full px-4 py-2 transition-colors" +
-                    (login?.canLogin || login.loginLoading
-                      ? " bg-emerald-200"
-                      : " bg-stone-300 text-white") +
-                    (login?.canLogin
-                      ? " hover:bg-emerald-900 hover:text-white"
-                      : "")
-                  }
-                  onClick={(e) => login?.onLogin?.(e)}
-                  disabled={!login?.canLogin}
-                >
-                  {login?.loginLoading && <CenteredLoadingDots />}
-                  <span className={login?.loginLoading ? " invisible" : ""}>
-                    Login
-                  </span>
-                </button>
-              </div>
+              <form onSubmit={(e) => e.preventDefault()}>
+                <div className="my-2 border-2 border-stone-800">
+                  <input
+                    type="text"
+                    placeholder="email address"
+                    onChange={(e) => login?.setEmail?.(e)}
+                    value={login?.email}
+                    className="w-full px-2 py-1 ring-sky-500 transition-shadow focus-visible:outline-none focus-visible:ring-2"
+                  />
+                </div>
+                <div className="mt-4 flex justify-end">
+                  <button
+                    className={
+                      "rounded-full px-4 py-2 transition-colors" +
+                      (login?.canLogin || login.loginLoading
+                        ? " bg-emerald-200"
+                        : " bg-stone-300 text-white") +
+                      (login?.canLogin
+                        ? " hover:bg-emerald-900 hover:text-white"
+                        : "")
+                    }
+                    onClick={(e) => login?.onLogin?.(e)}
+                    disabled={!login?.canLogin}
+                  >
+                    {login?.loginLoading && <CenteredLoadingDots />}
+                    <span className={login?.loginLoading ? " invisible" : ""}>
+                      Login
+                    </span>
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
