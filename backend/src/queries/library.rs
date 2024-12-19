@@ -61,18 +61,16 @@ pub async fn update_information(
 
 pub async fn insert_information(
     name: &str,
-    salt: &[u8; 32],
     max_rental_period: i32,
     max_future: i32,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<(), String> {
     sqlx::query!(
         r#"
-        INSERT INTO main.library_information (name, salt, maximum_rental_period, maximum_future)
-        VALUES ($1, $2, $3, $4);
+        INSERT INTO main.library_information (name, maximum_rental_period, maximum_future)
+        VALUES ($1, $2, $3);
         "#,
         name,
-        salt,
         max_rental_period,
         max_future,
     )

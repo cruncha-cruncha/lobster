@@ -1,9 +1,6 @@
-// mod admin_level_handlers;
 mod auth;
 mod db_structs;
-// mod moderator_level_handlers;
 mod rabbit;
-// mod user_level_handlers;
 mod handlers;
 mod queries;
 
@@ -17,16 +14,20 @@ use tower_http::cors::CorsLayer;
 #[derive(Clone)]
 pub struct AppState {
     db: PgPool,
-    comm: Option<Communicator>,
+    comm: Communicator,
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     dotenvy::dotenv().expect("Failed to read .env file");
 
-    // let (_rabbit_conn, communicator) = rabbit::communicator::init()
-    //     .await
-    //     .expect("Failed to connect to rabbitMQ");
+    let (_rabbit_conn, comm) = match rabbit::communicator::init().await {
+        Ok((conn, comm)) => (Some(conn), comm),
+        Err(e) => {
+            eprintln!("Failed to connect to rabbitMQ: {}", e);
+            (None, Communicator::new(None))
+        }
+    };
 
     let pg_connection_string = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let pool = PgPoolOptions::new()
@@ -36,7 +37,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .expect("Failed to create pool.");
     let shared_state = Arc::new(AppState {
         db: pool,
-        comm: None,
+        comm: comm,
     });
 
     let hosting_addr_string = env::var("HOSTING_ADDR").expect("HOSTING_ADDR must be set");

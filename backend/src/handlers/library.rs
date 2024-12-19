@@ -1,16 +1,13 @@
-use serde::{Deserialize, Serialize};
-
-use crate::auth::encryption::generate_salt;
-use crate::queries::library;
-use crate::{db_structs::library_information, queries::common};
-
 use super::common::NoData;
 use crate::auth::claims::Claims;
+use crate::queries::library;
 use crate::AppState;
+use crate::{db_structs::library_information, queries::common};
 use axum::{
     extract::{Json, State},
     http::StatusCode,
 };
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -113,13 +110,11 @@ pub async fn create_library(
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     };
 
-    let salt = generate_salt();
     let maximum_rental_period = 336;
     let maximum_future = 60;
 
     match library::insert_information(
         &payload.name,
-        &salt,
         maximum_rental_period,
         maximum_future,
         &state.db,

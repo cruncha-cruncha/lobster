@@ -1,66 +1,69 @@
 use std::env;
 
 use lapin::{
-    options::*, protocol::exchange, publisher_confirm::PublisherConfirm, types::FieldTable, BasicProperties, Channel, Connection, ConnectionProperties, ExchangeKind
+    options::*, publisher_confirm::PublisherConfirm, types::FieldTable, BasicProperties, Channel,
+    Connection, ConnectionProperties, ExchangeKind,
 };
 
 #[derive(Debug, Clone)]
 pub struct Communicator {
-    channel: Channel,
+    channel: Option<Channel>,
 }
 
 pub async fn init() -> Result<(Connection, Communicator), lapin::Error> {
     let addr = env::var("RABBIT_URL").expect("RABBIT_URL must be set");
 
-    let conn = Connection::connect(&addr, ConnectionProperties::default()).await?;
+    let connection = Connection::connect(&addr, ConnectionProperties::default()).await?;
 
-    let channel = conn.create_channel().await?;
+    let channel = connection.create_channel().await?;
 
-    channel
-        .exchange_declare(
-            "post-changed",
-            ExchangeKind::Fanout,
-            ExchangeDeclareOptions {
-                passive: false,
-                durable: true,
-                auto_delete: false,
-                internal: false,
-                nowait: false,
-            },
-            FieldTable::default(),
-        )
-        .await?;
-
-    /*
-    Things to think about:
-    - do we want a shared pool of channels, or just use the same one? How do we access it?
-    - do we want to use rabbitMQ to send off unread notifications too, so a different service can handle the websockets?
-    - what events do we need to send for search?
-    */
-
-    let communicator = Communicator { channel };
-
-    // let message = PostChangeMsg::hello();
-    // send_post_changed_message(&communicator, &message).await?;
+    let communicator = Communicator::new(Some(channel));
 
     // Have to pass conn as well, even if it's never used.
     // Otherwise it'll be closed when it goes out of scope, and the channel gets closed with it.
-    return Ok((conn, communicator));
+    return Ok((connection, communicator));
 }
 
-pub async fn send_message(
-    exchange: &str,
-    payload: &[u8],
-    communicator: &Communicator,
-) -> Result<PublisherConfirm, lapin::Error> {
-    communicator
-        .channel
-        .basic_publish(
-            exchange,
-            "",
-            BasicPublishOptions::default(),
-            payload,
-            BasicProperties::default(),
-        )
-        .await
+impl Communicator {
+    pub fn new(channel: Option<Channel>) -> Self {
+        Communicator { channel }
+    }
+
+    // RabbitMQ 'queues' are distinct from 'exchanges', but I'm calling this declare_queue because it's more generic
+    pub async fn declare_queue(&self, queue: &str) -> Result<(), lapin::Error> {
+        self.channel
+            .as_ref()
+            .expect("Channel not initialized")
+            .exchange_declare(
+                queue,
+                ExchangeKind::Fanout,
+                ExchangeDeclareOptions {
+                    passive: false,
+                    durable: true,
+                    auto_delete: true,
+                    internal: false,
+                    nowait: false,
+                },
+                FieldTable::default(),
+            )
+            .await
+    }
+
+    pub async fn send_message(
+        &self,
+        queue: &str,
+        payload: &[u8],
+    ) -> Result<PublisherConfirm, lapin::Error> {
+        self.channel
+            .as_ref()
+            .expect("Channel not initialized")
+            .basic_publish(
+                queue,
+                "",
+                BasicPublishOptions::default(),
+                payload,
+                BasicProperties::default(),
+            )
+            .await
+    }
 }

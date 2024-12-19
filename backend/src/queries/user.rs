@@ -1,10 +1,8 @@
-use std::vec;
-
-use super::library::select_information;
-use crate::auth::encryption::hash_email;
+use crate::auth::encryption::encode_plain_email;
 use crate::db_structs::{permission, store, user};
 use crate::queries::common;
 use serde::{Deserialize, Serialize};
+use std::vec;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SelectParams {
@@ -42,20 +40,10 @@ pub async fn select(
     params: SelectParams,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<Vec<user::User>, String> {
-    let library_information = match select_information(db).await {
-        Ok(info) => {
-            if info.is_none() {
-                return Err(String::from("Library information not found"));
-            }
-            info.unwrap()
-        }
-        Err(e) => return Err(e),
-    };
-
     let emails = params
         .emails
         .iter()
-        .map(|x| hash_email(x, &library_information.salt).to_vec())
+        .map(|x| encode_plain_email(x).unwrap_or_default())
         .collect::<Vec<Vec<u8>>>();
 
     sqlx::query_as!(
@@ -85,20 +73,10 @@ pub async fn select(
 }
 
 pub async fn count(params: SelectParams, db: &sqlx::Pool<sqlx::Postgres>) -> Result<i64, String> {
-    let library_information = match select_information(db).await {
-        Ok(info) => {
-            if info.is_none() {
-                return Err(String::from("Library information not found"));
-            }
-            info.unwrap()
-        }
-        Err(e) => return Err(e),
-    };
-
     let emails = params
         .emails
         .iter()
-        .map(|x| hash_email(x, &library_information.salt).to_vec())
+        .map(|x| encode_plain_email(x).unwrap_or_default())
         .collect::<Vec<Vec<u8>>>();
 
     sqlx::query!(
@@ -144,7 +122,9 @@ pub async fn select_by_email(
             limit: 1,
         },
         db,
-    ).await {
+    )
+    .await
+    {
         Ok(mut users) => {
             if users.len() == 0 {
                 Ok(None)
@@ -216,17 +196,7 @@ pub async fn insert(
     email: &str,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<user::Id, String> {
-    let library_information = match select_information(db).await {
-        Ok(info) => {
-            if info.is_none() {
-                return Err(String::from("Library information not found"));
-            }
-            info.unwrap()
-        }
-        Err(e) => return Err(e),
-    };
-
-    let email = hash_email(&email, &library_information.salt);
+    let email = encode_plain_email(email).ok_or("Failed to encode email")?;
 
     sqlx::query!(
         r#"
