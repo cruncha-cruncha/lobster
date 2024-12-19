@@ -1,3 +1,4 @@
+use crate::auth::encryption::decode_email;
 use crate::common;
 use crate::db_structs::{store, user};
 use crate::queries::users::{self, SelectParams};
@@ -20,8 +21,7 @@ pub struct UpdateUsername {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FilterParams {
-    pub usernames: Option<Vec<String>>,
-    pub emails: Option<Vec<String>>,
+    pub term: Option<String>,
     pub store_ids: Option<Vec<store::Id>>,
     pub statuses: Option<Vec<user::Status>>,
     pub roles: Option<Vec<permission::RoleId>>,
@@ -30,7 +30,15 @@ pub struct FilterParams {
     pub limit: i64,
 }
 
-// filter users by: username, email, store id, role, status, created_at
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UserWithPlainEmail {
+    pub id: user::Id,
+    pub username: user::Username,
+    pub status: user::Status,
+    pub email: String,
+    pub created_at: user::CreatedAt,
+}
 
 pub async fn get_statuses(
     State(state): State<Arc<AppState>>,
@@ -85,17 +93,29 @@ pub async fn get_by_id(
     claims: Claims,
     Path(user_id): Path<i32>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<user::User>, (StatusCode, String)> {
-    if !claims.is_user_admin() && claims.subject_as_user_id().unwrap_or(-1) != user_id {
-        return Err((
-            StatusCode::FORBIDDEN,
-            "You must be a user admin to get other users".to_string(),
-        ));
-    }
+) -> Result<Json<UserWithPlainEmail>, (StatusCode, String)> {
+    let can_see_email =
+        claims.is_user_admin() || claims.is_store_admin() || claims.subject_as_user_id().unwrap_or(-1) == user_id;
 
     match users::select_by_id(user_id, &state.db).await {
         Ok(user) => match user {
-            Some(u) => Ok(Json(u)),
+            Some(u) => {
+                let mut plain_email = String::new();
+                if can_see_email {
+                    plain_email = decode_email(&u.email).ok_or((
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        "Failed to decode email".to_string(),
+                    ))?;
+                }
+
+                Ok(Json(UserWithPlainEmail {
+                    id: u.id,
+                    username: u.username,
+                    status: u.status,
+                    email: plain_email,
+                    created_at: u.created_at,
+                }))
+            }
             None => Err((StatusCode::NOT_FOUND, "User not found".to_string())),
         },
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
@@ -103,14 +123,13 @@ pub async fn get_by_id(
 }
 
 pub async fn get_filtered(
-    _claims: Claims,
+    claims: Claims,
     State(state): State<Arc<AppState>>,
     Json(data): Json<FilterParams>,
-) -> Result<Json<Vec<user::User>>, (StatusCode, String)> {
+) -> Result<Json<Vec<UserWithPlainEmail>>, (StatusCode, String)> {
     let users = match users::select(
         SelectParams {
-            usernames: data.usernames.unwrap_or_default(),
-            emails: data.emails.unwrap_or_default(),
+            term: data.term.unwrap_or_default(),
             store_ids: data.store_ids.unwrap_or_default(),
             statuses: data.statuses.unwrap_or_default(),
             roles: data.roles.unwrap_or_default(),
@@ -126,5 +145,30 @@ pub async fn get_filtered(
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     };
 
-    Ok(Json(users))
+    let plain_users: Vec<UserWithPlainEmail>;
+    if claims.is_user_admin() || claims.is_store_admin() {
+        plain_users = users
+            .into_iter()
+            .map(|u| UserWithPlainEmail {
+                id: u.id,
+                username: u.username,
+                status: u.status,
+                email: decode_email(&u.email).unwrap_or_default(),
+                created_at: u.created_at,
+            })
+            .collect();
+    } else {
+        plain_users = users
+            .into_iter()
+            .map(|u| UserWithPlainEmail {
+                id: u.id,
+                username: u.username,
+                status: u.status,
+                email: String::new(),
+                created_at: u.created_at,
+            })
+            .collect();
+    }
+
+    Ok(Json(plain_users))
 }

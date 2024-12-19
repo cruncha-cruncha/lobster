@@ -5,8 +5,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SelectParams {
-    pub usernames: Vec<String>,
-    pub emails: Vec<String>,
+    pub term: String,
     pub store_ids: Vec<store::Id>,
     pub statuses: Vec<user::Status>,
     pub roles: Vec<permission::RoleId>,
@@ -34,11 +33,7 @@ pub async fn select(
     params: SelectParams,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<Vec<user::User>, String> {
-    let emails = params
-        .emails
-        .iter()
-        .map(|x| encode_plain_email(x).unwrap_or_default())
-        .collect::<Vec<Vec<u8>>>();
+    let email = encode_plain_email(&params.term).ok_or("Failed to encode email")?;
 
     sqlx::query_as!(
         user::User,
@@ -47,8 +42,8 @@ pub async fn select(
         FROM main.users usr
         LEFT JOIN main.permissions p ON usr.id = p.user_id
         WHERE
-            (ARRAY_LENGTH($1::text[], 1) IS NULL OR usr.username = ANY($1::text[]))
-            AND (ARRAY_LENGTH($2::bytea[], 1) IS NULL OR usr.email = ANY($2::bytea[]))
+            ($1::text = '' OR usr.username = $1::text)
+            AND ($2::bytea IS NULL OR usr.email = $2::bytea)
             AND (ARRAY_LENGTH($3::integer[], 1) IS NULL OR p.store_id = ANY($3::integer[]))
             AND (ARRAY_LENGTH($4::integer[], 1) IS NULL OR p.role_id = ANY($4::integer[]))
             AND (ARRAY_LENGTH($5::integer[], 1) IS NULL OR usr.status = ANY($5::integer[]))
@@ -57,8 +52,8 @@ pub async fn select(
         ORDER BY usr.created_at DESC
         OFFSET $8 LIMIT $9;
         "#,
-        &params.usernames,
-        &emails,
+        params.term,
+        email,
         &params.store_ids,
         &params.roles,
         &params.statuses,
@@ -156,7 +151,7 @@ pub async fn update(
     sqlx::query!(
         r#"
         UPDATE main.users usr
-        SET username = COALESCE($1, usr.username), status = COALESCE($2, usr.status)
+        SET username = COALESCE(NULLIF($1, ''), usr.username), status = COALESCE($2, usr.status)
         WHERE id = $3;
         "#,
         username,
