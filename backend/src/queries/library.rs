@@ -37,8 +37,8 @@ pub async fn select_information(
 
 pub async fn update_information(
     name: Option<String>,
-    maximum_rental_period: Option<i32>,
-    maximum_future: Option<i32>,
+    max_rental_period: Option<i32>,
+    max_future: Option<i32>,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<(), String> {
     sqlx::query!(
@@ -50,8 +50,8 @@ pub async fn update_information(
             maximum_future = COALESCE($3, li.maximum_future);
         "#,
         name,
-        maximum_rental_period,
-        maximum_future,
+        max_rental_period,
+        max_future,
     )
     .execute(db)
     .await
@@ -62,8 +62,8 @@ pub async fn update_information(
 pub async fn insert_information(
     name: &str,
     salt: &[u8; 32],
-    maximum_rental_period: i32,
-    maximum_future: i32,
+    max_rental_period: i32,
+    max_future: i32,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<(), String> {
     sqlx::query!(
@@ -73,8 +73,8 @@ pub async fn insert_information(
         "#,
         name,
         salt,
-        maximum_rental_period,
-        maximum_future,
+        max_rental_period,
+        max_future,
     )
     .execute(db)
     .await

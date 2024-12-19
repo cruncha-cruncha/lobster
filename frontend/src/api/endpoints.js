@@ -21,6 +21,7 @@ const handle = (url, params) => {
       if (message.length === 3 && parseInt(message, 10) !== NaN) {
         throw new Error(parseInt(message, 10));
       } else {
+        console.error(e);
         throw new Error(500);
       }
     });
@@ -43,6 +44,24 @@ export const createLibrary = async ({ name }) => {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name }),
+  });
+
+  return data;
+};
+
+export const updateLibrary = async ({
+  name,
+  maxRentalPeriod,
+  maxFuture,
+  accessToken,
+}) => {
+  const data = await handle(`${serverUrl}/library`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ name, maxRentalPeriod, maxFuture }),
   });
 
   return data;

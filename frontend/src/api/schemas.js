@@ -6,20 +6,20 @@ const tokensSchema = {
   type: "object",
   $id: "#tokens",
   properties: {
-    access_token: { type: "string" },
-    refresh_token: { type: "string" },
+    accessToken: { type: "string" },
+    refreshToken: { type: "string" },
   },
-  required: ["access_token", "refresh_token"],
+  required: ["accessToken", "refreshToken"],
 };
 
 const refreshedTokensSchema = {
   type: "object",
   $id: "#refreshedTokens",
   properties: {
-    access_token: { type: "string" },
-    refresh_token: { type: "null" },
+    accessToken: { type: "string" },
+    refreshToken: { type: "null" },
   },
-  required: ["access_token"],
+  required: ["accessToken"],
 };
 
 const libraryInfoSchema = {
@@ -28,10 +28,10 @@ const libraryInfoSchema = {
   properties: {
     uuid: { type: "string" },
     name: { type: "string" },
-    maximum_rental_period: { type: "number" },
-    maximum_future: { type: "number" },
+    maxRentalPeriod: { type: "number" },
+    maxFuture: { type: "number" },
   },
-  required: ["uuid", "name", "maximum_rental_period", "maximum_future"],
+  required: ["uuid", "name", "maxRentalPeriod", "maxFuture"],
 };
 
 

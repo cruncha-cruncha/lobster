@@ -1,12 +1,9 @@
-import { useState, useEffect } from "react";
-import useSWR from "swr";
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import { CenteredLoadingDots } from "../components/loading/LoadingDots";
-// import { useAuth } from "../state/auth";
-import { useInfoModal, PureInfoModal } from "../components/InfoModal";
-import * as endpoints from "../api/endpoints";
 import { useLibraryInfo } from "../state/libraryInfo";
 import { useAuth } from "../state/auth";
+import { PureInfoModal } from "../components/InfoModal";
 
 export const validateEmail = (email) => {
   return new RegExp(/^.+@.+\..+$/).test(email);
@@ -15,16 +12,10 @@ export const validateEmail = (email) => {
 export const useLogin = () => {
   const libraryInfo = useLibraryInfo();
   const navigate = useNavigate();
-  const auth = useAuth({ mustBeLoggedIn: false });
+  const auth = useAuth();
   const [email, _setEmail] = useState("");
 
   const validEmail = validateEmail(email);
-
-  // const { data, error, isLoading, isValidating, mutate } = useSWR(
-  //   "/library",
-  //   fetcher,
-  //   options,
-  // );
 
   const onLogin = async () => {
     auth
@@ -44,7 +35,7 @@ export const useLogin = () => {
   };
 
   return {
-    libraryName: libraryInfo.get.name,
+    libraryName: libraryInfo.name,
     email,
     setEmail,
     onLogin,
@@ -89,7 +80,7 @@ export const PureLogin = (login) => {
                     disabled={!login?.canLogin}
                   >
                     {login?.loginLoading && <CenteredLoadingDots />}
-                    <span className={login?.loginLoading ? " invisible" : ""}>
+                    <span className={login?.loginLoading ? "invisible" : ""}>
                       Login
                     </span>
                   </button>

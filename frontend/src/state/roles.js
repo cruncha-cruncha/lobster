@@ -22,11 +22,6 @@ export const useRoles = () => {
   return {
     error,
     isLoading,
-    get: {
-      roles,
-    },
-    set: {
-      roles: setRoles,
-    },
+    roles,
   };
 };

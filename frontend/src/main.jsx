@@ -19,7 +19,7 @@ const Init = ({ children }) => {
   const libraryInfo = useLibraryInfo();
   useSetupAuth();
 
-  if (libraryInfo.get.name) {
+  if (libraryInfo.name) {
     return children;
   } else if (libraryInfo.error) {
     if (libraryInfo.error.message === "404") {

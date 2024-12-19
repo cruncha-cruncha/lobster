@@ -48,7 +48,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .route("/hello", routing::get(|| async { "hello, world" }))
         .route(
             "/library",
-            routing::get(handlers::library::get_info).post(handlers::library::create_library),
+            routing::get(handlers::library::get_info)
+                .post(handlers::library::create_library)
+                .put(handlers::library::update_info),
         )
         .route("/login", routing::post(handlers::auth::login))
         .route("/refresh", routing::post(handlers::auth::refresh));

@@ -12,8 +12,8 @@ export const useLibraryInfo = () => {
   const [name, setName] = useAtom(libraryNameAtom);
   const [maxRentalPeriod, setMaxRentalPeriod] = useAtom(
     libraryMaxRentalPeriodAtom,
-  );
-  const [maxFuture, setMaxFuture] = useAtom(libraryMaxFutureAtom);
+  ); // hours that rentals can be checked out for
+  const [maxFuture, setMaxFuture] = useAtom(libraryMaxFutureAtom); // days in the future that rentals can be made
 
   const { error, isLoading } = useSWR(
     "get library information",
@@ -30,20 +30,22 @@ export const useLibraryInfo = () => {
     },
   );
 
+  const refresh = () => {
+    return endpoints.getLibraryInformation().then((data) => {
+      setUuid(data.uuid);
+      setName(data.name);
+      setMaxRentalPeriod(data.maxRentalPeriod);
+      setMaxFuture(data.maxFuture);
+    });
+  };
+
   return {
     error,
     isLoading,
-    get: {
-      uuid,
-      name,
-      maxRentalPeriod,
-      maxFuture,
-    },
-    set: {
-      uuid: setUuid,
-      name: setName,
-      maxRentalPeriod: setMaxRentalPeriod,
-      maxFuture: setMaxFuture,
-    },
+    refresh,
+    uuid,
+    name,
+    maxRentalPeriod,
+    maxFuture,
   };
 };

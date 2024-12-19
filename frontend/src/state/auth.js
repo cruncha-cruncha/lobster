@@ -13,7 +13,7 @@ const refreshTokenAtom = atom("");
 export const useSetupAuth = () => {
   const [accessToken, setAccessToken] = useAtom(accessTokenAtom);
   const [refreshToken, setRefreshToken] = useAtom(refreshTokenAtom);
-  const { refresh } = useAuth({ mustBeLoggedIn: false });
+  const { refresh } = useAuth();
 
   // try to login on load
   useEffect(() => {
@@ -46,7 +46,7 @@ export const useSetupAuth = () => {
   }, [refreshToken]);
 };
 
-export const useAuth = ({ mustBeLoggedIn = true } = {}) => {
+export const useAuth = ({ mustBeLoggedIn = false } = {}) => {
   const navigate = useNavigate();
   const [userId, setUserId] = useAtom(userIdAtom);
   const [permissions, setPermissions] = useAtom(userPermissionsAtom);
@@ -60,9 +60,9 @@ export const useAuth = ({ mustBeLoggedIn = true } = {}) => {
 
   const login = useCallback(({ email }) => {
     return endpoints.login({ email }).then((data) => {
-      setAccessToken(data.access_token);
-      setRefreshToken(data.refresh_token);
-      const decoded = jwtDecode(data.access_token);
+      setAccessToken(data.accessToken);
+      setRefreshToken(data.refreshToken);
+      const decoded = jwtDecode(data.accessToken);
       setUserId(parseInt(decoded.sub));
       setPermissions(decoded.permissions);
     });
@@ -72,8 +72,8 @@ export const useAuth = ({ mustBeLoggedIn = true } = {}) => {
     return endpoints
       .refresh({ refreshToken })
       .then((data) => {
-        setAccessToken(data.access_token);
-        const decoded = jwtDecode(data.access_token);
+        setAccessToken(data.accessToken);
+        const decoded = jwtDecode(data.accessToken);
         setUserId(parseInt(decoded.sub));
         setPermissions(decoded.permissions);
       })

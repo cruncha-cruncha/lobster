@@ -4,6 +4,7 @@ use crate::auth::encryption::generate_salt;
 use crate::queries::library;
 use crate::{db_structs::library_information, queries::common};
 
+use super::common::NoData;
 use crate::auth::claims::Claims;
 use crate::AppState;
 use axum::{
@@ -13,21 +14,24 @@ use axum::{
 use std::sync::Arc;
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PublicLibraryInfo {
     pub uuid: library_information::Uuid,
     pub name: library_information::Name,
-    pub maximum_rental_period: library_information::MaximumRentalPeriod,
-    pub maximum_future: library_information::MaximumFuture,
+    pub max_rental_period: library_information::MaximumRentalPeriod,
+    pub max_future: library_information::MaximumFuture,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SettableLibraryInfo {
     pub name: Option<library_information::Name>,
-    pub maximum_rental_period: Option<library_information::MaximumRentalPeriod>,
-    pub maximum_future: Option<library_information::MaximumFuture>,
+    pub max_rental_period: Option<library_information::MaximumRentalPeriod>,
+    pub max_future: Option<library_information::MaximumFuture>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateLibraryInfo {
     pub name: library_information::Name,
 }
@@ -63,8 +67,8 @@ pub async fn get_info(
     Ok(Json(PublicLibraryInfo {
         uuid: info.uuid,
         name: info.name,
-        maximum_rental_period: info.maximum_rental_period,
-        maximum_future: info.maximum_future,
+        max_rental_period: info.maximum_rental_period,
+        max_future: info.maximum_future,
     }))
 }
 
@@ -72,14 +76,31 @@ pub async fn update_info(
     claims: Claims,
     State(state): State<Arc<AppState>>,
     Json(payload): Json<SettableLibraryInfo>,
-) -> Result<Json<PublicLibraryInfo>, (StatusCode, String)> {
-    Err((StatusCode::NOT_IMPLEMENTED, String::from("")))
+) -> Result<Json<NoData>, (StatusCode, String)> {
+    if !claims.is_library_admin() {
+        return Err((
+            StatusCode::FORBIDDEN,
+            String::from("Insufficient permissions"),
+        ));
+    }
+
+    match library::update_information(
+        payload.name,
+        payload.max_rental_period,
+        payload.max_future,
+        &state.db,
+    )
+    .await
+    {
+        Ok(_) => Ok(Json(NoData {})),
+        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
+    }
 }
 
 pub async fn create_library(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<CreateLibraryInfo>,
-) -> Result<(), (StatusCode, String)> {
+) -> Result<Json<NoData>, (StatusCode, String)> {
     match library::select_information(&state.db).await {
         Ok(info) => {
             if info.is_some() {
@@ -105,7 +126,7 @@ pub async fn create_library(
     )
     .await
     {
-        Ok(_) => Ok(()),
+        Ok(_) => Ok(Json(NoData {})),
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     }
 }

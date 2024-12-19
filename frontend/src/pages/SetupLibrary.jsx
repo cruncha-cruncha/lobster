@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { CenteredLoadingDots } from "../components/loading/LoadingDots";
 import { useAuth } from "../state/auth";
 import { useInfoModal, PureInfoModal } from "../components/InfoModal";
@@ -15,12 +15,10 @@ export const useSetupLibrary = () => {
     endpoints
       .createLibrary({ name })
       .then((_) => {
-        libraryInfo.setName(name);
-        // navigate("/login");
+        return libraryInfo.refresh();
       })
       .catch((e) => {
         console.error(e);
-        // TODO: error popup
       });
   };
 

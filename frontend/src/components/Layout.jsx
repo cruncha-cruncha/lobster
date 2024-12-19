@@ -5,14 +5,14 @@ import { useAuth } from "../state/auth";
 
 export const Layout = () => {
   const libraryInfo = useLibraryInfo();
-  const auth = useAuth();
+  const auth = useAuth({ mustBeLoggedIn: true });
   const [showMenu, setShowMenu] = useState(false);
 
   return (
     <div className="flex min-h-full items-stretch justify-center">
       <div className="relative w-full max-w-5xl p-2">
         <div className="flex justify-between">
-          <h1>{libraryInfo.get.name}</h1>
+          <h1>{libraryInfo.name}</h1>
           <div
             className="relative"
             onClick={() => setShowMenu((prev) => !prev)}
@@ -20,8 +20,8 @@ export const Layout = () => {
             <span className="cursor-pointer">menu</span>
             <div
               className={
-                "flex flex-col items-end [&>*]:my-1" +
-                (showMenu ? " absolute right-0" : " hidden")
+                "flex flex-col items-end bg-white px-2 [&>*]:my-1" +
+                (showMenu ? " absolute -right-2" : " hidden")
               }
             >
               <NavLink to="/people" className="!mt-2">

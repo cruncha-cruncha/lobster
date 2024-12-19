@@ -1,4 +1,5 @@
 pub mod auth;
+pub mod common;
 pub mod grievances;
 pub mod library;
 pub mod permission;
