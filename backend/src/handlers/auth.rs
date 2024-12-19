@@ -1,4 +1,4 @@
-use crate::queries::{common, user};
+use crate::queries::users;
 use crate::AppState;
 use crate::{auth::claims, queries::permissions};
 use axum::{
@@ -25,30 +25,14 @@ pub async fn login(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<LoginData>,
 ) -> Result<Json<Tokens>, (StatusCode, String)> {
-    let user_id = match user::select_by_email(&payload.email, &state.db).await {
+    let user_id = match users::select_by_email(&payload.email, &state.db).await {
         Ok(u) => {
             if u.is_some() {
                 u.unwrap().id
             } else {
-                match user::insert("random", 1, &payload.email, &state.db).await {
+                match users::insert("random", 1, &payload.email, &state.db).await {
                     Ok(id) => {
-                        match user::count(
-                            user::SelectParams {
-                                ids: vec![],
-                                statuses: vec![],
-                                usernames: vec![],
-                                emails: vec![],
-                                created_at: common::DateBetween {
-                                    start: None,
-                                    end: None,
-                                },
-                                offset: 0,
-                                limit: 2,
-                            },
-                            &state.db,
-                        )
-                        .await
-                        {
+                        match users::count(&state.db).await {
                             Ok(count) => {
                                 if count <= 1 {
                                     permissions::insert(id, 1, None, 1, &state.db).await.ok();
@@ -99,7 +83,7 @@ pub async fn refresh(
         None => return Err((StatusCode::BAD_REQUEST, String::from(""))),
     };
 
-    let user = match user::select_by_id(user_id, &state.db).await {
+    let user = match users::select_by_id(user_id, &state.db).await {
         Ok(u) => {
             if u.is_none() {
                 return Err((StatusCode::NOT_FOUND, String::from("no user found")));

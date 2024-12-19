@@ -1,4 +1,4 @@
-use super::common;
+use crate::common;
 use crate::db_structs::{grievance, user};
 use serde::{Deserialize, Serialize};
 

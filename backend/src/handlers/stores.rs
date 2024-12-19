@@ -1,5 +1,5 @@
 use crate::auth::claims::Claims;
-use crate::queries::common;
+use crate::common;
 use crate::queries::stores::select_statuses;
 use crate::AppState;
 use axum::{
@@ -14,7 +14,6 @@ use std::sync::Arc;
 // edit store status
 
 pub async fn get_statuses(
-    _claims: Claims,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<Vec<common::Status>>, (StatusCode, String)> {
     let statuses = select_statuses(&state.db)

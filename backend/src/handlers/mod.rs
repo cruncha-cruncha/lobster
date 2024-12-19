@@ -1,9 +1,8 @@
 pub mod auth;
-pub mod common;
 pub mod grievances;
 pub mod library;
-pub mod permission;
+pub mod permissions;
 pub mod rentals;
 pub mod stores;
 pub mod tools;
-pub mod user;
+pub mod users;

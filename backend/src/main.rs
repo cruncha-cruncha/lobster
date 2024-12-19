@@ -1,8 +1,9 @@
 mod auth;
+mod common;
 mod db_structs;
-mod rabbit;
 mod handlers;
 mod queries;
+mod rabbit;
 
 use axum::{routing, Router};
 use rabbit::communicator::Communicator;
@@ -47,14 +48,24 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let app = Router::new()
         .route("/hello", routing::get(|| async { "hello, world" }))
+        .route("/login", routing::post(handlers::auth::login))
+        .route("/refresh", routing::post(handlers::auth::refresh))
+        .route("/statuses", routing::get(handlers::library::get_statuses))
         .route(
             "/library",
             routing::get(handlers::library::get_info)
                 .post(handlers::library::create_library)
                 .put(handlers::library::update_info),
         )
-        .route("/login", routing::post(handlers::auth::login))
-        .route("/refresh", routing::post(handlers::auth::refresh));
+        .route("/users", routing::get(handlers::users::get_filtered))
+        .route(
+            "/users/:user_id",
+            routing::put(handlers::users::update).get(handlers::users::get_by_id),
+        )
+        .route(
+            "/users/:user_id/status/:status_id",
+            routing::put(handlers::users::update_status),
+        );
 
     #[cfg(feature = "cors")]
     let app = app.layer(

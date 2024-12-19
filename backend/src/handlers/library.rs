@@ -1,8 +1,7 @@
-use super::common::NoData;
-use crate::auth::claims::Claims;
+use crate::db_structs::library_information;
 use crate::queries::library;
 use crate::AppState;
-use crate::{db_structs::library_information, queries::common};
+use crate::{auth::claims::Claims, common};
 use axum::{
     extract::{Json, State},
     http::StatusCode,
@@ -34,7 +33,6 @@ pub struct CreateLibraryInfo {
 }
 
 pub async fn get_role_options(
-    _claims: Claims,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<Vec<common::Status>>, (StatusCode, String)> {
     let roles = match library::select_roles(&state.db).await {
@@ -43,6 +41,17 @@ pub async fn get_role_options(
     };
 
     Ok(Json(roles))
+}
+
+pub async fn get_statuses(
+    State(state): State<Arc<AppState>>,
+) -> Result<Json<Vec<common::Status>>, (StatusCode, String)> {
+    // get all possible statuses for everything (tools, users, stores, etc)
+    // will need a custom return type
+    Err((
+        StatusCode::NOT_IMPLEMENTED,
+        String::from("Not implemented"),
+    ))
 }
 
 pub async fn get_info(
@@ -73,7 +82,7 @@ pub async fn update_info(
     claims: Claims,
     State(state): State<Arc<AppState>>,
     Json(payload): Json<SettableLibraryInfo>,
-) -> Result<Json<NoData>, (StatusCode, String)> {
+) -> Result<Json<common::NoData>, (StatusCode, String)> {
     if !claims.is_library_admin() {
         return Err((
             StatusCode::FORBIDDEN,
@@ -89,7 +98,7 @@ pub async fn update_info(
     )
     .await
     {
-        Ok(_) => Ok(Json(NoData {})),
+        Ok(_) => Ok(Json(common::NoData {})),
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     }
 }
@@ -97,7 +106,7 @@ pub async fn update_info(
 pub async fn create_library(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<CreateLibraryInfo>,
-) -> Result<Json<NoData>, (StatusCode, String)> {
+) -> Result<Json<common::NoData>, (StatusCode, String)> {
     match library::select_information(&state.db).await {
         Ok(info) => {
             if info.is_some() {
@@ -121,7 +130,7 @@ pub async fn create_library(
     )
     .await
     {
-        Ok(_) => Ok(Json(NoData {})),
+        Ok(_) => Ok(Json(common::NoData {})),
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     }
 }

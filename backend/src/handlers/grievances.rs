@@ -1,16 +1,14 @@
-use axum::extract::{Path, Query};
-use serde::{Deserialize, Serialize};
-
-use crate::db_structs::{grievance, store, user};
-
 use crate::auth::claims::Claims;
-use crate::queries::common;
+use crate::common;
+use crate::db_structs::{grievance, store, user};
 use crate::queries::grievances::{select_statuses, GrievanceWithNames};
 use crate::AppState;
+use axum::extract::{Path, Query};
 use axum::{
     extract::{Json, State},
     http::StatusCode,
 };
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 const PAGE_SIZE: i32 = 20;
@@ -44,7 +42,6 @@ pub struct GrievancesResponse {
 }
 
 pub async fn get_statuses(
-    _claims: Claims,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<Vec<common::Status>>, (StatusCode, String)> {
     let statuses = select_statuses(&state.db)

@@ -1,7 +1,6 @@
-use serde::{Deserialize, Serialize};
-
+use crate::common;
 use crate::db_structs::rental;
-use crate::queries::common;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SelectParams {

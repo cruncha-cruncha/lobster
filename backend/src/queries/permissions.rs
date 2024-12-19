@@ -1,7 +1,7 @@
 use crate::auth::claims::ClaimPermissions;
-use crate::db_structs::user;
+use crate::common;
 use crate::db_structs::permission;
-use crate::queries::common;
+use crate::db_structs::user;
 
 pub async fn select_statuses(
     db: &sqlx::Pool<sqlx::Postgres>,
@@ -76,22 +76,27 @@ pub async fn select_by_user(
         user_id,
     )
     .fetch_all(db)
-    .await {
+    .await
+    {
         Ok(permissions) => permissions,
         Err(e) => return Err(e.to_string()),
     };
 
     let permissions = ClaimPermissions {
-        library: permissions.iter().filter(|p| p.store_id.is_none()).map(|lp| lp.role_id).collect(),
-        store: permissions
+        library: permissions
             .iter()
-            .filter(|p| p.store_id.is_some())
-            .fold(Default::default(), |mut acc, vp| {
+            .filter(|p| p.store_id.is_none())
+            .map(|lp| lp.role_id)
+            .collect(),
+        store: permissions.iter().filter(|p| p.store_id.is_some()).fold(
+            Default::default(),
+            |mut acc, vp| {
                 acc.entry(vp.store_id.unwrap())
                     .and_modify(|e| e.push(vp.role_id))
                     .or_insert(vec![vp.role_id]);
                 acc
-            }),
+            },
+        ),
     };
 
     return Ok(permissions);
