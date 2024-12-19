@@ -51,6 +51,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="/people" element={<People />} />
             <Route path="/grievances" element={<Grievances />} />
             <Route path="/rentals" element={<Rentals />} />
+            <Route index element={<Tools />} />
             <Route path="/tools" element={<Tools />} />
             <Route path="/stores" element={<Stores />} />
             <Route path="/library" element={<Library />} />

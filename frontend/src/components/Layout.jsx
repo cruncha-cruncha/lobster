@@ -33,7 +33,7 @@ export const Layout = () => {
               <NavLink to="/stores">Stores</NavLink>
               <NavLink to="/library">Library</NavLink>
               <button onClick={() => auth.logout()} className="block">
-                Logout
+                logout
               </button>
             </div>
           </div>
