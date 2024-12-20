@@ -4,11 +4,11 @@ use crate::db_structs::{store, user};
 use crate::queries::users::{self, SelectParams};
 use crate::AppState;
 use crate::{auth::claims::Claims, db_structs::permission};
-use axum::extract::Path;
 use axum::{
-    extract::{Json, State},
+    extract::{Json, Path, State},
     http::StatusCode,
 };
+use axum_extra::extract::Query;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
@@ -26,8 +26,7 @@ pub struct FilterParams {
     pub statuses: Option<Vec<user::Status>>,
     pub roles: Option<Vec<permission::RoleId>>,
     pub created_at: Option<common::DateBetween>,
-    pub offset: i64,
-    pub limit: i64,
+    pub page: Option<i64>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -94,8 +93,9 @@ pub async fn get_by_id(
     Path(user_id): Path<i32>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<UserWithPlainEmail>, (StatusCode, String)> {
-    let can_see_email =
-        claims.is_user_admin() || claims.is_store_admin() || claims.subject_as_user_id().unwrap_or(-1) == user_id;
+    let can_see_email = claims.is_user_admin()
+        || claims.is_store_admin()
+        || claims.subject_as_user_id().unwrap_or(-1) == user_id;
 
     match users::select_by_id(user_id, &state.db).await {
         Ok(user) => match user {
@@ -124,18 +124,20 @@ pub async fn get_by_id(
 
 pub async fn get_filtered(
     claims: Claims,
+    Query(params): Query<FilterParams>,
     State(state): State<Arc<AppState>>,
-    Json(data): Json<FilterParams>,
 ) -> Result<Json<Vec<UserWithPlainEmail>>, (StatusCode, String)> {
+    let (offset, limit) = common::calculate_offset_limit(params.page.unwrap_or_default());
+
     let users = match users::select(
         SelectParams {
-            term: data.term.unwrap_or_default(),
-            store_ids: data.store_ids.unwrap_or_default(),
-            statuses: data.statuses.unwrap_or_default(),
-            roles: data.roles.unwrap_or_default(),
-            created_at: data.created_at.unwrap_or_default(),
-            offset: data.offset,
-            limit: data.limit,
+            term: params.term.unwrap_or_default(),
+            store_ids: params.store_ids.unwrap_or_default(),
+            statuses: params.statuses.unwrap_or_default(),
+            roles: params.roles.unwrap_or_default(),
+            created_at: params.created_at.unwrap_or_default(),
+            offset: offset,
+            limit: limit,
         },
         &state.db,
     )

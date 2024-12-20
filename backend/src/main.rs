@@ -50,7 +50,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .route("/hello", routing::get(|| async { "hello, world" }))
         .route("/login", routing::post(handlers::auth::login))
         .route("/refresh", routing::post(handlers::auth::refresh))
-        .route("/statuses", routing::get(handlers::library::get_statuses))
+        .route("/statuses", routing::get(handlers::library::get_all_statuses))
         .route(
             "/library",
             routing::get(handlers::library::get_info)
@@ -65,6 +65,18 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .route(
             "/users/:user_id/status/:status_id",
             routing::put(handlers::users::update_status),
+        )
+        .route(
+            "/stores",
+            routing::get(handlers::stores::get_filtered).post(handlers::stores::create_new),
+        )
+        .route(
+            "/stores/:store_id",
+            routing::put(handlers::stores::update_info).get(handlers::stores::get_by_id),
+        )
+        .route(
+            "/stores/:store_id/status/:status_id",
+            routing::put(handlers::stores::update_status),
         );
 
     #[cfg(feature = "cors")]
@@ -86,8 +98,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let app = app.with_state(shared_state);
 
-    axum::Server::bind(&hosting_addr)
-        .serve(app.into_make_service_with_connect_info::<SocketAddr>())
+    let listener = tokio::net::TcpListener::bind(&hosting_addr)
+        .await
+        .expect("listener failed to start");
+
+    axum::serve(listener, app)
         .await
         .expect("server failed to start");
 

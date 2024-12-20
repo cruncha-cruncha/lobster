@@ -48,6 +48,7 @@ CREATE TABLE main.stores (
     status INTEGER NOT NULL,
     location TEXT NOT NULL,
     hours TEXT NOT NULL,
+    contact TEXT NOT NULL,
     description TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     PRIMARY KEY (id),

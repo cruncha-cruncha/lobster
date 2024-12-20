@@ -1,8 +1,22 @@
 use crate::db_structs::user;
 
+pub const PAGE_SIZE: i64 = 10;
+
+pub fn calculate_offset_limit(page: i64) -> (i64, i64) {
+    let page = page.max(1);
+    let offset = (page - 1) * PAGE_SIZE;
+    (offset, PAGE_SIZE)
+}
+
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NoData {}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IdOnly {
+    pub id: i32,
+}
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, sqlx::FromRow, sqlx::Type)]
 pub struct Status {

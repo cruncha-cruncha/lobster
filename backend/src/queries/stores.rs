@@ -1,12 +1,12 @@
-use crate::db_structs::store;
 use crate::common;
+use crate::db_structs::store;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SelectParams {
     pub ids: Vec<store::Id>,
     pub statuses: Vec<store::Status>,
-    pub names: Vec<store::Name>,
+    pub name: String,
     pub offset: i64,
     pub limit: i64,
 }
@@ -38,13 +38,13 @@ pub async fn select(
         WHERE
             (ARRAY_LENGTH($1::integer[], 1) = 0 OR ms.id = ANY($1::integer[]))
             AND (ARRAY_LENGTH($2::integer[], 1) = 0 OR ms.status = ANY($2::integer[]))
-            AND (ARRAY_LENGTH($3::text[], 1) = 0 OR ms.name = ANY($3::text[]))
+            AND ($3::text = '' OR ms.name = $3::text)
         ORDER BY ms.id
         OFFSET $4 LIMIT $5;
         "#,
         &params.ids,
         &params.statuses,
-        &params.names,
+        params.name,
         params.offset,
         params.limit,
     )
@@ -58,19 +58,21 @@ pub async fn insert(
     status: store::Status,
     location: store::Location,
     hours: store::Hours,
+    contact: store::Contact,
     description: store::Description,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<store::Id, String> {
     sqlx::query!(
         r#"
-        INSERT INTO main.stores (name, status, location, hours, description)
-        VALUES ($1, $2, $3, $4, $5)
+        INSERT INTO main.stores (name, status, location, hours, contact, description)
+        VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING id;
         "#,
         name,
         status,
         location,
         hours,
+        contact,
         description,
     )
     .fetch_one(db)
@@ -85,13 +87,20 @@ pub async fn update(
     status: Option<store::Status>,
     location: Option<store::Location>,
     hours: Option<store::Hours>,
+    contact: Option<store::Contact>,
     description: Option<store::Description>,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<(), String> {
     sqlx::query!(
         r#"
         UPDATE main.stores ms
-        SET name = COALESCE($2, ms.name), status = COALESCE($3, ms.status), location = COALESCE($4, ms.location), hours = COALESCE($5, ms.hours), description = COALESCE($6, ms.description)
+        SET
+            name = COALESCE($2, ms.name),
+            status = COALESCE($3, ms.status),
+            location = COALESCE($4, ms.location),
+            hours = COALESCE($5, ms.hours),
+            contact = COALESCE($6, ms.contact),
+            description = COALESCE($7, ms.description)
         WHERE ms.id = $1
         "#,
         store_id,
@@ -99,6 +108,7 @@ pub async fn update(
         status,
         location,
         hours,
+        contact,
         description,
     )
     .execute(db)

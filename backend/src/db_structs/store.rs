@@ -5,6 +5,7 @@ pub type Name = String;
 pub type Status = i32;
 pub type Location = String;
 pub type Hours = String;
+pub type Contact = String;
 pub type Description = String;
 pub type CreatedAt = time::OffsetDateTime;
 
@@ -15,6 +16,7 @@ pub struct Store {
     pub status: Status,
     pub location: Location,
     pub hours: Hours,
+    pub contact: Contact,
     pub description: Description,
     pub created_at: CreatedAt,
 }

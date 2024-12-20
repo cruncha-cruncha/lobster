@@ -111,7 +111,7 @@ pub struct Claims {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ClaimPermissions {
     pub library: Vec<i32>,
-    pub store: HashMap<i32, Vec<i32>>,
+    pub store: HashMap<i32, Vec<i32>>, // key = store_id, val = Vec<role_id>
 }
 
 // assumes that 1 = 'library_admin', 2 = 'user_admin', 3 = 'store_admin', 4 = 'store_rep', and 5 = 'tool_manager'

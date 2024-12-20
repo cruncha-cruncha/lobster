@@ -43,11 +43,19 @@ pub async fn get_role_options(
     Ok(Json(roles))
 }
 
-pub async fn get_statuses(
+pub async fn get_all_statuses(
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<Vec<common::Status>>, (StatusCode, String)> {
     // get all possible statuses for everything (tools, users, stores, etc)
     // will need a custom return type
+
+    // crate::handlers::stores::get_statuses(State(state));
+    // crate::handlers::users::get_statuses(State(state));
+    // crate::handlers::tools::get_statuses(State(state));
+    // crate::handlers::rentals::get_statuses(State(state));
+    // crate::handlers::grievances::get_statuses(State(state));
+    // crate::handlers::permissions::get_statuses(State(state));
+
     Err((
         StatusCode::NOT_IMPLEMENTED,
         String::from("Not implemented"),
