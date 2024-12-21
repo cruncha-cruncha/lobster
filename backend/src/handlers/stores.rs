@@ -56,7 +56,7 @@ pub async fn create_new(
 ) -> Result<Json<common::IdOnly>, (StatusCode, String)> {
     stores::insert(
         payload.name,
-        1,
+        3,
         payload.location,
         payload.hours,
         payload.contact,

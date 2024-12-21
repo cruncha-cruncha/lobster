@@ -2,6 +2,8 @@ import {
   validateTokens,
   validateRefreshedTokens,
   validateLibraryInformation,
+  validateStatusOptions,
+  validateRoleOptions,
 } from "./schemas";
 
 const serverUrl = import.meta.env.VITE_SERVER_URL || "http://127.0.0.1:3000";
@@ -33,6 +35,30 @@ export const getLibraryInformation = async () => {
   });
 
   if (!validateLibraryInformation(data)) {
+    throw new Error(400);
+  }
+
+  return data;
+};
+
+export const getAllStatusOptions = async () => {
+  const data = await handle(`${serverUrl}/statuses`, {
+    method: "GET",
+  });
+
+  if (!validateStatusOptions(data)) {
+    throw new Error(400);
+  }
+
+  return data;
+};
+
+export const getRoleOptions = async () => {
+  const data = await handle(`${serverUrl}/roles`, {
+    method: "GET",
+  });
+
+  if (!validateRoleOptions(data)) {
     throw new Error(400);
   }
 

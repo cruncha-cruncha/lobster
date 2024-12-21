@@ -34,12 +34,45 @@ const libraryInfoSchema = {
   required: ["uuid", "name", "maxRentalPeriod", "maxFuture"],
 };
 
+const genericOptionSchema = {
+  type: "object",
+  $id: "#genericOption",
+  properties: {
+    id: { type: "number" },
+    name: { type: "string" },
+  },
+  required: ["id", "name"],
+};
 
+const allStatusOptionsSchema = {
+  type: "object",
+  $id: "#allStatusOptions",
+  properties: {
+    stores: { type: "array", items: { $ref: "#genericOption" } },
+    users: { type: "array", items: { $ref: "#genericOption" } },
+    tools: { type: "array", items: { $ref: "#genericOption" } },
+    rentals: { type: "array", items: { $ref: "#genericOption" } },
+    grievances: { type: "array", items: { $ref: "#genericOption" } },
+    permissions: { type: "array", items: { $ref: "#genericOption" } },
+  },
+  required: [
+    "stores",
+    "users",
+    "tools",
+    "rentals",
+    "grievances",
+    "permissions",
+  ],
+};
 
-
-
-
-
+const roleOptionsSchema = {
+  type: "object",
+  $id: "#roleOptions",
+  properties: {
+    roles: { type: "array", items: { $ref: "#genericOption" } },
+  },
+  required: ["roles"],
+};
 
 const countriesSchema = {
   type: "array",
@@ -394,13 +427,13 @@ const makeLazyValidator = (schema) => {
 
 export const validateTokens = makeLazyValidator(tokensSchema);
 
-export const validateRefreshedTokens = makeLazyValidator(
-  refreshedTokensSchema,
-);
+export const validateRefreshedTokens = makeLazyValidator(refreshedTokensSchema);
 
-export const validateLibraryInformation = makeLazyValidator(
-  libraryInfoSchema,
-);
+export const validateLibraryInformation = makeLazyValidator(libraryInfoSchema);
+
+export const validateStatusOptions = makeLazyValidator(allStatusOptionsSchema);
+
+export const validateRoleOptions = makeLazyValidator(roleOptionsSchema);
 
 export const validateGetPost = makeLazyValidator([
   singleChangeSchema,

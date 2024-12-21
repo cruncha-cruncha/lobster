@@ -13,10 +13,12 @@ import { Rentals } from "./pages/Rentals";
 import { Stores } from "./pages/Stores";
 import { Library } from "./pages/Library";
 import { useSetupAuth } from "./state/auth";
+import { useInitConstants } from "./state/constants";
 import "./index.css";
 
 const Init = ({ children }) => {
   const libraryInfo = useLibraryInfo();
+  useInitConstants();
   useSetupAuth();
 
   if (libraryInfo.name) {

@@ -32,34 +32,71 @@ pub struct CreateLibraryInfo {
     pub name: library_information::Name,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AllStatuses {
+    pub stores: Vec<common::Status>,
+    pub users: Vec<common::Status>,
+    pub tools: Vec<common::Status>,
+    pub rentals: Vec<common::Status>,
+    pub grievances: Vec<common::Status>,
+    pub permissions: Vec<common::Status>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RoleOptions {
+    pub roles: Vec<common::Status>,
+}
+
 pub async fn get_role_options(
     State(state): State<Arc<AppState>>,
-) -> Result<Json<Vec<common::Status>>, (StatusCode, String)> {
+) -> Result<Json<RoleOptions>, (StatusCode, String)> {
     let roles = match library::select_roles(&state.db).await {
         Ok(roles) => roles,
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     };
 
-    Ok(Json(roles))
+    Ok(Json(RoleOptions { roles }))
 }
 
 pub async fn get_all_statuses(
     State(state): State<Arc<AppState>>,
-) -> Result<Json<Vec<common::Status>>, (StatusCode, String)> {
-    // get all possible statuses for everything (tools, users, stores, etc)
-    // will need a custom return type
+) -> Result<Json<AllStatuses>, (StatusCode, String)> { 
+    let store_future = crate::queries::stores::select_statuses(&state.db);
+    let user_future = crate::queries::users::select_statuses(&state.db);
+    let tool_future = crate::queries::tools::select_statuses(&state.db);
+    let rental_future = crate::queries::rentals::select_statuses(&state.db);
+    let grievance_future = crate::queries::grievances::select_statuses(&state.db);
+    let permission_future = crate::queries::permissions::select_statuses(&state.db);
 
-    // crate::handlers::stores::get_statuses(State(state));
-    // crate::handlers::users::get_statuses(State(state));
-    // crate::handlers::tools::get_statuses(State(state));
-    // crate::handlers::rentals::get_statuses(State(state));
-    // crate::handlers::grievances::get_statuses(State(state));
-    // crate::handlers::permissions::get_statuses(State(state));
+    let (
+        store_statuses,
+        user_statuses,
+        tool_statuses,
+        rental_statuses,
+        grievance_statuses,
+        permission_statuses,
+    ) = match tokio::try_join!(
+        store_future,
+        user_future,
+        tool_future,
+        rental_future,
+        grievance_future,
+        permission_future,
+    ) {
+        Ok(res) => res,
+        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+    };
 
-    Err((
-        StatusCode::NOT_IMPLEMENTED,
-        String::from("Not implemented"),
-    ))
+    Ok(Json(AllStatuses {
+        stores: store_statuses,
+        users: user_statuses,
+        tools: tool_statuses,
+        rentals: rental_statuses,
+        grievances: grievance_statuses,
+        permissions: permission_statuses,
+    }))
 }
 
 pub async fn get_info(

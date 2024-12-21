@@ -51,6 +51,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .route("/login", routing::post(handlers::auth::login))
         .route("/refresh", routing::post(handlers::auth::refresh))
         .route("/statuses", routing::get(handlers::library::get_all_statuses))
+        .route("/roles", routing::get(handlers::library::get_role_options))
         .route(
             "/library",
             routing::get(handlers::library::get_info)
