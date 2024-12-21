@@ -56,7 +56,7 @@ export const updateLibrary = async ({
   accessToken,
 }) => {
   const data = await handle(`${serverUrl}/library`, {
-    method: "PUT",
+    method: "PATCH",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
@@ -96,3 +96,59 @@ export const refresh = async ({ refreshToken }) => {
 
   return data;
 };
+
+export const getUsers = async ({ params, accessToken }) => {
+  const data = await handle(`${serverUrl}/users`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  // if (!validateUsers(data)) {
+  //   throw new Error(400);
+  // }
+
+  return data;
+}
+
+export const getUser = async ({ id, accessToken }) => {
+  const data = await handle(`${serverUrl}/users/${id}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  // if (!validateUser(data)) {
+  //   throw new Error(400);
+  // }
+
+  return data;
+}
+
+export const updateUser = async ({ id, username, accessToken }) => {
+  const data = await handle(`${serverUrl}/users/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ username }),
+  });
+
+  return data;
+}
+
+export const updateUserStatus = async ({ id, status, accessToken }) => {
+  const data = await handle(`${serverUrl}/users/${id}/status`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ status }),
+  });
+
+  return data;
+}

@@ -18,6 +18,12 @@ pub struct IdOnly {
     pub id: i32,
 }
 
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StatusOnly {  
+    pub status: i32,
+}
+
 #[derive(Debug, serde::Serialize, serde::Deserialize, sqlx::FromRow, sqlx::Type)]
 pub struct Status {
     pub id: i32,

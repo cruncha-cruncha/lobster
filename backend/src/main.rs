@@ -55,16 +55,16 @@ async fn main() -> Result<(), Box<dyn Error>> {
             "/library",
             routing::get(handlers::library::get_info)
                 .post(handlers::library::create_library)
-                .put(handlers::library::update_info),
+                .patch(handlers::library::update_info),
         )
         .route("/users", routing::get(handlers::users::get_filtered))
         .route(
             "/users/:user_id",
-            routing::put(handlers::users::update).get(handlers::users::get_by_id),
+            routing::patch(handlers::users::update).get(handlers::users::get_by_id),
         )
         .route(
-            "/users/:user_id/status/:status_id",
-            routing::put(handlers::users::update_status),
+            "/users/:user_id/status",
+            routing::patch(handlers::users::update_status),
         )
         .route(
             "/stores",
@@ -72,11 +72,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
         )
         .route(
             "/stores/:store_id",
-            routing::put(handlers::stores::update_info).get(handlers::stores::get_by_id),
+            routing::patch(handlers::stores::update_info).get(handlers::stores::get_by_id),
         )
         .route(
-            "/stores/:store_id/status/:status_id",
-            routing::put(handlers::stores::update_status),
+            "/stores/:store_id/status",
+            routing::patch(handlers::stores::update_status),
         );
 
     #[cfg(feature = "cors")]

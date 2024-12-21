@@ -72,8 +72,8 @@ pub async fn update(
 pub async fn update_status(
     claims: Claims,
     Path(user_id): Path<i32>,
-    Path(status): Path<i32>,
     State(state): State<Arc<AppState>>,
+    Json(payload): Json<common::StatusOnly>,
 ) -> Result<Json<common::NoData>, (StatusCode, String)> {
     if !claims.is_user_admin() {
         return Err((
@@ -82,7 +82,7 @@ pub async fn update_status(
         ));
     }
 
-    match users::update(user_id, None, Some(status), &state.db).await {
+    match users::update(user_id, None, Some(payload.status), &state.db).await {
         Ok(_) => Ok(Json(common::NoData {})),
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     }
