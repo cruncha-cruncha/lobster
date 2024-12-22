@@ -4,6 +4,8 @@ import {
   validateLibraryInformation,
   validateStatusOptions,
   validateRoleOptions,
+  validateUserInfo,
+  validateFilteredUsers,
 } from "./schemas";
 
 const serverUrl = import.meta.env.VITE_SERVER_URL || "http://127.0.0.1:3000";
@@ -28,6 +30,10 @@ const handle = (url, params) => {
       }
     });
 };
+
+const obj_to_query = (obj) => {
+  return new URLSearchParams(obj).toString();
+}
 
 export const getLibraryInformation = async () => {
   const data = await handle(`${serverUrl}/library`, {
@@ -124,16 +130,18 @@ export const refresh = async ({ refreshToken }) => {
 };
 
 export const getUsers = async ({ params, accessToken }) => {
-  const data = await handle(`${serverUrl}/users`, {
+  const str_params = obj_to_query(params);
+
+  const data = await handle(`${serverUrl}/users?${str_params}`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
   });
 
-  // if (!validateUsers(data)) {
-  //   throw new Error(400);
-  // }
+  if (!validateFilteredUsers(data)) {
+    throw new Error(400);
+  }
 
   return data;
 }
@@ -146,9 +154,9 @@ export const getUser = async ({ id, accessToken }) => {
     },
   });
 
-  // if (!validateUser(data)) {
-  //   throw new Error(400);
-  // }
+  if (!validateUserInfo(data)) {
+    throw new Error(400);
+  }
 
   return data;
 }
