@@ -50,7 +50,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .route("/hello", routing::get(|| async { "hello, world" }))
         .route("/login", routing::post(handlers::auth::login))
         .route("/refresh", routing::post(handlers::auth::refresh))
-        .route("/statuses", routing::get(handlers::library::get_all_statuses))
+        .route(
+            "/statuses",
+            routing::get(handlers::library::get_all_statuses),
+        )
         .route("/roles", routing::get(handlers::library::get_role_options))
         .route(
             "/library",

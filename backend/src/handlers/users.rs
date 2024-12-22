@@ -39,15 +39,10 @@ pub struct UserWithPlainEmail {
     pub created_at: user::CreatedAt,
 }
 
-pub async fn get_statuses(
-    State(state): State<Arc<AppState>>,
-) -> Result<Json<Vec<common::Status>>, (StatusCode, String)> {
-    let roles = match users::select_statuses(&state.db).await {
-        Ok(roles) => roles,
-        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
-    };
-
-    Ok(Json(roles))
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FilteredResponse {
+    pub users: Vec<UserWithPlainEmail>,
 }
 
 pub async fn update(
@@ -126,7 +121,7 @@ pub async fn get_filtered(
     claims: Claims,
     Query(params): Query<FilterParams>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<Vec<UserWithPlainEmail>>, (StatusCode, String)> {
+) -> Result<Json<FilteredResponse>, (StatusCode, String)> {
     let (offset, limit) = common::calculate_offset_limit(params.page.unwrap_or_default());
 
     let users = match users::select(
@@ -172,5 +167,5 @@ pub async fn get_filtered(
             .collect();
     }
 
-    Ok(Json(plain_users))
+    Ok(Json(FilteredResponse { users: plain_users }))
 }

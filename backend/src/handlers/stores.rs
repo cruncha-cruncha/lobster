@@ -1,5 +1,5 @@
 use crate::common;
-use crate::queries::stores::{self, select_statuses};
+use crate::queries::stores;
 use crate::AppState;
 use crate::{auth::claims::Claims, db_structs::store};
 use axum::{
@@ -37,16 +37,6 @@ pub struct FilterParams {
     pub statuses: Option<Vec<store::Status>>,
     pub name: Option<String>,
     pub page: Option<i64>,
-}
-
-pub async fn get_statuses(
-    State(state): State<Arc<AppState>>,
-) -> Result<Json<Vec<common::Status>>, (StatusCode, String)> {
-    let statuses = select_statuses(&state.db)
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
-
-    Ok(Json(statuses))
 }
 
 pub async fn create_new(

@@ -11,8 +11,6 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
-const PAGE_SIZE: i32 = 20;
-
 // get possible statuses for a grievance
 // check how many grievances any user has received
 // check how many grievances anyone related to a store has received
@@ -39,16 +37,6 @@ pub struct Params {
 pub struct GrievancesResponse {
     pub page_size: i32,
     pub grievances: Vec<GrievanceWithNames>,
-}
-
-pub async fn get_statuses(
-    State(state): State<Arc<AppState>>,
-) -> Result<Json<Vec<common::Status>>, (StatusCode, String)> {
-    let statuses = select_statuses(&state.db)
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
-
-    Ok(Json(statuses))
 }
 
 pub async fn create(

@@ -13,8 +13,8 @@ axum = { version = "0.7", features = ["ws", "query", "json"] }
 axum-extra = { version = "0.9", features = ["query"] }
 hyper = { version = "1.0.0-rc.4", features = ["full"] }
 tokio = { version = "1.33", features = ["full"] }
-tower = { version = "0.4" }
-tower-http = { version = "0.4", features = ["cors"] }
+tower = { version = "0.5" }
+tower-http = { version = "0.6", features = ["cors"] }
 jsonwebtoken = { version = "9.1", features = ["use_pem"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", features = ["raw_value"] }
