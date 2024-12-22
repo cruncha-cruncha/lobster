@@ -1,4 +1,3 @@
-use crate::auth::encryption::encode_plain_email;
 use crate::common;
 use crate::db_structs::{permission, store, user};
 use serde::{Deserialize, Serialize};
@@ -33,8 +32,6 @@ pub async fn select(
     params: SelectParams,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<Vec<user::User>, String> {
-    let email = encode_plain_email(&params.term).ok_or("Failed to encode email")?;
-
     sqlx::query_as!(
         user::User,
         r#"
@@ -43,17 +40,16 @@ pub async fn select(
         LEFT JOIN main.permissions p ON usr.id = p.user_id
         WHERE
             ($1::text = '' OR usr.username = $1::text)
-            AND ($2::bytea IS NULL OR usr.email = $2::bytea)
-            AND (ARRAY_LENGTH($3::integer[], 1) IS NULL OR p.store_id = ANY($3::integer[]))
-            AND (ARRAY_LENGTH($4::integer[], 1) IS NULL OR p.role_id = ANY($4::integer[]))
-            AND (ARRAY_LENGTH($5::integer[], 1) IS NULL OR usr.status = ANY($5::integer[]))
-            AND (COALESCE($6, '1970-01-01 00:00:00+00'::timestamp with time zone) <= usr.created_at AND usr.created_at < COALESCE($7, '9999-12-31 23:59:59+00'::timestamp with time zone))
+            AND ($1::text = '' OR usr.email = $1::text)
+            AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR p.store_id = ANY($2::integer[]))
+            AND (ARRAY_LENGTH($3::integer[], 1) IS NULL OR p.role_id = ANY($3::integer[]))
+            AND (ARRAY_LENGTH($4::integer[], 1) IS NULL OR usr.status = ANY($4::integer[]))
+            AND (COALESCE($5, '1970-01-01 00:00:00+00'::timestamp with time zone) <= usr.created_at AND usr.created_at < COALESCE($6, '9999-12-31 23:59:59+00'::timestamp with time zone))
         GROUP BY usr.id
         ORDER BY usr.created_at DESC
-        OFFSET $8 LIMIT $9;
+        OFFSET $7 LIMIT $8;
         "#,
         params.term,
-        email,
         &params.store_ids,
         &params.roles,
         &params.statuses,
@@ -84,8 +80,6 @@ pub async fn select_by_email(
     email: &str,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<Option<user::User>, String> {
-    let encoded = encode_plain_email(email).ok_or("Failed to encode email")?;
-
     sqlx::query_as!(
         user::User,
         r#"
@@ -93,7 +87,7 @@ pub async fn select_by_email(
         FROM main.users mu
         WHERE mu.email = $1
         "#,
-        encoded,
+        email,
     )
     .fetch_optional(db)
     .await
@@ -124,8 +118,6 @@ pub async fn insert(
     email: &str,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<user::User, String> {
-    let email = encode_plain_email(email).ok_or("Failed to encode email")?;
-
     sqlx::query_as!(
         user::User,
         r#"
@@ -135,7 +127,7 @@ pub async fn insert(
         "#,
         username,
         status,
-        &email,
+        email,
     )
     .fetch_one(db)
     .await

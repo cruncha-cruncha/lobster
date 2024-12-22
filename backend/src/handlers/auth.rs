@@ -44,8 +44,7 @@ pub async fn login(
                             Err(_) => (),
                         }
 
-                        let plain_user = crate::handlers::users::UserWithPlainEmail::from(new_user);
-                        let encoded = serde_json::to_vec(&plain_user).unwrap_or_default();
+                        let encoded = serde_json::to_vec(&new_user).unwrap_or_default();
                         state.comm.send_message("users", &encoded).await.ok();
 
                         id

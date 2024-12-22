@@ -12,7 +12,7 @@ CREATE TABLE main.users (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     username TEXT NOT NULL,
     status INTEGER NOT NULL,
-    email BYTEA NOT NULL,
+    email TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     PRIMARY KEY (id),
     UNIQUE (email),
