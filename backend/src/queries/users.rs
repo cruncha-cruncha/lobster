@@ -123,14 +123,15 @@ pub async fn insert(
     status: i32,
     email: &str,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<user::Id, String> {
+) -> Result<user::User, String> {
     let email = encode_plain_email(email).ok_or("Failed to encode email")?;
 
-    sqlx::query!(
+    sqlx::query_as!(
+        user::User,
         r#"
         INSERT INTO main.users (username, status, email)
         VALUES ($1, $2, $3)
-        RETURNING id;
+        RETURNING *;
         "#,
         username,
         status,
@@ -138,7 +139,6 @@ pub async fn insert(
     )
     .fetch_one(db)
     .await
-    .map(|row| row.id)
     .map_err(|e| e.to_string())
 }
 
@@ -147,20 +147,20 @@ pub async fn update(
     username: Option<&str>,
     status: Option<i32>,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<(), String> {
-    sqlx::query!(
+) -> Result<user::User, String> {
+    sqlx::query_as!(
+        user::User,
         r#"
         UPDATE main.users usr
         SET username = COALESCE(NULLIF($1, ''), usr.username), status = COALESCE($2, usr.status)
-        WHERE id = $3;
+        WHERE id = $3
+        RETURNING *;
         "#,
         username,
         status,
         id,
     )
-    .execute(db)
+    .fetch_one(db)
     .await
-    .map_err(|e| e.to_string())?;
-
-    Ok(())
+    .map_err(|e| e.to_string())
 }

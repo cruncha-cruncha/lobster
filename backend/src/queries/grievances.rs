@@ -45,12 +45,13 @@ pub async fn insert(
     description: grievance::Description,
     status: grievance::Status,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<grievance::Id, String> {
-    sqlx::query!(
+) -> Result<grievance::Grievance, String> {
+    sqlx::query_as!(
+        grievance::Grievance,
         r#"
         INSERT INTO main.grievances (author_id, accused_id, title, description, status)
         VALUES ($1, $2, $3, $4, $5)
-        RETURNING id;
+        RETURNING *;
         "#,
         author_id,
         accused_id,
@@ -60,7 +61,6 @@ pub async fn insert(
     )
     .fetch_one(db)
     .await
-    .map(|row| row.id)
     .map_err(|e| e.to_string())
 }
 
@@ -68,19 +68,20 @@ pub async fn update_status(
     grievance_id: grievance::Id,
     status: grievance::Status,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<(), String> {
-    sqlx::query!(
+) -> Result<grievance::Grievance, String> {
+    sqlx::query_as!(
+        grievance::Grievance,
         r#"
         UPDATE main.grievances
         SET status = $2
-        WHERE id = $1;
+        WHERE id = $1
+        RETURNING *;
         "#,
         grievance_id,
         status,
     )
-    .execute(db)
+    .fetch_one(db)
     .await
-    .map(|_| ())
     .map_err(|e| e.to_string())
 }
 

@@ -31,7 +31,8 @@ pub async fn login(
                 u.unwrap().id
             } else {
                 match users::insert("random", 1, &payload.email, &state.db).await {
-                    Ok(id) => {
+                    Ok(new_user) => {
+                        let id = new_user.id;
                         match users::count(&state.db).await {
                             Ok(count) => {
                                 if count <= 1 {
@@ -42,6 +43,10 @@ pub async fn login(
                             }
                             Err(_) => (),
                         }
+
+                        let plain_user = crate::handlers::users::UserWithPlainEmail::from(new_user);
+                        let encoded = serde_json::to_vec(&plain_user).unwrap_or_default();
+                        state.comm.send_message("users", &encoded).await.ok();
 
                         id
                     }

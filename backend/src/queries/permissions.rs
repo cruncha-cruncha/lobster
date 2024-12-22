@@ -24,12 +24,13 @@ pub async fn insert(
     store_id: Option<permission::StoreId>,
     status: permission::Status,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<permission::Id, String> {
-    sqlx::query!(
+) -> Result<permission::Permission, String> {
+    sqlx::query_as!(
+        permission::Permission,
         r#"
         INSERT INTO main.permissions (user_id, role_id, store_id, status)
         VALUES ($1, $2, $3, $4)
-        RETURNING id;
+        RETURNING *;
         "#,
         user_id,
         role_id,
@@ -38,7 +39,6 @@ pub async fn insert(
     )
     .fetch_one(db)
     .await
-    .map(|row| row.id)
     .map_err(|e| e.to_string())
 }
 
@@ -46,19 +46,20 @@ pub async fn update_status(
     permission_id: permission::Id,
     status: permission::Status,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<(), String> {
-    sqlx::query!(
+) -> Result<permission::Permission, String> {
+    sqlx::query_as!(
+        permission::Permission,
         r#"
         UPDATE main.permissions
         SET status = $1
-        WHERE id = $2;
+        WHERE id = $2
+        RETURNING *;
         "#,
         status,
         permission_id,
     )
-    .execute(db)
+    .fetch_one(db)
     .await
-    .map(|_| ())
     .map_err(|e| e.to_string())
 }
 

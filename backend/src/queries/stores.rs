@@ -61,12 +61,13 @@ pub async fn insert(
     contact: store::Contact,
     description: store::Description,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<store::Id, String> {
-    sqlx::query!(
+) -> Result<store::Store, String> {
+    sqlx::query_as!(
+        store::Store,
         r#"
         INSERT INTO main.stores (name, status, location, hours, contact, description)
         VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING id;
+        RETURNING *;
         "#,
         name,
         status,
@@ -77,7 +78,6 @@ pub async fn insert(
     )
     .fetch_one(db)
     .await
-    .map(|row| row.id)
     .map_err(|e| e.to_string())
 }
 
@@ -90,8 +90,9 @@ pub async fn update(
     contact: Option<store::Contact>,
     description: Option<store::Description>,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<(), String> {
-    sqlx::query!(
+) -> Result<store::Store, String> {
+    sqlx::query_as!(
+        store::Store,
         r#"
         UPDATE main.stores ms
         SET
@@ -102,6 +103,7 @@ pub async fn update(
             contact = COALESCE($6, ms.contact),
             description = COALESCE($7, ms.description)
         WHERE ms.id = $1
+        RETURNING *;
         "#,
         store_id,
         name,
@@ -111,8 +113,7 @@ pub async fn update(
         contact,
         description,
     )
-    .execute(db)
+    .fetch_one(db)
     .await
-    .map(|_| ())
     .map_err(|e| e.to_string())
 }

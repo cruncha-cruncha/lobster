@@ -37,12 +37,13 @@ pub async fn insert(
     pictures: tool::Pictures,
     status: tool::Status,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<tool::Id, String> {
-    sqlx::query!(
+) -> Result<tool::Tool, String> {
+    sqlx::query_as!(
+        tool::Tool,
         r#"
         INSERT INTO main.tools (real_id, store_id, category_id, default_rental_period, description, pictures, status)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
-        RETURNING id;
+        RETURNING *;
         "#,
         real_id,
         store_id,
@@ -54,7 +55,6 @@ pub async fn insert(
     )
     .fetch_one(db)
     .await
-    .map(|row| row.id)
     .map_err(|e| e.to_string())
 }
 
@@ -68,12 +68,14 @@ pub async fn update(
     pictures: Option<tool::Pictures>,
     status: Option<tool::Status>,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<(), String> {
-    sqlx::query!(
+) -> Result<tool::Tool, String> {
+    sqlx::query_as!(
+        tool::Tool,
         r#"
         UPDATE main.tools
         SET real_id = COALESCE($2, real_id), store_id = COALESCE($3, store_id), category_id = COALESCE($4, category_id), default_rental_period = COALESCE($5, default_rental_period), description = COALESCE($6, description), pictures = COALESCE($7, pictures), status = COALESCE($8, status)
-        WHERE id = $1;
+        WHERE id = $1
+        RETURNING *;
         "#,
         tool_id,
         real_id,
@@ -84,9 +86,8 @@ pub async fn update(
         pictures.as_deref(),
         status,
     )
-    .execute(db)
+    .fetch_one(db)
     .await
-    .map(|_| ())
     .map_err(|e| e.to_string())
 }
 
@@ -97,8 +98,9 @@ pub async fn clear_fields(
     default_rental_period: bool,
     description: bool,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<(), String> {
-    sqlx::query!(
+) -> Result<tool::Tool, String> {
+    sqlx::query_as!(
+        tool::Tool,
         r#"
         UPDATE main.tools mt
         SET 
@@ -106,7 +108,8 @@ pub async fn clear_fields(
             category_id = CASE WHEN $3 THEN NULL ELSE mt.category_id END,
             default_rental_period = CASE WHEN $4 THEN NULL ELSE mt.default_rental_period END,
             description = CASE WHEN $5 THEN NULL ELSE mt.description END
-        WHERE id = $1;
+        WHERE id = $1
+        RETURNING *;
         "#,
         tool_id,
         real_id,
@@ -114,9 +117,8 @@ pub async fn clear_fields(
         default_rental_period,
         description,
     )
-    .execute(db)
+    .fetch_one(db)
     .await
-    .map(|_| ())
     .map_err(|e| e.to_string())
 }
 

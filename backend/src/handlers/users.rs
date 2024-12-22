@@ -50,7 +50,7 @@ pub async fn update(
     Path(user_id): Path<i32>,
     State(state): State<Arc<AppState>>,
     Json(data): Json<UpdateUsername>,
-) -> Result<Json<common::NoData>, (StatusCode, String)> {
+) -> Result<Json<UserWithPlainEmail>, (StatusCode, String)> {
     if claims.subject_as_user_id().unwrap_or(-1) != user_id {
         return Err((
             StatusCode::FORBIDDEN,
@@ -59,7 +59,13 @@ pub async fn update(
     }
 
     match users::update(user_id, Some(&data.username), None, &state.db).await {
-        Ok(_) => Ok(Json(common::NoData {})),
+        Ok(u) => {
+            let mut plain_user = UserWithPlainEmail::from(u);
+            let encoded = serde_json::to_vec(&plain_user).unwrap_or_default();
+            state.comm.send_message("users", &encoded).await.ok();
+            plain_user.email = String::new();
+            Ok(Json(plain_user))
+        }
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     }
 }
@@ -69,7 +75,7 @@ pub async fn update_status(
     Path(user_id): Path<i32>,
     State(state): State<Arc<AppState>>,
     Json(payload): Json<common::StatusOnly>,
-) -> Result<Json<common::NoData>, (StatusCode, String)> {
+) -> Result<Json<UserWithPlainEmail>, (StatusCode, String)> {
     if !claims.is_user_admin() {
         return Err((
             StatusCode::FORBIDDEN,
@@ -78,7 +84,13 @@ pub async fn update_status(
     }
 
     match users::update(user_id, None, Some(payload.status), &state.db).await {
-        Ok(_) => Ok(Json(common::NoData {})),
+        Ok(u) => {
+            let mut plain_user = UserWithPlainEmail::from(u);
+            let encoded = serde_json::to_vec(&plain_user).unwrap_or_default();
+            state.comm.send_message("users", &encoded).await.ok();
+            plain_user.email = String::new();
+            Ok(Json(plain_user))
+        }
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     }
 }
@@ -103,13 +115,10 @@ pub async fn get_by_id(
                     ))?;
                 }
 
-                Ok(Json(UserWithPlainEmail {
-                    id: u.id,
-                    username: u.username,
-                    status: u.status,
-                    email: plain_email,
-                    created_at: u.created_at,
-                }))
+                let mut plain_user = UserWithPlainEmail::from(u);
+                plain_user.email = plain_email;
+
+                Ok(Json(plain_user))
             }
             None => Err((StatusCode::NOT_FOUND, "User not found".to_string())),
         },
@@ -157,15 +166,21 @@ pub async fn get_filtered(
     } else {
         plain_users = users
             .into_iter()
-            .map(|u| UserWithPlainEmail {
-                id: u.id,
-                username: u.username,
-                status: u.status,
-                email: String::new(),
-                created_at: u.created_at,
-            })
+            .map(|u| UserWithPlainEmail::from(u))
             .collect();
     }
 
     Ok(Json(FilteredResponse { users: plain_users }))
+}
+
+impl From<crate::db_structs::user::User> for UserWithPlainEmail {
+    fn from(u: crate::db_structs::user::User) -> Self {
+        UserWithPlainEmail {
+            id: u.id,
+            username: u.username,
+            status: u.status,
+            email: decode_email(&u.email).unwrap_or_default(),
+            created_at: u.created_at,
+        }
+    }
 }

@@ -33,7 +33,6 @@ pub struct SettableStoreData {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FilterParams {
-    pub ids: Option<Vec<store::Id>>,
     pub statuses: Option<Vec<store::Status>>,
     pub name: Option<String>,
     pub page: Option<i64>,
@@ -43,8 +42,8 @@ pub async fn create_new(
     _claims: Claims,
     State(state): State<Arc<AppState>>,
     Json(payload): Json<CreateStoreData>,
-) -> Result<Json<common::IdOnly>, (StatusCode, String)> {
-    stores::insert(
+) -> Result<Json<store::Store>, (StatusCode, String)> {
+    match stores::insert(
         payload.name,
         3,
         payload.location,
@@ -54,8 +53,14 @@ pub async fn create_new(
         &state.db,
     )
     .await
-    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
-    .map(|id| Json(common::IdOnly { id }))
+    {
+        Ok(s) => {
+            let encoded = serde_json::to_vec(&s).unwrap_or_default();
+            state.comm.send_message("stores", &encoded).await.ok();
+            Ok(Json(s))
+        }
+        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+    }
 }
 
 pub async fn update_info(
@@ -63,7 +68,7 @@ pub async fn update_info(
     Path(store_id): Path<i32>,
     State(state): State<Arc<AppState>>,
     Json(payload): Json<SettableStoreData>,
-) -> Result<Json<common::NoData>, (StatusCode, String)> {
+) -> Result<Json<store::Store>, (StatusCode, String)> {
     match claims.permissions.store.get(&store_id) {
         Some(roles) => {
             if !roles.contains(&4) {
@@ -73,7 +78,7 @@ pub async fn update_info(
         None => return Err((StatusCode::UNAUTHORIZED, "Must be a store rep".to_string())),
     }
 
-    stores::update(
+    match stores::update(
         store_id,
         payload.name,
         None,
@@ -84,8 +89,14 @@ pub async fn update_info(
         &state.db,
     )
     .await
-    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
-    .map(|_| Json(common::NoData {}))
+    {
+        Ok(s) => {
+            let encoded = serde_json::to_vec(&s).unwrap_or_default();
+            state.comm.send_message("stores", &encoded).await.ok();
+            Ok(Json(s))
+        }
+        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+    }
 }
 
 pub async fn update_status(
@@ -93,7 +104,7 @@ pub async fn update_status(
     Path(store_id): Path<i32>,
     State(state): State<Arc<AppState>>,
     Json(payload): Json<common::StatusOnly>,
-) -> Result<Json<common::NoData>, (StatusCode, String)> {
+) -> Result<Json<store::Store>, (StatusCode, String)> {
     if !claims.is_store_admin() {
         return Err((
             StatusCode::UNAUTHORIZED,
@@ -101,7 +112,7 @@ pub async fn update_status(
         ));
     }
 
-    stores::update(
+    match stores::update(
         store_id,
         None,
         Some(payload.status),
@@ -112,8 +123,14 @@ pub async fn update_status(
         &state.db,
     )
     .await
-    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
-    .map(|_| Json(common::NoData {}))
+    {
+        Ok(s) => {
+            let encoded = serde_json::to_vec(&s).unwrap_or_default();
+            state.comm.send_message("stores", &encoded).await.ok();
+            Ok(Json(s))
+        }
+        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+    }
 }
 
 pub async fn get_by_id(
@@ -153,7 +170,7 @@ pub async fn get_filtered(
 
     let stores = match stores::select(
         stores::SelectParams {
-            ids: params.ids.unwrap_or_default(),
+            ids: vec![],
             statuses: params.statuses.unwrap_or_default(),
             name: params.name.unwrap_or_default(),
             offset: offset,

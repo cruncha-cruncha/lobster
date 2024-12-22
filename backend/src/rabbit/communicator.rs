@@ -19,6 +19,9 @@ pub async fn init() -> Result<(Connection, Communicator), lapin::Error> {
 
     let communicator = Communicator::new(Some(channel));
 
+    communicator.declare_queue("stores").await?;
+    communicator.declare_queue("users").await?;
+
     // Have to pass conn as well, even if it's never used.
     // Otherwise it'll be closed when it goes out of scope, and the channel gets closed with it.
     return Ok((connection, communicator));

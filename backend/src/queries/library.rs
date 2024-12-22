@@ -40,22 +40,23 @@ pub async fn update_information(
     max_rental_period: Option<i32>,
     max_future: Option<i32>,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<(), String> {
-    sqlx::query!(
+) -> Result<LibraryInformation, String> {
+    sqlx::query_as!(
+        LibraryInformation,
         r#"
         UPDATE main.library_information li
         SET
             name = COALESCE($1, li.name),
             maximum_rental_period = COALESCE($2, li.maximum_rental_period),
-            maximum_future = COALESCE($3, li.maximum_future);
+            maximum_future = COALESCE($3, li.maximum_future)
+        RETURNING *;
         "#,
         name,
         max_rental_period,
         max_future,
     )
-    .execute(db)
+    .fetch_one(db)
     .await
-    .map(|_| ())
     .map_err(|e| e.to_string())
 }
 
@@ -64,18 +65,19 @@ pub async fn insert_information(
     max_rental_period: i32,
     max_future: i32,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<(), String> {
-    sqlx::query!(
+) -> Result<LibraryInformation, String> {
+    sqlx::query_as!(
+        LibraryInformation,
         r#"
         INSERT INTO main.library_information (name, maximum_rental_period, maximum_future)
-        VALUES ($1, $2, $3);
+        VALUES ($1, $2, $3)
+        RETURNING *;
         "#,
         name,
         max_rental_period,
         max_future,
     )
-    .execute(db)
+    .fetch_one(db)
     .await
-    .map(|_| ())
     .map_err(|e| e.to_string())
 }

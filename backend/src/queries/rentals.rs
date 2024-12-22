@@ -50,12 +50,13 @@ pub async fn insert(
     pickup_date: Option<rental::PickupDate>,
     status: rental::Status,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<rental::Id, String> {
-    sqlx::query!(
+) -> Result<rental::Rental, String> {
+    sqlx::query_as!(
+        rental::Rental,
         r#"
         INSERT INTO main.rentals (tool_id, renter_id, start_date, end_date, pickup_date, status)
         VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING id;
+        RETURNING *;
         "#,
         tool_id,
         renter_id,
@@ -66,7 +67,6 @@ pub async fn insert(
     )
     .fetch_one(db)
     .await
-    .map(|row| row.id)
     .map_err(|e| e.to_string())
 }
 
@@ -78,8 +78,9 @@ pub async fn update(
     return_date: Option<rental::ReturnDate>,
     status: Option<rental::Status>,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<(), String> {
-    sqlx::query!(
+) -> Result<rental::Rental, String> {
+    sqlx::query_as!(
+        rental::Rental,
         r#"
         UPDATE main.rentals mr
         SET
@@ -88,7 +89,8 @@ pub async fn update(
             pickup_date = COALESCE($4, mr.pickup_date),
             return_date = COALESCE($5, mr.return_date),
             status = COALESCE($6, mr.status)
-        WHERE id = $1;
+        WHERE id = $1
+        RETURNING *;
         "#,
         id,
         start_date,
@@ -97,9 +99,8 @@ pub async fn update(
         return_date,
         status,
     )
-    .execute(db)
+    .fetch_one(db)
     .await
-    .map(|_| ())
     .map_err(|e| e.to_string())
 }
 
@@ -108,22 +109,23 @@ pub async fn clear_fields(
     pickup_date: bool,
     return_date: bool,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<(), String> {
-    sqlx::query!(
+) -> Result<rental::Rental, String> {
+    sqlx::query_as!(
+        rental::Rental,
         r#"
         UPDATE main.rentals mr
         SET
             pickup_date = CASE WHEN $2 THEN NULL ELSE mr.pickup_date END,
             return_date = CASE WHEN $3 THEN NULL ELSE mr.return_date END
-        WHERE id = $1;
+        WHERE id = $1
+        RETURNING *;
         "#,
         id,
         pickup_date,
         return_date,
     )
-    .execute(db)
+    .fetch_one(db)
     .await
-    .map(|_| ())
     .map_err(|e| e.to_string())
 }
 
