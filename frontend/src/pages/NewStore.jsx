@@ -1,6 +1,5 @@
-import { useState, useReducer } from "react";
+import { useReducer } from "react";
 import { useNavigate } from "react-router";
-import { useConstants } from "../state/constants";
 import * as endpoints from "../api/endpoints";
 import { Button } from "../components/Button";
 import { TextInput } from "../components/TextInput";
@@ -24,7 +23,6 @@ const reducer = (state, action) => {
 };
 
 export const NewStore = () => {
-  const { storeStatuses } = useConstants();
   const navigate = useNavigate();
   const { accessToken } = useAuth();
 
