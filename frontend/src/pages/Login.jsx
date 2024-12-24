@@ -4,6 +4,8 @@ import { CenteredLoadingDots } from "../components/loading/LoadingDots";
 import { useLibraryInfo } from "../state/libraryInfo";
 import { useAuth } from "../state/auth";
 import { PureInfoModal } from "../components/InfoModal";
+import { Button } from "../components/Button";
+import { TextInput } from "../components/TextInput";
 
 export const validateEmail = (email) => {
   return new RegExp(/^.+@.+\..+$/).test(email);
@@ -56,34 +58,22 @@ export const PureLogin = (login) => {
             <div className="p-2">
               <h1 className="text-left text-xl">Login</h1>
               <form onSubmit={(e) => e.preventDefault()}>
-                <div className="my-2 border-2 border-stone-800">
-                  <input
-                    type="text"
+                <div className="my-2">
+                  <TextInput
                     placeholder="email address"
-                    onChange={(e) => login?.setEmail?.(e)}
                     value={login?.email}
-                    className="w-full px-2 py-1 ring-sky-500 transition-shadow focus-visible:outline-none focus-visible:ring-2"
+                    onChange={login?.setEmail}
+                    disabled={login?.loginLoading}
                   />
                 </div>
                 <div className="mt-4 flex justify-end">
-                  <button
-                    className={
-                      "rounded-full px-4 py-2 transition-colors" +
-                      (login?.canLogin || login.loginLoading
-                        ? " bg-emerald-200"
-                        : " bg-stone-300 text-white") +
-                      (login?.canLogin
-                        ? " hover:bg-emerald-900 hover:text-white"
-                        : "")
-                    }
-                    onClick={(e) => login?.onLogin?.(e)}
+                  <Button
+                    color="green"
+                    text="Login"
                     disabled={!login?.canLogin}
-                  >
-                    {login?.loginLoading && <CenteredLoadingDots />}
-                    <span className={login?.loginLoading ? "invisible" : ""}>
-                      Login
-                    </span>
-                  </button>
+                    onClick={login?.onLogin}
+                    isLoading={login?.loginLoading}
+                  />
                 </div>
               </form>
             </div>
