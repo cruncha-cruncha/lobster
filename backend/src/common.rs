@@ -1,6 +1,6 @@
 use crate::db_structs::user;
 
-pub const PAGE_SIZE: i64 = 10;
+pub const PAGE_SIZE: i64 = 20;
 
 pub fn calculate_offset_limit(page: i64) -> (i64, i64) {
     let page = page.max(1);

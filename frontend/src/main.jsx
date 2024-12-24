@@ -11,6 +11,7 @@ import { People } from "./pages/People";
 import { Grievances } from "./pages/Grievances";
 import { Rentals } from "./pages/Rentals";
 import { Stores } from "./pages/Stores";
+import { NewStore } from "./pages/NewStore";
 import { Library } from "./pages/Library";
 import { useSetupAuth } from "./state/auth";
 import { useInitConstants } from "./state/constants";
@@ -56,6 +57,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route index element={<Tools />} />
             <Route path="/tools" element={<Tools />} />
             <Route path="/stores" element={<Stores />} />
+            <Route path="/stores/new" element={<NewStore />} />
             <Route path="/library" element={<Library />} />
           </Route>
         </Routes>

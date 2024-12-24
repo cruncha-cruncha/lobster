@@ -132,11 +132,11 @@ pub async fn select(
         SELECT *
         FROM main.tools mt
         WHERE
-            (ARRAY_LENGTH($1::integer[], 1) = 0 OR mt.id = ANY($1::integer[]))
-            AND (ARRAY_LENGTH($2::integer[], 1) = 0 OR mt.status = ANY($2::integer[]))
-            AND (ARRAY_LENGTH($3::integer[], 1) = 0 OR mt.store_id = ANY($3::integer[]))
-            AND (ARRAY_LENGTH($4::integer[], 1) = 0 OR mt.category_id = ANY($4::integer[]))
-            AND (ARRAY_LENGTH($5::text[], 1) = 0 OR mt.real_id = ANY($5::text[]))
+            (ARRAY_LENGTH($1::integer[], 1) IS NULL OR mt.id = ANY($1::integer[]))
+            AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR mt.status = ANY($2::integer[]))
+            AND (ARRAY_LENGTH($3::integer[], 1) IS NULL OR mt.store_id = ANY($3::integer[]))
+            AND (ARRAY_LENGTH($4::integer[], 1) IS NULL OR mt.category_id = ANY($4::integer[]))
+            AND (ARRAY_LENGTH($5::text[], 1) IS NULL OR mt.real_id = ANY($5::text[]))
         ORDER BY mt.id
         OFFSET $6 LIMIT $7;
         "#,

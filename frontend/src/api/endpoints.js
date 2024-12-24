@@ -6,10 +6,11 @@ import {
   validateRoleOptions,
   validateUserInfo,
   validateFilteredUsers,
+  validateStoreInfo,
+  validateStoreSearchResults,
 } from "./schemas";
 
 const serverUrl = import.meta.env.VITE_SERVER_URL || "http://127.0.0.1:3000";
-const searchUrl = import.meta.env.VITE_SEARCH_URL || "http://127.0.0.1:3001";
 
 const handle = (url, params) => {
   return fetch(url, params)
@@ -33,7 +34,7 @@ const handle = (url, params) => {
 
 const obj_to_query = (obj) => {
   return new URLSearchParams(obj).toString();
-}
+};
 
 export const getLibraryInformation = async () => {
   const data = await handle(`${serverUrl}/library`, {
@@ -82,9 +83,7 @@ export const createLibrary = async ({ name }) => {
 };
 
 export const updateLibrary = async ({
-  name,
-  maxRentalPeriod,
-  maxFuture,
+  info,
   accessToken,
 }) => {
   const data = await handle(`${serverUrl}/library`, {
@@ -93,7 +92,7 @@ export const updateLibrary = async ({
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
     },
-    body: JSON.stringify({ name, maxRentalPeriod, maxFuture }),
+    body: JSON.stringify(info),
   });
 
   return data;
@@ -144,7 +143,7 @@ export const getUsers = async ({ params, accessToken }) => {
   }
 
   return data;
-}
+};
 
 export const getUser = async ({ id, accessToken }) => {
   const data = await handle(`${serverUrl}/users/${id}`, {
@@ -159,7 +158,7 @@ export const getUser = async ({ id, accessToken }) => {
   }
 
   return data;
-}
+};
 
 export const updateUser = async ({ id, username, accessToken }) => {
   const data = await handle(`${serverUrl}/users/${id}`, {
@@ -172,7 +171,7 @@ export const updateUser = async ({ id, username, accessToken }) => {
   });
 
   return data;
-}
+};
 
 export const updateUserStatus = async ({ id, status, accessToken }) => {
   const data = await handle(`${serverUrl}/users/${id}/status`, {
@@ -185,4 +184,79 @@ export const updateUserStatus = async ({ id, status, accessToken }) => {
   });
 
   return data;
-}
+};
+
+export const createStore = async ({
+  info,
+  accessToken,
+}) => {
+  const data = await handle(`${serverUrl}/stores`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(info),
+  });
+
+  if (!validateStoreInfo(data)) {
+    throw new Error(400);
+  }
+
+  return data;
+};
+
+export const updateStore = async ({
+  id,
+  info,
+  accessToken,
+}) => {
+  const data = await handle(`${serverUrl}/stores/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(info),
+  });
+
+  if (!validateStoreInfo(data)) {
+    throw new Error(400);
+  }
+
+  return data;
+};
+
+export const updateStoreStatus = async ({ id, status, accessToken }) => {
+  const data = await handle(`${serverUrl}/stores/${id}/status`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ status }),
+  });
+
+  if (!validateStoreInfo(data)) {
+    throw new Error(400);
+  }
+
+  return data;
+};
+
+export const getStores = async ({ params, accessToken }) => {
+  const str_params = obj_to_query(params);
+
+  const data = await handle(`${serverUrl}/stores?${str_params}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!validateStoreSearchResults(data)) {
+    throw new Error(400);
+  }
+
+  return data;
+};

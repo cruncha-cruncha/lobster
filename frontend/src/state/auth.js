@@ -63,7 +63,7 @@ export const useAuth = ({ mustBeLoggedIn = false } = {}) => {
       setAccessToken(data.accessToken);
       setRefreshToken(data.refreshToken);
       const decoded = jwtDecode(data.accessToken);
-      setUserId(parseInt(decoded.sub));
+      setUserId(parseInt(decoded.sub, 10));
       setPermissions(decoded.permissions);
     });
   }, []);
@@ -74,7 +74,7 @@ export const useAuth = ({ mustBeLoggedIn = false } = {}) => {
       .then((data) => {
         setAccessToken(data.accessToken);
         const decoded = jwtDecode(data.accessToken);
-        setUserId(parseInt(decoded.sub));
+        setUserId(parseInt(decoded.sub, 10));
         setPermissions(decoded.permissions);
       })
       .catch((e) => {
