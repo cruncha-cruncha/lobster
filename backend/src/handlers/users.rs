@@ -93,7 +93,7 @@ pub async fn get_by_id(
         Ok(user) => match user {
             Some(mut u) => {
                 if !can_see_email {
-                    u.email = String::new();
+                    u.email_address = String::new();
                 }
 
                 Ok(Json(u))
@@ -130,7 +130,7 @@ pub async fn get_filtered(
     };
 
     if !claims.is_user_admin() && !claims.is_store_admin() {
-        users.iter_mut().for_each(|u| u.email = String::new());
+        users.iter_mut().for_each(|u| u.email_address = String::new());
     }
 
     Ok(Json(FilteredResponse { users }))

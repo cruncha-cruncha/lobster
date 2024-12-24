@@ -30,14 +30,15 @@ pub async fn select(
     params: SelectParams,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<Vec<store::Store>, String> {
+    // TODO: split param on white space, search using ANY
     sqlx::query_as!(
         store::Store,
         r#"
         SELECT *
         FROM main.stores ms
         WHERE
-            (ARRAY_LENGTH($1::integer[], 1) = 0 OR ms.id = ANY($1::integer[]))
-            AND (ARRAY_LENGTH($2::integer[], 1) = 0 OR ms.status = ANY($2::integer[]))
+            (ARRAY_LENGTH($1::integer[], 1) IS NULL OR ms.id = ANY($1::integer[]))
+            AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR ms.status = ANY($2::integer[]))
             AND ($3::text = '' OR ms.name = $3::text)
         ORDER BY ms.id
         OFFSET $4 LIMIT $5;
@@ -56,25 +57,25 @@ pub async fn select(
 pub async fn insert(
     name: store::Name,
     status: store::Status,
-    location: store::Location,
-    hours: store::Hours,
-    contact: store::Contact,
-    description: store::Description,
+    email_address: store::EmailAddress,
+    phone_number: store::PhoneNumber,
+    rental_information: store::RentalInformation,
+    other_information: store::OtherInformation,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<store::Store, String> {
     sqlx::query_as!(
         store::Store,
         r#"
-        INSERT INTO main.stores (name, status, location, hours, contact, description)
+        INSERT INTO main.stores (name, status, email_address, phone_number, rental_information, other_information)
         VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING *;
         "#,
         name,
         status,
-        location,
-        hours,
-        contact,
-        description,
+        email_address,
+        phone_number,
+        rental_information,
+        other_information,
     )
     .fetch_one(db)
     .await
@@ -85,10 +86,10 @@ pub async fn update(
     store_id: store::Id,
     name: Option<store::Name>,
     status: Option<store::Status>,
-    location: Option<store::Location>,
-    hours: Option<store::Hours>,
-    contact: Option<store::Contact>,
-    description: Option<store::Description>,
+    email_address: Option<store::EmailAddress>,
+    phone_number: Option<store::PhoneNumber>,
+    rental_information: Option<store::RentalInformation>,
+    other_information: Option<store::OtherInformation>,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<store::Store, String> {
     sqlx::query_as!(
@@ -98,20 +99,20 @@ pub async fn update(
         SET
             name = COALESCE($2, ms.name),
             status = COALESCE($3, ms.status),
-            location = COALESCE($4, ms.location),
-            hours = COALESCE($5, ms.hours),
-            contact = COALESCE($6, ms.contact),
-            description = COALESCE($7, ms.description)
+            email_address = COALESCE($4, ms.email_address),
+            phone_number = COALESCE($5, ms.phone_number),
+            rental_information = COALESCE($6, ms.rental_information),
+            other_information = COALESCE($7, ms.other_information)
         WHERE ms.id = $1
         RETURNING *;
         "#,
         store_id,
         name,
         status,
-        location,
-        hours,
-        contact,
-        description,
+        email_address,
+        phone_number,
+        rental_information,
+        other_information,
     )
     .fetch_one(db)
     .await

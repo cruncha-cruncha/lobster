@@ -14,20 +14,20 @@ use std::sync::Arc;
 #[serde(rename_all = "camelCase")]
 pub struct CreateStoreData {
     pub name: store::Name,
-    pub location: store::Location,
-    pub hours: store::Location,
-    pub contact: store::Contact,
-    pub description: store::Contact,
+    pub email_address: store::EmailAddress,
+    pub phone_number: store::PhoneNumber,
+    pub rental_information: store::RentalInformation,
+    pub other_information: store::OtherInformation,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SettableStoreData {
     pub name: Option<store::Name>,
-    pub location: Option<store::Location>,
-    pub hours: Option<store::Location>,
-    pub contact: Option<store::Contact>,
-    pub description: Option<store::Contact>,
+    pub email_address: Option<store::EmailAddress>,
+    pub phone_number: Option<store::PhoneNumber>,
+    pub rental_information: Option<store::RentalInformation>,
+    pub other_information: Option<store::OtherInformation>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -38,6 +38,12 @@ pub struct FilterParams {
     pub page: Option<i64>,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FilteredResponse {
+    pub stores: Vec<store::Store>,
+}
+
 pub async fn create_new(
     _claims: Claims,
     State(state): State<Arc<AppState>>,
@@ -45,11 +51,11 @@ pub async fn create_new(
 ) -> Result<Json<store::Store>, (StatusCode, String)> {
     match stores::insert(
         payload.name,
-        3,
-        payload.location,
-        payload.hours,
-        payload.contact,
-        payload.description,
+        3, // pending
+        payload.email_address,
+        payload.phone_number,
+        payload.rental_information,
+        payload.other_information,
         &state.db,
     )
     .await
@@ -82,10 +88,10 @@ pub async fn update_info(
         store_id,
         payload.name,
         None,
-        payload.location,
-        payload.hours,
-        payload.contact,
-        payload.description,
+        payload.email_address,
+        payload.phone_number,
+        payload.rental_information,
+        payload.other_information,
         &state.db,
     )
     .await
@@ -165,7 +171,7 @@ pub async fn get_filtered(
     _claims: Claims,
     Query(params): Query<FilterParams>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<Vec<store::Store>>, (StatusCode, String)> {
+) -> Result<Json<FilteredResponse>, (StatusCode, String)> {
     let (offset, limit) = common::calculate_offset_limit(params.page.unwrap_or_default());
 
     let stores = match stores::select(
@@ -184,5 +190,5 @@ pub async fn get_filtered(
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     };
 
-    Ok(Json(stores))
+    Ok(Json(FilteredResponse { stores }))
 }

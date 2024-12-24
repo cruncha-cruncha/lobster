@@ -32,6 +32,7 @@ pub async fn select(
     params: SelectParams,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<Vec<user::User>, String> {
+    // TODO: split params.term on whitespace, search using ANY
     sqlx::query_as!(
         user::User,
         r#"
@@ -40,7 +41,7 @@ pub async fn select(
         LEFT JOIN main.permissions p ON usr.id = p.user_id
         WHERE
             ($1::text = '' OR usr.username = $1::text)
-            AND ($1::text = '' OR usr.email = $1::text)
+            AND ($1::text = '' OR usr.email_address = $1::text)
             AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR p.store_id = ANY($2::integer[]))
             AND (ARRAY_LENGTH($3::integer[], 1) IS NULL OR p.role_id = ANY($3::integer[]))
             AND (ARRAY_LENGTH($4::integer[], 1) IS NULL OR usr.status = ANY($4::integer[]))
@@ -85,7 +86,7 @@ pub async fn select_by_email(
         r#"
         SELECT *
         FROM main.users mu
-        WHERE mu.email = $1
+        WHERE mu.email_address = $1
         "#,
         email,
     )
@@ -121,7 +122,7 @@ pub async fn insert(
     sqlx::query_as!(
         user::User,
         r#"
-        INSERT INTO main.users (username, status, email)
+        INSERT INTO main.users (username, status, email_address)
         VALUES ($1, $2, $3)
         RETURNING *;
         "#,
