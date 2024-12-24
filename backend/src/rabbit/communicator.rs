@@ -10,12 +10,17 @@ pub struct Communicator {
     channel: Option<Channel>,
 }
 
-pub async fn init() -> Result<(Connection, Communicator), lapin::Error> {
-    let addr = env::var("RABBIT_URL").expect("RABBIT_URL must be set");
+pub async fn init() -> Result<(Connection, Communicator), String> {
+    let addr = env::var("RABBIT_URL").map_err(|e| e.to_string())?;
 
-    let connection = Connection::connect(&addr, ConnectionProperties::default()).await?;
+    let connection = Connection::connect(&addr, ConnectionProperties::default())
+        .await
+        .map_err(|e| e.to_string())?;
 
-    let channel = connection.create_channel().await?;
+    let channel = connection
+        .create_channel()
+        .await
+        .map_err(|e| e.to_string())?;
 
     let communicator = Communicator::new(Some(channel));
 
@@ -33,40 +38,46 @@ impl Communicator {
     }
 
     // RabbitMQ 'queues' are distinct from 'exchanges', but I'm calling this declare_queue because it's more generic
-    pub async fn declare_queue(&self, queue: &str) -> Result<(), lapin::Error> {
-        self.channel
-            .as_ref()
-            .expect("Channel not initialized")
-            .exchange_declare(
-                queue,
-                ExchangeKind::Fanout,
-                ExchangeDeclareOptions {
-                    passive: false,
-                    durable: true,
-                    auto_delete: true,
-                    internal: false,
-                    nowait: false,
-                },
-                FieldTable::default(),
-            )
-            .await
+    pub async fn declare_queue(&self, queue: &str) -> Result<(), String> {
+        let chan = match self.channel {
+            Some(ref c) => c,
+            None => return Err("Channel not initialized".to_string()),
+        };
+
+        chan.exchange_declare(
+            queue,
+            ExchangeKind::Fanout,
+            ExchangeDeclareOptions {
+                passive: false,
+                durable: true,
+                auto_delete: true,
+                internal: false,
+                nowait: false,
+            },
+            FieldTable::default(),
+        )
+        .await
+        .map_err(|e| e.to_string())
     }
 
     pub async fn send_message(
         &self,
         queue: &str,
         payload: &[u8],
-    ) -> Result<PublisherConfirm, lapin::Error> {
-        self.channel
-            .as_ref()
-            .expect("Channel not initialized")
-            .basic_publish(
-                queue,
-                "",
-                BasicPublishOptions::default(),
-                payload,
-                BasicProperties::default(),
-            )
-            .await
+    ) -> Result<PublisherConfirm, String> {
+        let chan = match self.channel {
+            Some(ref c) => c,
+            None => return Err("Channel not initialized".to_string()),
+        };
+
+        chan.basic_publish(
+            queue,
+            "",
+            BasicPublishOptions::default(),
+            payload,
+            BasicProperties::default(),
+        )
+        .await
+        .map_err(|e| e.to_string())
     }
 }
