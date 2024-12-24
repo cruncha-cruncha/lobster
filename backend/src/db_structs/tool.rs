@@ -11,6 +11,7 @@ pub type Pictures = Vec<String>;
 pub type Status = i32;
 
 #[derive(Debug, sqlx::FromRow, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Tool {
     pub id: Id,
     pub real_id: Option<RealId>,
