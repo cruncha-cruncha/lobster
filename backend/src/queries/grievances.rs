@@ -104,10 +104,10 @@ pub async fn select(
             LEFT JOIN main.users u1 ON g.author_id = u1.id
             LEFT JOIN main.users u2 ON g.accused_id = u2.id
             WHERE
-                (ARRAY_LENGTH($1::integer[], 1) = 0 OR g.id = ANY($1::integer[]))
-                AND (ARRAY_LENGTH($2::integer[], 1) = 0 OR g.status = ANY($2::integer[]))
-                AND (ARRAY_LENGTH($3::integer[], 1) = 0 OR g.author_id = ANY($3::integer[]))
-                AND (ARRAY_LENGTH($4::integer[], 1) = 0 OR g.accused_id = ANY($4::integer[]))
+                (ARRAY_LENGTH($1::integer[], 1) IS NULL OR g.id = ANY($1::integer[]))
+                AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR g.status = ANY($2::integer[]))
+                AND (ARRAY_LENGTH($3::integer[], 1) IS NULL OR g.author_id = ANY($3::integer[]))
+                AND (ARRAY_LENGTH($4::integer[], 1) IS NULL OR g.accused_id = ANY($4::integer[]))
             ORDER BY g.created_at DESC
             OFFSET $5 LIMIT $6;
             "#,

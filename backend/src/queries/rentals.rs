@@ -139,10 +139,10 @@ pub async fn select(
         SELECT *
         FROM main.rentals mr
         WHERE
-            (ARRAY_LENGTH($1::integer[], 1) = 0 OR mr.id = ANY($1::integer[]))
-            AND (ARRAY_LENGTH($2::integer[], 1) = 0 OR mr.renter_id = ANY($2::integer[]))
-            AND (ARRAY_LENGTH($3::integer[], 1) = 0 OR mr.tool_id = ANY($3::integer[]))
-            AND (ARRAY_LENGTH($4::integer[], 1) = 0 OR mr.status = ANY($4::integer[]))
+            (ARRAY_LENGTH($1::integer[], 1) IS NULL OR mr.id = ANY($1::integer[]))
+            AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR mr.renter_id = ANY($2::integer[]))
+            AND (ARRAY_LENGTH($3::integer[], 1) IS NULL OR mr.tool_id = ANY($3::integer[]))
+            AND (ARRAY_LENGTH($4::integer[], 1) IS NULL OR mr.status = ANY($4::integer[]))
             AND (COALESCE($5, '1970-01-01 00:00:00+00'::timestamp with time zone) <= mr.created_at AND mr.created_at < COALESCE($6, '9999-12-31 23:59:59+00'::timestamp with time zone))
             AND (COALESCE($7, '1970-01-01 00:00:00+00'::timestamp with time zone) <= mr.start_date AND mr.start_date < COALESCE($8, '9999-12-31 23:59:59+00'::timestamp with time zone))
             AND (COALESCE($9, '1970-01-01 00:00:00+00'::timestamp with time zone) <= mr.end_date AND mr.end_date < COALESCE($10, '9999-12-31 23:59:59+00'::timestamp with time zone))
