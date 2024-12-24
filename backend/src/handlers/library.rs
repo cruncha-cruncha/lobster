@@ -11,19 +11,10 @@ use std::sync::Arc;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct PublicLibraryInfo {
-    pub uuid: library_information::Uuid,
-    pub name: library_information::Name,
-    pub max_rental_period: library_information::MaximumRentalPeriod,
-    pub max_future: library_information::MaximumFuture,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct SettableLibraryInfo {
     pub name: Option<library_information::Name>,
-    pub max_rental_period: Option<library_information::MaximumRentalPeriod>,
-    pub max_future: Option<library_information::MaximumFuture>,
+    pub maximum_rental_period: Option<library_information::MaximumRentalPeriod>,
+    pub maximum_future: Option<library_information::MaximumFuture>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -101,7 +92,7 @@ pub async fn get_all_statuses(
 
 pub async fn get_info(
     State(state): State<Arc<AppState>>,
-) -> Result<Json<PublicLibraryInfo>, (StatusCode, String)> {
+) -> Result<Json<library_information::LibraryInformation>, (StatusCode, String)> {
     let info = match library::select_information(&state.db).await {
         Ok(info) => {
             if info.is_none() {
@@ -115,12 +106,7 @@ pub async fn get_info(
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     };
 
-    Ok(Json(PublicLibraryInfo {
-        uuid: info.uuid,
-        name: info.name,
-        max_rental_period: info.maximum_rental_period,
-        max_future: info.maximum_future,
-    }))
+    Ok(Json(info))
 }
 
 pub async fn update_info(
@@ -137,8 +123,8 @@ pub async fn update_info(
 
     match library::update_information(
         payload.name,
-        payload.max_rental_period,
-        payload.max_future,
+        payload.maximum_rental_period,
+        payload.maximum_future,
         &state.db,
     )
     .await

@@ -28,10 +28,10 @@ const libraryInfoSchema = {
   properties: {
     uuid: { type: "string" },
     name: { type: "string" },
-    maxRentalPeriod: { type: "number" },
-    maxFuture: { type: "number" },
+    maximumRentalPeriod: { type: "number" },
+    maximumFuture: { type: "number" },
   },
-  required: ["uuid", "name", "maxRentalPeriod", "maxFuture"],
+  required: ["uuid", "name", "maximumRentalPeriod", "maximumFuture"],
 };
 
 const genericOptionSchema = {
@@ -96,6 +96,30 @@ const filteredUsersSchema = {
   required: ["users"],
 };
 
+const storeInfoSchema = {
+  type: "object",
+  $id: "#storeInfo",
+  properties: {
+    id: { type: "number" },
+    name: { type: "string" },
+    status: { type: "number" },
+    emailAddress: { type: "string" },
+    phoneNumber: { type: "string" },
+    rentalInformation: { type: "string" },
+    otherInformation: { type: "string" },
+  },
+  required: ["id", "name", "status", "emailAddress", "phoneNumber", "rentalInformation", "otherInformation"],
+}
+
+const storeSearchResultsSchema = {
+  type: "object",
+  $id: "#storeSearchResults",
+  properties: {
+    stores: { type: "array", items: { $ref: "#storeInfo" } },
+  },
+  required: ["stores"],
+}
+
 const makeLazyValidator = (schema) => {
   let validate = null;
   return (data) => {
@@ -140,4 +164,11 @@ export const validateUserInfo = makeLazyValidator(userInfoSchema);
 export const validateFilteredUsers = makeLazyValidator([
   userInfoSchema,
   filteredUsersSchema,
+]);
+
+export const validateStoreInfo = makeLazyValidator(storeInfoSchema);
+
+export const validateStoreSearchResults = makeLazyValidator([
+  storeInfoSchema,
+  storeSearchResultsSchema,
 ]);

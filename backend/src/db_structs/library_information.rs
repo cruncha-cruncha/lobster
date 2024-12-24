@@ -6,6 +6,7 @@ pub type MaximumRentalPeriod = i32;
 pub type MaximumFuture = i32;
 
 #[derive(Debug, sqlx::FromRow, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LibraryInformation {
     pub uuid: Uuid,
     pub name: Name,
