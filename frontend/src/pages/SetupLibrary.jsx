@@ -59,6 +59,13 @@ export const useSetupLibrary = () => {
 };
 
 export const PureSetupLibrary = (setupLibrary) => {
+  const {
+    name,
+    setName,
+    onConfirm,
+    canConfirm,
+  } = setupLibrary;
+
   return (
     <div className="flex min-h-full items-center justify-center">
       <div className="mx-2 flex w-full max-w-sm flex-col justify-center">
@@ -71,8 +78,8 @@ export const PureSetupLibrary = (setupLibrary) => {
           <input
             type="text"
             placeholder="Library Name"
-            onChange={(e) => setupLibrary?.setName?.(e)}
-            value={setupLibrary?.name}
+            onChange={setName}
+            value={name}
             className="w-full px-2 py-1 ring-sky-500 transition-shadow focus-visible:outline-none focus-visible:ring-2"
           />
         </div>
@@ -88,15 +95,12 @@ export const PureSetupLibrary = (setupLibrary) => {
           <button
             className={
               "rounded-full px-4 py-2 transition-colors" +
-              (setupLibrary?.canConfirm
-                ? " bg-emerald-200"
-                : " bg-stone-300 text-white") +
-              (setupLibrary?.canConfirm
-                ? " hover:bg-emerald-900 hover:text-white"
-                : "")
+              (canConfirm
+                ? " bg-emerald-200 hover:bg-emerald-900 hover:text-white"
+                : " bg-stone-300 text-white")
             }
-            onClick={(e) => setupLibrary?.onConfirm?.(e)}
-            disabled={!setupLibrary?.canConfirm}
+            onClick={onConfirm}
+            disabled={!canConfirm}
           >
             <span>Confirm</span>
           </button>

@@ -5,7 +5,7 @@ import { Button } from "../components/Button";
 import { TextInput } from "../components/TextInput";
 import { useAuth } from "../state/auth";
 
-const reducer = (state, action) => {
+const infoReducer = (state, action) => {
   switch (action.type) {
     case "name":
       return { ...state, name: action.value };
@@ -26,7 +26,7 @@ export const NewStore = () => {
   const navigate = useNavigate();
   const { accessToken } = useAuth();
 
-  const [info, dispatch] = useReducer(reducer, {
+  const [info, dispatch] = useReducer(infoReducer, {
     name: "",
     emailAddress: "",
     phoneNumber: "",

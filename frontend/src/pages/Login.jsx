@@ -46,13 +46,23 @@ export const useLogin = () => {
 };
 
 export const PureLogin = (login) => {
+  const {
+    modal,
+    libraryName,
+    email,
+    setEmail,
+    onLogin,
+    canLogin,
+    loginLoading,
+  } = login;
+
   return (
     <>
-      <PureInfoModal {...login?.modal} />
+      <PureInfoModal {...modal} />
       <div className="flex min-h-full items-stretch justify-center">
         <div className="relative flex w-full max-w-5xl justify-center">
           <div className="absolute left-0 top-0 p-2">
-            <h1>{login?.libraryName}</h1>
+            <h1>{libraryName}</h1>
           </div>
           <div className="flex w-full max-w-sm flex-col justify-center">
             <div className="p-2">
@@ -61,18 +71,18 @@ export const PureLogin = (login) => {
                 <div className="my-2">
                   <TextInput
                     placeholder="email address"
-                    value={login?.email}
-                    onChange={login?.setEmail}
-                    disabled={login?.loginLoading}
+                    value={email}
+                    onChange={setEmail}
+                    disabled={loginLoading}
                   />
                 </div>
                 <div className="mt-4 flex justify-end">
                   <Button
                     color="green"
                     text="Login"
-                    disabled={!login?.canLogin}
-                    onClick={login?.onLogin}
-                    isLoading={login?.loginLoading}
+                    disabled={!canLogin}
+                    onClick={onLogin}
+                    isLoading={loginLoading}
                   />
                 </div>
               </form>

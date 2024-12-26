@@ -25,7 +25,7 @@ export const useStores = () => {
   const { storeStatuses } = useConstants();
   const { accessToken } = useAuth();
 
-  const [stores, setStores] = useState([]);
+  const [storeList, setStoreList] = useState([]);
   const [params, dispatch] = useReducer(paramsReducer, {
     page: 1,
     status: "0",
@@ -66,12 +66,12 @@ export const useStores = () => {
         accessToken,
       })
       .then((data) => {
-        setStores(data.stores);
+        setStoreList(data.stores);
       });
   }, [params, debouncedParams, accessToken]);
 
   return {
-    stores,
+    storeList,
     storeStatuses,
     params,
     debouncedParams,
@@ -85,27 +85,40 @@ export const useStores = () => {
 };
 
 export const PureStores = (stores) => {
+  const {
+    goToNewStore,
+    goToStore,
+    prevPage,
+    nextPage,
+    params,
+    debouncedParams,
+    setName,
+    setStatus,
+    storeStatuses,
+    storeList,
+  } = stores;
+
   return (
     <div>
       <h1>Stores</h1>
       <Button
-        onClick={(e) => stores?.goToNewStore?.(e)}
+        onClick={goToNewStore}
         variant="blue"
         text="New Store"
       />
       <TextInput
-        value={stores?.params?.name}
-        onChange={(e) => stores?.setName?.(e)}
+        value={params.name}
+        onChange={setName}
         placeholder="Some Store"
         label="Store Name"
       />
       <label>Status</label>
       <select
-        onChange={(e) => stores?.setStatus?.(e)}
-        value={stores?.params?.status}
+        onChange={setStatus}
+        value={params.status}
       >
         <option value="0">any</option>
-        {(stores?.storeStatuses || []).map((status) => (
+        {storeStatuses.map((status) => (
           <option key={status.id} value={status.id}>
             {status.name}
           </option>
@@ -113,7 +126,7 @@ export const PureStores = (stores) => {
       </select>
       <div>
         <ul>
-          {(stores?.stores || []).map((store) => (
+          {storeList.map((store) => (
             <li key={store.id} onClick={() => stores?.goToStore?.(store.id)}>
               <h2>{store.name}</h2>
               <p>{store.location}</p>
@@ -128,13 +141,13 @@ export const PureStores = (stores) => {
       </div>
       <div className="flex">
         <Button
-          onClick={(e) => stores?.prevPage?.(e)}
+          onClick={prevPage}
           variant="blue"
           text="Previous"
         />
-        <span>Page {stores?.debouncedParams?.page}</span>
+        <span>Page {debouncedParams.page}</span>
         <Button
-          onClick={(e) => stores?.nextPage?.(e)}
+          onClick={nextPage}
           variant="blue"
           text="Next"
         />

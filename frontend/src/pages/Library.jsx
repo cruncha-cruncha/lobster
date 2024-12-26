@@ -78,25 +78,36 @@ export const useLibrary = () => {
 };
 
 export const PureLibrary = (library) => {
+  const {
+    uuid,
+    info,
+    setName,
+    setMaximumRentalPeriod,
+    setMaximumFuture,
+    canSave,
+    save,
+    isLoading,
+  } = library;
+
   return (
     <div>
       <h2>Library Settings</h2>
-      <p>(id: "{library?.uuid}")</p>
+      <p>(id: "{uuid}")</p>
       <form>
         <fieldset className="my-4">
           <TextInput
             label="Name"
             placeholder="Library Name"
-            value={library?.info?.name}
-            onChange={(e) => library?.setName?.(e)}
+            value={info.name}
+            onChange={setName}
           />
         </fieldset>
         <fieldset className="my-4">
           <TextInput
             label="Max Rental Period"
             placeholder="hours"
-            value={library?.info?.maximumRentalPeriod}
-            onChange={(e) => library?.setMaximumRentalPeriod?.(e)}
+            value={info.maximumRentalPeriod}
+            onChange={setMaximumRentalPeriod}
           />
           <p>The longest time any tool can be rented, in hours.</p>
         </fieldset>
@@ -104,18 +115,18 @@ export const PureLibrary = (library) => {
           <TextInput
             label="Max Future Scheduled time"
             placeholder="days"
-            value={library?.info?.maximumFuture}
-            onChange={(e) => library?.setMaximumFuture?.(e)}
+            value={info.maximumFuture}
+            onChange={setMaximumFuture}
             />
           <p>The furthest in future someone can enter a rental, in days.</p>
         </fieldset>
 
         <div className="mt-4 flex">
           <Button
-            onClick={library?.save}
-            disabled={!library?.canSave}
+            onClick={save}
+            disabled={!canSave}
             text="Save"
-            loading={library?.isLoading}
+            loading={isLoading}
           />
         </div>
       </form>
