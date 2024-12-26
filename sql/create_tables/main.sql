@@ -14,6 +14,7 @@ CREATE TABLE main.users (
     status INTEGER NOT NULL,
     email_address TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
+    code TEXT NOT NULL,
     PRIMARY KEY (id),
     UNIQUE (email),
     CONSTRAINT fk_status

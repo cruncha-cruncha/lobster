@@ -85,15 +85,22 @@ pub async fn get_by_id(
     Path(user_id): Path<i32>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<user::User>, (StatusCode, String)> {
+    let claims_user_id = claims.subject_as_user_id().unwrap_or(user_id);
+
     let can_see_email = claims.is_user_admin()
         || claims.is_store_admin()
-        || claims.subject_as_user_id().unwrap_or(-1) == user_id;
+        || claims_user_id == user_id;
+
+    let can_see_code = claims_user_id == user_id;
 
     match users::select_by_id(user_id, &state.db).await {
         Ok(user) => match user {
             Some(mut u) => {
                 if !can_see_email {
                     u.email_address = String::new();
+                }
+                if !can_see_code {
+                    u.code = String::new();
                 }
 
                 Ok(Json(u))
