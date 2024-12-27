@@ -7,6 +7,7 @@ pub type EmailAddress = String;
 pub type PhoneNumber = String;
 pub type RentalInformation = String;
 pub type OtherInformation = String;
+pub type Code = String;
 pub type CreatedAt = time::OffsetDateTime;
 
 #[derive(Debug, sqlx::FromRow, Serialize, Deserialize)]
@@ -19,5 +20,6 @@ pub struct Store {
     pub phone_number: Option<PhoneNumber>,
     pub rental_information: Option<RentalInformation>,
     pub other_information: Option<OtherInformation>,
+    pub code: Code,
     pub created_at: CreatedAt,
 }

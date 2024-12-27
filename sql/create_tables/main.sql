@@ -51,6 +51,7 @@ CREATE TABLE main.stores (
     phone_number TEXT,
     rental_information TEXT,
     other_information TEXT,
+    code TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     PRIMARY KEY (id),
     UNIQUE (name),
