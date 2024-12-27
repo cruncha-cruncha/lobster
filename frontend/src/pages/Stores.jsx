@@ -5,6 +5,7 @@ import { useAuth } from "../state/auth";
 import * as endpoints from "../api/endpoints";
 import { Button } from "../components/Button";
 import { TextInput } from "../components/TextInput";
+import { Select } from "../components/Select";
 import { useDebounce } from "../components/useDebounce";
 
 const paramsReducer = (state, action) => {
@@ -72,7 +73,7 @@ export const useStores = () => {
 
   return {
     storeList,
-    storeStatuses,
+    storeStatuses: [...storeStatuses, { id: "0", name: "Any" }],
     params,
     debouncedParams,
     goToNewStore,
@@ -113,17 +114,12 @@ export const PureStores = (stores) => {
         label="Store Name"
       />
       <label>Status</label>
-      <select
-        onChange={setStatus}
+      <Select 
+        label="Status"
+        options={storeStatuses}
         value={params.status}
-      >
-        <option value="0">any</option>
-        {storeStatuses.map((status) => (
-          <option key={status.id} value={status.id}>
-            {status.name}
-          </option>
-        ))}
-      </select>
+        onChange={setStatus}
+      />
       <div>
         <ul>
           {storeList.map((store) => (

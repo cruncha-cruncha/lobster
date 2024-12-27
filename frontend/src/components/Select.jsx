@@ -1,0 +1,17 @@
+// expects each option to have an 'id' and 'name' property
+export const Select = ({ label, options, value, onChange, disabled }) => {
+  return (
+    <div>
+      <label>{label}</label>
+      <div className="border-2 border-stone-800">
+        <select value={value} onChange={onChange} disabled={disabled}>
+          {options.map((option) => (
+            <option key={option.id} value={option.id}>
+              {option.name}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+};
