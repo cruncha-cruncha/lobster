@@ -27,7 +27,7 @@ export const useStores = () => {
   const { accessToken } = useAuth();
 
   const [storeList, setStoreList] = useState([]);
-  const [params, dispatch] = useReducer(paramsReducer, {
+  const [params, paramsDispatch] = useReducer(paramsReducer, {
     page: 1,
     status: "0",
     name: "",
@@ -43,12 +43,12 @@ export const useStores = () => {
 
   const prevPage = () => {
     if (params.page > 1) {
-      dispatch({ type: "page", value: params.page - 1 });
+      paramsDispatch({ type: "page", value: params.page - 1 });
     }
   };
-  const nextPage = () => dispatch({ type: "page", value: params.page + 1 });
-  const setStatus = (e) => dispatch({ type: "status", value: e.target.value });
-  const setName = (e) => dispatch({ type: "name", value: e.target.value });
+  const nextPage = () => paramsDispatch({ type: "page", value: params.page + 1 });
+  const setStatus = (e) => paramsDispatch({ type: "status", value: e.target.value });
+  const setName = (e) => paramsDispatch({ type: "name", value: e.target.value });
 
   const debouncedParams = useDebounce(params, 200);
 
@@ -113,7 +113,6 @@ export const PureStores = (stores) => {
         placeholder="Some Store"
         label="Store Name"
       />
-      <label>Status</label>
       <Select 
         label="Status"
         options={storeStatuses}

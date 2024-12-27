@@ -81,10 +81,10 @@ const userInfoSchema = {
     id: { type: "number" },
     username: { type: "string" },
     status: { type: "number" },
-    email: { type: "string" },
+    emailAddress: { type: "string" },
     createdAt: { type: "string" },
   },
-  required: ["id", "username", "status", "email", "created_at"],
+  required: ["id", "username", "status", "emailAddress", "createdAt"],
 };
 
 const filteredUsersSchema = {
