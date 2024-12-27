@@ -35,13 +35,6 @@ CREATE TABLE fixed.tool_statuses (
     UNIQUE (name)
 );
 
-CREATE TABLE fixed.rental_statuses (
-    id INTEGER GENERATED ALWAYS AS IDENTITY,
-    name TEXT NOT NULL,
-    PRIMARY KEY (id),
-    UNIQUE (name)
-);
-
 CREATE TABLE fixed.grievance_statuses (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     name TEXT NOT NULL,

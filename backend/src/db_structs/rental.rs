@@ -9,7 +9,6 @@ pub type StartDate = time::OffsetDateTime;
 pub type EndDate = time::OffsetDateTime;
 pub type PickupDate = time::OffsetDateTime;
 pub type ReturnDate = time::OffsetDateTime;
-pub type Status = i32;
 
 #[derive(Debug, sqlx::FromRow, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -22,5 +21,4 @@ pub struct Rental {
     pub end_date: Option<EndDate>,
     pub pickup_date: Option<PickupDate>,
     pub return_date: Option<ReturnDate>,
-    pub status: Status,
 }

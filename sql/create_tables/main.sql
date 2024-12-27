@@ -103,16 +103,9 @@ CREATE TABLE main.rentals (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     tool_id INTEGER NOT NULL,
     renter_id INTEGER NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     start_date TIMESTAMPTZ NOT NULL,
     end_date TIMESTAMPTZ,
-    pickup_date TIMESTAMPTZ,
-    return_date TIMESTAMPTZ,
-    status INTEGER NOT NULL,
-    PRIMARY KEY (id),
-    CONSTRAINT fk_status
-      FOREIGN KEY(status)
-        REFERENCES fixed.rental_statuses(id)
+    PRIMARY KEY (id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_rentals_tool_id ON main.rentals USING btree(tool_id);
