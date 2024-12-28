@@ -7,15 +7,16 @@ import { Button } from "../components/Button";
 import { TextInput } from "../components/TextInput";
 import { Select } from "../components/Select";
 import { useDebounce } from "../components/useDebounce";
+import { PrevNext } from "../components/PrevNext";
 
 const paramsReducer = (state, action) => {
   switch (action.type) {
     case "page":
       return { ...state, page: action.value };
     case "status":
-      return { ...state, status: action.value };
+      return { ...state, status: action.value, page: 1 };
     case "name":
-      return { ...state, name: action.value };
+      return { ...state, name: action.value, page: 1 };
     default:
       return state;
   }
@@ -46,9 +47,12 @@ export const useStores = () => {
       paramsDispatch({ type: "page", value: params.page - 1 });
     }
   };
-  const nextPage = () => paramsDispatch({ type: "page", value: params.page + 1 });
-  const setStatus = (e) => paramsDispatch({ type: "status", value: e.target.value });
-  const setName = (e) => paramsDispatch({ type: "name", value: e.target.value });
+  const nextPage = () =>
+    paramsDispatch({ type: "page", value: params.page + 1 });
+  const setStatus = (e) =>
+    paramsDispatch({ type: "status", value: e.target.value });
+  const setName = (e) =>
+    paramsDispatch({ type: "name", value: e.target.value });
 
   const debouncedParams = useDebounce(params, 200);
 
@@ -102,18 +106,14 @@ export const PureStores = (stores) => {
   return (
     <div>
       <h1>Stores</h1>
-      <Button
-        onClick={goToNewStore}
-        variant="blue"
-        text="New Store"
-      />
+      <Button onClick={goToNewStore} variant="blue" text="New Store" />
       <TextInput
         value={params.name}
         onChange={setName}
         placeholder="Some Store"
         label="Store Name"
       />
-      <Select 
+      <Select
         label="Status"
         options={storeStatuses}
         value={params.status}
@@ -134,19 +134,11 @@ export const PureStores = (stores) => {
           ))}
         </ul>
       </div>
-      <div className="flex">
-        <Button
-          onClick={prevPage}
-          variant="blue"
-          text="Previous"
-        />
-        <span>Page {debouncedParams.page}</span>
-        <Button
-          onClick={nextPage}
-          variant="blue"
-          text="Next"
-        />
-      </div>
+      <PrevNext
+        prev={prevPage}
+        next={nextPage}
+        pageNumber={debouncedParams.page}
+      />
     </div>
   );
 };

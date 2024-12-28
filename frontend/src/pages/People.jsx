@@ -2,35 +2,30 @@ import { useState, useReducer, useEffect } from "react";
 import { useConstants } from "../state/constants";
 import { TextInput } from "../components/TextInput";
 import { Select } from "../components/Select";
+import { Button } from "../components/Button";
 import { useAuth } from "../state/auth";
 import { useDebounce } from "../components/useDebounce";
 import * as endpoints from "../api/endpoints";
+import { PrevNext } from "../components/PrevNext";
 
 const paramsReducer = (state, action) => {
   switch (action.type) {
     case "page":
       return { ...state, page: action.value };
     case "status":
-      return { ...state, status: action.value };
+      return { ...state, status: action.value, page: 1 };
     case "searchTerm":
-      return { ...state, searchTerm: action.value };
+      return { ...state, searchTerm: action.value, page: 1 };
     case "role":
-      return { ...state, role: action.value };
+      return { ...state, role: action.value, page: 1 };
     default:
       return state;
   }
 };
 
 export const People = () => {
-  // filters
-  // search
-  // pagination
-  // username, email, roles, store, created_at, status
-  // link to info (edit)
-
   const { roles, usersStatuses } = useConstants();
   const { accessToken } = useAuth();
-
   const [peopleList, setPeopleList] = useState([]);
   const [params, paramsDispatch] = useReducer(paramsReducer, {
     searchTerm: "",
@@ -65,7 +60,8 @@ export const People = () => {
       .getUsers({
         params: {
           term: params.searchTerm,
-          storeIds: params.storeId === "0" ? "" : [parseInt(params.storeId, 10)],
+          storeIds:
+            params.storeId === "0" ? "" : [parseInt(params.storeId, 10)],
           statuses: params.status === "0" ? "" : [parseInt(params.status, 10)],
           roles: params.role === "0" ? "" : [parseInt(params.role, 10)],
           page: params.page,
@@ -104,10 +100,14 @@ export const People = () => {
         <p>results</p>
         <ul>
           {peopleList.map((person) => (
-            <div key={person.id}><p>{person.username}</p><p>{person.emailAddress}</p></div>
+            <div key={person.id}>
+              <p>{person.username}</p>
+              <p>{person.emailAddress}</p>
+            </div>
           ))}
         </ul>
       </div>
+      <PrevNext prev={prevPage} next={nextPage} pageNumber={debouncedParams.page} />
     </div>
   );
 };
