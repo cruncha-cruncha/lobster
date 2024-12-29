@@ -49,7 +49,7 @@ pub async fn create_new(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<CreateStoreData>,
 ) -> Result<Json<store::Store>, (StatusCode, String)> {
-    let code = common::rnd_code_str();
+    let code = common::rnd_code_str("s");
     match stores::insert(
         payload.name,
         store::StoreStatus::Pending as i32,
