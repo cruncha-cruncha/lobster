@@ -7,7 +7,7 @@ pub type Description = String;
 
 #[derive(Debug, sqlx::FromRow, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct RentalCategory {
+pub struct ToolCategory {
     pub id: Id,
     pub name: Name,
     pub synonyms: Synonyms,

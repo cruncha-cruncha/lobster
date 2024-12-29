@@ -10,6 +10,13 @@ pub type OtherInformation = String;
 pub type Code = String;
 pub type CreatedAt = time::OffsetDateTime;
 
+pub enum StoreStatus {
+    Active = 1,
+    Pending = 2,
+    Closed = 3,
+    Banned = 4,
+}
+
 #[derive(Debug, sqlx::FromRow, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Store {

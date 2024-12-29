@@ -1,2 +1,2 @@
-INSERT INTO main.rental_categories (name, description, synonyms)
+INSERT INTO main.tool_categories (name, description, synonyms)
 VALUES ('all', 'All', '{}');

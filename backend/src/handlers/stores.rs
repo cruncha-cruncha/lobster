@@ -51,11 +51,12 @@ pub async fn create_new(
 ) -> Result<Json<store::Store>, (StatusCode, String)> {
     match stores::insert(
         payload.name,
-        3, // pending
+        store::StoreStatus::Pending as i32,
         payload.email_address,
         payload.phone_number,
         payload.rental_information,
         payload.other_information,
+        "code".to_string(),
         &state.db,
     )
     .await

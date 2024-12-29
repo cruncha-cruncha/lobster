@@ -7,6 +7,11 @@ pub type RoleId = i32;
 pub type StoreId = store::Id;
 pub type Status = i32;
 
+pub enum PermissionStatus {
+    Active = 1,
+    Revoked = 2,
+}
+
 #[derive(Debug, sqlx::FromRow, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Permission {

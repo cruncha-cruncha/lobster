@@ -3,7 +3,7 @@ export const Select = ({ label, options, value, onChange, disabled }) => {
   return (
     <div>
       <label>{label}</label>
-      <div className="border-y-2 border-stone-800">
+      <div className="border-2 border-stone-800">
         <select
           value={value}
           onChange={onChange}

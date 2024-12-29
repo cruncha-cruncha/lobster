@@ -1,4 +1,4 @@
-CREATE SCHEMA main;
+CREATE SCHEMA IF NOT EXISTS main;
 
 CREATE TABLE main.library_information (
     uuid UUID DEFAULT gen_random_uuid() NOT NULL,
@@ -16,13 +16,13 @@ CREATE TABLE main.users (
     created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     code TEXT NOT NULL,
     PRIMARY KEY (id),
-    UNIQUE (email),
+    UNIQUE (email_address),
     CONSTRAINT fk_status
       FOREIGN KEY(status)
         REFERENCES fixed.user_statuses(id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_users_email ON main.users USING btree(email);
+CREATE INDEX IF NOT EXISTS idx_users_email ON main.users USING btree(email_address);
 
 CREATE TABLE main.permissions (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
@@ -60,7 +60,7 @@ CREATE TABLE main.stores (
         REFERENCES fixed.store_statuses(id)
 );
 
-CREATE TABLE main.rental_categories (
+CREATE TABLE main.tool_categories (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     name TEXT NOT NULL,
     synonyms TEXT[] NOT NULL,
@@ -69,16 +69,16 @@ CREATE TABLE main.rental_categories (
     PRIMARY KEY (id)
 );
 
-CREATE TABLE main.rental_category_relationships (
+CREATE TABLE main.tool_category_relationships (
     parent_id INTEGER NOT NULL,
     child_id INTEGER NOT NULL,
     PRIMARY KEY (parent_id, child_id),
     CONSTRAINT fk_parent
       FOREIGN KEY(parent_id)
-        REFERENCES main.rental_categories(id),
+        REFERENCES main.tool_categories(id),
     CONSTRAINT fk_child
       FOREIGN KEY(child_id)
-        REFERENCES main.rental_categories(id)
+        REFERENCES main.tool_categories(id)
 );
 
 CREATE TABLE main.tools (

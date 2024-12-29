@@ -61,13 +61,14 @@ pub async fn insert(
     phone_number: store::PhoneNumber,
     rental_information: store::RentalInformation,
     other_information: store::OtherInformation,
+    code: store::Code,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<store::Store, String> {
     sqlx::query_as!(
         store::Store,
         r#"
-        INSERT INTO main.stores (name, status, email_address, phone_number, rental_information, other_information)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO main.stores (name, status, email_address, phone_number, rental_information, other_information, code)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING *;
         "#,
         name,
@@ -76,6 +77,7 @@ pub async fn insert(
         phone_number,
         rental_information,
         other_information,
+        code,
     )
     .fetch_one(db)
     .await

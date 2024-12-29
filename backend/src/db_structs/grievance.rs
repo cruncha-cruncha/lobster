@@ -8,6 +8,11 @@ pub type Description = String;
 pub type CreatedAt = time::OffsetDateTime;
 pub type Status = i32;
 
+pub enum GrievanceStatus {
+    Open = 1,
+    Closed = 2,
+}
+
 #[derive(Debug, sqlx::FromRow, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Grievance {

@@ -10,6 +10,16 @@ pub type Description = String;
 pub type Pictures = Vec<String>;
 pub type Status = i32;
 
+pub enum ToolStatus {
+    Available = 1,
+    Rented = 2,
+    Maintenance = 3,
+    Broken = 4,
+    Lost = 5,
+    Stolen = 6,
+    Retired = 7,
+}
+
 #[derive(Debug, sqlx::FromRow, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Tool {

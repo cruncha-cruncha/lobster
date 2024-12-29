@@ -7,6 +7,12 @@ pub type Code = String;
 pub type EmailAddress = String;
 pub type CreatedAt = time::OffsetDateTime;
 
+pub enum UserStatus {
+    Active = 1,
+    Pending = 2,
+    Banned = 3,
+}
+
 #[derive(Debug, sqlx::FromRow, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct User {

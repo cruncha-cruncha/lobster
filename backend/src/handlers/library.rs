@@ -29,7 +29,6 @@ pub struct AllStatuses {
     pub stores: Vec<common::Status>,
     pub users: Vec<common::Status>,
     pub tools: Vec<common::Status>,
-    pub rentals: Vec<common::Status>,
     pub grievances: Vec<common::Status>,
     pub permissions: Vec<common::Status>,
 }
@@ -57,7 +56,6 @@ pub async fn get_all_statuses(
     let store_future = crate::queries::stores::select_statuses(&state.db);
     let user_future = crate::queries::users::select_statuses(&state.db);
     let tool_future = crate::queries::tools::select_statuses(&state.db);
-    let rental_future = crate::queries::rentals::select_statuses(&state.db);
     let grievance_future = crate::queries::grievances::select_statuses(&state.db);
     let permission_future = crate::queries::permissions::select_statuses(&state.db);
 
@@ -65,14 +63,12 @@ pub async fn get_all_statuses(
         store_statuses,
         user_statuses,
         tool_statuses,
-        rental_statuses,
         grievance_statuses,
         permission_statuses,
     ) = match tokio::try_join!(
         store_future,
         user_future,
         tool_future,
-        rental_future,
         grievance_future,
         permission_future,
     ) {
@@ -84,7 +80,6 @@ pub async fn get_all_statuses(
         stores: store_statuses,
         users: user_statuses,
         tools: tool_statuses,
-        rentals: rental_statuses,
         grievances: grievance_statuses,
         permissions: permission_statuses,
     }))

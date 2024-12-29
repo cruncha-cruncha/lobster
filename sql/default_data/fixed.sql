@@ -5,7 +5,7 @@ INSERT INTO fixed.user_statuses (name)
 VALUES ('active'), ('pending'), ('banned');
 
 INSERT INTO fixed.permission_statuses (name)
-VALUES ('active'), ('inactive');
+VALUES ('active'), ('revoked');
 
 INSERT INTO fixed.store_statuses (name)
 VALUES ('active'), ('pending'), ('closed'), ('banned');

@@ -116,18 +116,20 @@ pub async fn insert(
     username: &str,
     status: i32,
     email: &str,
+    code: &str,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<user::User, String> {
     sqlx::query_as!(
         user::User,
         r#"
-        INSERT INTO main.users (username, status, email_address)
-        VALUES ($1, $2, $3)
+        INSERT INTO main.users (username, status, email_address, code)
+        VALUES ($1, $2, $3, $4)
         RETURNING *;
         "#,
         username,
         status,
         email,
+        code,
     )
     .fetch_one(db)
     .await
