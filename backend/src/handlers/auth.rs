@@ -30,7 +30,9 @@ pub async fn login(
             if u.is_some() {
                 u.unwrap().id
             } else {
-                match users::insert("random", 1, &payload.email, "code", &state.db).await {
+                let username = crate::usernames::rnd_username();
+                let code = crate::common::rnd_code_str();
+                match users::insert(&username, 1, &payload.email, &code, &state.db).await {
                     Ok(new_user) => {
                         let id = new_user.id;
                         match users::count(&state.db).await {

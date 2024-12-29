@@ -1,4 +1,5 @@
 use crate::db_structs::user;
+use rand::Rng;
 
 pub const PAGE_SIZE: i64 = 20;
 
@@ -20,7 +21,7 @@ pub struct IdOnly {
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct StatusOnly {  
+pub struct StatusOnly {
     pub status: i32,
 }
 
@@ -41,3 +42,12 @@ pub struct DateBetween {
     pub start: Option<time::OffsetDateTime>,
     pub end: Option<time::OffsetDateTime>,
 }
+
+pub fn rnd_code_str() -> String {
+    const CHARSET: &[u8] = b"0123456789ACEFHJKLNPRTUWXY";
+    let mut rng = rand::thread_rng();
+    let one_char = || CHARSET[rng.gen_range(0..CHARSET.len())] as char;
+    let random_str = std::iter::repeat_with(one_char).take(8).collect::<String>();
+    format!("{}-{}", &random_str[..4], &random_str[4..])
+}
+

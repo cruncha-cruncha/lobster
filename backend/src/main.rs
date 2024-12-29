@@ -1,5 +1,6 @@
 mod auth;
 mod common;
+mod usernames;
 mod db_structs;
 mod handlers;
 mod queries;
