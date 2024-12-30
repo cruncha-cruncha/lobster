@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct SelectParams {
     pub ids: Vec<store::Id>,
     pub statuses: Vec<store::Status>,
-    pub name: String,
+    pub term: String,
     pub offset: i64,
     pub limit: i64,
 }
@@ -39,13 +39,13 @@ pub async fn select(
         WHERE
             (ARRAY_LENGTH($1::integer[], 1) IS NULL OR ms.id = ANY($1::integer[]))
             AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR ms.status = ANY($2::integer[]))
-            AND ($3::text = '' OR ms.name = $3::text)
+            AND ($3::text = '' OR $3::text <% (COALESCE(ms.name, '') || ' ' || COALESCE(ms.email_address, '') || ' ' || COALESCE(ms.phone_number, '')))
         ORDER BY ms.id
         OFFSET $4 LIMIT $5;
         "#,
         &params.ids,
         &params.statuses,
-        params.name,
+        params.term,
         params.offset,
         params.limit,
     )

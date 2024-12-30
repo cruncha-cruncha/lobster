@@ -15,8 +15,8 @@ const paramsReducer = (state, action) => {
       return { ...state, page: action.value };
     case "status":
       return { ...state, status: action.value, page: 1 };
-    case "name":
-      return { ...state, name: action.value, page: 1 };
+    case "term":
+      return { ...state, term: action.value, page: 1 };
     default:
       return state;
   }
@@ -31,7 +31,7 @@ export const useStores = () => {
   const [params, paramsDispatch] = useReducer(paramsReducer, {
     page: 1,
     status: "0",
-    name: "",
+    term: "",
   });
 
   const goToNewStore = async () => {
@@ -51,8 +51,8 @@ export const useStores = () => {
     paramsDispatch({ type: "page", value: params.page + 1 });
   const setStatus = (e) =>
     paramsDispatch({ type: "status", value: e.target.value });
-  const setName = (e) =>
-    paramsDispatch({ type: "name", value: e.target.value });
+  const setTerm = (e) =>
+    paramsDispatch({ type: "term", value: e.target.value });
 
   const debouncedParams = useDebounce(params, 200);
 
@@ -66,7 +66,7 @@ export const useStores = () => {
         params: {
           page: params.page,
           statuses: params.status === "0" ? "" : [parseInt(params.status, 10)],
-          name: params.name,
+          term: params.term,
         },
         accessToken,
       })
@@ -85,7 +85,7 @@ export const useStores = () => {
     prevPage,
     nextPage,
     setStatus,
-    setName,
+    setTerm,
   };
 };
 
@@ -97,7 +97,7 @@ export const PureStores = (stores) => {
     nextPage,
     params,
     debouncedParams,
-    setName,
+    setTerm,
     setStatus,
     storeStatuses,
     storeList,
@@ -108,8 +108,8 @@ export const PureStores = (stores) => {
       <h1>Stores</h1>
       <Button onClick={goToNewStore} variant="blue" text="New Store" />
       <TextInput
-        value={params.name}
-        onChange={setName}
+        value={params.term}
+        onChange={setTerm}
         placeholder="Some Store"
         label="Store Name"
       />

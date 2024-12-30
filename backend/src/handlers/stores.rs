@@ -34,7 +34,7 @@ pub struct SettableStoreData {
 #[serde(rename_all = "camelCase")]
 pub struct FilterParams {
     pub statuses: Option<Vec<store::Status>>,
-    pub name: Option<String>,
+    pub term: Option<String>,
     pub page: Option<i64>,
 }
 
@@ -150,7 +150,7 @@ pub async fn get_by_id(
         stores::SelectParams {
             ids: vec![store_id],
             statuses: vec![],
-            name: String::new(),
+            term: String::new(),
             offset: 0,
             limit: 1,
         },
@@ -180,7 +180,7 @@ pub async fn get_filtered(
         stores::SelectParams {
             ids: vec![],
             statuses: params.statuses.unwrap_or_default(),
-            name: params.name.unwrap_or_default(),
+            term: params.term.unwrap_or_default(),
             offset: offset,
             limit: limit,
         },

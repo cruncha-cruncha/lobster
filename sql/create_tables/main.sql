@@ -124,3 +124,14 @@ CREATE TABLE main.grievances (
       FOREIGN KEY(status)
         REFERENCES fixed.grievance_statuses(id)
 );
+
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+CREATE INDEX IF NOT EXISTS idx_fuzzy_users ON main.users
+  USING gist(COALESCE(username, '') gist_trgm_ops(siglen=256));
+
+CREATE INDEX IF NOT EXISTS idx_fuzzy_users_with_email ON main.users
+  USING gist((COALESCE(username, '') || ' ' || COALESCE(email_address, '')) gist_trgm_ops(siglen=256));
+
+CREATE INDEX IF NOT EXISTS idx_fuzzy_stores ON main.stores
+  USING gist((COALESCE(name, '') || ' ' || COALESCE(email_address, '') || ' ' || COALESCE(phone_number, '')) gist_trgm_ops(siglen=256));

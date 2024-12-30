@@ -116,29 +116,27 @@ pub async fn get_filtered(
     Query(params): Query<FilterParams>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<FilteredResponse>, (StatusCode, String)> {
+    let can_see_emails = claims.is_user_admin() || claims.is_store_admin();
     let (offset, limit) = common::calculate_offset_limit(params.page.unwrap_or_default());
-
-    let mut users = match users::select(
-        SelectParams {
-            term: params.term.unwrap_or_default(),
-            store_ids: params.store_ids.unwrap_or_default(),
-            statuses: params.statuses.unwrap_or_default(),
-            roles: params.roles.unwrap_or_default(),
-            created_at: params.created_at.unwrap_or_default(),
-            offset: offset,
-            limit: limit,
-        },
-        &state.db,
-    )
-    .await
-    {
-        Ok(users) => users,
-        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
+    let params = SelectParams {
+        term: params.term.unwrap_or_default(),
+        store_ids: params.store_ids.unwrap_or_default(),
+        statuses: params.statuses.unwrap_or_default(),
+        roles: params.roles.unwrap_or_default(),
+        created_at: params.created_at.unwrap_or_default(),
+        offset: offset,
+        limit: limit,
     };
 
-    if !claims.is_user_admin() && !claims.is_store_admin() {
-        users.iter_mut().for_each(|u| u.email_address = String::new());
+    if can_see_emails {
+        users::select_with_email(params, &state.db)
+            .await
+            .map(|users| Json(FilteredResponse { users }))
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
+    } else {
+        users::select(params, &state.db)
+            .await
+            .map(|users| Json(FilteredResponse { users }))
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
     }
-
-    Ok(Json(FilteredResponse { users }))
 }
