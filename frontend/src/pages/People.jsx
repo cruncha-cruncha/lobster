@@ -2,7 +2,6 @@ import { useState, useReducer, useEffect } from "react";
 import { useConstants } from "../state/constants";
 import { TextInput } from "../components/TextInput";
 import { Select } from "../components/Select";
-import { Button } from "../components/Button";
 import { useAuth } from "../state/auth";
 import { useDebounce } from "../components/useDebounce";
 import * as endpoints from "../api/endpoints";
@@ -23,7 +22,7 @@ const paramsReducer = (state, action) => {
   }
 };
 
-export const People = () => {
+export const usePeople = () => {
   const { roles, usersStatuses } = useConstants();
   const { accessToken } = useAuth();
   const [peopleList, setPeopleList] = useState([]);
@@ -73,6 +72,34 @@ export const People = () => {
       });
   }, [params, debouncedParams, accessToken]);
 
+  return {
+    roles: [...roles, { id: "0", name: "Any" }],
+    usersStatuses,
+    params,
+    debouncedParams,
+    peopleList,
+    prevPage,
+    nextPage,
+    setStatus,
+    setSearchTerm,
+    setRole,
+  };
+};
+
+export const PurePeople = (people) => {
+  const {
+    roles,
+    usersStatuses,
+    params,
+    debouncedParams,
+    peopleList,
+    prevPage,
+    nextPage,
+    setStatus,
+    setSearchTerm,
+    setRole,
+  } = people;
+
   return (
     <div>
       <h1>People</h1>
@@ -97,7 +124,6 @@ export const People = () => {
         />
       </div>
       <div>
-        <p>results</p>
         <ul>
           {peopleList.map((person) => (
             <div key={person.id}>
@@ -111,3 +137,8 @@ export const People = () => {
     </div>
   );
 };
+
+export const People = () => {
+  const people = usePeople();
+  return <PurePeople {...people} />;
+}
