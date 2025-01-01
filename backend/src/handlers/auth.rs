@@ -31,7 +31,7 @@ pub async fn login(
                 u.unwrap().id
             } else {
                 let username = crate::usernames::rnd_username();
-                let code = crate::common::rnd_code_str("u");
+                let code = crate::common::rnd_code_str("");
                 match users::insert(&username, 1, &payload.email, &code, &state.db).await {
                     Ok(new_user) => {
                         let id = new_user.id;

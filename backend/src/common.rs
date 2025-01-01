@@ -48,6 +48,6 @@ pub fn rnd_code_str(pre: &str) -> String {
     let mut rng = rand::thread_rng();
     let one_char = || CHARSET[rng.gen_range(0..CHARSET.len())] as char;
     let random_str = std::iter::repeat_with(one_char).take(8).collect::<String>();
-    format!("{}-{}-{}", pre, &random_str[..4], &random_str[4..])
+    format!("{}{}-{}", pre, &random_str[..4], &random_str[4..])
 }
 
