@@ -105,8 +105,10 @@ const storeInfoSchema = {
     phoneNumber: { type: "string" },
     rentalInformation: { type: "string" },
     otherInformation: { type: "string" },
+    code: { type: "string" },
+    createdAt: { type: "string" },
   },
-  required: ["id", "name", "status", "emailAddress", "phoneNumber", "rentalInformation", "otherInformation"],
+  required: ["id", "name", "status", "emailAddress", "phoneNumber", "rentalInformation", "otherInformation", "code", "createdAt"],
 }
 
 const storeSearchResultsSchema = {

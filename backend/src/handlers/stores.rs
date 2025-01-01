@@ -77,13 +77,8 @@ pub async fn update_info(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<SettableStoreData>,
 ) -> Result<Json<store::Store>, (StatusCode, String)> {
-    match claims.permissions.store.get(&store_id) {
-        Some(roles) => {
-            if !roles.contains(&4) {
-                return Err((StatusCode::UNAUTHORIZED, "Must be a store rep".to_string()));
-            }
-        }
-        None => return Err((StatusCode::UNAUTHORIZED, "Must be a store rep".to_string())),
+    if !claims.is_store_rep(store_id) {
+        return Err((StatusCode::UNAUTHORIZED, "Must be a store rep".to_string()));
     }
 
     match stores::update(
@@ -142,7 +137,7 @@ pub async fn update_status(
 }
 
 pub async fn get_by_id(
-    _claims: Claims,
+    claims: Claims,
     Path(store_id): Path<i32>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<store::Store>, (StatusCode, String)> {
@@ -164,6 +159,11 @@ pub async fn get_by_id(
 
     if stores.len() < 1 {
         return Err((StatusCode::NOT_FOUND, "not found".to_string()));
+    }
+
+    let can_see_code = claims.is_store_admin() || claims.is_store_rep(store_id) || claims.is_tool_manager(store_id);
+    if !can_see_code {
+        stores[0].code = String::new();
     }
 
     Ok(Json(stores.remove(0)))
@@ -188,7 +188,10 @@ pub async fn get_filtered(
     )
     .await
     {
-        Ok(s) => s,
+        Ok(mut res) => {
+            res.iter_mut().for_each(|s| s.code = String::new());
+            res
+        },
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     };
 
