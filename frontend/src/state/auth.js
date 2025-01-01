@@ -9,10 +9,12 @@ const userIdAtom = atom(0);
 const userPermissionsAtom = atom([]);
 const accessTokenAtom = atom("");
 const refreshTokenAtom = atom("");
+const attemptingRefreshAtom = atom(true);
 
 export const useSetupAuth = () => {
   const [accessToken, setAccessToken] = useAtom(accessTokenAtom);
   const [refreshToken, setRefreshToken] = useAtom(refreshTokenAtom);
+  const [attemptingRefresh, setAttemptingRefresh] = useAtom(attemptingRefreshAtom);
   const { refresh } = useAuth();
 
   // try to login on load
@@ -22,6 +24,8 @@ export const useSetupAuth = () => {
     if (refreshToken) {
       refresh(refreshToken);
       setRefreshToken(refreshToken);
+    } else {
+      setAttemptingRefresh(false);
     }
   }, []);
 
@@ -52,9 +56,10 @@ export const useAuth = ({ mustBeLoggedIn = false } = {}) => {
   const [permissions, setPermissions] = useAtom(userPermissionsAtom);
   const [accessToken, setAccessToken] = useAtom(accessTokenAtom);
   const [refreshToken, setRefreshToken] = useAtom(refreshTokenAtom);
+  const [attemptingRefresh, setAttemptingRefresh] = useAtom(attemptingRefreshAtom);
 
   const isLoggedIn = !!userId && !!accessToken;
-  if (!isLoggedIn && mustBeLoggedIn) {
+  if (!isLoggedIn && !attemptingRefresh && mustBeLoggedIn) {
     navigate("/login");
   }
 
@@ -69,6 +74,7 @@ export const useAuth = ({ mustBeLoggedIn = false } = {}) => {
   }, []);
 
   const refresh = useCallback((refreshToken) => {
+    setAttemptingRefresh(true);
     return endpoints
       .refresh({ refreshToken })
       .then((data) => {
@@ -83,6 +89,9 @@ export const useAuth = ({ mustBeLoggedIn = false } = {}) => {
         setUserId("");
         setPermissions([]);
         throw e;
+      })
+      .finally(() => {
+        setAttemptingRefresh(false);
       });
   }, []);
 
@@ -99,6 +108,7 @@ export const useAuth = ({ mustBeLoggedIn = false } = {}) => {
     accessToken,
     refreshToken,
     isLoggedIn,
+    attemptingRefresh,
     login,
     refresh,
     logout,
