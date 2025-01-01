@@ -24,16 +24,17 @@ export const useSetupAuth = () => {
     if (refreshToken) {
       refresh(refreshToken);
       setRefreshToken(refreshToken);
-    } else {
+    } else{
       setAttemptingRefresh(false);
     }
   }, []);
 
   // keep local storage in sync with state
   useEffect(() => {
+    if (attemptingRefresh) return;
     localStorage?.setItem?.("accessToken", accessToken);
     localStorage?.setItem?.("refreshToken", refreshToken);
-  }, [accessToken, refreshToken]);
+  }, [attemptingRefresh, accessToken, refreshToken]);
 
   // automatically refresh the access token every 15 minutes
   useEffect(() => {
