@@ -67,16 +67,19 @@ export const usePeople = () => {
     paramsDispatch({ type: "withStore", value: e.target.checked });
 
   const setStoreTerm = (e) => {
+    if (!params.withStore) paramsDispatch({ type: "withStore", value: true });
     const term = e.target.value;
     _setStoreTerm(term);
-    paramsDispatch({ type: "withStore", value: true });
     endpoints.getStores({ params: { term }, accessToken }).then((data) => {
       setStoreOptions(data.stores);
     });
   };
 
   useEffect(() => {
-    if (JSON.stringify(params) !== JSON.stringify(debouncedParams)) {
+    if (
+      JSON.stringify(params) !== JSON.stringify(debouncedParams) ||
+      !accessToken
+    ) {
       return;
     }
 
@@ -169,7 +172,7 @@ export const PurePeople = (people) => {
           value={storeTerm}
           onChange={setStoreTerm}
           options={storeOptions}
-          onSelect={(id) => setStoreId(id)}
+          onSelect={setStoreId}
         />
       </div>
       <div>
