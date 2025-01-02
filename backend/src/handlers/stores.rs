@@ -161,7 +161,9 @@ pub async fn get_by_id(
         return Err((StatusCode::NOT_FOUND, "not found".to_string()));
     }
 
-    let can_see_code = claims.is_store_admin() || claims.is_store_rep(store_id) || claims.is_tool_manager(store_id);
+    let can_see_code = claims.is_store_admin()
+        || claims.is_store_rep(store_id)
+        || claims.is_tool_manager(store_id);
     if !can_see_code {
         stores[0].code = String::new();
     }
@@ -170,11 +172,12 @@ pub async fn get_by_id(
 }
 
 pub async fn get_filtered(
-    _claims: Claims,
+    claims: Claims,
     Query(params): Query<FilterParams>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<FilteredResponse>, (StatusCode, String)> {
     let (offset, limit) = common::calculate_offset_limit(params.page.unwrap_or_default());
+    let can_see_code = claims.is_store_admin();
 
     let stores = match stores::select(
         stores::SelectParams {
@@ -189,9 +192,11 @@ pub async fn get_filtered(
     .await
     {
         Ok(mut res) => {
-            res.iter_mut().for_each(|s| s.code = String::new());
+            if !can_see_code {
+                res.iter_mut().for_each(|s| s.code = String::new());
+            }
             res
-        },
+        }
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     };
 
