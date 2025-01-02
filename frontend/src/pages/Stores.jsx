@@ -39,7 +39,7 @@ export const useStores = () => {
   };
 
   const goToStore = (id) => {
-    // go to a store
+    navigate(`/stores/${id}`);
   };
 
   const prevPage = () => {
@@ -57,7 +57,7 @@ export const useStores = () => {
   const debouncedParams = useDebounce(params, 200);
 
   useEffect(() => {
-    if (JSON.stringify(params) !== JSON.stringify(debouncedParams)) {
+    if (JSON.stringify(params) !== JSON.stringify(debouncedParams) || !accessToken) {
       return;
     }
 
@@ -122,7 +122,7 @@ export const PureStores = (stores) => {
       <div>
         <ul>
           {storeList.map((store) => (
-            <li key={store.id} onClick={() => stores?.goToStore?.(store.id)}>
+            <li key={store.id} onClick={() => goToStore(store.id)}>
               <h2>{store.name}</h2>
               <p>{store.location}</p>
               <p>{store.hours}</p>

@@ -260,3 +260,19 @@ export const getStores = async ({ params, accessToken }) => {
 
   return data;
 };
+
+export const getStore = async ({ id, accessToken }) => {
+  const data = await handle(`${serverUrl}/stores/${id}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!validateStoreInfo(data)) {
+    throw new Error(400);
+  }
+
+  return data;
+};
