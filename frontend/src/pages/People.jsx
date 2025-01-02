@@ -2,6 +2,8 @@ import { useState, useReducer, useEffect } from "react";
 import { useConstants } from "../state/constants";
 import { TextInput } from "../components/TextInput";
 import { Select } from "../components/Select";
+import { SearchSelect } from "../components/SearchSelect";
+import { Checkbox } from "../components/Checkbox";
 import { useAuth } from "../state/auth";
 import { useDebounce } from "../components/useDebounce";
 import * as endpoints from "../api/endpoints";
@@ -17,6 +19,10 @@ const paramsReducer = (state, action) => {
       return { ...state, searchTerm: action.value, page: 1 };
     case "role":
       return { ...state, role: action.value, page: 1 };
+    case "storeId":
+      return { ...state, storeId: action.value, page: 1 };
+    case "withStore":
+      return { ...state, withStore: action.value, page: 1 };
     default:
       return state;
   }
@@ -30,9 +36,12 @@ export const usePeople = () => {
     searchTerm: "",
     page: 1,
     storeId: "0",
+    withStore: false,
     status: "0",
     role: "0",
   });
+  const [storeTerm, _setStoreTerm] = useState("");
+  const [storeOptions, setStoreOptions] = useState([]);
 
   const debouncedParams = useDebounce(params, 200);
 
@@ -49,6 +58,22 @@ export const usePeople = () => {
     paramsDispatch({ type: "searchTerm", value: e.target.value });
   const setRole = (e) =>
     paramsDispatch({ type: "role", value: e.target.value });
+  const setStoreId = (id) => {
+    paramsDispatch({ type: "storeId", value: id });
+    const storeName = storeOptions.find((store) => store.id === id).name;
+    _setStoreTerm(storeName);
+  };
+  const setWithStore = (e) =>
+    paramsDispatch({ type: "withStore", value: e.target.checked });
+
+  const setStoreTerm = (e) => {
+    const term = e.target.value;
+    _setStoreTerm(term);
+    paramsDispatch({ type: "withStore", value: true });
+    endpoints.getStores({ params: { term }, accessToken }).then((data) => {
+      setStoreOptions(data.stores);
+    });
+  };
 
   useEffect(() => {
     if (JSON.stringify(params) !== JSON.stringify(debouncedParams)) {
@@ -60,7 +85,9 @@ export const usePeople = () => {
         params: {
           term: params.searchTerm,
           storeIds:
-            params.storeId === "0" ? "" : [parseInt(params.storeId, 10)],
+            params.storeId === "0" || !params.withStore
+              ? ""
+              : [parseInt(params.storeId, 10)],
           statuses: params.status === "0" ? "" : [parseInt(params.status, 10)],
           roles: params.role === "0" ? "" : [parseInt(params.role, 10)],
           page: params.page,
@@ -76,6 +103,7 @@ export const usePeople = () => {
     roles: [...roles, { id: "0", name: "Any" }],
     usersStatuses,
     params,
+    storeTerm,
     debouncedParams,
     peopleList,
     prevPage,
@@ -83,6 +111,10 @@ export const usePeople = () => {
     setStatus,
     setSearchTerm,
     setRole,
+    setStoreTerm,
+    setWithStore,
+    setStoreId,
+    storeOptions: params.withStore ? storeOptions : [],
   };
 };
 
@@ -91,6 +123,7 @@ export const PurePeople = (people) => {
     roles,
     usersStatuses,
     params,
+    storeTerm,
     debouncedParams,
     peopleList,
     prevPage,
@@ -98,6 +131,10 @@ export const PurePeople = (people) => {
     setStatus,
     setSearchTerm,
     setRole,
+    setStoreTerm,
+    setWithStore,
+    setStoreId,
+    storeOptions,
   } = people;
 
   return (
@@ -122,6 +159,18 @@ export const PurePeople = (people) => {
           value={params.role}
           onChange={setRole}
         />
+        <Checkbox
+          label="Related to Store"
+          checked={params.withStore}
+          onChange={setWithStore}
+        />
+        <SearchSelect
+          label="Store"
+          value={storeTerm}
+          onChange={setStoreTerm}
+          options={storeOptions}
+          onSelect={(id) => setStoreId(id)}
+        />
       </div>
       <div>
         <ul>
@@ -133,7 +182,11 @@ export const PurePeople = (people) => {
           ))}
         </ul>
       </div>
-      <PrevNext prev={prevPage} next={nextPage} pageNumber={debouncedParams.page} />
+      <PrevNext
+        prev={prevPage}
+        next={nextPage}
+        pageNumber={debouncedParams.page}
+      />
     </div>
   );
 };
@@ -141,4 +194,4 @@ export const PurePeople = (people) => {
 export const People = () => {
   const people = usePeople();
   return <PurePeople {...people} />;
-}
+};
