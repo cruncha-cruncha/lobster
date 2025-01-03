@@ -65,12 +65,17 @@ export const usePeople = () => {
     paramsDispatch({ type: "storeId", value: id });
     const storeName = storeOptions.find((store) => store.id === id).name;
     _setStoreTerm(storeName);
+    urlParams.set(URL_STORE_ID_KEY, id);
+    setUrlParams(urlParams);
   };
   const setWithStore = (e) => {
     const checked = e.target.checked;
     paramsDispatch({ type: "withStore", value: checked });
     if (!checked && urlParams.has(URL_STORE_ID_KEY)) {
       urlParams.delete(URL_STORE_ID_KEY);
+      setUrlParams(urlParams);
+    } else if (checked && params.storeId != 0) {
+      urlParams.set(URL_STORE_ID_KEY, params.storeId);
       setUrlParams(urlParams);
     }
   };
