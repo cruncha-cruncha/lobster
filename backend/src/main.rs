@@ -82,6 +82,18 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .route(
             "/stores/:store_id/status",
             routing::patch(handlers::stores::update_status),
+        )
+        .route(
+            "/permissions",
+            routing::post(handlers::permissions::add)
+        )
+        .route(
+            "/permissions/:permission_id",
+            routing::delete(handlers::permissions::delete)
+        )
+        .route(
+            "/permissions/user/:user_id",
+            routing::get(handlers::permissions::get_by_user)
         );
 
     #[cfg(feature = "cors")]
