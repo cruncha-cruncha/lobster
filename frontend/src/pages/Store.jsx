@@ -8,7 +8,6 @@ import { Button } from "../components/Button";
 import { TextInput } from "../components/TextInput";
 import { Select } from "../components/Select";
 import { useDebounce } from "../components/useDebounce";
-import { PrevNext } from "../components/PrevNext";
 
 export const URL_STORE_ID_KEY = "storeId";
 

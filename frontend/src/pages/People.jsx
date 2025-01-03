@@ -32,7 +32,7 @@ const paramsReducer = (state, action) => {
 
 export const usePeople = () => {
   const [urlParams, setUrlParams] = useSearchParams();
-  const { roles, usersStatuses } = useConstants();
+  const { roles, userStatuses } = useConstants();
   const { accessToken } = useAuth();
   const [peopleList, setPeopleList] = useState([]);
   const [params, paramsDispatch] = useReducer(paramsReducer, {
@@ -127,7 +127,7 @@ export const usePeople = () => {
 
   return {
     roles: [...roles, { id: "0", name: "Any" }],
-    usersStatuses,
+    userStatuses,
     params,
     storeTerm,
     debouncedParams,
@@ -147,7 +147,7 @@ export const usePeople = () => {
 export const PurePeople = (people) => {
   const {
     roles,
-    usersStatuses,
+    userStatuses,
     params,
     storeTerm,
     debouncedParams,
@@ -175,7 +175,7 @@ export const PurePeople = (people) => {
         />
         <Select
           label="Status"
-          options={usersStatuses}
+          options={userStatuses}
           value={params.status}
           onChange={setStatus}
         />

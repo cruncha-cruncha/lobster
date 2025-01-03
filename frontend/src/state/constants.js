@@ -6,23 +6,23 @@ import * as endpoints from "../api/endpoints";
 
 const rolesAtom = atom([]);
 const storeStatusesAtom = atom([]);
-const usersStatusesAtom = atom([]);
-const toolsStatusesAtom = atom([]);
-const rentalsStatusesAtom = atom([]);
-const grievancesStatusesAtom = atom([]);
-const permissionsStatusesAtom = atom([]);
+const userStatusesAtom = atom([]);
+const toolStatusesAtom = atom([]);
+const rentalStatusesAtom = atom([]);
+const grievanceStatusesAtom = atom([]);
+const permissionStatusesAtom = atom([]);
 
 export const useInitConstants = () => {
   const [roles, setRoles] = useAtom(rolesAtom);
   const [storeStatuses, setStoreStatuses] = useAtom(storeStatusesAtom);
-  const [usersStatuses, setUsersStatuses] = useAtom(usersStatusesAtom);
-  const [toolsStatuses, setToolsStatuses] = useAtom(toolsStatusesAtom);
-  const [rentalsStatuses, setRentalsStatuses] = useAtom(rentalsStatusesAtom);
-  const [grievancesStatuses, setGrievancesStatuses] = useAtom(
-    grievancesStatusesAtom,
+  const [userStatuses, setUserStatuses] = useAtom(userStatusesAtom);
+  const [toolStatuses, setToolStatuses] = useAtom(toolStatusesAtom);
+  const [rentalStatuses, setRentalStatuses] = useAtom(rentalStatusesAtom);
+  const [grievanceStatuses, setGrievanceStatuses] = useAtom(
+    grievanceStatusesAtom,
   );
-  const [permissionsStatuses, setPermissionsStatuses] = useAtom(
-    permissionsStatusesAtom,
+  const [permissionStatuses, setPermissionStatuses] = useAtom(
+    permissionStatusesAtom,
   );
 
   useSWR("get all status options", endpoints.getAllStatusOptions, {
@@ -30,11 +30,11 @@ export const useInitConstants = () => {
     keepPreviousData: true,
     onSuccess: (data) => {
       setStoreStatuses(data.stores);
-      setUsersStatuses(data.users);
-      setToolsStatuses(data.tools);
-      setRentalsStatuses(data.rentals);
-      setGrievancesStatuses(data.grievances);
-      setPermissionsStatuses(data.permissions);
+      setUserStatuses(data.users);
+      setToolStatuses(data.tools);
+      setRentalStatuses(data.rentals);
+      setGrievanceStatuses(data.grievances);
+      setPermissionStatuses(data.permissions);
     },
   });
 
@@ -50,14 +50,14 @@ export const useInitConstants = () => {
 export const useConstants = () => {
   const [roles, setRoles] = useAtom(rolesAtom);
   const [storeStatuses, setStoreStatuses] = useAtom(storeStatusesAtom);
-  const [usersStatuses, setUsersStatuses] = useAtom(usersStatusesAtom);
-  const [toolsStatuses, setToolsStatuses] = useAtom(toolsStatusesAtom);
-  const [rentalsStatuses, setRentalsStatuses] = useAtom(rentalsStatusesAtom);
-  const [grievancesStatuses, setGrievancesStatuses] = useAtom(
-    grievancesStatusesAtom,
+  const [userStatuses, setUserStatuses] = useAtom(userStatusesAtom);
+  const [toolStatuses, setToolStatuses] = useAtom(toolStatusesAtom);
+  const [rentalStatuses, setRentalStatuses] = useAtom(rentalStatusesAtom);
+  const [grievanceStatuses, setGrievanceStatuses] = useAtom(
+    grievanceStatusesAtom,
   );
-  const [permissionsStatuses, setPermissionsStatuses] = useAtom(
-    permissionsStatusesAtom,
+  const [permissionStatuses, setPermissionStatuses] = useAtom(
+    permissionStatusesAtom,
   );
 
   const refresh = () => {
@@ -67,11 +67,11 @@ export const useConstants = () => {
     ).then(([rolesData, statusData]) => {
       setRoles(rolesData.roles);
       setStoreStatuses(statusData.stores);
-      setUsersStatuses(statusData.users);
-      setToolsStatuses(statusData.tools);
-      setRentalsStatuses(statusData.rentals);
-      setGrievancesStatuses(statusData.grievances);
-      setPermissionsStatuses(statusData.permissions);
+      setUserStatuses(statusData.users);
+      setToolStatuses(statusData.tools);
+      setRentalStatuses(statusData.rentals);
+      setGrievanceStatuses(statusData.grievances);
+      setPermissionStatuses(statusData.permissions);
     });
   };
 
@@ -79,10 +79,10 @@ export const useConstants = () => {
     refresh,
     roles,
     storeStatuses,
-    usersStatuses,
-    toolsStatuses,
-    rentalsStatuses,
-    grievancesStatuses,
-    permissionsStatuses,
+    userStatuses,
+    toolStatuses,
+    rentalStatuses,
+    grievanceStatuses,
+    permissionStatuses,
   };
 };
