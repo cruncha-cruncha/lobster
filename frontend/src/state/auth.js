@@ -101,6 +101,7 @@ export const useAuth = ({ mustBeLoggedIn = false } = {}) => {
     setPermissions([]);
     setAccessToken("");
     setRefreshToken("");
+    navigate("/login");
   }, []);
 
   return {
