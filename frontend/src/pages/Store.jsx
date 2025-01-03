@@ -10,42 +10,49 @@ import { Select } from "../components/Select";
 import { useDebounce } from "../components/useDebounce";
 import { PrevNext } from "../components/PrevNext";
 
+export const URL_STORE_ID_KEY = "storeId";
+
 export const Store = () => {
-    const navigate = useNavigate();
-    const params = useParams();
-    const { storeStatuses } = useConstants();
-    const { accessToken } = useAuth();
-    const [storeInfo, setStoreInfo] = useState({});
+  const navigate = useNavigate();
+  const params = useParams();
+  const { storeStatuses } = useConstants();
+  const { accessToken } = useAuth();
+  const [storeInfo, setStoreInfo] = useState({});
 
-    const { error, isLoading } = useSWR(
-        !accessToken ? null : `get store ${params.id} using ${accessToken}`,
-        () => endpoints.getStore({ id: params.id, accessToken }),
-        {
-          onSuccess: (data) => {
-            setStoreInfo(data);
-          },
-        },
-      );
+  const { error, isLoading } = useSWR(
+    !accessToken ? null : `get store ${params.id} using ${accessToken}`,
+    () => endpoints.getStore({ id: params.id, accessToken }),
+    {
+      onSuccess: (data) => {
+        setStoreInfo(data);
+      },
+    },
+  );
 
-    const goToStores = () => {
-        navigate("/stores");
-    };
+  const goToStores = () => {
+    navigate("/stores");
+  };
 
-    // all info (title, email, phone, hours, description, other)
-    // can see store code if related to the store
-    // button to edit store details
-    // button to see tools available from the store
-    // button to edit tools in the store
-    // button to see users related to the store
-    // button to go to returns page
-    // button to go to rentals page
-    // button to go to stores page
+  const goToPeople = () => {
+    navigate(`/people?storeId=${params.id}`);
+  };
 
-    return (
-        <div>
-            <Button onClick={() => goToStores()} text="All Stores" />
-            <h1>{storeInfo.name}</h1>
-            <p>{JSON.stringify(storeInfo)}</p>
-        </div>
-    )
-}
+  // all info (title, email, phone, hours, description, other)
+  // can see store code if related to the store
+  // button to edit store details
+  // button to see tools available from the store
+  // button to edit tools in the store
+  // button to see users related to the store
+  // button to go to returns page
+  // button to go to rentals page
+  // button to go to stores page
+
+  return (
+    <div>
+      <Button onClick={() => goToStores()} text="All Stores" />
+      <Button onClick={() => goToPeople()} text="People" />
+      <h1>{storeInfo.name}</h1>
+      <p>{JSON.stringify(storeInfo)}</p>
+    </div>
+  );
+};

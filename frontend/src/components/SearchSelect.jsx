@@ -17,7 +17,7 @@ export const SearchSelect = ({
       <div className="border-2 border-stone-800">
         <input
           type="text"
-          value={collapsed ? lastSelected : value}
+          value={(collapsed && lastSelected) ? lastSelected : value}
           onChange={onChange}
           onFocus={() => setCollapsed(false)}
           onBlur={() => setCollapsed(true)}

@@ -1,4 +1,5 @@
 import { useState, useReducer, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router";
 import { useConstants } from "../state/constants";
 import { TextInput } from "../components/TextInput";
 import { Select } from "../components/Select";
@@ -8,6 +9,7 @@ import { useAuth } from "../state/auth";
 import { useDebounce } from "../components/useDebounce";
 import * as endpoints from "../api/endpoints";
 import { PrevNext } from "../components/PrevNext";
+import { URL_STORE_ID_KEY } from "./Store";
 
 const paramsReducer = (state, action) => {
   switch (action.type) {
@@ -29,6 +31,7 @@ const paramsReducer = (state, action) => {
 };
 
 export const usePeople = () => {
+  const [urlParams, setUrlParams] = useSearchParams();
   const { roles, usersStatuses } = useConstants();
   const { accessToken } = useAuth();
   const [peopleList, setPeopleList] = useState([]);
@@ -42,8 +45,8 @@ export const usePeople = () => {
   });
   const [storeTerm, _setStoreTerm] = useState("");
   const [storeOptions, setStoreOptions] = useState([]);
-
   const debouncedParams = useDebounce(params, 200);
+  const urlStoreId = urlParams.get(URL_STORE_ID_KEY);
 
   const prevPage = () => {
     if (params.page > 1) {
@@ -63,8 +66,14 @@ export const usePeople = () => {
     const storeName = storeOptions.find((store) => store.id === id).name;
     _setStoreTerm(storeName);
   };
-  const setWithStore = (e) =>
-    paramsDispatch({ type: "withStore", value: e.target.checked });
+  const setWithStore = (e) => {
+    const checked = e.target.checked;
+    paramsDispatch({ type: "withStore", value: checked });
+    if (!checked && urlParams.has(URL_STORE_ID_KEY)) {
+      urlParams.delete(URL_STORE_ID_KEY);
+      setUrlParams(urlParams);
+    }
+  };
 
   const setStoreTerm = (e) => {
     if (!params.withStore) paramsDispatch({ type: "withStore", value: true });
@@ -74,6 +83,15 @@ export const usePeople = () => {
       setStoreOptions(data.stores);
     });
   };
+
+  useEffect(() => {
+    if (!urlStoreId || !accessToken || params.storeId != 0) return;
+    endpoints.getStore({ id: urlStoreId, accessToken }).then((data) => {
+      setStoreTerm({ target: { value: data.name } });
+      paramsDispatch({ type: "withStore", value: true });
+      paramsDispatch({ type: "storeId", value: urlStoreId });
+    });
+  }, [urlStoreId, accessToken, params.storeId]);
 
   useEffect(() => {
     if (
