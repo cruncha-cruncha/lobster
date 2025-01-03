@@ -6,7 +6,10 @@ import { jwtDecode } from "jwt-decode";
 import * as endpoints from "../api/endpoints";
 
 const userIdAtom = atom(0);
-const userPermissionsAtom = atom([]);
+const userPermissionsAtom = atom({
+  library: [],
+  store: {},
+});
 const accessTokenAtom = atom("");
 const refreshTokenAtom = atom("");
 const attemptingRefreshAtom = atom(true);
@@ -14,7 +17,9 @@ const attemptingRefreshAtom = atom(true);
 export const useSetupAuth = () => {
   const [accessToken, setAccessToken] = useAtom(accessTokenAtom);
   const [refreshToken, setRefreshToken] = useAtom(refreshTokenAtom);
-  const [attemptingRefresh, setAttemptingRefresh] = useAtom(attemptingRefreshAtom);
+  const [attemptingRefresh, setAttemptingRefresh] = useAtom(
+    attemptingRefreshAtom,
+  );
   const { refresh } = useAuth();
 
   // try to login on load
@@ -24,7 +29,7 @@ export const useSetupAuth = () => {
     if (refreshToken) {
       refresh(refreshToken);
       setRefreshToken(refreshToken);
-    } else{
+    } else {
       setAttemptingRefresh(false);
     }
   }, []);
@@ -54,10 +59,12 @@ export const useSetupAuth = () => {
 export const useAuth = ({ mustBeLoggedIn = false } = {}) => {
   const navigate = useNavigate();
   const [userId, setUserId] = useAtom(userIdAtom);
-  const [permissions, setPermissions] = useAtom(userPermissionsAtom);
+  const [_permissions, setPermissions] = useAtom(userPermissionsAtom);
   const [accessToken, setAccessToken] = useAtom(accessTokenAtom);
   const [refreshToken, setRefreshToken] = useAtom(refreshTokenAtom);
-  const [attemptingRefresh, setAttemptingRefresh] = useAtom(attemptingRefreshAtom);
+  const [attemptingRefresh, setAttemptingRefresh] = useAtom(
+    attemptingRefreshAtom,
+  );
 
   const isLoggedIn = !!userId && !!accessToken;
   if (!isLoggedIn && !attemptingRefresh && mustBeLoggedIn) {
@@ -88,7 +95,10 @@ export const useAuth = ({ mustBeLoggedIn = false } = {}) => {
         setAccessToken("");
         setRefreshToken("");
         setUserId("");
-        setPermissions([]);
+        setPermissions({
+          library: [],
+          store: {},
+        });
         throw e;
       })
       .finally(() => {
@@ -98,11 +108,22 @@ export const useAuth = ({ mustBeLoggedIn = false } = {}) => {
 
   const logout = useCallback(() => {
     setUserId("");
-    setPermissions([]);
+    setPermissions({
+      library: [],
+      store: {},
+    });
     setAccessToken("");
     setRefreshToken("");
     navigate("/login");
   }, []);
+
+  const permissions = {
+    isLibraryAdmin: () => _permissions.library.includes(1),
+    isUserAdmin: () => _permissions.library.includes(2),
+    isStoreAdmin: () => _permissions.library.includes(3),
+    isStoreRep: (id) => { (_permissions.stores[id] || []).includes(4) },
+    isToolManager: (id) => { (_permissions.stored[id] || []).includes(5) },
+  }
 
   return {
     userId,
