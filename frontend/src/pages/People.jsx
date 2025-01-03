@@ -31,6 +31,7 @@ const paramsReducer = (state, action) => {
 };
 
 export const usePeople = () => {
+  const navigate = useNavigate();
   const [urlParams, setUrlParams] = useSearchParams();
   const { roles, userStatuses } = useConstants();
   const { accessToken } = useAuth();
@@ -125,6 +126,10 @@ export const usePeople = () => {
       });
   }, [params, debouncedParams, accessToken]);
 
+  const goToPerson = (id) => {
+    navigate(`/people/${id}`);
+  };
+
   return {
     roles: [...roles, { id: "0", name: "Any" }],
     userStatuses,
@@ -141,6 +146,7 @@ export const usePeople = () => {
     setWithStore,
     setStoreId,
     storeOptions: params.withStore ? storeOptions : [],
+    goToPerson,
   };
 };
 
@@ -161,6 +167,7 @@ export const PurePeople = (people) => {
     setWithStore,
     setStoreId,
     storeOptions,
+    goToPerson,
   } = people;
 
   return (
@@ -201,7 +208,7 @@ export const PurePeople = (people) => {
       <div>
         <ul>
           {peopleList.map((person) => (
-            <div key={person.id}>
+            <div key={person.id} onClick={() => goToPerson(person.id)}>
               <p>{person.username}</p>
               <p>{person.emailAddress}</p>
             </div>

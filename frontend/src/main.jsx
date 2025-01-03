@@ -8,6 +8,7 @@ import { LoadingScreen } from "./components/loading/LoadingScreen";
 import { useLibraryInfo } from "./state/libraryInfo";
 import { Tools } from "./pages/Tools";
 import { People } from "./pages/People";
+import { Person } from "./pages/Person";
 import { Grievances } from "./pages/Grievances";
 import { Rentals } from "./pages/Rentals";
 import { Stores } from "./pages/Stores";
@@ -53,6 +54,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route path="/login" element={<Login />} />
           <Route element={<Layout />}>
             <Route path="/people" element={<People />} />
+            <Route path="/people/:id" element={<Person />} />
             <Route path="/grievances" element={<Grievances />} />
             <Route path="/rentals" element={<Rentals />} />
             <Route index element={<Tools />} />
