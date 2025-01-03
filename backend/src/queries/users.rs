@@ -37,7 +37,7 @@ pub async fn select(
         r#"
         SELECT usr.id, usr.username, usr.status, '' AS "email_address!: _", usr.created_at, usr.code
         FROM main.users usr
-        LEFT JOIN main.permissions p ON usr.id = p.user_id
+        LEFT JOIN main.permissions p ON usr.id = p.user_id AND p.status = 1
         WHERE
             ($1::text = '' OR $1::text <% COALESCE(usr.username, ''))
             AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR p.store_id = ANY($2::integer[]))
@@ -71,7 +71,7 @@ pub async fn select_with_email(
         r#"
         SELECT usr.*
         FROM main.users usr
-        LEFT JOIN main.permissions p ON usr.id = p.user_id
+        LEFT JOIN main.permissions p ON usr.id = p.user_id AND p.status = 1
         WHERE
             ($1::text = '' OR $1::text <% (COALESCE(usr.username, '') || ' ' || COALESCE(usr.email_address, '')))
             AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR p.store_id = ANY($2::integer[]))

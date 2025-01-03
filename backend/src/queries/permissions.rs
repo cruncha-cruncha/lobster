@@ -65,6 +65,7 @@ pub async fn update_status(
 
 pub async fn select_by_user(
     user_id: &user::Id,
+    active_only: bool,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<ClaimPermissions, String> {
     let permissions = match sqlx::query_as!(
@@ -72,9 +73,11 @@ pub async fn select_by_user(
         r#"
         SELECT *
         FROM main.permissions p
-        WHERE p.user_id = $1;
+        WHERE p.user_id = $1
+        AND ($2 = FALSE OR p.status = 1);
         "#,
         user_id,
+        active_only,
     )
     .fetch_all(db)
     .await

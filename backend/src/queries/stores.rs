@@ -30,7 +30,6 @@ pub async fn select(
     params: SelectParams,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<Vec<store::Store>, String> {
-    // TODO: split param on white space, search using ANY
     sqlx::query_as!(
         store::Store,
         r#"
