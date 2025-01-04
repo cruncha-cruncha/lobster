@@ -8,6 +8,7 @@ import {
   validateFilteredUsers,
   validateStoreInfo,
   validateStoreSearchResults,
+  validateUserPermissions,
 } from "./schemas";
 
 const serverUrl = import.meta.env.VITE_SERVER_URL || "http://127.0.0.1:3000";
@@ -276,3 +277,20 @@ export const getStore = async ({ id, accessToken }) => {
 
   return data;
 };
+
+export const getUserPermissions = async ({ id, accessToken }) => {
+  const data = await handle(`${serverUrl}/users/${id}/permissions`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!validateUserPermissions(data)) {
+    throw new Error(400);
+  }
+
+  return data;
+}
+

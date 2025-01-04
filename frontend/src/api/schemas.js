@@ -120,6 +120,27 @@ const storeSearchResultsSchema = {
   required: ["stores"],
 }
 
+const storePermissionInfoSchema = {
+  type: "object",
+  $id: "#storePermissionInfo",
+  properties: {
+    storeId: { type: "number" },
+    storeName: { type: "string" },
+    roles: { type: "array", items: { type: "number" } },
+  },
+  required: ["storeId", "storeName", "roles"],
+}
+
+const userPermissionsSchema = {
+  type: "object",
+  $id: "#userPermissions",
+  properties: {
+    library: { type: "array", items: { type: "number" } },
+    store: { type: "array", items: { $ref: "#storePermissionInfo" } },
+  },
+  required: ["library", "store"],
+}
+
 const makeLazyValidator = (schema) => {
   let validate = null;
   return (data) => {
@@ -171,4 +192,9 @@ export const validateStoreInfo = makeLazyValidator(storeInfoSchema);
 export const validateStoreSearchResults = makeLazyValidator([
   storeInfoSchema,
   storeSearchResultsSchema,
+]);
+
+export const validateUserPermissions = makeLazyValidator([
+  storePermissionInfoSchema,
+  userPermissionsSchema,
 ]);
