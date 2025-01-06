@@ -18,15 +18,16 @@ export const Store = () => {
   const { accessToken } = useAuth();
   const [storeInfo, setStoreInfo] = useState({});
 
-  const { error, isLoading } = useSWR(
+  const { data, error, isLoading } = useSWR(
     !accessToken ? null : `get store ${params.id} using ${accessToken}`,
     () => endpoints.getStore({ id: params.id, accessToken }),
-    {
-      onSuccess: (data) => {
-        setStoreInfo(data);
-      },
-    },
   );
+
+  useEffect(() => {
+    if (data) {
+      setStoreInfo(data);
+    }
+  }, [data]);
 
   const goToStores = () => {
     navigate("/stores");

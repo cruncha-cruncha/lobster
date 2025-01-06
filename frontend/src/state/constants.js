@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { atom, useAtom } from "jotai";
 import useSWR from "swr";
 import * as endpoints from "../api/endpoints";
@@ -25,26 +26,36 @@ export const useInitConstants = () => {
     permissionStatusesAtom,
   );
 
-  useSWR("get all status options", endpoints.getAllStatusOptions, {
+  const { data: statusData } = useSWR(
+    "get all status options",
+    endpoints.getAllStatusOptions,
+    {
+      revalidateOnFocus: false,
+      keepPreviousData: true,
+    },
+  );
+
+  useEffect(() => {
+    if (statusData) {
+      setStoreStatuses(statusData.stores);
+      setUserStatuses(statusData.users);
+      setToolStatuses(statusData.tools);
+      setRentalStatuses(statusData.rentals);
+      setGrievanceStatuses(statusData.grievances);
+      setPermissionStatuses(statusData.permissions);
+    }
+  }, [statusData]);
+
+  const { data: roleData } = useSWR("get role options", endpoints.getRoleOptions, {
     revalidateOnFocus: false,
     keepPreviousData: true,
-    onSuccess: (data) => {
-      setStoreStatuses(data.stores);
-      setUserStatuses(data.users);
-      setToolStatuses(data.tools);
-      setRentalStatuses(data.rentals);
-      setGrievanceStatuses(data.grievances);
-      setPermissionStatuses(data.permissions);
-    },
   });
 
-  useSWR("get role options", endpoints.getRoleOptions, {
-    revalidateOnFocus: false,
-    keepPreviousData: true,
-    onSuccess: (data) => {
-      setRoles(data.roles);
-    },
-  });
+  useEffect(() => {
+    if (roleData) {
+      setRoles(roleData.roles);
+    }
+  }, [roleData]);
 };
 
 export const useConstants = () => {

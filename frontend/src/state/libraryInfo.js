@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { atom, useAtom } from "jotai";
 import useSWR from "swr";
 import * as endpoints from "../api/endpoints";
@@ -15,20 +16,23 @@ export const useLibraryInfo = () => {
   ); // hours that rentals can be checked out for
   const [maximumFuture, setMaximumFuture] = useAtom(libraryMaximumFutureAtom); // days in the future that rentals can be made
 
-  const { error, isLoading } = useSWR(
+  const { data, error, isLoading } = useSWR(
     "get library information",
     endpoints.getLibraryInformation,
     {
       revalidateOnFocus: false,
       keepPreviousData: true,
-      onSuccess: (data) => {
-        setUuid(data.uuid);
-        setName(data.name);
-        setMaximumRentalPeriod(data.maximumRentalPeriod);
-        setMaximumFuture(data.maximumFuture);
-      },
     },
   );
+
+  useEffect(() => {
+    if (data) {
+      setUuid(data.uuid);
+      setName(data.name);
+      setMaximumRentalPeriod(data.maximumRentalPeriod);
+      setMaximumFuture(data.maximumFuture);
+    }
+  }, [data]);
 
   const refresh = () => {
     return endpoints.getLibraryInformation().then((data) => {
