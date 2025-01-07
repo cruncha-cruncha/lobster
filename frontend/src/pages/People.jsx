@@ -41,7 +41,7 @@ export const usePeople = () => {
     page: 1,
     storeId: "0",
     withStore: false,
-    status: "0",
+    status: "1",
     role: "0",
   });
   const [storeTerm, _setStoreTerm] = useState("");
@@ -131,8 +131,8 @@ export const usePeople = () => {
   };
 
   return {
-    roles: [...roles, { id: "0", name: "Any" }],
-    userStatuses,
+    roles: [{ id: "0", name: "Any" }, ...roles],
+    userStatuses: [{ id: "0", name: "Any" }, ...userStatuses],
     params,
     storeTerm,
     debouncedParams,
@@ -197,13 +197,15 @@ export const PurePeople = (people) => {
           checked={params.withStore}
           onChange={setWithStore}
         />
-        <SearchSelect
-          label="Store"
-          value={storeTerm}
-          onChange={setStoreTerm}
-          options={storeOptions}
-          onSelect={setStoreId}
-        />
+        {params.withStore && (
+          <SearchSelect
+            label="Store"
+            value={storeTerm}
+            onChange={setStoreTerm}
+            options={storeOptions}
+            onSelect={setStoreId}
+          />
+        )}
       </div>
       <div>
         <ul>

@@ -30,7 +30,7 @@ export const useStores = () => {
   const [storeList, setStoreList] = useState([]);
   const [params, paramsDispatch] = useReducer(paramsReducer, {
     page: 1,
-    status: "0",
+    status: "1",
     term: "",
   });
 
@@ -77,7 +77,7 @@ export const useStores = () => {
 
   return {
     storeList,
-    storeStatuses: [...storeStatuses, { id: "0", name: "Any" }],
+    storeStatuses: [{ id: "0", name: "Any" }, ...storeStatuses],
     params,
     debouncedParams,
     goToNewStore,
