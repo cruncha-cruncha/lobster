@@ -121,9 +121,9 @@ export const useAuth = ({ mustBeLoggedIn = false } = {}) => {
     isLibraryAdmin: () => _permissions.library.includes(1),
     isUserAdmin: () => _permissions.library.includes(2),
     isStoreAdmin: () => _permissions.library.includes(3),
-    isStoreRep: (id) => { (_permissions.stores[id] || []).includes(4) },
-    isToolManager: (id) => { (_permissions.stored[id] || []).includes(5) },
-  }
+    isStoreRep: (id) => (_permissions.store[id] || []).includes(4),
+    isToolManager: (id) => (_permissions.store[id] || []).includes(5),
+  };
 
   return {
     userId,

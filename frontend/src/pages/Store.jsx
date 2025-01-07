@@ -15,7 +15,7 @@ export const Store = () => {
   const navigate = useNavigate();
   const params = useParams();
   const { storeStatuses } = useConstants();
-  const { accessToken } = useAuth();
+  const { accessToken, permissions } = useAuth();
   const [storeInfo, setStoreInfo] = useState({});
   const [status, _setStatus] = useState(0);
 
@@ -27,7 +27,7 @@ export const Store = () => {
   useEffect(() => {
     if (data) {
       setStoreInfo(data);
-      _setStatus(prev => prev === 0 ? data.status : prev);
+      _setStatus((prev) => (prev === 0 ? data.status : prev));
     }
   }, [data]);
 
@@ -39,15 +39,21 @@ export const Store = () => {
     navigate(`/people?storeId=${params.id}`);
   };
 
+  const showUpdateStatus = permissions.isStoreAdmin();
+
+  const canUpdateStatus = storeInfo.status != status;
+
   const updateStatus = () => {
-    endpoints.updateStoreStatus({
-      id: params.id,
-      status: Number(status),
-      accessToken,
-    }).then((data) => {
-      setStoreInfo(data);
-    });
-  }
+    endpoints
+      .updateStoreStatus({
+        id: params.id,
+        status: Number(status),
+        accessToken,
+      })
+      .then((data) => {
+        setStoreInfo(data);
+      });
+  };
 
   const setStatus = (e) => {
     _setStatus(e.target.value);
@@ -69,12 +75,16 @@ export const Store = () => {
       <Button onClick={() => goToPeople()} text="People" />
       <h1>{storeInfo.name}</h1>
       <p>{JSON.stringify(storeInfo)}</p>
-      <Select 
-        options={storeStatuses}
-        value={status}
-        onChange={setStatus}
-      />
-      <Button onClick={() => updateStatus()} text="Update Status" />
+      {showUpdateStatus && (
+        <>
+          <Select options={storeStatuses} value={status} onChange={setStatus} />
+          <Button
+            onClick={() => updateStatus()}
+            text="Update Status"
+            disabled={!canUpdateStatus}
+          />
+        </>
+      )}
     </div>
   );
 };
