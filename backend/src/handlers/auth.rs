@@ -60,7 +60,7 @@ pub async fn login(
 
     // if user banned then...
 
-    let permissions = permissions::select_by_user(&user_id, true, &state.db)
+    let permissions = permissions::select_for_claims(&user_id, &state.db)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
 
@@ -101,7 +101,7 @@ pub async fn refresh(
 
     // TODO: if user is banned...
 
-    let permissions = permissions::select_by_user(&user_id, true, &state.db)
+    let permissions = permissions::select_for_claims(&user_id, &state.db)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
 

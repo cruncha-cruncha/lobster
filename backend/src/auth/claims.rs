@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-
 use super::signing::{ALGORITHM, PRIVATE_KEY, PUBLIC_KEY};
 use crate::db_structs::user;
 use axum::{
@@ -108,6 +107,15 @@ pub struct Claims {
     pub iat: i64,
 }
 
+#[derive(Debug, Serialize, Deserialize, PartialEq, Copy, Clone)]
+pub enum Roles {
+    LibraryAdmin = 1,
+    UserAdmin = 2,
+    StoreAdmin = 3,
+    StoreRep = 4,
+    ToolManager = 5,
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ClaimPermissions {
     pub library: Vec<i32>,
@@ -122,29 +130,34 @@ impl Claims {
     }
 
     pub fn is_library_admin(&self) -> bool {
-        self.permissions.library.contains(&1)
+        let num = Roles::LibraryAdmin as i32;
+        self.permissions.library.contains(&num)
     }
 
     pub fn is_user_admin(&self) -> bool {
-        self.permissions.library.contains(&2)
+        let num = Roles::UserAdmin as i32;
+        self.permissions.library.contains(&num)
     }
 
     pub fn is_store_admin(&self) -> bool {
-        self.permissions.library.contains(&3)
+        let num = Roles::StoreAdmin as i32;
+        self.permissions.library.contains(&num)
     }
 
     pub fn is_store_rep(&self, store_id: i32) -> bool {
+        let num = Roles::StoreRep as i32;
         self.permissions
             .store
             .get(&store_id)
-            .map_or(false, |perms| perms.contains(&4))
+            .map_or(false, |perms| perms.contains(&num))
     }
 
     pub fn is_tool_manager(&self, store_id: i32) -> bool {
+        let num = Roles::ToolManager as i32;
         self.permissions
             .store
             .get(&store_id)
-            .map_or(false, |perms| perms.contains(&5))
+            .map_or(false, |perms| perms.contains(&num))
     }
 }
 

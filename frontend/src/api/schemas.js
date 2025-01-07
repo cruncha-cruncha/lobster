@@ -120,25 +120,59 @@ const storeSearchResultsSchema = {
   required: ["stores"],
 }
 
-const storePermissionInfoSchema = {
+const userPermissionsLibraryInfoSchema = {
   type: "object",
-  $id: "#storePermissionInfo",
+  $id: "#userPermissionsLibraryInfo",
+  properties: {
+    id: { type: "number" },
+    role: { type: "number" },
+  },
+  required: ["id", "role"],
+}
+
+const userPermissionsStoreInfoSchema = {
+  type: "object",
+  $id: "#userPermissionsStoreInfo",
+  properties: {
+    id: { type: "number" },
+    storeId: { type: "number" },
+    role: { type: "number" },
+  },
+  required: ["id", "storeId", "role"],
+}
+
+const userPermissionsStoreNameSchema = {
+  type: "object",
+  $id: "#userPermissionsStoreName",
   properties: {
     storeId: { type: "number" },
     storeName: { type: "string" },
-    roles: { type: "array", items: { type: "number" } },
   },
-  required: ["storeId", "storeName", "roles"],
+  required: ["storeId", "storeName"],
 }
 
 const userPermissionsSchema = {
   type: "object",
   $id: "#userPermissions",
   properties: {
-    library: { type: "array", items: { type: "number" } },
-    store: { type: "array", items: { $ref: "#storePermissionInfo" } },
+    library: { type: "array", items: { $ref: "#userPermissionsLibraryInfo" } },
+    store: { type: "array", items: { $ref: "#userPermissionsStoreInfo" } },
+    storeNames: { type: "array", items: { $ref: "#userPermissionsStoreName" } },
   },
-  required: ["library", "store"],
+  required: ["library", "store", "storeNames"],
+}
+
+const singlePermissionSchema = {
+  type: "object",
+  $id: "#singlePermission",
+  properties: {
+    id: { type: "number" },
+    userId: { type: "number" },
+    roleId: { type: "number" },
+    storeId: { type: ["number", "null"] },
+    status: { type: "number" },
+  },
+  required: ["id", "userId", "roleId", "storeId", "status"],
 }
 
 const makeLazyValidator = (schema) => {
@@ -195,6 +229,10 @@ export const validateStoreSearchResults = makeLazyValidator([
 ]);
 
 export const validateUserPermissions = makeLazyValidator([
-  storePermissionInfoSchema,
+  userPermissionsLibraryInfoSchema,
+  userPermissionsStoreInfoSchema,
+  userPermissionsStoreNameSchema,
   userPermissionsSchema,
 ]);
+
+export const validateSinglePermission = makeLazyValidator(singlePermissionSchema);

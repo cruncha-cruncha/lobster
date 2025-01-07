@@ -2,6 +2,16 @@ use crate::auth::claims::ClaimPermissions;
 use crate::common;
 use crate::db_structs::permission;
 use crate::db_structs::user;
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SelectParams {
+    pub ids: Vec<permission::Id>,
+    pub user_ids: Vec<permission::UserId>,
+    pub role_ids: Vec<permission::RoleId>,
+    pub store_ids: Vec<permission::StoreId>,
+    pub statuses: Vec<permission::Status>,
+}
 
 pub async fn select_statuses(
     db: &sqlx::Pool<sqlx::Postgres>,
@@ -63,9 +73,35 @@ pub async fn update_status(
     .map_err(|e| e.to_string())
 }
 
-pub async fn select_by_user(
+pub async fn select(
+    params: SelectParams,
+    db: &sqlx::Pool<sqlx::Postgres>,
+) -> Result<Vec<permission::Permission>, String> {
+    sqlx::query_as!(
+        permission::Permission,
+        r#"
+        SELECT *
+        FROM main.permissions p
+        WHERE 
+            (ARRAY_LENGTH($1::integer[], 1) IS NULL OR p.id = ANY($1::integer[]))
+            AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR p.user_id = ANY($2::integer[]))
+            AND (ARRAY_LENGTH($3::integer[], 1) IS NULL OR p.role_id = ANY($3::integer[]))
+            AND (ARRAY_LENGTH($4::integer[], 1) IS NULL OR p.store_id = ANY($4::integer[]))
+            AND (ARRAY_LENGTH($5::integer[], 1) IS NULL OR p.status = ANY($5::integer[]));
+        "#,
+        &params.ids,
+        &params.user_ids,
+        &params.role_ids,
+        &params.store_ids,
+        &params.statuses,
+    )
+    .fetch_all(db)
+    .await
+    .map_err(|e| e.to_string())
+}
+
+pub async fn select_for_claims(
     user_id: &user::Id,
-    active_only: bool,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<ClaimPermissions, String> {
     let permissions = match sqlx::query_as!(
@@ -74,10 +110,9 @@ pub async fn select_by_user(
         SELECT *
         FROM main.permissions p
         WHERE p.user_id = $1
-        AND ($2 = FALSE OR p.status = 1);
+        AND p.status = 1;
         "#,
         user_id,
-        active_only,
     )
     .fetch_all(db)
     .await

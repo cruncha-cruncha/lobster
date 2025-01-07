@@ -1,5 +1,7 @@
+use crate::auth::claims;
 use crate::common;
-use crate::queries::stores;
+use crate::db_structs::permission;
+use crate::queries::{stores, permissions};
 use crate::AppState;
 use crate::{auth::claims::Claims, db_structs::store};
 use axum::{
@@ -45,12 +47,17 @@ pub struct FilteredResponse {
 }
 
 pub async fn create_new(
-    _claims: Claims,
+    claims: Claims,
     State(state): State<Arc<AppState>>,
     Json(payload): Json<CreateStoreData>,
 ) -> Result<Json<store::Store>, (StatusCode, String)> {
+    let user_id = match claims.subject_as_user_id() {
+        Some(id) => id,
+        None => return Err((StatusCode::BAD_REQUEST, "Token missing user id".to_string())),
+    };
+
     let code = common::rnd_code_str("s-");
-    match stores::insert(
+    let store = match stores::insert(
         payload.name,
         store::StoreStatus::Pending as i32,
         payload.email_address,
@@ -62,13 +69,35 @@ pub async fn create_new(
     )
     .await
     {
-        Ok(s) => {
-            let encoded = serde_json::to_vec(&s).unwrap_or_default();
-            state.comm.send_message("stores", &encoded).await.ok();
-            Ok(Json(s))
+        Ok(s) => s,
+        Err(e) => {
+            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
         }
-        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
-    }
+    };
+
+    match tokio::try_join!(
+        permissions::insert(
+            user_id,
+            claims::Roles::StoreRep as i32,
+            Some(store.id),
+            permission::PermissionStatus::Active as i32,
+            &state.db,
+        ),
+        permissions::insert(
+            user_id,
+            claims::Roles::ToolManager as i32,
+            Some(store.id),
+            permission::PermissionStatus::Active as i32,
+            &state.db,
+        ),
+    ) {
+        Ok(_) => (),
+        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+    };
+
+    let encoded = serde_json::to_vec(&store).unwrap_or_default();
+    state.comm.send_message("stores", &encoded).await.ok();
+    Ok(Json(store))
 }
 
 pub async fn update_info(

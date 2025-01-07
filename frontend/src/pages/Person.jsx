@@ -7,6 +7,7 @@ import * as endpoints from "../api/endpoints";
 import { Button } from "../components/Button";
 import { TextInput } from "../components/TextInput";
 import { Select } from "../components/Select";
+import { SearchSelect } from "../components/SearchSelect";
 
 export const Person = () => {
   const navigate = useNavigate();
@@ -151,7 +152,6 @@ const userStatusStateReducer = (state, action) => {
 };
 
 export const useUserStatus = ({ id }) => {
-  const params = useParams();
   const { userStatuses } = useConstants();
   const { userId, accessToken, permissions } = useAuth();
   const [userInfo, setUserInfo] = useState({});
@@ -189,7 +189,7 @@ export const useUserStatus = ({ id }) => {
     userStatusStateDispatch({ type: "saving", value: true });
     endpoints
       .updateUserStatus({
-        id: params.id,
+        id: id,
         sctatus: Number(userStatusState.value),
         accessToken,
       })
@@ -245,29 +245,19 @@ const PureUserStatus = (userStatus) => {
   );
 };
 
-const userPermissionsStateReducer = (state, action) => {
-  switch (action.type) {
-    case "library":
-      return { ...state, library: action.value };
-    case "store":
-      return { ...state, store: action.value };
-    case "loading":
-      return { ...state, isLoading: action.value };
-    case "saving":
-      return { ...state, isSaving: action.value };
-    default:
-      return state;
-  }
-};
-
 export const useUserPermissions = ({ id }) => {
   const { roles } = useConstants();
   const { userId, accessToken, permissions } = useAuth();
-  const [userPermissions, setUserPermissions] = useState({});
-  const [userPermissionsState, userPermissionsStateDispatch] = useReducer(
-    userPermissionsStateReducer,
-    { library: [], store: [], isLoading: true, isSaving: false },
-  );
+  const [userPermissions, setUserPermissions] = useState({
+    library: [],
+    store: [],
+  });
+  const [saving, setSaving] = useState(false);
+  const [showFields, setShowFields] = useState(""); // "", "add", "remove"
+  const [selectedRole, selectRoleOption] = useState("0");
+  const [storeTerm, _setStoreTerm] = useState("");
+  const [storeId, _setStoreId] = useState("0");
+  const [storeOptions, setStoreOptions] = useState([]);
 
   const { data, error, isLoading } = useSWR(
     !accessToken ? null : `get user ${id} permissions using ${accessToken}`,
@@ -277,81 +267,278 @@ export const useUserPermissions = ({ id }) => {
   useEffect(() => {
     if (data) {
       setUserPermissions(data);
-      if (userPermissionsState.isLoading) {
-        userPermissionsStateDispatch({ type: "loading", value: false });
-        userPermissionsStateDispatch({
-          type: "library",
-          value: data.library,
-        });
-        userPermissionsStateDispatch({ type: "store", value: data.store });
-      }
     }
-  }, [data, userPermissionsState]);
+  }, [data]);
 
-  // const setUserName = (e) => {
-  //   userNameStateDispatch({ type: "username", value: e.target.value });
-  // };
-
-  // add / remove library permission
-  // can if library admin and not my user id
   const canUpdateLibraryPermissions =
     permissions.isLibraryAdmin() && userId != id;
 
-  // add / remove store permission
-  // can if store admin
   const canUpdateStorePermissions = permissions.isStoreAdmin();
 
-  // const updateUserName = async () => {
-  //   userNameStateDispatch({ type: "saving", value: true });
-  //   endpoints
-  //     .updateUser({
-  //       id: params.id,
-  //       username: userNameState.value,
-  //       accessToken,
-  //     })
-  //     .then((data) => {
-  //       setUserInfo(data);
-  //     })
-  //     .finally(() => {
-  //       userNameStateDispatch({ type: "saving", value: false });
-  //     });
-  // };
+  const setStoreTerm = (e) => {
+    const term = e.target.value;
+    _setStoreTerm(term);
+    endpoints.getStores({ params: { term }, accessToken }).then((data) => {
+      setStoreOptions(data.stores);
+    });
+  };
+
+  const removePermission = async ({ permissionId }) => {
+    setSaving(true);
+    endpoints
+      .removeUserPermission({
+        id: permissionId,
+        accessToken,
+      })
+      .then(() => endpoints.getUserPermissions({ id, accessToken }))
+      .then((data) => {
+        setUserPermissions(data);
+      })
+      .finally(() => {
+        setSaving(false);
+      });
+  };
+
+  const addPermission = async () => {
+    setSaving(true);
+
+    const permission = {
+      userId: Number(id),
+      roleId: Number(selectedRole),
+      storeId: Number(storeId),
+    };
+    if (
+      selectedRoleName !== "store_rep" &&
+      selectedRoleName !== "tool_manager"
+    ) {
+      delete permission.storeId;
+    }
+
+    endpoints
+      .addUserPermission({
+        permission,
+        accessToken,
+      })
+      .then(() => endpoints.getUserPermissions({ id, accessToken }))
+      .then((data) => {
+        setUserPermissions(data);
+      })
+      .finally(() => {
+        setSaving(false);
+      });
+  };
+
+  const roleOptions = roles.filter(({ name }) => {
+    switch (name) {
+      case "library_admin":
+      case "store_admin":
+      case "user_admin":
+        return canUpdateLibraryPermissions;
+      case "store_rep":
+      case "tool_manager":
+        return canUpdateStorePermissions;
+      default:
+        return false;
+    }
+  });
+
+  const selectedRoleName = roles.find(({ id }) => id == selectedRole)?.name;
+
+  const setStoreId = (id) => {
+    _setStoreId(id);
+    const storeName = storeOptions.find((store) => store.id === id).name;
+    _setStoreTerm(storeName);
+  };
+
+  const canAddPermission = (() => {
+    if (showFields !== "add") return false;
+    switch (selectedRoleName) {
+      case "library_admin":
+      case "store_admin":
+      case "user_admin":
+        return true;
+      case "store_rep":
+      case "tool_manager":
+        return storeId != "0";
+      default:
+        return false;
+    }
+  })();
+
+  const showStoreSearch =
+    selectedRoleName === "store_rep" || selectedRoleName === "tool_manager";
+  if (showStoreSearch && storeId === "0" && storeOptions.length === 0) {
+    endpoints.getStores({ params: {}, accessToken }).then((data) => {
+      setStoreOptions(data.stores);
+    });
+  }
+
+  // TODO: store_reps should be able to modify permissions for their store
+  // limit store options to stores they're a rep for
+
+  const permissionLookup = [
+    ...userPermissions.library,
+    ...userPermissions.store,
+  ].reduce((acc, p) => {
+    acc[p.id] = p;
+    return acc;
+  }, {});
+
+  const canRemovePermission = (permissionId) => {
+    const permission = permissionLookup[permissionId];
+    if (!permission) return false;
+    const roleName = roles.find(({ id }) => id == permission.role)?.name;
+    switch (roleName) {
+      case "library_admin":
+      case "store_admin":
+      case "user_admin":
+        return canUpdateLibraryPermissions;
+      case "store_rep":
+      case "tool_manager":
+        return canUpdateStorePermissions;
+      default:
+        return false;
+    }
+  };
 
   return {
-    libraryPermissions: userPermissionsState.library,
-    storePermissions: userPermissionsState.store,
-    roles,
+    libraryPermissions: userPermissions.library.map((p) => ({
+      id: p.id,
+      roleId: p.role,
+      roleName: roles.find(({ id }) => id == p.role)?.name,
+    })),
+    storePermissions: userPermissions.store.map((p) => ({
+      id: p.id,
+      storeId: p.storeId,
+      storeName: userPermissions.storeNames.find(
+        ({ storeId }) => storeId == p.storeId,
+      )?.storeName,
+      roleId: p.role,
+      roleName: roles.find(({ id }) => id == p.role)?.name,
+    })),
+    showModifyPermissions:
+      canUpdateLibraryPermissions || canUpdateStorePermissions,
+    showFields,
+    showAddFields: () => setShowFields("add"),
+    showRemoveFields: () => setShowFields("remove"),
+    toggleShowFields: () => setShowFields(""),
+    roleOptions: [{ name: "Select Role", id: "0" }, ...roleOptions],
+    selectedRole,
+    setSelectedRole: (e) => selectRoleOption(e.target.value),
+    showStoreSearch,
+    storeTerm,
+    setStoreTerm,
+    storeOptions,
+    setStoreId,
+    canAddPermission,
+    addPermission,
+    canRemovePermission,
+    removePermission,
   };
 };
 
 const PureUserPermissions = (userPermissions) => {
-  const { libraryPermissions, storePermissions, roles } = userPermissions;
+  const {
+    libraryPermissions,
+    storePermissions,
+    showModifyPermissions,
+    showFields,
+    showAddFields,
+    showRemoveFields,
+    toggleShowFields,
+    roleOptions,
+    selectedRole,
+    setSelectedRole,
+    showStoreSearch,
+    storeTerm,
+    setStoreTerm,
+    storeOptions,
+    setStoreId,
+    canAddPermission,
+    addPermission,
+    canRemovePermission,
+    removePermission,
+  } = userPermissions;
 
   return (
     <div>
-      {libraryPermissions.length > 0 ? (
-        <>
-          <p>Library Permissions</p>
-          <ul>
-            {libraryPermissions.map((num) => (
-              <li key={num}>{roles.find(({ id }) => id == num)?.name}</li>
-            ))}
-          </ul>
-        </>
+      {libraryPermissions.length <= 0 && storePermissions.length <= 0 ? (
+        <p>No Permissions</p>
       ) : (
-        <p>No Library Permissions</p>
-      )}
-      {storePermissions.length > 0 ? (
         <>
-          <p>Store Permissions</p>
+          <p>Permissions</p>
           <ul>
+            {libraryPermissions.map((permission) => (
+              <li key={permission.id}>
+                {showFields === "remove" &&
+                  canRemovePermission(permission.id) && (
+                    <span
+                      onClick={() =>
+                        removePermission({ permissionId: permission.id })
+                      }
+                      className="cursor-pointer"
+                    >
+                      X
+                    </span>
+                  )}{" "}
+                {permission.roleName}
+              </li>
+            ))}
             {storePermissions.map((info) => (
-              <li key={info.storeId}>{info.storeName}</li>
+              <li key={info.id}>
+                {showFields === "remove" && canRemovePermission(info.id) && (
+                  <span
+                    onClick={() => removePermission({ permissionId: info.id })}
+                    className="cursor-pointer"
+                  >
+                    X
+                  </span>
+                )}{" "}
+                {info.roleName} of {info.storeName}
+              </li>
             ))}
           </ul>
         </>
-      ) : (
-        <p>No Store Permissions</p>
+      )}
+      {showModifyPermissions && (
+        <>
+          {showFields === "add" && (
+            <>
+              <Select
+                label="Role"
+                options={roleOptions}
+                value={selectedRole}
+                onChange={setSelectedRole}
+              />
+              {showStoreSearch && (
+                <SearchSelect
+                  label="Store"
+                  value={storeTerm}
+                  onChange={setStoreTerm}
+                  options={storeOptions}
+                  onSelect={setStoreId}
+                />
+              )}
+              <Button
+                text="Add Permission"
+                disabled={!canAddPermission}
+                onClick={addPermission}
+              />
+              <Button text="Cancel" onClick={toggleShowFields} />
+            </>
+          )}
+          {showFields === "remove" && (
+            <>
+              <Button text="Done" onClick={toggleShowFields} />
+            </>
+          )}
+          {showFields === "" && (
+            <>
+              <Button text="Add Permission" onClick={showAddFields} />
+              <Button text="Remove Permissions" onClick={showRemoveFields} />
+            </>
+          )}
+        </>
       )}
     </div>
   );

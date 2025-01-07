@@ -9,6 +9,7 @@ import {
   validateStoreInfo,
   validateStoreSearchResults,
   validateUserPermissions,
+  validateSinglePermission,
 } from "./schemas";
 
 const serverUrl = import.meta.env.VITE_SERVER_URL || "http://127.0.0.1:3000";
@@ -290,6 +291,35 @@ export const getUserPermissions = async ({ id, accessToken }) => {
   if (!validateUserPermissions(data)) {
     throw new Error(400);
   }
+
+  return data;
+}
+
+export const addUserPermission = async ({ permission, accessToken }) => {
+  const data = await handle(`${serverUrl}/permissions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(permission),
+  });
+
+  if (!validateSinglePermission(data)) {
+    throw new Error(400);
+  }
+
+  return data;
+}
+
+export const removeUserPermission = async ({ id, accessToken }) => {
+  const data = await handle(`${serverUrl}/permissions/${id}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
 
   return data;
 }
