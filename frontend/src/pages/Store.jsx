@@ -17,6 +17,7 @@ export const Store = () => {
   const { storeStatuses } = useConstants();
   const { accessToken } = useAuth();
   const [storeInfo, setStoreInfo] = useState({});
+  const [status, _setStatus] = useState(0);
 
   const { data, error, isLoading } = useSWR(
     !accessToken ? null : `get store ${params.id} using ${accessToken}`,
@@ -26,6 +27,7 @@ export const Store = () => {
   useEffect(() => {
     if (data) {
       setStoreInfo(data);
+      _setStatus(prev => prev === 0 ? data.status : prev);
     }
   }, [data]);
 
@@ -35,6 +37,20 @@ export const Store = () => {
 
   const goToPeople = () => {
     navigate(`/people?storeId=${params.id}`);
+  };
+
+  const updateStatus = () => {
+    endpoints.updateStoreStatus({
+      id: params.id,
+      status: Number(status),
+      accessToken,
+    }).then((data) => {
+      setStoreInfo(data);
+    });
+  }
+
+  const setStatus = (e) => {
+    _setStatus(e.target.value);
   };
 
   // all info (title, email, phone, hours, description, other)
@@ -53,6 +69,12 @@ export const Store = () => {
       <Button onClick={() => goToPeople()} text="People" />
       <h1>{storeInfo.name}</h1>
       <p>{JSON.stringify(storeInfo)}</p>
+      <Select 
+        options={storeStatuses}
+        value={status}
+        onChange={setStatus}
+      />
+      <Button onClick={() => updateStatus()} text="Update Status" />
     </div>
   );
 };
