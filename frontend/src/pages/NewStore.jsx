@@ -22,7 +22,7 @@ const infoReducer = (state, action) => {
   }
 };
 
-export const NewStore = () => {
+export const useNewStore = () => {
   const navigate = useNavigate();
   const { accessToken } = useAuth();
 
@@ -39,6 +39,8 @@ export const NewStore = () => {
     endpoints.createStore({
       info,
       accessToken,
+    }).then((data) => {
+      navigate(`/stores/${data.id}`);
     });
   };
 
@@ -55,6 +57,32 @@ export const NewStore = () => {
     dispatch({ type: "rentalInformation", value: e.target.value });
   const setOtherInformation = (e) =>
     dispatch({ type: "otherInformation", value: e.target.value });
+
+  return {
+    info,
+    setName,
+    setEmailAddress,
+    setPhoneNumber,
+    setRentalInformation,
+    setOtherInformation,
+    canCreateNewStore: info.name && info.emailAddress && info.phoneNumber,
+    handleCreateStore,
+    handleCancel,
+  }
+};
+
+export const PureNewStore = (newStore) => {
+  const {
+    info,
+    setName,
+    setEmailAddress,
+    setPhoneNumber,
+    setRentalInformation,
+    setOtherInformation,
+    canCreateNewStore,
+    handleCreateStore,
+    handleCancel,
+  } = newStore;
 
   return (
     <div>
@@ -89,8 +117,13 @@ export const NewStore = () => {
         onChange={setOtherInformation}
         placeholder=""
       />
-      <Button onClick={handleCreateStore} text="Create New Store" />
+      <Button onClick={handleCreateStore} text="Create New Store" disabled={!canCreateNewStore} />
       <Button onClick={handleCancel} variant="blue" text="Cancel" />
     </div>
   );
 };
+
+export const NewStore = () => {
+  const newStore = useNewStore();
+  return <PureNewStore {...newStore} />;
+}
