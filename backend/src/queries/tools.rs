@@ -32,8 +32,8 @@ pub async fn insert(
     real_id: tool::RealId,
     store_id: store::Id,
     category_id: tool::CategoryId,
-    default_rental_period: tool::DefaultRentalPeriod,
-    description: tool::Description,
+    default_rental_period: Option<tool::DefaultRentalPeriod>,
+    description: Option<tool::Description>,
     pictures: tool::Pictures,
     status: tool::Status,
     db: &sqlx::Pool<sqlx::Postgres>,
@@ -93,8 +93,6 @@ pub async fn update(
 
 pub async fn clear_fields(
     tool_id: tool::Id,
-    real_id: bool,
-    category_id: bool,
     default_rental_period: bool,
     description: bool,
     db: &sqlx::Pool<sqlx::Postgres>,
@@ -104,16 +102,12 @@ pub async fn clear_fields(
         r#"
         UPDATE main.tools mt
         SET 
-            real_id = CASE WHEN $2 THEN NULL ELSE mt.real_id END,
-            category_id = CASE WHEN $3 THEN NULL ELSE mt.category_id END,
-            default_rental_period = CASE WHEN $4 THEN NULL ELSE mt.default_rental_period END,
-            description = CASE WHEN $5 THEN NULL ELSE mt.description END
+            default_rental_period = CASE WHEN $2 THEN NULL ELSE mt.default_rental_period END,
+            description = CASE WHEN $3 THEN NULL ELSE mt.description END
         WHERE id = $1
         RETURNING *;
         "#,
         tool_id,
-        real_id,
-        category_id,
         default_rental_period,
         description,
     )

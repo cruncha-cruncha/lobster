@@ -24,9 +24,9 @@ pub enum ToolStatus {
 #[serde(rename_all = "camelCase")]
 pub struct Tool {
     pub id: Id,
-    pub real_id: Option<RealId>,
+    pub real_id: RealId,
     pub store_id: StoreId,
-    pub category_id: Option<CategoryId>,
+    pub category_id: CategoryId,
     pub default_rental_period: Option<DefaultRentalPeriod>,
     pub description: Option<Description>,
     pub pictures: Pictures,

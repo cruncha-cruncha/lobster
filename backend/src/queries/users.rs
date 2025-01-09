@@ -39,7 +39,7 @@ pub async fn select(
         FROM main.users usr
         LEFT JOIN main.permissions p ON usr.id = p.user_id AND p.status = 1
         WHERE
-            ($1::text = '' OR $1::text <% COALESCE(usr.username, ''))
+            ($1::text = '' OR $1::text <% usr.username)
             AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR p.store_id = ANY($2::integer[]))
             AND (ARRAY_LENGTH($3::integer[], 1) IS NULL OR p.role_id = ANY($3::integer[]))
             AND (ARRAY_LENGTH($4::integer[], 1) IS NULL OR usr.status = ANY($4::integer[]))
@@ -73,7 +73,7 @@ pub async fn select_with_email(
         FROM main.users usr
         LEFT JOIN main.permissions p ON usr.id = p.user_id AND p.status = 1
         WHERE
-            ($1::text = '' OR $1::text <% (COALESCE(usr.username, '') || ' ' || COALESCE(usr.email_address, '')))
+            ($1::text = '' OR $1::text <% (usr.username || ' ' || usr.email_address))
             AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR p.store_id = ANY($2::integer[]))
             AND (ARRAY_LENGTH($3::integer[], 1) IS NULL OR p.role_id = ANY($3::integer[]))
             AND (ARRAY_LENGTH($4::integer[], 1) IS NULL OR usr.status = ANY($4::integer[]))

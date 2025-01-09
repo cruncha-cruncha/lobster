@@ -25,6 +25,8 @@ pub async fn init() -> Result<(Connection, Communicator), String> {
     let communicator = Communicator::new(Some(channel));
 
     communicator.declare_queue("stores").await?;
+    communicator.declare_queue("tools").await?;
+    communicator.declare_queue("rentals").await?;
     communicator.declare_queue("users").await?;
 
     // Have to pass conn as well, even if it's never used.

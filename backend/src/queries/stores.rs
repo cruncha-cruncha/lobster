@@ -38,7 +38,7 @@ pub async fn select(
         WHERE
             (ARRAY_LENGTH($1::integer[], 1) IS NULL OR ms.id = ANY($1::integer[]))
             AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR ms.status = ANY($2::integer[]))
-            AND ($3::text = '' OR $3::text <% (COALESCE(ms.name, '') || ' ' || COALESCE(ms.email_address, '') || ' ' || COALESCE(ms.phone_number, '')))
+            AND ($3::text = '' OR $3::text <% (ms.name || ' ' || COALESCE(ms.email_address, '') || ' ' || COALESCE(ms.phone_number, '')))
         ORDER BY ms.id
         OFFSET $4 LIMIT $5;
         "#,
