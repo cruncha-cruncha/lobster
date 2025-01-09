@@ -1,10 +1,11 @@
-use crate::db_structs::tool_category;
+use crate::db_structs::{tool_category, tool_classification};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SelectParams {
     pub ids: Vec<tool_category::Id>,
     pub term: String,
+    pub tool_ids: Vec<tool_classification::ToolId>,
     pub offset: i64,
     pub limit: i64,
 }
@@ -65,16 +66,20 @@ pub async fn select (
     sqlx::query_as!(
         tool_category::ToolCategory,
         r#"
-        SELECT *
+        SELECT tc.*
         FROM main.tool_categories tc
+        LEFT JOIN main.tool_classifications tcl ON tc.id = tcl.category_id
         WHERE
             (ARRAY_LENGTH($1::integer[], 1) IS NULL OR tc.id = ANY($1::integer[]))
             AND ($2::text = '' OR $2::text <% (tc.name || ' ' || COALESCE(tc.description, '') || ' ' || ARRAY_TO_STRING(tc.synonyms, ' ')))
+            AND (ARRAY_LENGTH($3::integer[], 1) IS NULL OR tcl.tool_id = ANY($3::integer[]))
+        GROUP BY tc.id
         ORDER BY tc.id
-        OFFSET $3 LIMIT $4;
+        OFFSET $4 LIMIT $5;
         "#,
         &params.ids,
         params.term,
+        &params.tool_ids,
         params.offset,
         params.limit,
     )

@@ -1,4 +1,4 @@
-use crate::auth::claims::Claims;
+use crate::{auth::claims::Claims, db_structs::tool_classification};
 use crate::common;
 use crate::db_structs::tool_category;
 use crate::queries::tool_categories;
@@ -31,6 +31,7 @@ pub struct UpdateToolCategoryData {
 #[serde(rename_all = "camelCase")]
 pub struct FilterParams {
     pub ids: Option<Vec<tool_category::Id>>,
+    pub tool_ids: Option<Vec<tool_classification::ToolId>>,
     pub term: Option<String>,
     pub page: Option<i64>,
 }
@@ -103,6 +104,7 @@ pub async fn get_by_id(
     let mut tool_categories = match tool_categories::select(
         tool_categories::SelectParams {
             ids: vec![tool_category_id],
+            tool_ids: vec![],
             term: "".to_string(),
             offset: 0,
             limit: 1,
@@ -134,6 +136,7 @@ pub async fn get_filtered(
     let tool_categories = match tool_categories::select(
         tool_categories::SelectParams {
             ids: params.ids.unwrap_or_default(),
+            tool_ids: params.tool_ids.unwrap_or_default(),
             term: params.term.unwrap_or_default(),
             offset,
             limit,

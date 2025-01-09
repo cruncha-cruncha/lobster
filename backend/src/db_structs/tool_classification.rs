@@ -1,7 +1,8 @@
+use super::{tool, tool_category};
 use serde::{Deserialize, Serialize};
 
-pub type ToolId = i32;
-pub type CategoryId = i32;
+pub type ToolId = tool::Id;
+pub type CategoryId = tool_category::Id;
 
 #[derive(Debug, sqlx::FromRow, Serialize, Deserialize, Clone, sqlx::Type)]
 #[serde(rename_all = "camelCase")]

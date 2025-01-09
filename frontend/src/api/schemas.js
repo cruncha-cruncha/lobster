@@ -179,6 +179,19 @@ const singlePermissionSchema = {
   required: ["id", "userId", "roleId", "storeId", "status"],
 };
 
+const toolCategorySchema = {
+  type: "object",
+  $id: "#toolCategory",
+  properties: {
+    id: { type: "number" },
+    name: { type: "string" },
+    synonyms: { type: "array", items: { type: "string" } },
+    description: { type: ["string", "null"] },
+    defaultRentalPeriod: { type: ["number", "null"] },
+  },
+  required: ["id", "name", "synonyms", "description", "defaultRentalPeriod"],
+};
+
 const singleToolSchema = {
   type: "object",
   $id: "#singleTool",
@@ -186,21 +199,48 @@ const singleToolSchema = {
     id: { type: "number" },
     realId: { type: "string" },
     storeId: { type: "number" },
-    categoryId: { type: "number" },
-    defaultRentalPeriod: { type: "number" },
-    description: { type: "string" },
+    storeName: { type: "string" },
+    defaultRentalPeriod: { type: ["number", "null"] },
+    description: { type: ["string", "null"] },
     pictures: { type: "array", items: { type: "string" } },
     status: { type: "number" },
+    categories: { type: "array", items: { $ref: "#toolCategory" } },
   },
   required: [
     "id",
     "realId",
     "storeId",
-    "categoryId",
+    "storeName",
     "defaultRentalPeriod",
     "description",
     "pictures",
     "status",
+    "categories",
+  ],
+};
+
+const toolWithClassificationsSchema = {
+  type: "object",
+  $id: "#toolWithClassifications",
+  properties: {
+    id: { type: "number" },
+    realId: { type: "string" },
+    storeId: { type: "number" },
+    defaultRentalPeriod: { type: ["number", "null"] },
+    description: { type: ["string", "null"] },
+    pictures: { type: "array", items: { type: "string" } },
+    status: { type: "number" },
+    classifications: { type: "array", items: { type: "number" } },
+  },
+  required: [
+    "id",
+    "realId",
+    "storeId",
+    "defaultRentalPeriod",
+    "description",
+    "pictures",
+    "status",
+    "classifications",
   ],
 };
 
@@ -208,7 +248,9 @@ const toolSearchResultsSchema = {
   type: "object",
   $id: "#toolSearchResults",
   properties: {
-    tools: { type: "array", items: { $ref: "#singleTool" } },
+    tools: { type: "array", items: { $ref: "#toolWithClassifications" } },
+    stores: { type: "array", items: { $ref: "#storeInfo" } },
+    categories: { type: "array", items: { $ref: "#toolCategory" } },
   },
   required: ["tools"],
 };
@@ -277,9 +319,14 @@ export const validateSinglePermission = makeLazyValidator(
   singlePermissionSchema,
 );
 
-export const validateSingleTool = makeLazyValidator(singleToolSchema);
+export const validateSingleTool = makeLazyValidator([
+  toolCategorySchema,
+  singleToolSchema,
+]);
 
 export const validateToolSearchResults = makeLazyValidator([
-  singleToolSchema,
+  toolWithClassificationsSchema,
+  storeInfoSchema,
+  toolCategorySchema,
   toolSearchResultsSchema,
 ]);

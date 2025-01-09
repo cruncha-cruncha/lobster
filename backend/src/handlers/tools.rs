@@ -2,7 +2,7 @@ use crate::auth::claims::Claims;
 use crate::common;
 use crate::db_structs::tool_classification::ToolClassification;
 use crate::db_structs::{store, tool, tool_category, tool_classification};
-use crate::queries::{tool_classifications, tools};
+use crate::queries::{stores, tool_categories, tool_classifications, tools};
 use crate::AppState;
 use axum::{
     extract::{Json, Path, State},
@@ -47,15 +47,44 @@ pub struct FilterParams {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct ToolWithText {
+    pub id: tool::Id,
+    pub real_id: tool::RealId,
+    pub store_id: tool::StoreId,
+    pub store_name: store::Name,
+    pub default_rental_period: Option<tool::DefaultRentalPeriod>,
+    pub description: Option<tool::Description>,
+    pub pictures: tool::Pictures,
+    pub status: tool::Status,
+    pub categories: Vec<tool_category::ToolCategory>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ToolWithClassifications {
+    pub id: tool::Id,
+    pub real_id: tool::RealId,
+    pub store_id: tool::StoreId,
+    pub default_rental_period: Option<tool::DefaultRentalPeriod>,
+    pub description: Option<tool::Description>,
+    pub pictures: tool::Pictures,
+    pub status: tool::Status,
+    pub classifications: Vec<tool_classification::CategoryId>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ToolSearchResponse {
-    pub tools: Vec<tool::Tool>,
+    pub tools: Vec<ToolWithClassifications>,
+    pub stores: Vec<store::Store>,
+    pub categories: Vec<tool_category::ToolCategory>,
 }
 
 pub async fn create_new(
     claims: Claims,
     State(state): State<Arc<AppState>>,
     Json(payload): Json<NewToolData>,
-) -> Result<Json<tool::Tool>, (StatusCode, String)> {
+) -> Result<Json<ToolWithText>, (StatusCode, String)> {
     if !claims.is_tool_manager(payload.store_id) {
         return Err((
             StatusCode::FORBIDDEN,
@@ -96,9 +125,50 @@ pub async fn create_new(
         }
     }
 
+    let store_name = match stores::select(stores::SelectParams{
+        ids: vec![payload.store_id],
+        statuses: vec![],
+        term: "".to_string(),
+        offset: 0,
+        limit: 1,
+    }, &state.db).await {
+        Ok(s) => s[0].name.clone(),
+        Err(e) => {
+            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+        }
+    };
+
+    let categories = match tool_categories::select(
+        tool_categories::SelectParams {
+            ids: payload.category_ids,
+            tool_ids: vec![],
+            term: "".to_string(),
+            offset: 0,
+            limit: 1000,
+        },
+        &state.db,
+    )
+    .await
+    {
+        Ok(c) => c,
+        Err(e) => {
+            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+        }
+    };
+
     let encoded = serde_json::to_vec(&tool).unwrap_or_default();
     state.comm.send_message("tools", &encoded).await.ok();
-    Ok(Json(tool))
+    Ok(Json(ToolWithText {
+        id: tool.id,
+        real_id: tool.real_id,
+        store_id: tool.store_id,
+        store_name,
+        default_rental_period: tool.default_rental_period,
+        description: tool.description,
+        pictures: tool.pictures,
+        status: tool.status,
+        categories,
+    }))
 }
 
 pub async fn update(
@@ -106,7 +176,8 @@ pub async fn update(
     Path(tool_id): Path<i32>,
     State(state): State<Arc<AppState>>,
     Json(payload): Json<UpdateToolData>,
-) -> Result<Json<tool::Tool>, (StatusCode, String)> {
+) -> Result<Json<ToolWithText>, (StatusCode, String)> {
+    // all the sql statements in this handler should be inside a transaction, but I'm ignoring that for now
     match tools::select(
         tools::SelectParams {
             ids: vec![tool_id],
@@ -122,7 +193,7 @@ pub async fn update(
     )
     .await
     {
-        Ok(mut tools) => {
+        Ok(tools) => {
             if tools.is_empty() {
                 return Err((StatusCode::NOT_FOUND, "Tool not found".to_string()));
             } else if !claims.is_tool_manager(tools[0].store_id) {
@@ -164,10 +235,10 @@ pub async fn update(
                 }
             };
 
-        let new_categories = payload.category_ids.unwrap();
+        let new_categories = payload.category_ids.as_deref().unwrap_or_default();
 
         let mut to_add: Vec<tool_classification::ToolClassification> = vec![];
-        for category_id in &new_categories {
+        for category_id in new_categories {
             if !existing_categories
                 .iter()
                 .any(|c| c.category_id == *category_id)
@@ -201,16 +272,57 @@ pub async fn update(
         }
     }
 
+    let store_name = match stores::select(stores::SelectParams{
+        ids: vec![tool.store_id],
+        statuses: vec![],
+        term: "".to_string(),
+        offset: 0,
+        limit: 1,
+    }, &state.db).await {
+        Ok(s) => s[0].name.clone(),
+        Err(e) => {
+            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+        }
+    };
+
+    let categories = match tool_categories::select(
+        tool_categories::SelectParams {
+            ids: vec![],
+            tool_ids: vec![tool_id],
+            term: "".to_string(),
+            offset: 0,
+            limit: 1000,
+        },
+        &state.db,
+    )
+    .await
+    {
+        Ok(c) => c,
+        Err(e) => {
+            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+        }
+    };
+
     let encoded = serde_json::to_vec(&tool).unwrap_or_default();
     state.comm.send_message("tools", &encoded).await.ok();
-    Ok(Json(tool))
+    Ok(Json(ToolWithText {
+        id: tool.id,
+        real_id: tool.real_id,
+        store_id: tool.store_id,
+        store_name,
+        default_rental_period: tool.default_rental_period,
+        description: tool.description,
+        pictures: tool.pictures,
+        status: tool.status,
+        categories,
+    }))
 }
 
 pub async fn get_by_id(
     _claims: Claims,
     Path(tool_id): Path<i32>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<tool::Tool>, (StatusCode, String)> {
+) -> Result<Json<ToolWithText>, (StatusCode, String)> {
     let mut tools = match tools::select(
         tools::SelectParams {
             ids: vec![tool_id],
@@ -235,8 +347,51 @@ pub async fn get_by_id(
     if tools.is_empty() {
         return Err((StatusCode::NOT_FOUND, "Tool not found".to_string()));
     }
+    let tool = tools.pop().unwrap();
 
-    Ok(Json(tools.pop().unwrap()))
+
+    let store_name = match stores::select(stores::SelectParams{
+        ids: vec![tool.store_id],
+        statuses: vec![],
+        term: "".to_string(),
+        offset: 0,
+        limit: 1,
+    }, &state.db).await {
+        Ok(s) => s[0].name.clone(),
+        Err(e) => {
+            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+        }
+    };
+
+    let categories = match tool_categories::select(
+        tool_categories::SelectParams {
+            ids: vec![],
+            tool_ids: vec![tool.id],
+            term: "".to_string(),
+            offset: 0,
+            limit: 1000,
+        },
+        &state.db,
+    )
+    .await
+    {
+        Ok(c) => c,
+        Err(e) => {
+            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+        }
+    };
+
+    Ok(Json(ToolWithText {
+        id: tool.id,
+        real_id: tool.real_id,
+        store_id: tool.store_id,
+        store_name,
+        default_rental_period: tool.default_rental_period,
+        description: tool.description,
+        pictures: tool.pictures,
+        status: tool.status,
+        categories,
+    }))
 }
 
 pub async fn get_filtered(
@@ -267,5 +422,69 @@ pub async fn get_filtered(
         }
     };
 
-    Ok(Json(ToolSearchResponse { tools }))
+    let classifications =
+        match tool_classifications::select(tools.iter().map(|t| t.id).collect(), vec![], &state.db)
+            .await
+        {
+            Ok(c) => c,
+            Err(e) => {
+                return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+            }
+        };
+
+    let mut store_ids = tools.iter().map(|t| t.store_id).collect::<Vec<store::Id>>();
+    store_ids.dedup();
+    let stores = match stores::select(stores::SelectParams {
+        ids: store_ids,
+        statuses: vec![],
+        term: "".to_string(),
+        offset: 0,
+        limit: 1000,
+    }, &state.db).await {
+        Ok(s) => s,
+        Err(e) => {
+            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+        }
+    };
+
+    let tools_with_classifications = tools.iter().map(|t| {
+        let classifications = classifications
+            .iter()
+            .filter(|c| c.tool_id == t.id)
+            .map(|c| c.category_id)
+            .collect();
+
+        ToolWithClassifications {
+            id: t.id,
+            real_id: t.real_id.clone(),
+            store_id: t.store_id,
+            default_rental_period: t.default_rental_period,
+            description: t.description.clone(),
+            pictures: t.pictures.clone(),
+            status: t.status,
+            classifications,
+        }
+    }).collect();
+
+    let categories = match tool_categories::select(
+        tool_categories::SelectParams {
+            ids: vec![],
+            tool_ids: tools.iter().map(|t| t.id).collect(),
+            term: "".to_string(),
+            offset: 0,
+            limit: 1000,
+        },
+        &state.db,
+    ).await {
+        Ok(c) => c,
+        Err(e) => {
+            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+        }
+    };
+
+    Ok(Json(ToolSearchResponse {
+        tools: tools_with_classifications,
+        stores,
+        categories,
+    }))
 }
