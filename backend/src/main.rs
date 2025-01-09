@@ -94,6 +94,16 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .route(
             "/permissions/:permission_id",
             routing::delete(handlers::permissions::delete)
+        )
+        .route(
+            "/tool-categories",
+            routing::get(handlers::tool_categories::get_filtered)
+                .post(handlers::tool_categories::create_new),
+        )
+        .route(
+            "/tool-categories/:tool_category_id",
+            routing::patch(handlers::tool_categories::update)
+                .get(handlers::tool_categories::get_by_id),
         );
 
     #[cfg(feature = "cors")]
