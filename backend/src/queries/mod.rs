@@ -6,3 +6,4 @@ pub mod stores;
 pub mod tool_categories;
 pub mod tools;
 pub mod users;
+pub mod tool_classifications;

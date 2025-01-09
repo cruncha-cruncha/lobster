@@ -69,23 +69,10 @@ CREATE TABLE main.tool_categories (
     PRIMARY KEY (id)
 );
 
-CREATE TABLE main.tool_category_relationships (
-    parent_id INTEGER NOT NULL,
-    child_id INTEGER NOT NULL,
-    PRIMARY KEY (parent_id, child_id),
-    CONSTRAINT fk_parent
-      FOREIGN KEY(parent_id)
-        REFERENCES main.tool_categories(id),
-    CONSTRAINT fk_child
-      FOREIGN KEY(child_id)
-        REFERENCES main.tool_categories(id)
-);
-
 CREATE TABLE main.tools (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     real_id TEXT NOT NULL,
     store_id INTEGER NOT NULL,
-    category_id INTEGER NOT NULL,
     default_rental_period INTEGER,
     description TEXT,
     pictures TEXT[] NOT NULL,
@@ -98,6 +85,15 @@ CREATE TABLE main.tools (
 
 CREATE INDEX IF NOT EXISTS idx_tools_store_id ON main.tools USING btree(store_id);
 CREATE INDEX IF NOT EXISTS idx_tools_category_id ON main.tools USING btree(category_id);
+
+CREATE TABLE main.tool_classifications (
+    tool_id INTEGER NOT NULL,
+    category_id INTEGER NOT NULL,
+    PRIMARY KEY (tool_id, category_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_tool_classifications_tool_id ON main.tool_classifications USING btree(tool_id);
+CREATE INDEX IF NOT EXISTS idx_tool_classifications_category_id ON main.tool_classifications USING btree(category_id);
 
 CREATE TABLE main.rentals (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
@@ -138,3 +134,6 @@ CREATE INDEX IF NOT EXISTS idx_fuzzy_stores ON main.stores
 
 CREATE INDEX IF NOT EXISTS idx_fuzzy_tool_categories ON main.tool_categories
   USING gist((name || ' ' || COALESCE(description, '') || ' ' || ARRAY_TO_STRING(synonyms, ' ')) gist_trgm_ops(siglen=256));
+
+CREATE INDEX IF NOT EXISTS idx_fuzzy_tools ON main.tools
+  USING gist(COALESCE(description, '') gist_trgm_ops(siglen=256));
