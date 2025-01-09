@@ -10,6 +10,8 @@ import {
   validateStoreSearchResults,
   validateUserPermissions,
   validateSinglePermission,
+  validateSingleTool,
+  validateToolSearchResults,
 } from "./schemas";
 
 const serverUrl = import.meta.env.VITE_SERVER_URL || "http://127.0.0.1:3000";
@@ -320,6 +322,73 @@ export const removeUserPermission = async ({ id, accessToken }) => {
       Authorization: `Bearer ${accessToken}`,
     },
   });
+
+  return data;
+}
+
+export const createTool = async ({ info, accessToken }) => {
+  const data = await handle(`${serverUrl}/tools`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(info),
+  });
+
+  if (!validateSingleTool(data)) {
+    throw new Error(400);
+  }
+
+  return data;
+}
+
+export const updateTool = async ({ id, info, accessToken }) => {
+  const data = await handle(`${serverUrl}/tools/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(info),
+  });
+
+  if (!validateSingleTool(data)) {
+    throw new Error(400);
+  }
+
+  return data;
+}
+
+export const getTool = async ({ id, accessToken }) => {
+  const data = await handle(`${serverUrl}/tools/${id}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!validateSingleTool(data)) {
+    throw new Error(400);
+  }
+
+  return data;
+}
+
+export const searchTools = async ({ params, accessToken }) => {
+  const str_params = obj_to_query(params);
+
+  const data = await handle(`${serverUrl}/tools?${str_params}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!validateToolSearchResults(data)) {
+    throw new Error(400);
+  }
 
   return data;
 }

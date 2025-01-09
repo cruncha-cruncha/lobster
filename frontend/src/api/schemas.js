@@ -54,13 +54,7 @@ const allStatusOptionsSchema = {
     grievances: { type: "array", items: { $ref: "#genericOption" } },
     permissions: { type: "array", items: { $ref: "#genericOption" } },
   },
-  required: [
-    "stores",
-    "users",
-    "tools",
-    "grievances",
-    "permissions",
-  ],
+  required: ["stores", "users", "tools", "grievances", "permissions"],
 };
 
 const roleOptionsSchema = {
@@ -108,8 +102,18 @@ const storeInfoSchema = {
     code: { type: "string" },
     createdAt: { type: "string" },
   },
-  required: ["id", "name", "status", "emailAddress", "phoneNumber", "rentalInformation", "otherInformation", "code", "createdAt"],
-}
+  required: [
+    "id",
+    "name",
+    "status",
+    "emailAddress",
+    "phoneNumber",
+    "rentalInformation",
+    "otherInformation",
+    "code",
+    "createdAt",
+  ],
+};
 
 const storeSearchResultsSchema = {
   type: "object",
@@ -118,7 +122,7 @@ const storeSearchResultsSchema = {
     stores: { type: "array", items: { $ref: "#storeInfo" } },
   },
   required: ["stores"],
-}
+};
 
 const userPermissionsLibraryInfoSchema = {
   type: "object",
@@ -128,7 +132,7 @@ const userPermissionsLibraryInfoSchema = {
     role: { type: "number" },
   },
   required: ["id", "role"],
-}
+};
 
 const userPermissionsStoreInfoSchema = {
   type: "object",
@@ -139,7 +143,7 @@ const userPermissionsStoreInfoSchema = {
     role: { type: "number" },
   },
   required: ["id", "storeId", "role"],
-}
+};
 
 const userPermissionsStoreNameSchema = {
   type: "object",
@@ -149,7 +153,7 @@ const userPermissionsStoreNameSchema = {
     storeName: { type: "string" },
   },
   required: ["storeId", "storeName"],
-}
+};
 
 const userPermissionsSchema = {
   type: "object",
@@ -160,7 +164,7 @@ const userPermissionsSchema = {
     storeNames: { type: "array", items: { $ref: "#userPermissionsStoreName" } },
   },
   required: ["library", "store", "storeNames"],
-}
+};
 
 const singlePermissionSchema = {
   type: "object",
@@ -173,7 +177,41 @@ const singlePermissionSchema = {
     status: { type: "number" },
   },
   required: ["id", "userId", "roleId", "storeId", "status"],
-}
+};
+
+const singleToolSchema = {
+  type: "object",
+  $id: "#singleTool",
+  properties: {
+    id: { type: "number" },
+    realId: { type: "string" },
+    storeId: { type: "number" },
+    categoryId: { type: "number" },
+    defaultRentalPeriod: { type: "number" },
+    description: { type: "string" },
+    pictures: { type: "array", items: { type: "string" } },
+    status: { type: "number" },
+  },
+  required: [
+    "id",
+    "realId",
+    "storeId",
+    "categoryId",
+    "defaultRentalPeriod",
+    "description",
+    "pictures",
+    "status",
+  ],
+};
+
+const toolSearchResultsSchema = {
+  type: "object",
+  $id: "#toolSearchResults",
+  properties: {
+    tools: { type: "array", items: { $ref: "#singleTool" } },
+  },
+  required: ["tools"],
+};
 
 const makeLazyValidator = (schema) => {
   let validate = null;
@@ -235,4 +273,13 @@ export const validateUserPermissions = makeLazyValidator([
   userPermissionsSchema,
 ]);
 
-export const validateSinglePermission = makeLazyValidator(singlePermissionSchema);
+export const validateSinglePermission = makeLazyValidator(
+  singlePermissionSchema,
+);
+
+export const validateSingleTool = makeLazyValidator(singleToolSchema);
+
+export const validateToolSearchResults = makeLazyValidator([
+  singleToolSchema,
+  toolSearchResultsSchema,
+]);

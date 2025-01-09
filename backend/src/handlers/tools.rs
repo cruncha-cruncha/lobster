@@ -43,6 +43,12 @@ pub struct FilterParams {
     pub page: Option<i64>,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ToolSearchResponse {
+    pub tools: Vec<tool::Tool>,
+}
+
 pub async fn create_new(
     claims: Claims,
     State(state): State<Arc<AppState>>,
@@ -173,7 +179,7 @@ pub async fn get_filtered(
     _claims: Claims,
     Query(params): Query<FilterParams>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<Vec<tool::Tool>>, (StatusCode, String)> {
+) -> Result<Json<ToolSearchResponse>, (StatusCode, String)> {
     let (offset, limit) = common::calculate_offset_limit(params.page.unwrap_or_default());
 
     let tools = match tools::select(
@@ -196,5 +202,5 @@ pub async fn get_filtered(
         }
     };
 
-    Ok(Json(tools))
+    Ok(Json(ToolSearchResponse { tools }))
 }

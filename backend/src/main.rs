@@ -104,6 +104,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
             "/tool-categories/:tool_category_id",
             routing::patch(handlers::tool_categories::update)
                 .get(handlers::tool_categories::get_by_id),
+        )
+        .route(
+            "/tools",
+            routing::get(handlers::tools::get_filtered).post(handlers::tools::create_new),
+        ).route(
+            "/tools/:tool_id",
+            routing::patch(handlers::tools::update)
+                .get(handlers::tools::get_by_id),
         );
 
     #[cfg(feature = "cors")]
