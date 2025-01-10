@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SelectParams {
     pub ids: Vec<tool::Id>,
+    pub term: String,
     pub statuses: Vec<tool::Status>,
     pub store_ids: Vec<store::Id>,
     pub category_ids: Vec<i32>,
@@ -136,15 +137,17 @@ pub async fn select(
         LEFT JOIN main.tool_classifications tc ON mt.id = tc.tool_id
         WHERE
             (ARRAY_LENGTH($1::integer[], 1) IS NULL OR mt.id = ANY($1::integer[]))
-            AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR mt.status = ANY($2::integer[]))
-            AND (ARRAY_LENGTH($3::integer[], 1) IS NULL OR mt.store_id = ANY($3::integer[]))
-            AND (ARRAY_LENGTH($4::text[], 1) IS NULL OR mt.real_id = ANY($4::text[]))
-            AND (ARRAY_LENGTH($5::integer[], 1) IS NULL OR tc.category_id = ANY($5::integer[]))
-        GROUP BY mt.id having count(*) >= COALESCE(NULLIF(ARRAY_LENGTH($5::integer[], 1), $6), 1)
+            AND ($2::text = '' OR $2::text <% COALESCE(mt.description, ''))
+            AND (ARRAY_LENGTH($3::integer[], 1) IS NULL OR mt.status = ANY($3::integer[]))
+            AND (ARRAY_LENGTH($4::integer[], 1) IS NULL OR mt.store_id = ANY($4::integer[]))
+            AND (ARRAY_LENGTH($5::text[], 1) IS NULL OR mt.real_id = ANY($5::text[]))
+            AND (ARRAY_LENGTH($6::integer[], 1) IS NULL OR tc.category_id = ANY($6::integer[]))
+        GROUP BY mt.id having count(*) >= COALESCE(NULLIF(ARRAY_LENGTH($6::integer[], 1), $7), 1)
         ORDER BY mt.id 
-        OFFSET $7 LIMIT $8;
+        OFFSET $8 LIMIT $9;
         "#,
         &params.ids,
+        params.term,
         &params.statuses,
         &params.store_ids,
         &params.real_ids,

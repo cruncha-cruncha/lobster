@@ -38,6 +38,7 @@ pub struct UpdateToolData {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FilterParams {
+    pub term: Option<String>,
     pub store_ids: Option<Vec<store::Id>>,
     pub statuses: Option<Vec<tool::Status>>,
     pub categories: Option<Vec<tool_category::Id>>,
@@ -125,13 +126,18 @@ pub async fn create_new(
         }
     }
 
-    let store_name = match stores::select(stores::SelectParams{
-        ids: vec![payload.store_id],
-        statuses: vec![],
-        term: "".to_string(),
-        offset: 0,
-        limit: 1,
-    }, &state.db).await {
+    let store_name = match stores::select(
+        stores::SelectParams {
+            ids: vec![payload.store_id],
+            statuses: vec![],
+            term: "".to_string(),
+            offset: 0,
+            limit: 1,
+        },
+        &state.db,
+    )
+    .await
+    {
         Ok(s) => s[0].name.clone(),
         Err(e) => {
             return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
@@ -181,6 +187,7 @@ pub async fn update(
     match tools::select(
         tools::SelectParams {
             ids: vec![tool_id],
+            term: "".to_string(),
             statuses: vec![],
             store_ids: vec![],
             category_ids: vec![],
@@ -272,13 +279,18 @@ pub async fn update(
         }
     }
 
-    let store_name = match stores::select(stores::SelectParams{
-        ids: vec![tool.store_id],
-        statuses: vec![],
-        term: "".to_string(),
-        offset: 0,
-        limit: 1,
-    }, &state.db).await {
+    let store_name = match stores::select(
+        stores::SelectParams {
+            ids: vec![tool.store_id],
+            statuses: vec![],
+            term: "".to_string(),
+            offset: 0,
+            limit: 1,
+        },
+        &state.db,
+    )
+    .await
+    {
         Ok(s) => s[0].name.clone(),
         Err(e) => {
             return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
@@ -326,6 +338,7 @@ pub async fn get_by_id(
     let mut tools = match tools::select(
         tools::SelectParams {
             ids: vec![tool_id],
+            term: "".to_string(),
             statuses: vec![],
             store_ids: vec![],
             category_ids: vec![],
@@ -349,14 +362,18 @@ pub async fn get_by_id(
     }
     let tool = tools.pop().unwrap();
 
-
-    let store_name = match stores::select(stores::SelectParams{
-        ids: vec![tool.store_id],
-        statuses: vec![],
-        term: "".to_string(),
-        offset: 0,
-        limit: 1,
-    }, &state.db).await {
+    let store_name = match stores::select(
+        stores::SelectParams {
+            ids: vec![tool.store_id],
+            statuses: vec![],
+            term: "".to_string(),
+            offset: 0,
+            limit: 1,
+        },
+        &state.db,
+    )
+    .await
+    {
         Ok(s) => s[0].name.clone(),
         Err(e) => {
             return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
@@ -404,6 +421,7 @@ pub async fn get_filtered(
     let tools = match tools::select(
         tools::SelectParams {
             ids: vec![],
+            term: params.term.unwrap_or_default(),
             category_ids: params.categories.unwrap_or_default(),
             match_all_categories: params.match_all_categories.unwrap_or_default(),
             statuses: params.statuses.unwrap_or_default(),
@@ -422,65 +440,83 @@ pub async fn get_filtered(
         }
     };
 
-    let classifications =
-        match tool_classifications::select(tools.iter().map(|t| t.id).collect(), vec![], &state.db)
-            .await
+    let tool_ids = tools.iter().map(|t| t.id).collect::<Vec<tool::Id>>();
+    let mut store_ids = tools.iter().map(|t| t.store_id).collect::<Vec<store::Id>>();
+    store_ids.dedup(); // better than nothing
+
+    let mut classifications: Vec<ToolClassification> = vec![];
+    if !tool_ids.is_empty() {
+        classifications = match tool_classifications::select(tool_ids.clone(), vec![], &state.db).await {
+            Ok(c) => c,
+            Err(e) => {
+                return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+            }
+        };
+    }
+
+    let mut stores: Vec<store::Store> = vec![];
+    if !store_ids.is_empty() {
+        stores = match stores::select(
+            stores::SelectParams {
+                ids: store_ids,
+                statuses: vec![],
+                term: "".to_string(),
+                offset: 0,
+                limit: 1000,
+            },
+            &state.db,
+        )
+        .await
+        {
+            Ok(s) => s,
+            Err(e) => {
+                return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+            }
+        };
+    }
+
+    let tools_with_classifications = tools
+        .iter()
+        .map(|t| {
+            let classifications = classifications
+                .iter()
+                .filter(|c| c.tool_id == t.id)
+                .map(|c| c.category_id)
+                .collect();
+
+            ToolWithClassifications {
+                id: t.id,
+                real_id: t.real_id.clone(),
+                store_id: t.store_id,
+                default_rental_period: t.default_rental_period,
+                description: t.description.clone(),
+                pictures: t.pictures.clone(),
+                status: t.status,
+                classifications,
+            }
+        })
+        .collect();
+
+    let mut categories: Vec<tool_category::ToolCategory> = vec![];
+    if !tool_ids.is_empty() {
+        categories = match tool_categories::select(
+            tool_categories::SelectParams {
+                ids: vec![],
+                tool_ids: tool_ids,
+                term: "".to_string(),
+                offset: 0,
+                limit: 1000,
+            },
+            &state.db,
+        )
+        .await
         {
             Ok(c) => c,
             Err(e) => {
                 return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
             }
         };
-
-    let mut store_ids = tools.iter().map(|t| t.store_id).collect::<Vec<store::Id>>();
-    store_ids.dedup();
-    let stores = match stores::select(stores::SelectParams {
-        ids: store_ids,
-        statuses: vec![],
-        term: "".to_string(),
-        offset: 0,
-        limit: 1000,
-    }, &state.db).await {
-        Ok(s) => s,
-        Err(e) => {
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
-        }
-    };
-
-    let tools_with_classifications = tools.iter().map(|t| {
-        let classifications = classifications
-            .iter()
-            .filter(|c| c.tool_id == t.id)
-            .map(|c| c.category_id)
-            .collect();
-
-        ToolWithClassifications {
-            id: t.id,
-            real_id: t.real_id.clone(),
-            store_id: t.store_id,
-            default_rental_period: t.default_rental_period,
-            description: t.description.clone(),
-            pictures: t.pictures.clone(),
-            status: t.status,
-            classifications,
-        }
-    }).collect();
-
-    let categories = match tool_categories::select(
-        tool_categories::SelectParams {
-            ids: vec![],
-            tool_ids: tools.iter().map(|t| t.id).collect(),
-            term: "".to_string(),
-            offset: 0,
-            limit: 1000,
-        },
-        &state.db,
-    ).await {
-        Ok(c) => c,
-        Err(e) => {
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
-        }
-    };
+    }
 
     Ok(Json(ToolSearchResponse {
         tools: tools_with_classifications,
