@@ -118,6 +118,8 @@ export const useAuth = ({ mustBeLoggedIn = false } = {}) => {
   }, []);
 
   const permissions = {
+    library: [..._permissions.library],
+    store: { ..._permissions.store },
     isLibraryAdmin: () => _permissions.library.includes(1),
     isUserAdmin: () => _permissions.library.includes(2),
     isStoreAdmin: () => _permissions.library.includes(3),

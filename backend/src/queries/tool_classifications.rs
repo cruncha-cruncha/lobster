@@ -1,21 +1,18 @@
 use crate::db_structs::tool_classification;
-use serde::{Deserialize, Serialize};
 
 pub async fn insert(
     data: Vec<tool_classification::ToolClassification>,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<(), String> {
-    sqlx::query_as!(
-        tool_classification::ToolClassification,
+    sqlx::query!(
         r#"
         INSERT INTO main.tool_classifications (tool_id, category_id)
-        SELECT * FROM UNNEST($1::integer[], $2::integer[])
-        RETURNING *;
+        SELECT * FROM UNNEST($1::integer[], $2::integer[]);
         "#,
         &data.iter().map(|d| d.tool_id).collect::<Vec<i32>>(),
         &data.iter().map(|d| d.category_id).collect::<Vec<i32>>(),
     )
-    .fetch_one(db)
+    .execute(db)
     .await
     .map(|_| ())
     .map_err(|e| e.to_string())

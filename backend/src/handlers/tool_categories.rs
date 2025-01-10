@@ -1,8 +1,8 @@
-use crate::{auth::claims::Claims, db_structs::tool_classification};
 use crate::common;
 use crate::db_structs::tool_category;
 use crate::queries::tool_categories;
 use crate::AppState;
+use crate::{auth::claims::Claims, db_structs::tool_classification};
 use axum::{
     extract::{Json, Path, State},
     http::StatusCode,
@@ -34,6 +34,12 @@ pub struct FilterParams {
     pub tool_ids: Option<Vec<tool_classification::ToolId>>,
     pub term: Option<String>,
     pub page: Option<i64>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SearchResponse {
+    pub categories: Vec<tool_category::ToolCategory>,
 }
 
 pub async fn create_new(
@@ -130,7 +136,7 @@ pub async fn get_filtered(
     _claims: Claims,
     Query(params): Query<FilterParams>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<Vec<tool_category::ToolCategory>>, (StatusCode, String)> {
+) -> Result<Json<SearchResponse>, (StatusCode, String)> {
     let (offset, limit) = common::calculate_offset_limit(params.page.unwrap_or_default());
 
     let tool_categories = match tool_categories::select(
@@ -151,5 +157,7 @@ pub async fn get_filtered(
         }
     };
 
-    Ok(Json(tool_categories))
+    Ok(Json(SearchResponse {
+        categories: tool_categories,
+    }))
 }

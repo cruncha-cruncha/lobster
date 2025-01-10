@@ -255,6 +255,15 @@ const toolSearchResultsSchema = {
   required: ["tools"],
 };
 
+const toolCategorySearchResultsSchema = {
+  type: "object",
+  $id: "#toolCategorySearchResults",
+  properties: {
+    categories: { type: "array", items: { $ref: "#toolCategory" } },
+  },
+  required: ["categories"],
+};
+
 const makeLazyValidator = (schema) => {
   let validate = null;
   return (data) => {
@@ -329,4 +338,9 @@ export const validateToolSearchResults = makeLazyValidator([
   storeInfoSchema,
   toolCategorySchema,
   toolSearchResultsSchema,
+]);
+
+export const validateToolCategorySearchResults = makeLazyValidator([
+  toolCategorySchema,
+  toolCategorySearchResultsSchema,
 ]);

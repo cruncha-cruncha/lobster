@@ -8,6 +8,7 @@ export const SearchSelect = ({
   onSelect,
   options,
   disabled,
+  showLastSelected = true,
 }) => {
   const [collapsed, setCollapsed] = useState(true);
   const [lastSelected, setLastSelected] = useState("");
@@ -17,7 +18,7 @@ export const SearchSelect = ({
       <div className="border-2 border-stone-800">
         <input
           type="text"
-          value={(collapsed && lastSelected) ? lastSelected : value}
+          value={(showLastSelected && collapsed && lastSelected) ? lastSelected : value}
           onChange={onChange}
           onFocus={() => setCollapsed(false)}
           onBlur={() => setCollapsed(true)}

@@ -39,6 +39,10 @@ export const Store = () => {
     navigate(`/people?storeId=${params.id}`);
   };
 
+  const goToStoreTools = () => {
+    navigate(`/stores/${params.id}/tools`);
+  }
+
   const showUpdateStatus = permissions.isStoreAdmin();
 
   const canUpdateStatus = storeInfo.status != status;
@@ -59,20 +63,17 @@ export const Store = () => {
     _setStatus(e.target.value);
   };
 
-  // all info (title, email, phone, hours, description, other)
-  // can see store code if related to the store
   // button to edit store details
   // button to see tools available from the store
   // button to edit tools in the store
-  // button to see users related to the store
   // button to go to returns page
   // button to go to rentals page
-  // button to go to stores page
 
   return (
     <div>
       <Button onClick={() => goToStores()} text="All Stores" />
       <Button onClick={() => goToPeople()} text="People" />
+      <Button onClick={() => goToStoreTools()} text="Tools" />
       <h1>{storeInfo.name}</h1>
       <p>{JSON.stringify(storeInfo)}</p>
       {showUpdateStatus && (
