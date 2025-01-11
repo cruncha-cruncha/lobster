@@ -4,6 +4,10 @@ pub async fn insert(
     data: Vec<tool_classification::ToolClassification>,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<(), String> {
+    if data.is_empty() {
+        return Ok(());
+    }
+
     sqlx::query!(
         r#"
         INSERT INTO main.tool_classifications (tool_id, category_id)
@@ -22,6 +26,10 @@ pub async fn delete (
     data: Vec<tool_classification::ToolClassification>,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<(), String> {
+    if data.is_empty() {
+        return Ok(());
+    }
+    
     match sqlx::query!(
         r#"
         DELETE FROM main.tool_classifications tc
