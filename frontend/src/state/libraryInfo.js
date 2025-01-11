@@ -16,7 +16,7 @@ export const useLibraryInfo = () => {
   ); // hours that rentals can be checked out for
   const [maximumFuture, setMaximumFuture] = useAtom(libraryMaximumFutureAtom); // days in the future that rentals can be made
 
-  const { data, error, isLoading } = useSWR(
+  const { data, error, isLoading, mutate } = useSWR(
     "get library information",
     endpoints.getLibraryInformation,
     {
@@ -34,19 +34,10 @@ export const useLibraryInfo = () => {
     }
   }, [data]);
 
-  const refresh = () => {
-    return endpoints.getLibraryInformation().then((data) => {
-      setUuid(data.uuid);
-      setName(data.name);
-      setMaximumRentalPeriod(data.maximumRentalPeriod);
-      setMaximumFuture(data.maximumFuture);
-    });
-  };
-
   return {
     error,
     isLoading,
-    refresh,
+    refresh: () => mutate(),
     uuid,
     name,
     maximumRentalPeriod,

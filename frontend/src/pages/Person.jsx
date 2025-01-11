@@ -54,7 +54,7 @@ export const useUserInfo = ({ id }) => {
   );
 
   const { data, error, isLoading } = useSWR(
-    !accessToken ? null : `get user ${id} info using ${accessToken}`,
+    !accessToken ? null : `get user ${id} info, using ${accessToken}`,
     () => endpoints.getUser({ id, accessToken }),
   );
 
@@ -161,7 +161,7 @@ export const useUserStatus = ({ id }) => {
   );
 
   const { data, error, isLoading } = useSWR(
-    !accessToken ? null : `get user ${id} info using ${accessToken}`,
+    !accessToken ? null : `get user ${id} info, using ${accessToken}`,
     () => endpoints.getUser({ id, accessToken }),
   );
 
@@ -259,8 +259,8 @@ export const useUserPermissions = ({ id }) => {
   const [storeId, _setStoreId] = useState("0");
   const [storeOptions, setStoreOptions] = useState([]);
 
-  const { data, error, isLoading } = useSWR(
-    !accessToken ? null : `get user ${id} permissions using ${accessToken}`,
+  const { data, error, isLoading, mutate } = useSWR(
+    !accessToken ? null : `get user ${id} permissions, using ${accessToken}`,
     () => endpoints.getUserPermissions({ id, accessToken }),
   );
 
@@ -275,12 +275,29 @@ export const useUserPermissions = ({ id }) => {
 
   const canUpdateStorePermissions = permissions.isStoreAdmin();
 
+  {
+    const endpointParams = {
+      term: storeTerm,
+    };
+
+    const { data, isLoading, error, mutate } = useSWR(
+      !accessToken
+        ? null
+        : `get stores, using ${accessToken} and ${JSON.stringify(
+            endpointParams,
+          )}`,
+      () => endpoints.getStores({ params: endpointParams, accessToken }),
+    );
+
+    useEffect(() => {
+      if (data) {
+        setStoreOptions(data.stores);
+      }
+    }, [data]);
+  }
+
   const setStoreTerm = (e) => {
-    const term = e.target.value;
-    _setStoreTerm(term);
-    endpoints.getStores({ params: { term }, accessToken }).then((data) => {
-      setStoreOptions(data.stores);
-    });
+    _setStoreTerm(e.target.value);
   };
 
   const removePermission = async ({ permissionId }) => {
@@ -290,10 +307,7 @@ export const useUserPermissions = ({ id }) => {
         id: permissionId,
         accessToken,
       })
-      .then(() => endpoints.getUserPermissions({ id, accessToken }))
-      .then((data) => {
-        setUserPermissions(data);
-      })
+      .then(() => mutate())
       .finally(() => {
         setSaving(false);
       });
@@ -319,10 +333,7 @@ export const useUserPermissions = ({ id }) => {
         permission,
         accessToken,
       })
-      .then(() => endpoints.getUserPermissions({ id, accessToken }))
-      .then((data) => {
-        setUserPermissions(data);
-      })
+      .then(() => mutate())
       .finally(() => {
         setSaving(false);
       });
@@ -367,14 +378,9 @@ export const useUserPermissions = ({ id }) => {
 
   const showStoreSearch =
     selectedRoleName === "store_rep" || selectedRoleName === "tool_manager";
-  if (showStoreSearch && storeId === "0" && storeOptions.length === 0) {
-    endpoints.getStores({ params: {}, accessToken }).then((data) => {
-      setStoreOptions(data.stores);
-    });
-  }
 
   // TODO: store_reps should be able to modify permissions for their store
-  // limit store options to stores they're a rep for
+  // limit store options to stores they're a rep for?
 
   const permissionLookup = [
     ...userPermissions.library,

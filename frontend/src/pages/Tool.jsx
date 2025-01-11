@@ -39,7 +39,6 @@ export const Tool = () => {
   const navigate = useNavigate();
   const { toolStatuses } = useConstants();
   const _categorySearch = useCategorySearch();
-  const [data, setData] = useState({});
   const [info, dispatch] = useReducer(reducer, {
     status: "1",
     description: "",
@@ -52,7 +51,6 @@ export const Tool = () => {
   const toolId = params.id;
 
   const updateLocalInfo = (data) => {
-    setData(data);
     dispatch({ type: "status", value: data.status });
     dispatch({ type: "description", value: data.description });
     data.categories.forEach((category) => {
@@ -67,14 +65,16 @@ export const Tool = () => {
     dispatch({ type: "isLoading", value: false });
   };
 
-  const getData = () => {
-    if (!accessToken) return;
-    endpoints.getTool({ id: toolId, accessToken }).then(updateLocalInfo);
-  };
+  const { data, isLoading, error, mutate } = useSWR(
+    !accessToken ? null : `get tool ${toolId}, using ${accessToken}`,
+    () => endpoints.getTool({ id: toolId, accessToken }),
+  );
 
   useEffect(() => {
-    getData();
-  }, [accessToken]);
+    if (data) {
+      updateLocalInfo(data);
+    }
+  }, [data]);
 
   const goToTools = () => {
     navigate("/tools");
@@ -120,7 +120,9 @@ export const Tool = () => {
         },
         accessToken,
       })
-      .then(updateLocalInfo);
+      .then((_data) => {
+        mutate();
+      });
   };
 
   const categorySearch = {
@@ -133,7 +135,7 @@ export const Tool = () => {
       <p>Tool</p>
       <div className="flex gap-2">
         <Button text="Store" onClick={goToStore} variant="blue" />
-        <Button text="Store Tools" onClick={goToStoreTools} variant="blue"  />
+        <Button text="Store Tools" onClick={goToStoreTools} variant="blue" />
         <Button text="All Tools" onClick={goToTools} variant="blue" />
       </div>
 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import useSWR, { useSWRConfig } from "swr";
 import { useAuth } from "../state/auth";
 import * as endpoints from "../api/endpoints";
 import { useParams, useNavigate, useSearchParams } from "react-router";
@@ -21,9 +22,6 @@ export const buildToolList = (data) => {
 };
 
 export const useTools = () => {
-  // search for tools
-  // edit tools button, dropdown store search (or go directly to store if you only have one? get store titles for store roles we have?)
-
   const { accessToken } = useAuth();
   const navigate = useNavigate();
   const [urlParams, setUrlParams] = useSearchParams();
@@ -57,46 +55,51 @@ export const useTools = () => {
     },
   };
 
-  useEffect(() => {
-    if (!urlStoreId || !accessToken) return;
-    _storeSelect.addStore(urlStoreId);
-    endpoints.getStore({ id: urlStoreId, accessToken }).then((data) => {
-      storeSelect.setStoreTerm({ target: { value: data.name } });
-    });
-  }, [urlStoreId, accessToken, storeSelect.stores]);
+  {
+    useEffect(() => {
+      if (!urlStoreId || !accessToken) return;
+      _storeSelect.addStore(urlStoreId);
+    }, [urlStoreId, accessToken, storeSelect.stores]);
 
-  const fetchTools = () => {
-    if (!accessToken) return;
-    return endpoints
-      .searchTools({
-        params: {
-          term: searchTerm,
-          storeIds: urlStoreId
-            ? [urlStoreId]
-            : storeSelect.stores.map((store) => store.id),
-          statuses: status === "0" ? "" : [parseInt(status, 10)],
-          categories: categorySearch.categories.map((cat) => cat.id),
-          matchAllCategories: categorySearch.matchAllCats,
-          page,
-        },
-        accessToken,
-      })
-      .then((data) => {
-        setToolsList(buildToolList(data));
-      });
+    const { data } = useSWR(
+      !urlStoreId || !accessToken
+        ? null
+        : `get store ${urlStoreId}, using ${accessToken}`,
+      () => endpoints.getStore({ id: urlStoreId, accessToken }),
+    );
+
+    useEffect(() => {
+      if (data) {
+        _storeSelect.setStoreTerm({ target: { value: data.name } });
+      }
+    }, [data]);
+  }
+
+  const endpointParams = {
+    term: searchTerm,
+    storeIds: urlStoreId
+      ? [urlStoreId]
+      : storeSelect.stores.map((store) => store.id),
+    statuses: status === "0" ? "" : [parseInt(status, 10)],
+    categories: categorySearch.categories.map((cat) => cat.id),
+    matchAllCategories: categorySearch.matchAllCats,
+    page,
   };
 
+  const { data, isLoading, error, mutate } = useSWR(
+    !accessToken
+      ? null
+      : `get tools, using ${accessToken} and ${JSON.stringify(
+          endpointParams,
+        )}`,
+    () => endpoints.searchTools({ params: endpointParams, accessToken }),
+  );
+
   useEffect(() => {
-    fetchTools();
-  }, [
-    page,
-    status,
-    searchTerm,
-    categorySearch.categories,
-    categorySearch.matchAllCats,
-    storeSelect.stores,
-    accessToken,
-  ]);
+    if (data) {
+      setToolsList(buildToolList(data));
+    }
+  }, [data]);
 
   const setStatus = (e) => {
     _setStatus(e.target.value);
@@ -274,6 +277,7 @@ export const PureCategorySearch = (categorySearch) => {
 
 export const useStoreSelect = () => {
   const { accessToken } = useAuth();
+  const { cache } = useSWRConfig();
   const [stores, setStores] = useState([]);
   const [storeTerm, _setStoreTerm] = useState("");
   const [storeOptions, setStoreOptions] = useState([]);
@@ -305,6 +309,7 @@ export const useStoreSelect = () => {
     let newStore = storeOptions.find((s) => s.id == storeId);
     if (!newStore) {
       newStore = await endpoints.getStore({ id: storeId, accessToken });
+      cache.set(`get store ${storeId}, using ${accessToken}`, newStore);
     }
     !!newStore && setStores([...stores, newStore]);
   };

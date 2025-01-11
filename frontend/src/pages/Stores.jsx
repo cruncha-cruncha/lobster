@@ -2,6 +2,7 @@ import { useReducer, useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useConstants } from "../state/constants";
 import { useAuth } from "../state/auth";
+import useSWR from "swr";
 import * as endpoints from "../api/endpoints";
 import { Button } from "../components/Button";
 import { TextInput } from "../components/TextInput";
@@ -47,33 +48,41 @@ export const useStores = () => {
       paramsDispatch({ type: "page", value: params.page - 1 });
     }
   };
+
   const nextPage = () =>
     paramsDispatch({ type: "page", value: params.page + 1 });
+
   const setStatus = (e) =>
     paramsDispatch({ type: "status", value: e.target.value });
+
   const setTerm = (e) =>
     paramsDispatch({ type: "term", value: e.target.value });
 
   const debouncedParams = useDebounce(params, 200);
 
-  useEffect(() => {
-    if (JSON.stringify(params) !== JSON.stringify(debouncedParams) || !accessToken) {
-      return;
-    }
+  const endpointParams = {
+    term: debouncedParams.term,
+    page: debouncedParams.page,
+    statuses:
+      debouncedParams.status == "0"
+        ? ""
+        : [parseInt(debouncedParams.status, 10)],
+  };
 
-    endpoints
-      .getStores({
-        params: {
-          page: params.page,
-          statuses: params.status === "0" ? "" : [parseInt(params.status, 10)],
-          term: params.term,
-        },
-        accessToken,
-      })
-      .then((data) => {
-        setStoreList(data.stores);
-      });
-  }, [params, debouncedParams, accessToken]);
+  const { data, error, isLoading, mutate } = useSWR(
+    !accessToken
+      ? null
+      : `get stores, using ${accessToken} and ${JSON.stringify(
+          endpointParams,
+        )}`,
+    () => endpoints.getStores({ params: endpointParams, accessToken }),
+  );
+
+  useEffect(() => {
+    if (data) {
+      setStoreList(data.stores);
+    }
+  }, [data]);
 
   return {
     storeList,

@@ -1,6 +1,7 @@
 import { useState, useReducer, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useConstants } from "../state/constants";
+import useSWR from "swr";
 import { TextInput } from "../components/TextInput";
 import { Select } from "../components/Select";
 import { SearchSelect } from "../components/SearchSelect";
@@ -87,51 +88,67 @@ export const usePeople = () => {
     }
   };
 
+  {
+    const endpointParams = {
+      term: storeTerm,
+    };
+
+    const { data, isLoading, error, mutate } = useSWR(
+      !accessToken
+        ? null
+        : `get stores, using ${accessToken} and ${JSON.stringify(
+            endpointParams,
+          )}`,
+      () => endpoints.getStores({ params: endpointParams, accessToken }),
+    );
+
+    useEffect(() => {
+      if (data) {
+        setStoreOptions(data.stores);
+      }
+    }, [data]);
+  }
+
   const setStoreTerm = (e) => {
     if (!params.withStore) paramsDispatch({ type: "withStore", value: true });
-    const term = e.target.value;
-    _setStoreTerm(term);
-    endpoints.getStores({ params: { term }, accessToken }).then((data) => {
-      setStoreOptions(data.stores);
-    });
+    _setStoreTerm(e.target.value);
   };
 
-  useEffect(() => {
-    if (!urlStoreId || !accessToken || params.storeId != 0) return;
-    paramsDispatch({ type: "withStore", value: true });
-    paramsDispatch({ type: "storeId", value: urlStoreId });
-    endpoints.getStore({ id: urlStoreId, accessToken }).then((data) => {
-      setStoreTerm({ target: { value: data.name } });
-    });
-  }, [urlStoreId, accessToken, params.storeId]);
+  {
+    const { data, isLoading, error, mutate } = useSWR(
+      (!urlStoreId || !accessToken || params.storeId != 0) ? null : `get store ${urlStoreId}, using ${accessToken}`,
+      () => endpoints.getStore({ id: urlStoreId, accessToken }),
+    )
+
+    useEffect(() => {
+      if (data) {
+        setStoreTerm({ target: { value: data.name } });
+      }
+    }, [data]);
+  }
+
+  const endpointParams = {
+    term: debouncedParams.searchTerm,
+    storeIds: urlStoreId
+      ? [parseInt(urlStoreId, 10)]
+      : debouncedParams.storeId === "0" || !debouncedParams.withStore
+      ? ""
+      : [parseInt(debouncedParams.storeId, 10)],
+    statuses: debouncedParams.status === "0" ? "" : [parseInt(debouncedParams.status, 10)],
+    roles: debouncedParams.role === "0" ? "" : [parseInt(debouncedParams.role, 10)],
+    page: debouncedParams.page,
+  };
+
+  const { data, isLoading, error, mutate } = useSWR(
+    !accessToken ? null : `get users, using ${accessToken} and ${JSON.stringify(endpointParams)}`,
+    () => endpoints.getUsers({ params: endpointParams, accessToken }),
+  );
 
   useEffect(() => {
-    if (
-      JSON.stringify(params) !== JSON.stringify(debouncedParams) ||
-      !accessToken
-    ) {
-      return;
+    if (data) {
+      setPeopleList(data.users);
     }
-
-    endpoints
-      .getUsers({
-        params: {
-          term: params.searchTerm,
-          storeIds: urlStoreId
-            ? [parseInt(urlStoreId, 10)]
-            : params.storeId === "0" || !params.withStore
-            ? ""
-            : [parseInt(params.storeId, 10)],
-          statuses: params.status === "0" ? "" : [parseInt(params.status, 10)],
-          roles: params.role === "0" ? "" : [parseInt(params.role, 10)],
-          page: params.page,
-        },
-        accessToken,
-      })
-      .then((data) => {
-        setPeopleList(data.users);
-      });
-  }, [params, debouncedParams, accessToken, urlStoreId]);
+  })
 
   const goToPerson = (id) => {
     navigate(`/people/${id}`);

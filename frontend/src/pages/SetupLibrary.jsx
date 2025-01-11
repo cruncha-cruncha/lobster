@@ -21,31 +21,6 @@ export const useSetupLibrary = () => {
       });
   };
 
-  const onSignUp = async () => {
-    setIsLoading("signUp");
-
-    const showErrModal = () =>
-      modal.open(
-        "Request failed. There may already be a user with this email address.",
-        "error",
-      );
-
-    endpoints
-      .requestInvitation({ email })
-      .then((res) => {
-        if (res.status !== 200) {
-          showErrModal();
-        } else {
-          modal.open(
-            "Invitation request sent. Please contact a moderator for next steps.",
-          );
-        }
-      }, showErrModal)
-      .finally(() => {
-        setIsLoading("");
-      });
-  };
-
   const setName = (e) => {
     _setName(e.target.value);
   };

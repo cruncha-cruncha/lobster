@@ -23,7 +23,7 @@ export const Store = () => {
   const storeId = params.id;
 
   const { data, error, isLoading } = useSWR(
-    !accessToken ? null : `get store ${storeId} using ${accessToken}`,
+    !accessToken ? null : `get store ${storeId}, using ${accessToken}`,
     () => endpoints.getStore({ id: storeId, accessToken }),
   );
 

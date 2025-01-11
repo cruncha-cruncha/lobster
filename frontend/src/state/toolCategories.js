@@ -11,7 +11,7 @@ export const useInitToolCategories = () => {
   const [toolCategories, setToolCategories] = useAtom(toolCategoriesAtom);
 
   const { data, isLoading, error } = useSWR(
-    !accessToken ? null : `get all tool categories using ${accessToken}`,
+    !accessToken ? null : `get all tool categories, using ${accessToken}`,
     () => endpoints.getAllToolCategories({ accessToken }),
     {
       revalidateOnFocus: false,
