@@ -10,6 +10,7 @@ import { SearchSelect } from "../components/SearchSelect";
 import { Checkbox } from "../components/Checkbox";
 import { URL_STORE_ID_KEY } from "./Store";
 import { useToolCategories } from "../state/toolCategories";
+import { PrevNext } from "../components/PrevNext";
 
 export const buildToolList = (data) => {
   return data.tools.map((tool) => {
@@ -113,6 +114,14 @@ export const useTools = () => {
     navigate(`/tools/${toolId}`);
   };
 
+  const prevPage = () => {
+    if (page > 1) {
+      _setPage(page - 1);
+    }
+  };
+
+  const nextPage = () => _setPage(page + 1);
+
   return {
     toolStatuses: [{ id: "0", name: "All" }, ...toolStatuses],
     status,
@@ -124,6 +133,9 @@ export const useTools = () => {
     toolsList,
     goToTool,
     warnSingleStore: !!urlStoreId,
+    prevPage,
+    nextPage,
+    page,
   };
 };
 
@@ -139,6 +151,9 @@ export const PureTools = (tools) => {
     toolsList,
     goToTool,
     warnSingleStore,
+    prevPage,
+    nextPage,
+    page,
   } = tools;
 
   return (
@@ -166,6 +181,11 @@ export const PureTools = (tools) => {
           </li>
         ))}
       </ul>
+      <PrevNext
+        prev={prevPage}
+        next={nextPage}
+        pageNumber={page}
+      />
     </div>
   );
 };
