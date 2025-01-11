@@ -8,6 +8,7 @@ import { Button } from "../components/Button";
 import { TextInput } from "../components/TextInput";
 import { Select } from "../components/Select";
 import { useDebounce } from "../components/useDebounce";
+import { useCategorySearch, PureCategorySearch } from "./Tools";
 
 export const URL_STORE_ID_KEY = "storeId";
 
@@ -18,10 +19,12 @@ export const Store = () => {
   const { accessToken, permissions } = useAuth();
   const [storeInfo, setStoreInfo] = useState({});
   const [status, _setStatus] = useState(0);
+  const addTool = useAddTool({ storeId: params.id });
+  const storeId = params.id;
 
   const { data, error, isLoading } = useSWR(
-    !accessToken ? null : `get store ${params.id} using ${accessToken}`,
-    () => endpoints.getStore({ id: params.id, accessToken }),
+    !accessToken ? null : `get store ${storeId} using ${accessToken}`,
+    () => endpoints.getStore({ id: storeId, accessToken }),
   );
 
   useEffect(() => {
@@ -36,11 +39,11 @@ export const Store = () => {
   };
 
   const goToPeople = () => {
-    navigate(`/people?storeId=${params.id}`);
+    navigate(`/people?${URL_STORE_ID_KEY}=${storeId}`);
   };
 
-  const goToStoreTools = () => {
-    navigate(`/stores/${params.id}/tools`);
+  const goToTools = () => {
+    navigate(`/tools?${URL_STORE_ID_KEY}=${storeId}`);
   }
 
   const showUpdateStatus = permissions.isStoreAdmin();
@@ -50,7 +53,7 @@ export const Store = () => {
   const updateStatus = () => {
     endpoints
       .updateStoreStatus({
-        id: params.id,
+        id: storeId,
         status: Number(status),
         accessToken,
       })
@@ -64,8 +67,6 @@ export const Store = () => {
   };
 
   // button to edit store details
-  // button to see tools available from the store
-  // button to edit tools in the store
   // button to go to returns page
   // button to go to rentals page
 
@@ -73,7 +74,7 @@ export const Store = () => {
     <div>
       <Button onClick={() => goToStores()} text="All Stores" />
       <Button onClick={() => goToPeople()} text="People" />
-      <Button onClick={() => goToStoreTools()} text="Tools" />
+      <Button onClick={() => goToTools()} text="Tools" />
       <h1>{storeInfo.name}</h1>
       <p>{JSON.stringify(storeInfo)}</p>
       {showUpdateStatus && (
@@ -86,6 +87,93 @@ export const Store = () => {
           />
         </>
       )}
+      <PureAddTool {...addTool} />
+    </div>
+  );
+};
+
+export const useAddTool = ({ storeId }) => {
+  const { accessToken } = useAuth();
+  const [realId, _setRealId] = useState("");
+  const [description, _setDescription] = useState("");
+  const categorySearch = useCategorySearch();
+
+  // default rental period
+  // pictures
+
+  const setRealId = (e) => {
+    _setRealId(e.target.value);
+  };
+
+  const setDescription = (e) => {
+    _setDescription(e.target.value);
+  };
+
+  // const showAddTool = if user is tool manager for store
+
+  const canAddTool = true;
+  // realId !== "" && description !== "" && categories.length > 0;
+
+  const createTool = () => {
+    endpoints
+      .createTool({
+        info: {
+          realId,
+          storeId: Number(storeId),
+          categoryIds: [],
+          description,
+          pictures: [],
+          status: 1,
+        },
+        accessToken,
+      })
+      .then((data) => {
+        console.log(data);
+      });
+  };
+
+  return {
+    realId,
+    setRealId,
+    description,
+    setDescription,
+    categorySearch: {
+      ...categorySearch,
+      showMatchAllCats: false,
+    },
+    createTool,
+    canAddTool,
+  };
+};
+
+export const PureAddTool = (addTool) => {
+  const {
+    realId,
+    setRealId,
+    description,
+    setDescription,
+    categorySearch,
+    createTool,
+    canAddTool,
+  } = addTool;
+
+  return (
+    <div>
+      <p>New Tool</p>
+      <TextInput
+        label="Real ID"
+        value={realId}
+        onChange={setRealId}
+        placeholder="X5J2"
+      />
+      <TextInput
+        label="Description"
+        value={description}
+        onChange={setDescription}
+        placeholder="A red screw driver, square head"
+      />
+      <PureCategorySearch {...categorySearch} />
+      <Button onClick={createTool} text="Add Tool" disabled={!canAddTool} />
     </div>
   );
 };

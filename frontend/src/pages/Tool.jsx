@@ -9,6 +9,7 @@ import { Select } from "../components/Select";
 import { SearchSelect } from "../components/SearchSelect";
 import { Checkbox } from "../components/Checkbox";
 import { Button } from "../components/Button";
+import { URL_STORE_ID_KEY } from "./Store";
 
 const reducer = (state, action) => {
   switch (action.type) {
@@ -68,7 +69,7 @@ export const Tool = () => {
   };
 
   const goToStoreTools = () => {
-    navigate(`/stores/${data.storeId}/tools`);
+    navigate(`/tools?${URL_STORE_ID_KEY}=${data.storeId}`);
   }
 
   return (
