@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../state/auth";
 import * as endpoints from "../api/endpoints";
-import { useParams } from "react-router";
+import { useParams, useNavigate, useSearchParams } from "react-router";
 import { useConstants } from "../state/constants";
 import { TextInput } from "../components/TextInput";
 import { Select } from "../components/Select";
 import { SearchSelect } from "../components/SearchSelect";
 import { Checkbox } from "../components/Checkbox";
+import { URL_STORE_ID_KEY } from "./Store";
 
 export const buildToolList = (data) => {
   return data.tools.map((tool) => {
@@ -23,7 +24,10 @@ export const useTools = () => {
   // edit tools button, dropdown store search (or go directly to store if you only have one? get store titles for store roles we have?)
 
   const { accessToken } = useAuth();
-  const params = useParams();
+  const navigate = useNavigate();
+  const [urlParams, setUrlParams] = useSearchParams();
+  const urlStoreId = urlParams.get(URL_STORE_ID_KEY);
+
   const { toolStatuses } = useConstants();
   const [toolsList, setToolsList] = useState([]);
 
@@ -32,14 +36,43 @@ export const useTools = () => {
   const [page, _setPage] = useState(1);
 
   const categorySearch = useCategorySearch();
-  const storeSelect = useStoreSelect();
+  const _storeSelect = useStoreSelect();
+
+  const storeSelect = {
+    ..._storeSelect,
+    addStore: (storeId) => {
+      if (urlStoreId) {
+        urlParams.delete(URL_STORE_ID_KEY);
+        setUrlParams(urlParams);
+      }
+      _storeSelect.addStore(storeId);
+    },
+    removeStore: (storeId) => {
+      if (urlStoreId == storeId) {
+        urlParams.delete(URL_STORE_ID_KEY);
+        setUrlParams(urlParams);
+      }
+      _storeSelect.removeStore(storeId);
+    },
+  };
+
+  useEffect(() => {
+    if (!urlStoreId || !accessToken) return;
+    _storeSelect.addStore(urlStoreId);
+    endpoints.getStore({ id: urlStoreId, accessToken }).then((data) => {
+      storeSelect.setStoreTerm({ target: { value: data.name } });
+    });
+  }, [urlStoreId, accessToken, storeSelect.stores]);
 
   const fetchTools = () => {
-    endpoints
+    if (!accessToken) return;
+    return endpoints
       .searchTools({
         params: {
           term: searchTerm,
-          storeIds: storeSelect.stores.map((store) => store.id),
+          storeIds: urlStoreId
+            ? [urlStoreId]
+            : storeSelect.stores.map((store) => store.id),
           statuses: status === "0" ? "" : [parseInt(status, 10)],
           categories: categorySearch.categories.map((cat) => cat.id),
           matchAllCategories: categorySearch.matchAllCats,
@@ -61,6 +94,7 @@ export const useTools = () => {
     categorySearch.categories,
     categorySearch.matchAllCats,
     storeSelect.stores,
+    accessToken,
   ]);
 
   const setStatus = (e) => {
@@ -71,8 +105,12 @@ export const useTools = () => {
     _setSearchTerm(e.target.value);
   };
 
+  const goToTool = (toolId) => {
+    navigate(`/tools/${toolId}`);
+  };
+
   return {
-    toolStatuses,
+    toolStatuses: [{ id: "0", name: "All" }, ...toolStatuses],
     status,
     setStatus,
     searchTerm,
@@ -80,6 +118,8 @@ export const useTools = () => {
     categorySearch,
     storeSelect,
     toolsList,
+    goToTool,
+    warnSingleStore: !!urlStoreId,
   };
 };
 
@@ -93,6 +133,8 @@ export const PureTools = (tools) => {
     categorySearch,
     storeSelect,
     toolsList,
+    goToTool,
+    warnSingleStore,
   } = tools;
 
   return (
@@ -112,9 +154,12 @@ export const PureTools = (tools) => {
       />
       <PureCategorySearch {...categorySearch} />
       <PureStoreSelect {...storeSelect} />
+      {warnSingleStore && <p>currently filtering by store</p>}
       <ul>
         {toolsList.map((tool) => (
-          <li key={tool.id}>{JSON.stringify(tool)}</li>
+          <li key={tool.id} onClick={() => goToTool(tool.id)}>
+            {JSON.stringify(tool)}
+          </li>
         ))}
       </ul>
     </div>
@@ -144,7 +189,7 @@ export const useCategorySearch = () => {
 
   useEffect(() => {
     fetchCategories();
-  }, [categoryTerm]);
+  }, [categoryTerm, accessToken]);
 
   const setCategoryTerm = (e) => {
     _setCategoryTerm(e.target.value);
@@ -152,7 +197,7 @@ export const useCategorySearch = () => {
 
   const addCategory = (catId) => {
     const newCat = categoryOptions.find((c) => c.id == catId);
-    if (categories.find((cat) => cat.id == newCat.id)) return;
+    if (!newCat || categories.find((cat) => cat.id == newCat.id)) return;
     setCategories([...categories, newCat]);
   };
 
@@ -226,7 +271,8 @@ export const useStoreSelect = () => {
   const [storeOptions, setStoreOptions] = useState([]);
 
   const fetchStores = () => {
-    endpoints
+    if (!accessToken) return;
+    return endpoints
       .getStores({
         params: {
           term: storeTerm,
@@ -240,15 +286,18 @@ export const useStoreSelect = () => {
 
   useEffect(() => {
     fetchStores();
-  }, [storeTerm]);
+  }, [storeTerm, accessToken]);
 
   const setStoreTerm = (e) => {
     _setStoreTerm(e.target.value);
   };
 
-  const addStore = (storeId) => {
-    const newStore = storeOptions.find((s) => s.id == storeId);
-    if (stores.find((s) => s.id == newStore.id)) return;
+  const addStore = async (storeId) => {
+    if (stores.find((s) => s.id == storeId)) return;
+    let newStore = storeOptions.find((s) => s.id == storeId);
+    if (!newStore) {
+      newStore = await endpoints.getStore({ id: storeId, accessToken });
+    }
     setStores([...stores, newStore]);
   };
 

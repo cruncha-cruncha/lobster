@@ -54,14 +54,19 @@ export const usePeople = () => {
       paramsDispatch({ type: "page", value: params.page - 1 });
     }
   };
+
   const nextPage = () =>
     paramsDispatch({ type: "page", value: params.page + 1 });
+
   const setStatus = (e) =>
     paramsDispatch({ type: "status", value: e.target.value });
+
   const setSearchTerm = (e) =>
     paramsDispatch({ type: "searchTerm", value: e.target.value });
+
   const setRole = (e) =>
     paramsDispatch({ type: "role", value: e.target.value });
+
   const setStoreId = (id) => {
     paramsDispatch({ type: "storeId", value: id });
     const storeName = storeOptions.find((store) => store.id === id).name;
@@ -69,6 +74,7 @@ export const usePeople = () => {
     urlParams.set(URL_STORE_ID_KEY, id);
     setUrlParams(urlParams);
   };
+
   const setWithStore = (e) => {
     const checked = e.target.checked;
     paramsDispatch({ type: "withStore", value: checked });
@@ -92,10 +98,10 @@ export const usePeople = () => {
 
   useEffect(() => {
     if (!urlStoreId || !accessToken || params.storeId != 0) return;
+    paramsDispatch({ type: "withStore", value: true });
+    paramsDispatch({ type: "storeId", value: urlStoreId });
     endpoints.getStore({ id: urlStoreId, accessToken }).then((data) => {
       setStoreTerm({ target: { value: data.name } });
-      paramsDispatch({ type: "withStore", value: true });
-      paramsDispatch({ type: "storeId", value: urlStoreId });
     });
   }, [urlStoreId, accessToken, params.storeId]);
 
@@ -111,10 +117,11 @@ export const usePeople = () => {
       .getUsers({
         params: {
           term: params.searchTerm,
-          storeIds:
-            params.storeId === "0" || !params.withStore
-              ? ""
-              : [parseInt(params.storeId, 10)],
+          storeIds: urlStoreId
+            ? [parseInt(urlStoreId, 10)]
+            : params.storeId === "0" || !params.withStore
+            ? ""
+            : [parseInt(params.storeId, 10)],
           statuses: params.status === "0" ? "" : [parseInt(params.status, 10)],
           roles: params.role === "0" ? "" : [parseInt(params.role, 10)],
           page: params.page,
@@ -124,7 +131,7 @@ export const usePeople = () => {
       .then((data) => {
         setPeopleList(data.users);
       });
-  }, [params, debouncedParams, accessToken]);
+  }, [params, debouncedParams, accessToken, urlStoreId]);
 
   const goToPerson = (id) => {
     navigate(`/people/${id}`);
