@@ -1,4 +1,4 @@
-import { useState, useEffect, useReducer } from "react";
+import { useEffect, useReducer } from "react";
 import useSWR from "swr";
 import { useAuth } from "../state/auth";
 import * as endpoints from "../api/endpoints";
@@ -6,11 +6,10 @@ import { useParams, useNavigate } from "react-router";
 import { useConstants } from "../state/constants";
 import { TextInput } from "../components/TextInput";
 import { Select } from "../components/Select";
-import { SearchSelect } from "../components/SearchSelect";
-import { Checkbox } from "../components/Checkbox";
 import { Button } from "../components/Button";
 import { URL_STORE_ID_KEY } from "./Store";
 import { PureCategorySearch, useCategorySearch } from "./Tools";
+import { useToolCart } from "../state/toolCart";
 
 const reducer = (state, action) => {
   switch (action.type) {
@@ -33,12 +32,13 @@ const reducer = (state, action) => {
   }
 };
 
-export const Tool = () => {
+export const useTool = () => {
   const { accessToken } = useAuth();
   const params = useParams();
   const navigate = useNavigate();
   const { toolStatuses } = useConstants();
   const _categorySearch = useCategorySearch();
+  const { toolCart, addTool, removeTool } = useToolCart();
   const [info, dispatch] = useReducer(reducer, {
     status: "1",
     description: "",
@@ -104,6 +104,24 @@ export const Tool = () => {
     dispatch({ type: "defaultRentalPeriod", value: e.target.value });
   };
 
+  const goToCart = () => {
+    navigate("/rentals");
+  };
+
+  const cartSize = toolCart.length;
+  const showGoToCart = cartSize > 0;
+  const canAddToCart =
+    !toolCart.some((tool) => tool.id == toolId) && info.status == 1;
+  const canRemoveFromCart = toolCart.some((tool) => tool.id == toolId);
+
+  const addToCart = () => {
+    addTool(data);
+  };
+
+  const removeFromCart = () => {
+    removeTool(toolId);
+  };
+
   const updateTool = () => {
     return endpoints
       .updateTool({
@@ -130,6 +148,54 @@ export const Tool = () => {
     showMatchAllCats: false,
   };
 
+  return {
+    toolId,
+    info,
+    data,
+    goToTools,
+    goToStoreTools,
+    goToStore,
+    toolStatuses,
+    setStatus,
+    setDescription,
+    setRealId,
+    setDefaultRentalPeriod,
+    updateTool,
+    categorySearch,
+    goToCart,
+    cartSize,
+    showGoToCart,
+    canAddToCart,
+    canRemoveFromCart,
+    addToCart,
+    removeFromCart,
+  };
+};
+
+export const PureTool = (tool) => {
+  const {
+    toolId,
+    info,
+    data,
+    goToTools,
+    goToStoreTools,
+    goToStore,
+    toolStatuses,
+    setStatus,
+    setDescription,
+    setRealId,
+    setDefaultRentalPeriod,
+    updateTool,
+    categorySearch,
+    goToCart,
+    cartSize,
+    showGoToCart,
+    canAddToCart,
+    canRemoveFromCart,
+    addToCart,
+    removeFromCart,
+  } = tool;
+
   return (
     <div>
       <p>Tool</p>
@@ -137,9 +203,27 @@ export const Tool = () => {
         <Button text="Store" onClick={goToStore} variant="blue" />
         <Button text="Store Tools" onClick={goToStoreTools} variant="blue" />
         <Button text="All Tools" onClick={goToTools} variant="blue" />
+        {showGoToCart && (
+          <Button
+            text={`Cart (${cartSize})`}
+            onClick={goToCart}
+            variant="blue"
+          />
+        )}
       </div>
-
       <p>{JSON.stringify(data)}</p>
+      <div>
+        {canAddToCart && (
+          <Button text="Add to Cart" onClick={() => addToCart(toolId)} />
+        )}
+        {canRemoveFromCart && (
+          <Button
+            text="Remove from Cart"
+            onClick={() => removeFromCart(toolId)}
+            variant="red"
+          />
+        )}
+      </div>
       <Select
         label="Status"
         value={info.status}
@@ -161,4 +245,9 @@ export const Tool = () => {
       <Button text="Update" onClick={updateTool} />
     </div>
   );
+};
+
+export const Tool = () => {
+  const tool = useTool();
+  return <PureTool {...tool} />;
 };
