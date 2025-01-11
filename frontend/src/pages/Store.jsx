@@ -44,7 +44,7 @@ export const Store = () => {
 
   const goToTools = () => {
     navigate(`/tools?${URL_STORE_ID_KEY}=${storeId}`);
-  }
+  };
 
   const showUpdateStatus = permissions.isStoreAdmin();
 
@@ -72,9 +72,11 @@ export const Store = () => {
 
   return (
     <div>
-      <Button onClick={() => goToStores()} text="All Stores" />
-      <Button onClick={() => goToPeople()} text="People" />
-      <Button onClick={() => goToTools()} text="Tools" />
+      <div className="flex gap-2">
+        <Button onClick={() => goToTools()} text="Tools" variant="blue" />
+        <Button onClick={() => goToPeople()} text="People" variant="blue" />
+        <Button onClick={() => goToStores()} text="All Stores" variant="blue" />
+      </div>
       <h1>{storeInfo.name}</h1>
       <p>{JSON.stringify(storeInfo)}</p>
       {showUpdateStatus && (
@@ -96,6 +98,7 @@ export const useAddTool = ({ storeId }) => {
   const { accessToken } = useAuth();
   const [realId, _setRealId] = useState("");
   const [description, _setDescription] = useState("");
+  const [defaultRentalPeriod, _setDefaultRentalPeriod] = useState(7);
   const categorySearch = useCategorySearch();
 
   // default rental period
@@ -109,19 +112,24 @@ export const useAddTool = ({ storeId }) => {
     _setDescription(e.target.value);
   };
 
+  const setDefaultRentalPeriod = (e) => {
+    _setDefaultRentalPeriod(val);
+  };
+
   // const showAddTool = if user is tool manager for store
 
   const canAddTool = true;
   // realId !== "" && description !== "" && categories.length > 0;
 
   const createTool = () => {
-    endpoints
+    return endpoints
       .createTool({
         info: {
           realId,
           storeId: Number(storeId),
           categoryIds: [],
           description,
+          defaultRentalPeriod: parseInt(defaultRentalPeriod, 10) || undefined,
           pictures: [],
           status: 1,
         },
@@ -137,6 +145,8 @@ export const useAddTool = ({ storeId }) => {
     setRealId,
     description,
     setDescription,
+    defaultRentalPeriod,
+    setDefaultRentalPeriod,
     categorySearch: {
       ...categorySearch,
       showMatchAllCats: false,
@@ -152,6 +162,8 @@ export const PureAddTool = (addTool) => {
     setRealId,
     description,
     setDescription,
+    defaultRentalPeriod,
+    setDefaultRentalPeriod,
     categorySearch,
     createTool,
     canAddTool,
@@ -171,6 +183,12 @@ export const PureAddTool = (addTool) => {
         value={description}
         onChange={setDescription}
         placeholder="A red screw driver, square head"
+      />
+      <TextInput
+        label="Default Rental Period"
+        value={defaultRentalPeriod}
+        onChange={setDefaultRentalPeriod}
+        placeholder="days"
       />
       <PureCategorySearch {...categorySearch} />
       <Button onClick={createTool} text="Add Tool" disabled={!canAddTool} />

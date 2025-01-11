@@ -24,7 +24,7 @@ export const Person = () => {
   return (
     <div>
       <h1>Person</h1>
-      <Button onClick={goToPeople} text="All People" />
+      <Button onClick={goToPeople} text="All People" variant="blue" />
       <PureUserInfo {...userInfo} />
       <PureUserStatus {...userStatus} />
       <PureUserPermissions {...userPermissions} />
