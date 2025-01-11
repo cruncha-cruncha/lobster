@@ -38,7 +38,18 @@ const handle = (url, params) => {
 };
 
 const obj_to_query = (obj) => {
-  return new URLSearchParams(obj).toString();
+  const params = [];
+  for (const [key, value] of Object.entries(obj)) {
+    if (Array.isArray(value)) {
+      for (const v of value) {
+        params.push(`${encodeURIComponent(key)}=${encodeURIComponent(v)}`);
+      }
+    } else {
+      params.push(`${encodeURIComponent(key)}=${encodeURIComponent(value)}`);
+    }
+  }
+
+  return params.join("&");
 };
 
 export const getLibraryInformation = async () => {
@@ -87,10 +98,7 @@ export const createLibrary = async ({ name }) => {
   return data;
 };
 
-export const updateLibrary = async ({
-  info,
-  accessToken,
-}) => {
+export const updateLibrary = async ({ info, accessToken }) => {
   const data = await handle(`${serverUrl}/library`, {
     method: "PATCH",
     headers: {
@@ -191,10 +199,7 @@ export const updateUserStatus = async ({ id, status, accessToken }) => {
   return data;
 };
 
-export const createStore = async ({
-  info,
-  accessToken,
-}) => {
+export const createStore = async ({ info, accessToken }) => {
   const data = await handle(`${serverUrl}/stores`, {
     method: "POST",
     headers: {
@@ -211,11 +216,7 @@ export const createStore = async ({
   return data;
 };
 
-export const updateStore = async ({
-  id,
-  info,
-  accessToken,
-}) => {
+export const updateStore = async ({ id, info, accessToken }) => {
   const data = await handle(`${serverUrl}/stores/${id}`, {
     method: "PATCH",
     headers: {
@@ -296,7 +297,7 @@ export const getUserPermissions = async ({ id, accessToken }) => {
   }
 
   return data;
-}
+};
 
 export const addUserPermission = async ({ permission, accessToken }) => {
   const data = await handle(`${serverUrl}/permissions`, {
@@ -313,7 +314,7 @@ export const addUserPermission = async ({ permission, accessToken }) => {
   }
 
   return data;
-}
+};
 
 export const removeUserPermission = async ({ id, accessToken }) => {
   const data = await handle(`${serverUrl}/permissions/${id}`, {
@@ -325,7 +326,7 @@ export const removeUserPermission = async ({ id, accessToken }) => {
   });
 
   return data;
-}
+};
 
 export const createTool = async ({ info, accessToken }) => {
   const data = await handle(`${serverUrl}/tools`, {
@@ -342,7 +343,7 @@ export const createTool = async ({ info, accessToken }) => {
   }
 
   return data;
-}
+};
 
 export const updateTool = async ({ id, info, accessToken }) => {
   const data = await handle(`${serverUrl}/tools/${id}`, {
@@ -359,7 +360,7 @@ export const updateTool = async ({ id, info, accessToken }) => {
   }
 
   return data;
-}
+};
 
 export const getTool = async ({ id, accessToken }) => {
   const data = await handle(`${serverUrl}/tools/${id}`, {
@@ -375,7 +376,7 @@ export const getTool = async ({ id, accessToken }) => {
   }
 
   return data;
-}
+};
 
 export const searchTools = async ({ params, accessToken }) => {
   const str_params = obj_to_query(params);
@@ -392,7 +393,7 @@ export const searchTools = async ({ params, accessToken }) => {
   }
 
   return data;
-}
+};
 
 export const searchToolCategories = async ({ params, accessToken }) => {
   const str_params = obj_to_query(params);
@@ -409,5 +410,4 @@ export const searchToolCategories = async ({ params, accessToken }) => {
   }
 
   return data;
-}
-
+};
