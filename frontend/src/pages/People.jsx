@@ -37,6 +37,7 @@ export const usePeople = () => {
   const { roles, userStatuses } = useConstants();
   const { accessToken } = useAuth();
   const [peopleList, setPeopleList] = useState([]);
+  const _storeSelect = useSingleStoreSelect();
   const [params, paramsDispatch] = useReducer(paramsReducer, {
     searchTerm: "",
     page: 1,
@@ -45,8 +46,6 @@ export const usePeople = () => {
     status: "1",
     role: "0",
   });
-  const [storeTerm, _setStoreTerm] = useState("");
-  const [storeOptions, setStoreOptions] = useState([]);
   const debouncedParams = useDebounce(params, 200);
   const urlStoreId = urlParams.get(URL_STORE_ID_KEY);
 
@@ -68,12 +67,19 @@ export const usePeople = () => {
   const setRole = (e) =>
     paramsDispatch({ type: "role", value: e.target.value });
 
-  const setStoreId = (id) => {
-    paramsDispatch({ type: "storeId", value: id });
-    const storeName = storeOptions.find((store) => store.id === id).name;
-    _setStoreTerm(storeName);
-    urlParams.set(URL_STORE_ID_KEY, id);
-    setUrlParams(urlParams);
+  const storeSelect = {
+    ..._storeSelect,
+    storeOptions: params.withStore ? _storeSelect.storeOptions : [],
+    setStoreId: (id) => {
+      paramsDispatch({ type: "storeId", value: id });
+      urlParams.set(URL_STORE_ID_KEY, id);
+      setUrlParams(urlParams);
+      _storeSelect.setStoreId(id);
+    },
+    setStoreTerm: (e) => {
+      if (!params.withStore) paramsDispatch({ type: "withStore", value: true });
+      _storeSelect.setStoreTerm(e);
+    },
   };
 
   const setWithStore = (e) => {
@@ -89,32 +95,6 @@ export const usePeople = () => {
   };
 
   {
-    const endpointParams = {
-      term: storeTerm,
-    };
-
-    const { data, isLoading, error, mutate } = useSWR(
-      !accessToken
-        ? null
-        : `get stores, using ${accessToken} and ${JSON.stringify(
-            endpointParams,
-          )}`,
-      () => endpoints.getStores({ params: endpointParams, accessToken }),
-    );
-
-    useEffect(() => {
-      if (data) {
-        setStoreOptions(data.stores);
-      }
-    }, [data]);
-  }
-
-  const setStoreTerm = (e) => {
-    if (!params.withStore) paramsDispatch({ type: "withStore", value: true });
-    _setStoreTerm(e.target.value);
-  };
-
-  {
     const { data, isLoading, error, mutate } = useSWR(
       (!urlStoreId || !accessToken || params.storeId != 0) ? null : `get store ${urlStoreId}, using ${accessToken}`,
       () => endpoints.getStore({ id: urlStoreId, accessToken }),
@@ -122,7 +102,7 @@ export const usePeople = () => {
 
     useEffect(() => {
       if (data) {
-        setStoreTerm({ target: { value: data.name } });
+        storeSelect.setStoreTerm({ target: { value: data.name } });
       }
     }, [data]);
   }
@@ -134,13 +114,19 @@ export const usePeople = () => {
       : debouncedParams.storeId === "0" || !debouncedParams.withStore
       ? ""
       : [parseInt(debouncedParams.storeId, 10)],
-    statuses: debouncedParams.status === "0" ? "" : [parseInt(debouncedParams.status, 10)],
-    roles: debouncedParams.role === "0" ? "" : [parseInt(debouncedParams.role, 10)],
+    statuses:
+      debouncedParams.status === "0"
+        ? ""
+        : [parseInt(debouncedParams.status, 10)],
+    roles:
+      debouncedParams.role === "0" ? "" : [parseInt(debouncedParams.role, 10)],
     page: debouncedParams.page,
   };
 
   const { data, isLoading, error, mutate } = useSWR(
-    !accessToken ? null : `get users, using ${accessToken} and ${JSON.stringify(endpointParams)}`,
+    !accessToken
+      ? null
+      : `get users, using ${accessToken} and ${JSON.stringify(endpointParams)}`,
     () => endpoints.getUsers({ params: endpointParams, accessToken }),
   );
 
@@ -148,7 +134,7 @@ export const usePeople = () => {
     if (data) {
       setPeopleList(data.users);
     }
-  })
+  });
 
   const goToPerson = (id) => {
     navigate(`/people/${id}`);
@@ -158,7 +144,6 @@ export const usePeople = () => {
     roles: [{ id: "0", name: "Any" }, ...roles],
     userStatuses: [{ id: "0", name: "Any" }, ...userStatuses],
     params,
-    storeTerm,
     debouncedParams,
     peopleList,
     prevPage,
@@ -166,10 +151,8 @@ export const usePeople = () => {
     setStatus,
     setSearchTerm,
     setRole,
-    setStoreTerm,
     setWithStore,
-    setStoreId,
-    storeOptions: params.withStore ? storeOptions : [],
+    storeSelect,
     goToPerson,
   };
 };
@@ -179,7 +162,6 @@ export const PurePeople = (people) => {
     roles,
     userStatuses,
     params,
-    storeTerm,
     debouncedParams,
     peopleList,
     prevPage,
@@ -187,10 +169,8 @@ export const PurePeople = (people) => {
     setStatus,
     setSearchTerm,
     setRole,
-    setStoreTerm,
     setWithStore,
-    setStoreId,
-    storeOptions,
+    storeSelect,
     goToPerson,
   } = people;
 
@@ -222,13 +202,7 @@ export const PurePeople = (people) => {
           onChange={setWithStore}
         />
         {params.withStore && (
-          <SearchSelect
-            label="Store"
-            value={storeTerm}
-            onChange={setStoreTerm}
-            options={storeOptions}
-            onSelect={setStoreId}
-          />
+          <PureSingleStoreSelect {...storeSelect} />
         )}
       </div>
       <div>
@@ -247,6 +221,64 @@ export const PurePeople = (people) => {
         pageNumber={debouncedParams.page}
       />
     </div>
+  );
+};
+
+export const useSingleStoreSelect = () => {
+  const { accessToken } = useAuth();
+  const [storeId, _setStoreId] = useState("");
+  const [storeTerm, _setStoreTerm] = useState("");
+  const [storeOptions, setStoreOptions] = useState([]);
+
+  const setStoreTerm = (e) => {
+    _setStoreTerm(e.target.value);
+  };
+
+  const setStoreId = (id) => {
+    _setStoreId(id);
+    const storeName = storeOptions.find((store) => store.id === id).name;
+    _setStoreTerm(storeName);
+  };
+
+  const endpointParams = {
+    term: storeTerm,
+  };
+
+  const { data, isLoading, error, mutate } = useSWR(
+    !accessToken
+      ? null
+      : `get stores, using ${accessToken} and ${JSON.stringify(
+          endpointParams,
+        )}`,
+    () => endpoints.getStores({ params: endpointParams, accessToken }),
+  );
+
+  useEffect(() => {
+    if (data) {
+      setStoreOptions(data.stores);
+    }
+  }, [data]);
+
+  return {
+    storeId,
+    storeTerm,
+    storeOptions,
+    setStoreTerm,
+    setStoreId,
+  };
+};
+
+export const PureSingleStoreSelect = (storeSelect) => {
+  const { storeTerm, storeOptions, setStoreTerm, setStoreId } = storeSelect;
+
+  return (
+    <SearchSelect
+      label="Store"
+      value={storeTerm}
+      onChange={setStoreTerm}
+      options={storeOptions}
+      onSelect={setStoreId}
+    />
   );
 };
 

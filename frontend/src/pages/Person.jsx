@@ -8,6 +8,7 @@ import { Button } from "../components/Button";
 import { TextInput } from "../components/TextInput";
 import { Select } from "../components/Select";
 import { SearchSelect } from "../components/SearchSelect";
+import { PureSingleStoreSelect, useSingleStoreSelect } from "./People";
 
 export const Person = () => {
   const navigate = useNavigate();
@@ -255,9 +256,10 @@ export const useUserPermissions = ({ id }) => {
   const [saving, setSaving] = useState(false);
   const [showFields, setShowFields] = useState(""); // "", "add", "remove"
   const [selectedRole, selectRoleOption] = useState("0");
-  const [storeTerm, _setStoreTerm] = useState("");
-  const [storeId, _setStoreId] = useState("0");
-  const [storeOptions, setStoreOptions] = useState([]);
+  const storeSelect = useSingleStoreSelect();
+  // const [storeTerm, _setStoreTerm] = useState("");
+  // const [storeId, _setStoreId] = useState("0");
+  // const [storeOptions, setStoreOptions] = useState([]);
 
   const { data, error, isLoading, mutate } = useSWR(
     !accessToken ? null : `get user ${id} permissions, using ${accessToken}`,
@@ -275,30 +277,30 @@ export const useUserPermissions = ({ id }) => {
 
   const canUpdateStorePermissions = permissions.isStoreAdmin();
 
-  {
-    const endpointParams = {
-      term: storeTerm,
-    };
+  // {
+  //   const endpointParams = {
+  //     term: storeTerm,
+  //   };
 
-    const { data, isLoading, error, mutate } = useSWR(
-      !accessToken
-        ? null
-        : `get stores, using ${accessToken} and ${JSON.stringify(
-            endpointParams,
-          )}`,
-      () => endpoints.getStores({ params: endpointParams, accessToken }),
-    );
+  //   const { data, isLoading, error, mutate } = useSWR(
+  //     !accessToken
+  //       ? null
+  //       : `get stores, using ${accessToken} and ${JSON.stringify(
+  //           endpointParams,
+  //         )}`,
+  //     () => endpoints.getStores({ params: endpointParams, accessToken }),
+  //   );
 
-    useEffect(() => {
-      if (data) {
-        setStoreOptions(data.stores);
-      }
-    }, [data]);
-  }
+  //   useEffect(() => {
+  //     if (data) {
+  //       setStoreOptions(data.stores);
+  //     }
+  //   }, [data]);
+  // }
 
-  const setStoreTerm = (e) => {
-    _setStoreTerm(e.target.value);
-  };
+  // const setStoreTerm = (e) => {
+  //   _setStoreTerm(e.target.value);
+  // };
 
   const removePermission = async ({ permissionId }) => {
     setSaving(true);
@@ -319,7 +321,7 @@ export const useUserPermissions = ({ id }) => {
     const permission = {
       userId: Number(id),
       roleId: Number(selectedRole),
-      storeId: Number(storeId),
+      storeId: Number(storeSelect.storeId),
     };
     if (
       selectedRoleName !== "store_rep" &&
@@ -355,11 +357,11 @@ export const useUserPermissions = ({ id }) => {
 
   const selectedRoleName = roles.find(({ id }) => id == selectedRole)?.name;
 
-  const setStoreId = (id) => {
-    _setStoreId(id);
-    const storeName = storeOptions.find((store) => store.id === id).name;
-    _setStoreTerm(storeName);
-  };
+  // const setStoreId = (id) => {
+  //   _setStoreId(id);
+  //   const storeName = storeOptions.find((store) => store.id === id).name;
+  //   _setStoreTerm(storeName);
+  // };
 
   const canAddPermission = (() => {
     if (showFields !== "add") return false;
@@ -370,7 +372,7 @@ export const useUserPermissions = ({ id }) => {
         return true;
       case "store_rep":
       case "tool_manager":
-        return storeId != "0";
+        return storeSelect.storeId != "";
       default:
         return false;
     }
@@ -432,10 +434,11 @@ export const useUserPermissions = ({ id }) => {
     selectedRole,
     setSelectedRole: (e) => selectRoleOption(e.target.value),
     showStoreSearch,
-    storeTerm,
-    setStoreTerm,
-    storeOptions,
-    setStoreId,
+    // storeTerm,
+    // setStoreTerm,
+    // storeOptions,
+    // setStoreId,
+    storeSelect,
     canAddPermission,
     addPermission,
     canRemovePermission,
@@ -456,12 +459,13 @@ const PureUserPermissions = (userPermissions) => {
     selectedRole,
     setSelectedRole,
     showStoreSearch,
-    storeTerm,
-    setStoreTerm,
-    storeOptions,
-    setStoreId,
+    // storeTerm,
+    // setStoreTerm,
+    // storeOptions,
+    // setStoreId,
     canAddPermission,
     addPermission,
+    storeSelect,
     canRemovePermission,
     removePermission,
   } = userPermissions;
@@ -517,13 +521,14 @@ const PureUserPermissions = (userPermissions) => {
                 onChange={setSelectedRole}
               />
               {showStoreSearch && (
-                <SearchSelect
-                  label="Store"
-                  value={storeTerm}
-                  onChange={setStoreTerm}
-                  options={storeOptions}
-                  onSelect={setStoreId}
-                />
+                // <SearchSelect
+                //   label="Store"
+                //   value={storeTerm}
+                //   onChange={setStoreTerm}
+                //   options={storeOptions}
+                //   onSelect={setStoreId}
+                // />
+                <PureSingleStoreSelect {...storeSelect} />
               )}
               <Button
                 text="Add Permission"
