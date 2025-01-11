@@ -16,6 +16,7 @@ import { Store } from "./pages/Store";
 import { NewStore } from "./pages/NewStore";
 import { Library } from "./pages/Library";
 import { StoreTools } from "./pages/StoreTools";
+import { Tool } from "./pages/Tool";
 import { useSetupAuth } from "./state/auth";
 import { useInitConstants } from "./state/constants";
 import "./index.css";
@@ -60,6 +61,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="/rentals" element={<Rentals />} />
             <Route index element={<Tools />} />
             <Route path="/tools" element={<Tools />} />
+            <Route path="/tools/:id" element={<Tool />} />
             <Route path="/stores" element={<Stores />} />
             <Route path="/stores/new" element={<NewStore />} />
             <Route path="/stores/:id" element={<Store />} />

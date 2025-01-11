@@ -23,6 +23,7 @@ export const StoreTools = () => {
 
 export const useStoreToolSearch = () => {
   const params = useParams();
+  const navigate = useNavigate();
   const { toolStatuses } = useConstants();
   const { accessToken } = useAuth();
   const [toolsList, setToolsList] = useState([]);
@@ -69,6 +70,14 @@ export const useStoreToolSearch = () => {
     _setSearchTerm(e.target.value);
   };
 
+  const goToTool = (toolId) => {
+    navigate(`/tools/${toolId}`);
+  }
+
+  const goToStore = () => {
+    navigate(`/stores/${storeId}`);
+  }
+
   return {
     status,
     setStatus,
@@ -77,6 +86,8 @@ export const useStoreToolSearch = () => {
     setSearchTerm,
     categorySearch,
     toolsList,
+    goToTool,
+    goToStore,
   };
 };
 
@@ -89,11 +100,14 @@ export const PureStoreToolSearch = (storeToolSearch) => {
     setSearchTerm,
     categorySearch,
     toolsList,
+    goToTool,
+    goToStore,
   } = storeToolSearch;
 
   return (
     <div>
       <h1>Store Tools</h1>
+      <Button onClick={goToStore} text="Store" />
       <Select
         label="Status"
         value={status}
@@ -109,7 +123,7 @@ export const PureStoreToolSearch = (storeToolSearch) => {
       <PureCategorySearch {...categorySearch} />
       <ul>
         {toolsList.map((tool) => (
-          <li key={tool.id}>{JSON.stringify(tool)}</li>
+          <li key={tool.id} onClick={() => goToTool(tool.id)}>{JSON.stringify(tool)}</li>
         ))}
       </ul>
     </div>
