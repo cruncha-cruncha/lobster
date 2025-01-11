@@ -93,7 +93,7 @@ pub async fn add(
             user_ids: vec![data.user_id],
             role_ids: vec![data.role_id],
             store_ids: store_ids,
-            statuses: vec![permission::PermissionStatus::Active as i32],
+            statuses: vec![],
         },
         &state.db,
     )
@@ -105,21 +105,29 @@ pub async fn add(
         }
     };
 
-    if permissions.len() > 0 {
+    if permissions.len() > 0 && permissions[0].status == permission::PermissionStatus::Active as i32
+    {
         return Ok(Json(permissions.pop().unwrap()));
     }
 
-    match permissions::insert(
-        data.user_id,
-        data.role_id,
-        data.store_id,
-        permission::PermissionStatus::Active as i32,
-        &state.db,
-    )
-    .await
-    {
-        Ok(p) => Ok(Json(p)),
-        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
+    if permissions.len() > 0 {
+        match permissions::update_status(permissions[0].id, permission::PermissionStatus::Active as i32, &state.db).await {
+            Ok(_) => Ok(Json(permissions.pop().unwrap())),
+            Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
+        }
+    } else {
+        match permissions::insert(
+            data.user_id,
+            data.role_id,
+            data.store_id,
+            permission::PermissionStatus::Active as i32,
+            &state.db,
+        )
+        .await
+        {
+            Ok(p) => Ok(Json(p)),
+            Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
+        }
     }
 }
 
@@ -201,7 +209,10 @@ pub async fn get_by_user(
         .filter(|p| p.store_id.is_some())
         .collect::<Vec<_>>();
 
-    let mut store_ids = store_permissions.iter().map(|p| p.store_id.unwrap_or_default()).collect::<Vec<i32>>();
+    let mut store_ids = store_permissions
+        .iter()
+        .map(|p| p.store_id.unwrap_or_default())
+        .collect::<Vec<i32>>();
     store_ids.dedup();
     let store_info = match stores::select(
         stores::SelectParams {
@@ -235,10 +246,13 @@ pub async fn get_by_user(
                 role: p.role_id,
             })
             .collect(),
-        store_names: store_info.iter().map(|s| StoreNamePermissionInfo{
-            store_id: s.id,
-            store_name: s.name.clone(),
-        }).collect(),
+        store_names: store_info
+            .iter()
+            .map(|s| StoreNamePermissionInfo {
+                store_id: s.id,
+                store_name: s.name.clone(),
+            })
+            .collect(),
     };
 
     return Ok(Json(out));
