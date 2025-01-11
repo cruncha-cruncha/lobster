@@ -93,7 +93,7 @@ pub async fn add(
             user_ids: vec![data.user_id],
             role_ids: vec![data.role_id],
             store_ids: store_ids,
-            statuses: vec![],
+            statuses: vec![permission::PermissionStatus::Active as i32],
         },
         &state.db,
     )
