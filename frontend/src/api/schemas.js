@@ -344,3 +344,5 @@ export const validateToolCategorySearchResults = makeLazyValidator([
   toolCategorySchema,
   toolCategorySearchResultsSchema,
 ]);
+
+export const validateToolCategory = makeLazyValidator(toolCategorySchema);

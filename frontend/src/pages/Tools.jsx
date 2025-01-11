@@ -155,7 +155,7 @@ export const PureTools = (tools) => {
       />
       <PureCategorySearch {...categorySearch} />
       <PureStoreSelect {...storeSelect} />
-      {warnSingleStore && <p>currently filtering by store</p>}
+      {warnSingleStore && <p>currently filtering by a store</p>}
       <ul>
         {toolsList.map((tool) => (
           <li key={tool.id} onClick={() => goToTool(tool.id)}>
@@ -199,12 +199,14 @@ export const useCategorySearch = () => {
 
   const addCategory = async (catId) => {
     if (categories.find((c) => c.id == catId)) return;
-    const newCat = allCategories.find((c) => c.id == catId);
+    let newCat = allCategories.find((c) => c.id == catId);
     if (!newCat) {
-      console.error("category not found");
-      return;
+      newCat = categoryOptions.find((c) => c.id == catId);
+      if (!newCat) {
+        newCat = await endpoints.getToolCategory({ id: catId, accessToken });
+      }
     }
-    setCategories([...categories, newCat]);
+    !!newCat && setCategories([...categories, newCat]);
   };
 
   const removeCategory = (catId) => {
@@ -304,7 +306,7 @@ export const useStoreSelect = () => {
     if (!newStore) {
       newStore = await endpoints.getStore({ id: storeId, accessToken });
     }
-    setStores([...stores, newStore]);
+    !!newStore && setStores([...stores, newStore]);
   };
 
   const removeStore = (storeId) => {

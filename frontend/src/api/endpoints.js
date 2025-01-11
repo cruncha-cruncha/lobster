@@ -13,6 +13,7 @@ import {
   validateSingleTool,
   validateToolSearchResults,
   validateToolCategorySearchResults,
+  validateToolCategory,
 } from "./schemas";
 
 const serverUrl = import.meta.env.VITE_SERVER_URL || "http://127.0.0.1:3000";
@@ -408,6 +409,21 @@ export const getAllToolCategories = async ({ accessToken }) => {
 
   return data;
 };
+
+export const getToolCategory = async ({ id, accessToken }) => {
+  const data = await handle(`${serverUrl}/tool-categories/${id}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!validateToolCategory(data)) {
+    throw new Error(400);
+  }
+
+  return data;
+}
 
 export const searchToolCategories = async ({ params, accessToken }) => {
   const str_params = obj_to_query(params);
