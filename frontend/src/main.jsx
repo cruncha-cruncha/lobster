@@ -18,11 +18,13 @@ import { Library } from "./pages/Library";
 import { Tool } from "./pages/Tool";
 import { useSetupAuth } from "./state/auth";
 import { useInitConstants } from "./state/constants";
+import { useInitToolCategories } from "./state/toolCategories";
 import "./index.css";
 
 const Init = ({ children }) => {
   const libraryInfo = useLibraryInfo();
   useInitConstants();
+  useInitToolCategories();
   useSetupAuth();
 
   if (libraryInfo.name) {
