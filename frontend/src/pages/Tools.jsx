@@ -8,6 +8,7 @@ import { Select } from "../components/Select";
 import { SearchSelect } from "../components/SearchSelect";
 import { Checkbox } from "../components/Checkbox";
 import { URL_STORE_ID_KEY } from "./Store";
+import { useToolCategories } from "../state/toolCategories";
 
 export const buildToolList = (data) => {
   return data.tools.map((tool) => {
@@ -168,6 +169,7 @@ export const PureTools = (tools) => {
 
 export const useCategorySearch = () => {
   const { accessToken } = useAuth();
+  const { toolCategories: allCategories } = useToolCategories();
   const [categories, setCategories] = useState([]);
   const [categoryTerm, _setCategoryTerm] = useState("");
   const [categoryOptions, setCategoryOptions] = useState([]);
@@ -195,9 +197,13 @@ export const useCategorySearch = () => {
     _setCategoryTerm(e.target.value);
   };
 
-  const addCategory = (catId) => {
-    const newCat = categoryOptions.find((c) => c.id == catId);
-    if (!newCat || categories.find((cat) => cat.id == newCat.id)) return;
+  const addCategory = async (catId) => {
+    if (categories.find((c) => c.id == catId)) return;
+    const newCat = allCategories.find((c) => c.id == catId);
+    if (!newCat) {
+      console.error("category not found");
+      return;
+    }
     setCategories([...categories, newCat]);
   };
 

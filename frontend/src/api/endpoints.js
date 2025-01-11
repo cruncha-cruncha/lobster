@@ -366,7 +366,6 @@ export const getTool = async ({ id, accessToken }) => {
   const data = await handle(`${serverUrl}/tools/${id}`, {
     method: "GET",
     headers: {
-      "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
     },
   });
@@ -389,6 +388,21 @@ export const searchTools = async ({ params, accessToken }) => {
   });
 
   if (!validateToolSearchResults(data)) {
+    throw new Error(400);
+  }
+
+  return data;
+};
+
+export const getAllToolCategories = async ({ accessToken }) => {
+  const data = await handle(`${serverUrl}/tool-categories/all`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!validateToolCategorySearchResults(data)) {
     throw new Error(400);
   }
 
