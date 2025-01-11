@@ -101,6 +101,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 .post(handlers::tool_categories::create_new),
         )
         .route(
+            "/tool-categories/all",
+            routing::get(handlers::tool_categories::get_all),
+        )
+        .route(
             "/tool-categories/:tool_category_id",
             routing::patch(handlers::tool_categories::update)
                 .get(handlers::tool_categories::get_by_id),

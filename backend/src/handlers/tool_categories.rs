@@ -132,6 +132,33 @@ pub async fn get_by_id(
     Ok(Json(tool_categories.pop().unwrap()))
 }
 
+pub async fn get_all(
+    _claims: Claims,
+    State(state): State<Arc<AppState>>,
+) -> Result<Json<SearchResponse>, (StatusCode, String)> {
+    let tool_categories = match tool_categories::select(
+        tool_categories::SelectParams {
+            ids: vec![],
+            tool_ids: vec![],
+            term: "".to_string(),
+            offset: 0,
+            limit: 1000,
+        },
+        &state.db,
+    )
+    .await
+    {
+        Ok(t) => t,
+        Err(e) => {
+            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+        }
+    };
+
+    Ok(Json(SearchResponse {
+        categories: tool_categories,
+    }))
+}
+
 pub async fn get_filtered(
     _claims: Claims,
     Query(params): Query<FilterParams>,
