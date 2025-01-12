@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 pub type Id = i32;
 pub type RealId = String;
 pub type StoreId = store::Id;
-pub type DefaultRentalPeriod = i32;
+pub type RentalHours = i32;
 pub type Description = String;
 pub type Pictures = Vec<String>;
 pub type Status = i32;
@@ -25,8 +25,8 @@ pub struct Tool {
     pub id: Id,
     pub real_id: RealId,
     pub store_id: StoreId,
-    pub default_rental_period: Option<DefaultRentalPeriod>,
-    pub description: Option<Description>,
+    pub rental_hours: RentalHours,
+    pub description: Description,
     pub pictures: Pictures,
     pub status: Status,
 }

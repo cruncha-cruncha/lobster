@@ -1,5 +1,5 @@
-use crate::common;
-use crate::db_structs::rental;
+use crate::db_structs::{rental, tool};
+use crate::{common, db_structs::store};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -7,9 +7,13 @@ pub struct SelectParams {
     pub ids: Vec<rental::Id>,
     pub renter_ids: Vec<rental::RenterId>,
     pub tool_ids: Vec<rental::ToolId>,
+    pub store_ids: Vec<tool::StoreId>,
     pub start_date: common::DateBetween,
     pub end_date: common::DateBetween,
-    pub order_by: Option<OrderBy>,
+    pub open: bool,
+    pub overdue: Option<bool>,
+    pub order_by: OrderBy,
+    pub order_asc: bool,
     pub offset: i64,
     pub limit: i64,
 }
@@ -98,31 +102,49 @@ pub async fn select(
     sqlx::query_as!(
         rental::Rental,
         r#"
-        SELECT *
+        SELECT mr.*
         FROM main.rentals mr
+        LEFT JOIN main.tools t ON mr.tool_id = t.id
         WHERE
             (ARRAY_LENGTH($1::integer[], 1) IS NULL OR mr.id = ANY($1::integer[]))
             AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR mr.renter_id = ANY($2::integer[]))
             AND (ARRAY_LENGTH($3::integer[], 1) IS NULL OR mr.tool_id = ANY($3::integer[]))
-            AND (COALESCE($4, '1970-01-01 00:00:00+00'::timestamp with time zone) <= mr.start_date AND mr.start_date < COALESCE($5, '9999-12-31 23:59:59+00'::timestamp with time zone))
-            AND (COALESCE($6, '1970-01-01 00:00:00+00'::timestamp with time zone) <= mr.end_date AND mr.end_date < COALESCE($7, '9999-12-31 23:59:59+00'::timestamp with time zone))
-        ORDER BY COALESCE(
-            CASE $8::integer
-                WHEN 1 THEN mr.start_date
-                WHEN 2 THEN mr.end_date
-            END,
-            mr.start_date
+            AND (ARRAY_LENGTH($4::integer[], 1) IS NULL OR t.store_id = ANY($4::integer[]))
+            AND (COALESCE($5, '1970-01-01 00:00:00+00'::timestamp with time zone) <= mr.start_date AND mr.start_date < COALESCE($6, '9999-12-31 23:59:59+00'::timestamp with time zone))
+            AND (COALESCE($7, '1970-01-01 00:00:00+00'::timestamp with time zone) <= mr.end_date AND mr.end_date < COALESCE($8, '9999-12-31 23:59:59+00'::timestamp with time zone))
+            AND (mr.end_date IS NULL = $9::bool)
+            AND ($10::bool IS NULL OR (mr.start_date + interval '1' HOUR * t.rental_hours >= CURRENT_TIMESTAMP) = $10::bool)
+        ORDER BY (
+            CASE $12::bool
+                WHEN TRUE THEN CASE $11::integer
+                    WHEN 1 THEN mr.start_date
+                    WHEN 2 THEN mr.end_date
+                END
+                WHEN FALSE THEN NULL
+            END
+        ) ASC, (
+            CASE $12::bool
+                WHEN FALSE THEN CASE $11::integer
+                    WHEN 1 THEN mr.start_date
+                    WHEN 2 THEN mr.end_date
+                END
+                WHEN TRUE THEN NULL
+            END
         ) DESC, mr.id
-        OFFSET $9 LIMIT $10;
+        OFFSET $13 LIMIT $14;
         "#,
         &params.ids,
         &params.renter_ids,
         &params.tool_ids,
+        &params.store_ids,
         params.start_date.start,
         params.start_date.end,
         params.end_date.start,
         params.end_date.end,
-        params.order_by.map(|x| x as i32),
+        params.open,
+        params.overdue,
+        params.order_by as i32,
+        params.order_asc,
         params.offset,
         params.limit,
     )

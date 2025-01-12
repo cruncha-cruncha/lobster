@@ -33,8 +33,8 @@ pub async fn select_statuses(
 pub async fn insert(
     real_id: tool::RealId,
     store_id: store::Id,
-    default_rental_period: Option<tool::DefaultRentalPeriod>,
-    description: Option<tool::Description>,
+    rental_hours: tool::RentalHours,
+    description: tool::Description,
     pictures: tool::Pictures,
     status: tool::Status,
     db: &sqlx::Pool<sqlx::Postgres>,
@@ -42,13 +42,13 @@ pub async fn insert(
     sqlx::query_as!(
         tool::Tool,
         r#"
-        INSERT INTO main.tools (real_id, store_id, default_rental_period, description, pictures, status)
+        INSERT INTO main.tools (real_id, store_id, rental_hours, description, pictures, status)
         VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING *;
         "#,
         real_id,
         store_id,
-        default_rental_period,
+        rental_hours,
         description,
         &pictures,
         status,
@@ -62,7 +62,7 @@ pub async fn update(
     tool_id: tool::Id,
     real_id: Option<tool::RealId>,
     store_id: Option<tool::StoreId>,
-    default_rental_period: Option<tool::DefaultRentalPeriod>,
+    rental_hours: Option<tool::RentalHours>,
     description: Option<tool::Description>,
     pictures: Option<tool::Pictures>,
     status: Option<tool::Status>,
@@ -75,7 +75,7 @@ pub async fn update(
         SET
             real_id = COALESCE($2, real_id),
             store_id = COALESCE($3, store_id),
-            default_rental_period = COALESCE($4, default_rental_period),
+            rental_hours = COALESCE($4, rental_hours),
             description = COALESCE($5, description),
             pictures = COALESCE($6, pictures),
             status = COALESCE($7, status)
@@ -85,35 +85,10 @@ pub async fn update(
         tool_id,
         real_id,
         store_id,
-        default_rental_period,
+        rental_hours,
         description,
         pictures.as_deref(),
         status,
-    )
-    .fetch_one(db)
-    .await
-    .map_err(|e| e.to_string())
-}
-
-pub async fn clear_fields(
-    tool_id: tool::Id,
-    default_rental_period: bool,
-    description: bool,
-    db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<tool::Tool, String> {
-    sqlx::query_as!(
-        tool::Tool,
-        r#"
-        UPDATE main.tools mt
-        SET 
-            default_rental_period = CASE WHEN $2 THEN NULL ELSE mt.default_rental_period END,
-            description = CASE WHEN $3 THEN NULL ELSE mt.description END
-        WHERE id = $1
-        RETURNING *;
-        "#,
-        tool_id,
-        default_rental_period,
-        description,
     )
     .fetch_one(db)
     .await
@@ -137,7 +112,7 @@ pub async fn select(
         LEFT JOIN main.tool_classifications tc ON mt.id = tc.tool_id
         WHERE
             (ARRAY_LENGTH($1::integer[], 1) IS NULL OR mt.id = ANY($1::integer[]))
-            AND ($2::text = '' OR $2::text <% (mt.real_id || ' ' || COALESCE(mt.description, '')))
+            AND ($2::text = '' OR $2::text <% (mt.real_id || ' ' || mt.description))
             AND (ARRAY_LENGTH($3::integer[], 1) IS NULL OR mt.status = ANY($3::integer[]))
             AND (ARRAY_LENGTH($4::integer[], 1) IS NULL OR mt.store_id = ANY($4::integer[]))
             AND (ARRAY_LENGTH($5::text[], 1) IS NULL OR mt.real_id = ANY($5::text[]))
