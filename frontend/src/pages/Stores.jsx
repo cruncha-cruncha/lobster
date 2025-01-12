@@ -9,6 +9,7 @@ import { TextInput } from "../components/TextInput";
 import { Select } from "../components/Select";
 import { useDebounce } from "../components/useDebounce";
 import { PrevNext } from "../components/PrevNext";
+import { useToolCart } from "../state/toolCart";
 
 const paramsReducer = (state, action) => {
   switch (action.type) {
@@ -27,6 +28,7 @@ export const useStores = () => {
   const navigate = useNavigate();
   const { storeStatuses } = useConstants();
   const { accessToken } = useAuth();
+  const { toolCart } = useToolCart();
 
   const [storeList, setStoreList] = useState([]);
   const [params, paramsDispatch] = useReducer(paramsReducer, {
@@ -84,6 +86,12 @@ export const useStores = () => {
     }
   }, [data]);
 
+  const cartSize = toolCart.length;
+  const showGoToCart = cartSize > 0;
+  const goToCart = () => {
+    navigate("/rentals");
+  }
+
   return {
     storeList,
     storeStatuses: [{ id: "0", name: "Any" }, ...storeStatuses],
@@ -95,6 +103,9 @@ export const useStores = () => {
     nextPage,
     setStatus,
     setTerm,
+    cartSize,
+    showGoToCart,
+    goToCart,
   };
 };
 
@@ -110,12 +121,24 @@ export const PureStores = (stores) => {
     setStatus,
     storeStatuses,
     storeList,
+    cartSize,
+    showGoToCart,
+    goToCart,
   } = stores;
 
   return (
     <div>
       <h1>Stores</h1>
-      <Button onClick={goToNewStore} variant="blue" text="New Store" />
+      <div className="flex gap-2">
+        <Button onClick={goToNewStore} text="New Store" />
+        {showGoToCart && (
+          <Button
+            onClick={goToCart}
+            text={`Cart (${cartSize})`}
+            variant="blue"
+          />
+        )}
+      </div>
       <TextInput
         value={params.term}
         onChange={setTerm}

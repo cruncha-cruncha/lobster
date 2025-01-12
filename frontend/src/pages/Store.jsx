@@ -1,4 +1,4 @@
-import { useReducer, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router";
 import useSWR from "swr";
 import { useConstants } from "../state/constants";
@@ -7,15 +7,16 @@ import * as endpoints from "../api/endpoints";
 import { Button } from "../components/Button";
 import { TextInput } from "../components/TextInput";
 import { Select } from "../components/Select";
-import { useDebounce } from "../components/useDebounce";
 import { useCategorySearch, PureCategorySearch } from "./Tools";
+import { useToolCart } from "../state/toolCart";
 
 export const URL_STORE_ID_KEY = "storeId";
 
-export const Store = () => {
+export const useStore = () => {
   const navigate = useNavigate();
   const params = useParams();
   const { storeStatuses } = useConstants();
+  const { toolCart } = useToolCart();
   const { accessToken, permissions } = useAuth();
   const [storeInfo, setStoreInfo] = useState({});
   const [status, _setStatus] = useState(0);
@@ -50,6 +51,12 @@ export const Store = () => {
 
   const canUpdateStatus = storeInfo.status != status;
 
+  const cartSize = toolCart.length;
+  const showGoToCart = cartSize > 0;
+  const goToCart = () => {
+    navigate("/rentals");
+  };
+
   const updateStatus = () => {
     endpoints
       .updateStoreStatus({
@@ -66,9 +73,41 @@ export const Store = () => {
     _setStatus(e.target.value);
   };
 
-  // button to edit store details
-  // button to go to returns page
-  // button to go to rentals page
+  return {
+    storeInfo,
+    storeStatuses,
+    status,
+    setStatus,
+    showUpdateStatus,
+    canUpdateStatus,
+    goToStores,
+    goToPeople,
+    goToTools,
+    updateStatus,
+    addTool,
+    showGoToCart,
+    goToCart,
+    cartSize,
+  };
+};
+
+export const PureStore = (store) => {
+  const {
+    storeInfo,
+    storeStatuses,
+    status,
+    setStatus,
+    showUpdateStatus,
+    canUpdateStatus,
+    goToStores,
+    goToPeople,
+    goToTools,
+    updateStatus,
+    addTool,
+    showGoToCart,
+    goToCart,
+    cartSize,
+  } = store;
 
   return (
     <div>
@@ -76,6 +115,13 @@ export const Store = () => {
         <Button onClick={() => goToTools()} text="Tools" variant="blue" />
         <Button onClick={() => goToPeople()} text="People" variant="blue" />
         <Button onClick={() => goToStores()} text="All Stores" variant="blue" />
+        {showGoToCart && (
+          <Button
+            onClick={goToCart}
+            text={`Cart (${cartSize})`}
+            variant="blue"
+          />
+        )}
       </div>
       <h1>{storeInfo.name}</h1>
       <p>{JSON.stringify(storeInfo)}</p>
@@ -194,4 +240,9 @@ export const PureAddTool = (addTool) => {
       <Button onClick={createTool} text="Add Tool" disabled={!canAddTool} />
     </div>
   );
+};
+
+export const Store = () => {
+  const store = useStore();
+  return <PureStore {...store} />;
 };
