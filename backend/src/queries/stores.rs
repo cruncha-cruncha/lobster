@@ -53,6 +53,24 @@ pub async fn select(
     .map_err(|e| e.to_string())
 }
 
+pub async fn select_by_code(
+    code: store::Code,
+    db: &sqlx::Pool<sqlx::Postgres>,
+) -> Result<store::Store, String> {
+    sqlx::query_as!(
+        store::Store,
+        r#"
+        SELECT *
+        FROM main.stores ms
+        WHERE ms.code = $1;
+        "#,
+        code,
+    )
+    .fetch_one(db)
+    .await
+    .map_err(|e| e.to_string())
+}
+
 pub async fn insert(
     name: store::Name,
     status: store::Status,

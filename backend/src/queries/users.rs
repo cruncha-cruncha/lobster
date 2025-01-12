@@ -145,6 +145,24 @@ pub async fn select_by_id(
     .map_err(|e| e.to_string())
 }
 
+pub async fn select_by_code(
+    code: user::Code,
+    db: &sqlx::Pool<sqlx::Postgres>,
+) -> Result<user::User, String> {
+    sqlx::query_as!(
+        user::User,
+        r#"
+        SELECT *
+        FROM main.users mu
+        WHERE mu.code = $1
+        "#,
+        code,
+    )
+    .fetch_one(db)
+    .await
+    .map_err(|e| e.to_string())
+}
+
 pub async fn insert(
     username: &str,
     status: i32,

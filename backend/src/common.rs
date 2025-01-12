@@ -43,6 +43,12 @@ pub struct DateBetween {
     pub end: Option<time::OffsetDateTime>,
 }
 
+impl DateBetween {
+    pub fn none() -> Self {
+        Self { start: None, end: None }
+    }
+}
+
 pub fn rnd_code_str(pre: &str) -> String {
     const CHARSET: &[u8] = b"0123456789ACEFHJKLNPRTUWXY";
     let mut rng = rand::thread_rng();

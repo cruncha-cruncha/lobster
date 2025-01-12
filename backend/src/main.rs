@@ -1,10 +1,10 @@
 mod auth;
 mod common;
-mod usernames;
 mod db_structs;
 mod handlers;
 mod queries;
 mod rabbit;
+mod usernames;
 
 use axum::{routing, Router};
 use rabbit::communicator::Communicator;
@@ -87,13 +87,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
             "/stores/:store_id/status",
             routing::patch(handlers::stores::update_status),
         )
-        .route(
-            "/permissions",
-            routing::post(handlers::permissions::add)
-        )
+        .route("/permissions", routing::post(handlers::permissions::add))
         .route(
             "/permissions/:permission_id",
-            routing::delete(handlers::permissions::delete)
+            routing::delete(handlers::permissions::delete),
         )
         .route(
             "/tool-categories",
@@ -112,10 +109,23 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .route(
             "/tools",
             routing::get(handlers::tools::get_filtered).post(handlers::tools::create_new),
-        ).route(
+        )
+        .route(
             "/tools/:tool_id",
-            routing::patch(handlers::tools::update)
-                .get(handlers::tools::get_by_id),
+            routing::patch(handlers::tools::update).get(handlers::tools::get_by_id),
+        )
+        .route("/rentals", routing::get(handlers::rentals::get_filtered))
+        .route(
+            "/rentals/check-in",
+            routing::patch(handlers::rentals::check_in),
+        )
+        .route(
+            "/rentals/check-out",
+            routing::patch(handlers::rentals::check_out),
+        )
+        .route(
+            "/rentals/:rental_id",
+            routing::patch(handlers::rentals::update).get(handlers::rentals::get_by_id),
         );
 
     #[cfg(feature = "cors")]
