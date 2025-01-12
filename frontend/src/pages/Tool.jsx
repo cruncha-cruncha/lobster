@@ -21,8 +21,8 @@ const reducer = (state, action) => {
       return { ...state, realId: action.value };
     case "pictures":
       return { ...state, pictures: action.value };
-    case "defaultRentalPeriod":
-      return { ...state, defaultRentalPeriod: action.value };
+    case "rentalHours":
+      return { ...state, rentalHours: action.value };
     case "isLoading":
       return { ...state, isLoading: action.value };
     case "isSaving":
@@ -44,7 +44,7 @@ export const useTool = () => {
     description: "",
     realId: "",
     pictures: [],
-    defaultRentalPeriod: 0,
+    rentalHours: 0,
     isLoading: true,
     isSaving: false,
   });
@@ -59,8 +59,8 @@ export const useTool = () => {
     dispatch({ type: "realId", value: data.realId });
     dispatch({ type: "pictures", value: data.pictures });
     dispatch({
-      type: "defaultRentalPeriod",
-      value: data.defaultRentalPeriod,
+      type: "rentalHours",
+      value: data.rentalHours,
     });
     dispatch({ type: "isLoading", value: false });
   };
@@ -100,8 +100,8 @@ export const useTool = () => {
     dispatch({ type: "realId", value: e.target.value });
   };
 
-  const setDefaultRentalPeriod = (e) => {
-    dispatch({ type: "defaultRentalPeriod", value: e.target.value });
+  const setRentalHours = (e) => {
+    dispatch({ type: "rentalHours", value: e.target.value });
   };
 
   const canAddToCart =
@@ -125,8 +125,8 @@ export const useTool = () => {
           storeId: Number(data.storeId),
           categoryIds: categorySearch.categories.map((cat) => cat.id),
           description: info.description,
-          defaultRentalPeriod:
-            parseInt(info.defaultRentalPeriod, 10) || undefined,
+          rentalHours:
+            parseInt(info.rentalHours, 10) || data.rentalHours,
           pictures: [],
           status: Number(info.status),
         },
@@ -153,7 +153,7 @@ export const useTool = () => {
     setStatus,
     setDescription,
     setRealId,
-    setDefaultRentalPeriod,
+    setRentalHours,
     updateTool,
     categorySearch,
     canAddToCart,
@@ -175,7 +175,7 @@ export const PureTool = (tool) => {
     setStatus,
     setDescription,
     setRealId,
-    setDefaultRentalPeriod,
+    setRentalHours,
     updateTool,
     categorySearch,
     canAddToCart,
@@ -218,9 +218,9 @@ export const PureTool = (tool) => {
       />
       <TextInput label="Real ID" value={info.realId} onChange={setRealId} />
       <TextInput
-        label="Default Rental Period"
-        value={info.defaultRentalPeriod || ""}
-        onChange={setDefaultRentalPeriod}
+        label="Rental Hours"
+        value={info.rentalHours || ""}
+        onChange={setRentalHours}
       />
       <PureCategorySearch {...categorySearch} />
       <Button text="Update" onClick={updateTool} />
