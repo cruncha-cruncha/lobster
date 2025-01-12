@@ -75,8 +75,8 @@ CREATE TABLE main.tools (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     real_id TEXT NOT NULL,
     store_id INTEGER NOT NULL,
-    default_rental_period INTEGER,
-    description TEXT,
+    rental_hours INTEGER NOT NULL,
+    description TEXT NOT NULL,
     pictures TEXT[] NOT NULL,
     status INTEGER NOT NULL,
     PRIMARY KEY (id),
@@ -138,4 +138,4 @@ CREATE INDEX IF NOT EXISTS idx_fuzzy_tool_categories ON main.tool_categories
   USING gist((name || ' ' || COALESCE(description, '') || ' ' || ARRAY_TO_STRING(synonyms, ' ')) gist_trgm_ops(siglen=256));
 
 CREATE INDEX IF NOT EXISTS idx_fuzzy_tools ON main.tools
-  USING gist((real_id || ' ' || COALESCE(description, '')) gist_trgm_ops(siglen=256));
+  USING gist((real_id || ' ' || description) gist_trgm_ops(siglen=256));

@@ -132,13 +132,14 @@ export const PureStore = (store) => {
 };
 
 export const useAddTool = ({ storeId }) => {
+  const defaultRentalHours = 48;
   const { accessToken } = useAuth();
   const [realId, _setRealId] = useState("");
   const [description, _setDescription] = useState("");
-  const [defaultRentalPeriod, _setDefaultRentalPeriod] = useState(7);
+  const [rentalHours, _setRentalHours] = useState(defaultRentalHours);
   const categorySearch = useCategorySearch();
 
-  // default rental period
+  // rental hours
   // pictures
 
   const setRealId = (e) => {
@@ -149,8 +150,8 @@ export const useAddTool = ({ storeId }) => {
     _setDescription(e.target.value);
   };
 
-  const setDefaultRentalPeriod = (e) => {
-    _setDefaultRentalPeriod(val);
+  const setRentalHours = (e) => {
+    _setRentalHours(val);
   };
 
   // const showAddTool = if user is tool manager for store
@@ -166,7 +167,7 @@ export const useAddTool = ({ storeId }) => {
           storeId: Number(storeId),
           categoryIds: [],
           description,
-          defaultRentalPeriod: parseInt(defaultRentalPeriod, 10) || undefined,
+          rentalHours: parseInt(rentalHours, 10) || defaultRentalHours,
           pictures: [],
           status: 1,
         },
@@ -174,6 +175,7 @@ export const useAddTool = ({ storeId }) => {
       })
       .then((data) => {
         console.log(data);
+        // do something? success message? clear fields? navigate to tool? button to go to tool?
       });
   };
 
@@ -182,8 +184,9 @@ export const useAddTool = ({ storeId }) => {
     setRealId,
     description,
     setDescription,
-    defaultRentalPeriod,
-    setDefaultRentalPeriod,
+    rentalHours,
+    setRentalHours,
+    defaultRentalHours,
     categorySearch: {
       ...categorySearch,
       showMatchAllCats: false,
@@ -199,8 +202,8 @@ export const PureAddTool = (addTool) => {
     setRealId,
     description,
     setDescription,
-    defaultRentalPeriod,
-    setDefaultRentalPeriod,
+    rentalHours,
+    setRentalHours,
     categorySearch,
     createTool,
     canAddTool,
@@ -222,10 +225,10 @@ export const PureAddTool = (addTool) => {
         placeholder="A red screw driver, square head"
       />
       <TextInput
-        label="Default Rental Period"
-        value={defaultRentalPeriod}
-        onChange={setDefaultRentalPeriod}
-        placeholder="days"
+        label="Rental Hours"
+        value={rentalHours}
+        onChange={setRentalHours}
+        placeholder={`${defaultRentalHours}`}
       />
       <PureCategorySearch {...categorySearch} />
       <Button onClick={createTool} text="Add Tool" disabled={!canAddTool} />
