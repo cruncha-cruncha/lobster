@@ -187,9 +187,8 @@ const toolCategorySchema = {
     name: { type: "string" },
     synonyms: { type: "array", items: { type: "string" } },
     description: { type: ["string", "null"] },
-    defaultRentalPeriod: { type: ["number", "null"] },
   },
-  required: ["id", "name", "synonyms", "description", "defaultRentalPeriod"],
+  required: ["id", "name", "synonyms", "description"],
 };
 
 const singleToolSchema = {

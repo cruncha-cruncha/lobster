@@ -67,7 +67,6 @@ CREATE TABLE main.tool_categories (
     name TEXT NOT NULL,
     synonyms TEXT[] NOT NULL,
     description TEXT,
-    default_rental_period INTEGER,
     PRIMARY KEY (id)
 );
 
