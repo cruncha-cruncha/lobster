@@ -136,4 +136,4 @@ CREATE INDEX IF NOT EXISTS idx_fuzzy_tool_categories ON main.tool_categories
   USING gist((name || ' ' || COALESCE(description, '') || ' ' || ARRAY_TO_STRING(synonyms, ' ')) gist_trgm_ops(siglen=256));
 
 CREATE INDEX IF NOT EXISTS idx_fuzzy_tools ON main.tools
-  USING gist(COALESCE(description, '') gist_trgm_ops(siglen=256));
+  USING gist((real_id || ' ' || COALESCE(description, '')) gist_trgm_ops(siglen=256));

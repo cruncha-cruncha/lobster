@@ -137,7 +137,7 @@ pub async fn select(
         LEFT JOIN main.tool_classifications tc ON mt.id = tc.tool_id
         WHERE
             (ARRAY_LENGTH($1::integer[], 1) IS NULL OR mt.id = ANY($1::integer[]))
-            AND ($2::text = '' OR $2::text <% COALESCE(mt.description, ''))
+            AND ($2::text = '' OR $2::text <% (mt.real_id || ' ' || COALESCE(mt.description, '')))
             AND (ARRAY_LENGTH($3::integer[], 1) IS NULL OR mt.status = ANY($3::integer[]))
             AND (ARRAY_LENGTH($4::integer[], 1) IS NULL OR mt.store_id = ANY($4::integer[]))
             AND (ARRAY_LENGTH($5::text[], 1) IS NULL OR mt.real_id = ANY($5::text[]))
