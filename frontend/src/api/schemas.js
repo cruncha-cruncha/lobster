@@ -28,10 +28,9 @@ const libraryInfoSchema = {
   properties: {
     uuid: { type: "string" },
     name: { type: "string" },
-    maximumRentalPeriod: { type: "number" },
-    maximumFuture: { type: "number" },
+    maximumRentalHours: { type: "number" },
   },
-  required: ["uuid", "name", "maximumRentalPeriod", "maximumFuture"],
+  required: ["uuid", "name", "maximumRentalHours"],
 };
 
 const genericOptionSchema = {

@@ -5,16 +5,14 @@ import * as endpoints from "../api/endpoints";
 
 const libraryUuidAtom = atom("");
 const libraryNameAtom = atom("");
-const libraryMaximumRentalPeriodAtom = atom(0);
-const libraryMaximumFutureAtom = atom(0);
+const libraryMaximumRentalHoursAtom = atom(0);
 
 export const useLibraryInfo = () => {
   const [uuid, setUuid] = useAtom(libraryUuidAtom);
   const [name, setName] = useAtom(libraryNameAtom);
-  const [maximumRentalPeriod, setMaximumRentalPeriod] = useAtom(
-    libraryMaximumRentalPeriodAtom,
+  const [maximumRentalHours, setMaximumRentalHours] = useAtom(
+    libraryMaximumRentalHoursAtom,
   ); // hours that rentals can be checked out for
-  const [maximumFuture, setMaximumFuture] = useAtom(libraryMaximumFutureAtom); // days in the future that rentals can be made
 
   const { data, error, isLoading, mutate } = useSWR(
     "get library information",
@@ -29,8 +27,7 @@ export const useLibraryInfo = () => {
     if (data) {
       setUuid(data.uuid);
       setName(data.name);
-      setMaximumRentalPeriod(data.maximumRentalPeriod);
-      setMaximumFuture(data.maximumFuture);
+      setMaximumRentalHours(data.maximumRentalHours);
     }
   }, [data]);
 
@@ -40,7 +37,6 @@ export const useLibraryInfo = () => {
     refresh: () => mutate(),
     uuid,
     name,
-    maximumRentalPeriod,
-    maximumFuture,
+    maximumRentalHours,
   };
 };

@@ -37,8 +37,7 @@ pub async fn select_information(
 
 pub async fn update_information(
     name: Option<String>,
-    max_rental_period: Option<i32>,
-    max_future: Option<i32>,
+    max_rental_hours: Option<i32>,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<LibraryInformation, String> {
     sqlx::query_as!(
@@ -47,13 +46,11 @@ pub async fn update_information(
         UPDATE main.library_information li
         SET
             name = COALESCE($1, li.name),
-            maximum_rental_period = COALESCE($2, li.maximum_rental_period),
-            maximum_future = COALESCE($3, li.maximum_future)
+            maximum_rental_hours = COALESCE($2, li.maximum_rental_hours)
         RETURNING *;
         "#,
         name,
-        max_rental_period,
-        max_future,
+        max_rental_hours,
     )
     .fetch_one(db)
     .await
@@ -62,20 +59,18 @@ pub async fn update_information(
 
 pub async fn insert_information(
     name: &str,
-    max_rental_period: i32,
-    max_future: i32,
+    max_rental_hours: i32,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<LibraryInformation, String> {
     sqlx::query_as!(
         LibraryInformation,
         r#"
-        INSERT INTO main.library_information (name, maximum_rental_period, maximum_future)
-        VALUES ($1, $2, $3)
+        INSERT INTO main.library_information (name, maximum_rental_hours)
+        VALUES ($1, $2)
         RETURNING *;
         "#,
         name,
-        max_rental_period,
-        max_future,
+        max_rental_hours,
     )
     .fetch_one(db)
     .await

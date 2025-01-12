@@ -13,8 +13,7 @@ use std::sync::Arc;
 #[serde(rename_all = "camelCase")]
 pub struct SettableLibraryInfo {
     pub name: Option<library_information::Name>,
-    pub maximum_rental_period: Option<library_information::MaximumRentalPeriod>,
-    pub maximum_future: Option<library_information::MaximumFuture>,
+    pub maximum_rental_hours: Option<library_information::MaximumRentalHours>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -118,8 +117,7 @@ pub async fn update_info(
 
     match library::update_information(
         payload.name,
-        payload.maximum_rental_period,
-        payload.maximum_future,
+        payload.maximum_rental_hours,
         &state.db,
     )
     .await
@@ -145,13 +143,11 @@ pub async fn create_library(
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     };
 
-    let maximum_rental_period = 336;
-    let maximum_future = 60;
+    let maximum_rental_hours = 336;
 
     match library::insert_information(
         &payload.name,
-        maximum_rental_period,
-        maximum_future,
+        maximum_rental_hours,
         &state.db,
     )
     .await
