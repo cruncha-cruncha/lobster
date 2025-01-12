@@ -216,10 +216,7 @@ export const PureTools = (tools) => {
           <li key={tool.id}>
             <div className="flex justify-between">
               <div onClick={() => goToTool(tool.id)} className="cursor-pointer">
-                <p>{tool.description}</p>
-                {/* <p>status: {tool.status}</p> */}
-                {/* <p>store: {tool.storeName}</p> */}
-                {/* <p>categories: {JSON.stringify(tool.categories)}</p> */}
+                <p>{tool.realId}, {tool.description}</p>
                 {/* <p>pictures: {JSON.stringify(tool.pictures)}</p> */}
               </div>
               <div className="flex gap-2">
