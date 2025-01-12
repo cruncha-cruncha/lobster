@@ -51,10 +51,9 @@ export const useStore = () => {
 
   const canUpdateStatus = storeInfo.status != status;
 
-  const cartSize = toolCart.length;
-  const showGoToCart = cartSize > 0;
+  const cartSize = toolCart.filter((tool) => tool.storeId == storeId).length;
   const goToCart = () => {
-    navigate("/rentals");
+    navigate(`/stores/${storeId}/cart`);
   };
 
   const updateStatus = () => {
@@ -85,7 +84,6 @@ export const useStore = () => {
     goToTools,
     updateStatus,
     addTool,
-    showGoToCart,
     goToCart,
     cartSize,
   };
@@ -104,7 +102,6 @@ export const PureStore = (store) => {
     goToTools,
     updateStatus,
     addTool,
-    showGoToCart,
     goToCart,
     cartSize,
   } = store;
@@ -115,13 +112,7 @@ export const PureStore = (store) => {
         <Button onClick={() => goToTools()} text="Tools" variant="blue" />
         <Button onClick={() => goToPeople()} text="People" variant="blue" />
         <Button onClick={() => goToStores()} text="All Stores" variant="blue" />
-        {showGoToCart && (
-          <Button
-            onClick={goToCart}
-            text={`Cart (${cartSize})`}
-            variant="blue"
-          />
-        )}
+        <Button onClick={goToCart} text={`Cart (${cartSize})`} variant="blue" />
       </div>
       <h1>{storeInfo.name}</h1>
       <p>{JSON.stringify(storeInfo)}</p>

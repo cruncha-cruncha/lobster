@@ -34,7 +34,7 @@ export const useTools = () => {
   const navigate = useNavigate();
   const [urlParams, setUrlParams] = useSearchParams();
   const urlStoreId = urlParams.get(URL_STORE_ID_KEY);
-  const { toolCart, addTool, removeTool, inCart } = useToolCart();
+  const { addTool, removeTool, inCart } = useToolCart();
 
   const { toolStatuses } = useConstants();
   const [toolsList, setToolsList] = useState([]);
@@ -126,10 +126,6 @@ export const useTools = () => {
     }
   };
 
-  const goToCart = () => {
-    navigate("/rentals");
-  };
-
   const nextPage = () => _setPage(page + 1);
 
   const addToCart = (toolId) => {
@@ -160,9 +156,6 @@ export const useTools = () => {
     page,
     addToCart,
     removeFromCart,
-    showGoToCart: toolCart.length > 0,
-    cartSize: toolCart.length,
-    goToCart,
   };
 };
 
@@ -183,9 +176,6 @@ export const PureTools = (tools) => {
     page,
     addToCart,
     removeFromCart,
-    showGoToCart,
-    cartSize,
-    goToCart,
   } = tools;
 
   return (
@@ -206,11 +196,6 @@ export const PureTools = (tools) => {
       <PureCategorySearch {...categorySearch} />
       <PureStoreSelect {...storeSelect} />
       {warnSingleStore && <p>currently filtering by a store</p>}
-      {showGoToCart && (
-        <div className="flex justify-end">
-          <Button onClick={goToCart} text={`Cart (${cartSize})`} variant="blue" />
-        </div>
-      )}
       <ul>
         {toolsList.map((tool) => (
           <li key={tool.id}>

@@ -42,11 +42,11 @@ export const Rentals = () => {
           <li key={tool.id}>
             <div className="flex justify-between">
               <div onClick={() => goToTool(tool.id)} className="cursor-pointer">
-                {tool.description}
+                {tool.realId}, {tool.description}
               </div>
               <Button
                 onClick={() => removeFromCart(tool.id)}
-                text={"Remove"}
+                text="Remove"
                 variant="red"
               />
             </div>

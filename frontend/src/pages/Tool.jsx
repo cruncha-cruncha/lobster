@@ -104,12 +104,6 @@ export const useTool = () => {
     dispatch({ type: "defaultRentalPeriod", value: e.target.value });
   };
 
-  const goToCart = () => {
-    navigate("/rentals");
-  };
-
-  const cartSize = toolCart.length;
-  const showGoToCart = cartSize > 0;
   const canAddToCart =
     !toolCart.some((tool) => tool.id == toolId) && info.status == 1;
   const canRemoveFromCart = toolCart.some((tool) => tool.id == toolId);
@@ -162,9 +156,6 @@ export const useTool = () => {
     setDefaultRentalPeriod,
     updateTool,
     categorySearch,
-    goToCart,
-    cartSize,
-    showGoToCart,
     canAddToCart,
     canRemoveFromCart,
     addToCart,
@@ -187,9 +178,6 @@ export const PureTool = (tool) => {
     setDefaultRentalPeriod,
     updateTool,
     categorySearch,
-    goToCart,
-    cartSize,
-    showGoToCart,
     canAddToCart,
     canRemoveFromCart,
     addToCart,
@@ -203,13 +191,6 @@ export const PureTool = (tool) => {
         <Button text="Store" onClick={goToStore} variant="blue" />
         <Button text="Store Tools" onClick={goToStoreTools} variant="blue" />
         <Button text="All Tools" onClick={goToTools} variant="blue" />
-        {showGoToCart && (
-          <Button
-            text={`Cart (${cartSize})`}
-            onClick={goToCart}
-            variant="blue"
-          />
-        )}
       </div>
       <p>{JSON.stringify(data)}</p>
       <div>
