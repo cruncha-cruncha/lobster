@@ -17,6 +17,7 @@ CREATE TABLE main.users (
     code TEXT NOT NULL,
     PRIMARY KEY (id),
     UNIQUE (email_address),
+    UNIQUE (code),
     CONSTRAINT fk_status
       FOREIGN KEY(status)
         REFERENCES fixed.user_statuses(id)
@@ -55,6 +56,7 @@ CREATE TABLE main.stores (
     created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     PRIMARY KEY (id),
     UNIQUE (name),
+    UNIQUE (code),
     CONSTRAINT fk_status
       FOREIGN KEY(status)
         REFERENCES fixed.store_statuses(id)
