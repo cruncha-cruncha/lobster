@@ -56,7 +56,7 @@ export const useTools = () => {
       _storeSelect.addStore(storeId);
     },
     removeStore: (storeId) => {
-      if (urlStoreId == storeId) {
+      if (urlStoreId) {
         urlParams.delete(URL_STORE_ID_KEY);
         setUrlParams(urlParams);
       }
@@ -68,7 +68,7 @@ export const useTools = () => {
     useEffect(() => {
       if (!urlStoreId || !accessToken) return;
       _storeSelect.addStore(urlStoreId);
-    }, [urlStoreId, accessToken, storeSelect.stores]);
+    }, [urlStoreId, accessToken]);
 
     const { data } = useSWR(
       !urlStoreId || !accessToken
@@ -289,11 +289,12 @@ export const useCategorySearch = () => {
         cache.set(`get category ${catId}, using ${accessToken}`, newCat);
       }
     }
-    !!newCat && setCategories(prev => [...prev, newCat]);
+    !!newCat &&
+      setCategories((prev) => [...prev.filter((c) => c.id != catId), newCat]);
   };
 
   const removeCategory = (catId) => {
-    setCategories(categories.filter((cat) => cat.id != catId));
+    setCategories(categories.filter((c) => c.id != catId));
   };
 
   const setMatchAllCats = (e) => {
@@ -391,7 +392,8 @@ export const useStoreSelect = () => {
       newStore = await endpoints.getStore({ id: storeId, accessToken });
       cache.set(`get store ${storeId}, using ${accessToken}`, newStore);
     }
-    !!newStore && setStores(prev => [...prev, newStore]);
+    !!newStore &&
+      setStores((prev) => [...prev.filter((s) => s.id != storeId), newStore]);
   };
 
   const removeStore = (storeId) => {

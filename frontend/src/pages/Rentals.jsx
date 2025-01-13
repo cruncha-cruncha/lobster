@@ -9,6 +9,8 @@ import { Select } from "../components/Select";
 import { SearchSelect } from "../components/SearchSelect";
 import { Checkbox } from "../components/Checkbox";
 import { URL_STORE_ID_KEY } from "./Store";
+import { URL_TOOL_ID_KEY } from "./Tool";
+import { URL_PERSON_ID_KEY } from "./Person";
 import { useToolCategories } from "../state/toolCategories";
 import { PrevNext } from "../components/PrevNext";
 import { Button } from "../components/Button";
@@ -18,16 +20,138 @@ import { useStoreSelect, PureStoreSelect } from "./Tools";
 export const Rentals = () => {
   const { accessToken } = useAuth();
   const navigate = useNavigate();
-  const storeSelect = useStoreSelect();
-  const userSelect = useUserSelect();
-  const toolSelect = useToolSelect();
+  const [urlParams, setUrlParams] = useSearchParams();
+  const _storeSelect = useStoreSelect();
+  const _userSelect = useUserSelect();
+  const _toolSelect = useToolSelect();
   const [rentals, setRentals] = useState([]);
   const [stillOpen, _setStillOpen] = useState(true);
 
+  const urlStoreId = urlParams.get(URL_STORE_ID_KEY);
+  const urlToolId = urlParams.get(URL_TOOL_ID_KEY);
+  const urlPersonId = urlParams.get(URL_PERSON_ID_KEY);
+
+  const storeSelect = {
+    ..._storeSelect,
+    addStore: (storeId) => {
+      if (urlStoreId) {
+        urlParams.delete(URL_STORE_ID_KEY);
+        setUrlParams(urlParams);
+      }
+      _storeSelect.addStore(storeId);
+    },
+    removeStore: (storeId) => {
+      if (urlStoreId) {
+        urlParams.delete(URL_STORE_ID_KEY);
+        setUrlParams(urlParams);
+      }
+      _storeSelect.removeStore(storeId);
+    },
+  };
+
+  const userSelect = {
+    ..._userSelect,
+    addUser: (userId) => {
+      if (urlPersonId) {
+        urlParams.delete(URL_PERSON_ID_KEY);
+        setUrlParams(urlParams);
+      }
+      _userSelect.addUser(userId);
+    },
+    removeUser: (userId) => {
+      if (urlPersonId) {
+        urlParams.delete(URL_PERSON_ID_KEY);
+        setUrlParams(urlParams);
+      }
+      _userSelect.removeUser(userId);
+    },
+  };
+
+  const toolSelect = {
+    ..._toolSelect,
+    addTool: (toolId) => {
+      if (urlToolId) {
+        urlParams.delete(URL_TOOL_ID_KEY);
+        setUrlParams(urlParams);
+      }
+      _toolSelect.addTool(toolId);
+    },
+    removeTool: (toolId) => {
+      if (urlToolId) {
+        urlParams.delete(URL_TOOL_ID_KEY);
+        setUrlParams(urlParams);
+      }
+      _toolSelect.removeTool(toolId);
+    },
+  };
+
+  // filter by store if urlStoreId is present
+  {
+    useEffect(() => {
+      if (!urlStoreId || !accessToken) return;
+      _storeSelect.addStore(urlStoreId);
+    }, [urlStoreId, accessToken]);
+
+    const { data } = useSWR(
+      !urlStoreId || !accessToken
+        ? null
+        : `get store ${urlStoreId}, using ${accessToken}`,
+      () => endpoints.getStore({ id: urlStoreId, accessToken }),
+    );
+
+    useEffect(() => {
+      if (data) {
+        _storeSelect.setStoreTerm({ target: { value: data.name } });
+      }
+    }, [data]);
+  }
+
+  // filter by person if urlPersonId is present
+  {
+    useEffect(() => {
+      if (!urlPersonId || !accessToken) return;
+      _userSelect.addUser(urlPersonId);
+    }, [urlPersonId, accessToken]);
+
+    const { data } = useSWR(
+      !urlPersonId || !accessToken
+        ? null
+        : `get user ${urlPersonId}, using ${accessToken}`,
+      () => endpoints.getUser({ id: urlPersonId, accessToken }),
+    );
+
+    useEffect(() => {
+      if (data) {
+        _userSelect.setUserTerm({ target: { value: data.username } });
+      }
+    }, [data]);
+  }
+
+  // filter by tool if urlToolId is present
+  {
+    useEffect(() => {
+      if (!urlToolId || !accessToken) return;
+      _toolSelect.addTool(urlToolId);
+    }, [urlToolId, accessToken]);
+
+    const { data } = useSWR(
+      !urlToolId || !accessToken
+        ? null
+        : `get tool ${urlToolId}, using ${accessToken}`,
+      () => endpoints.getTool({ id: urlToolId, accessToken }),
+    );
+
+    useEffect(() => {
+      if (data) {
+        _toolSelect.setToolTerm({ target: { value: data.realId } });
+      }
+    }, [data]);
+  }
+
   const endpointParams = {
-    storeIds: storeSelect.stores.map((s) => s.id),
-    renterIds: userSelect.users.map((u) => u.id),
-    toolIds: toolSelect.tools.map((t) => t.id),
+    storeIds: urlStoreId ? [urlStoreId] : storeSelect.stores.map((s) => s.id),
+    renterIds: urlPersonId ? [urlPersonId] : userSelect.users.map((u) => u.id),
+    toolIds: urlToolId ? [urlToolId] : toolSelect.tools.map((t) => t.id),
     open: stillOpen,
   };
 
@@ -48,7 +172,7 @@ export const Rentals = () => {
 
   const setStillOpen = (e) => {
     _setStillOpen(e.target.checked);
-  }
+  };
 
   // simple store search
   // user search
@@ -68,7 +192,11 @@ export const Rentals = () => {
       <PureStoreSelect {...storeSelect} />
       <PureUserSelect {...userSelect} />
       <PureToolSelect {...toolSelect} />
-      <Checkbox label="Still Open" checked={stillOpen} onChange={setStillOpen} />
+      <Checkbox
+        label="Still Open"
+        checked={stillOpen}
+        onChange={setStillOpen}
+      />
       <ul>
         {rentals.map((rental) => (
           <li key={rental.id}>{JSON.stringify(rental)}</li>
@@ -115,7 +243,8 @@ export const useUserSelect = () => {
       newUser = await endpoints.getUser({ id: userId, accessToken });
       cache.set(`get user ${userId}, using ${accessToken}`, newUser);
     }
-    !!newUser && setUsers((prev) => [...prev, newUser]);
+    !!newUser &&
+      setUsers((prev) => [...prev.filter((u) => u.id != userId), newUser]);
   };
 
   const removeUser = (userId) => {
@@ -197,7 +326,8 @@ export const useToolSelect = () => {
       newTool = await endpoints.getTool({ id: toolId, accessToken });
       cache.set(`get tool ${toolId}, using ${accessToken}`, newTool);
     }
-    !!newTool && setTools((prev) => [...prev, newTool]);
+    !!newTool &&
+      setTools((prev) => [...prev.filter((t) => t.id != toolId), newTool]);
   };
 
   const removeTool = (toolId) => {

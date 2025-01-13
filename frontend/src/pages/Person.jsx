@@ -7,8 +7,9 @@ import * as endpoints from "../api/endpoints";
 import { Button } from "../components/Button";
 import { TextInput } from "../components/TextInput";
 import { Select } from "../components/Select";
-import { SearchSelect } from "../components/SearchSelect";
 import { PureSingleStoreSelect, useSingleStoreSelect } from "./People";
+
+export const URL_PERSON_ID_KEY = "personId";
 
 export const Person = () => {
   const navigate = useNavigate();

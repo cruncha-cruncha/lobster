@@ -11,6 +11,8 @@ import { URL_STORE_ID_KEY } from "./Store";
 import { PureCategorySearch, useCategorySearch } from "./Tools";
 import { useToolCart } from "../state/toolCart";
 
+export const URL_TOOL_ID_KEY = "toolId";
+
 const reducer = (state, action) => {
   switch (action.type) {
     case "status":
