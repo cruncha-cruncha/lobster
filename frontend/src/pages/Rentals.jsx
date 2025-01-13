@@ -26,6 +26,7 @@ export const Rentals = () => {
   const _toolSelect = useToolSelect();
   const [rentals, setRentals] = useState([]);
   const [stillOpen, _setStillOpen] = useState(true);
+  const [page, _setPage] = useState(1);
 
   const urlStoreId = urlParams.get(URL_STORE_ID_KEY);
   const urlToolId = urlParams.get(URL_TOOL_ID_KEY);
@@ -153,6 +154,7 @@ export const Rentals = () => {
     renterIds: urlPersonId ? [urlPersonId] : userSelect.users.map((u) => u.id),
     toolIds: urlToolId ? [urlToolId] : toolSelect.tools.map((t) => t.id),
     open: stillOpen,
+    page,
   };
 
   const { data, isLoading, error, mutate } = useSWR(
@@ -173,6 +175,14 @@ export const Rentals = () => {
   const setStillOpen = (e) => {
     _setStillOpen(e.target.checked);
   };
+
+  const prevPage = () => {
+    if (page > 1) {
+      _setPage(page - 1);
+    }
+  };
+
+  const nextPage = () => _setPage(page + 1);
 
   // simple store search
   // user search
@@ -202,6 +212,7 @@ export const Rentals = () => {
           <li key={rental.id}>{JSON.stringify(rental)}</li>
         ))}
       </ul>
+      <PrevNext prev={prevPage} next={nextPage} pageNumber={page} />
     </div>
   );
 };
