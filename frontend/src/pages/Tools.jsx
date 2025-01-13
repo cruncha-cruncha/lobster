@@ -191,6 +191,15 @@ export const PureTools = (tools) => {
   return (
     <div>
       <h1>Tools</h1>
+      {showGoToCart && (
+        <div className="flex justify-start gap-2">
+          <Button
+            onClick={goToCart}
+            text={`Cart (${cartSize})`}
+            variant="blue"
+          />
+        </div>
+      )}
       <Select
         label="Status"
         value={status}
@@ -206,15 +215,6 @@ export const PureTools = (tools) => {
       <PureCategorySearch {...categorySearch} />
       <PureStoreSelect {...storeSelect} />
       {warnSingleStore && <p>currently filtering by a store</p>}
-      {showGoToCart && (
-        <div>
-          <Button
-            onClick={goToCart}
-            text={`Cart (${cartSize})`}
-            variant="blue"
-          />
-        </div>
-      )}
       <ul>
         {toolsList.map((tool) => (
           <li key={tool.id}>

@@ -193,7 +193,7 @@ export const PureTool = (tool) => {
         <Button text="All Tools" onClick={goToTools} variant="blue" />
       </div>
       <p>{JSON.stringify(data)}</p>
-      <div>
+      <div className="flex justify-end gap-2">
         {canAddToCart && (
           <Button text="Add to Cart" onClick={() => addToCart(toolId)} />
         )}
@@ -223,7 +223,9 @@ export const PureTool = (tool) => {
         onChange={setRentalHours}
       />
       <PureCategorySearch {...categorySearch} />
-      <Button text="Update" onClick={updateTool} />
+      <div className="flex justify-end gap-2">
+        <Button text="Update" onClick={updateTool} />
+      </div>
     </div>
   );
 };

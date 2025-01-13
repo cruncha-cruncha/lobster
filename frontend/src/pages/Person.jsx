@@ -252,11 +252,13 @@ const PureUserStatus = (userStatus) => {
             options={statusOptions}
             disabled={statusLoading}
           />
-          <Button
-            text="Update Status"
-            onClick={updateStatus}
-            disabled={!canUpdateStatus}
-          />
+          <div className="flex justify-end gap-2">
+            <Button
+              text="Update Status"
+              onClick={updateStatus}
+              disabled={!canUpdateStatus}
+            />
+          </div>
         </>
       )}
     </div>
@@ -499,24 +501,38 @@ const PureUserPermissions = (userPermissions) => {
                 onChange={setSelectedRole}
               />
               {showStoreSearch && <PureSingleStoreSelect {...storeSelect} />}
-              <Button
-                text="Add Permission"
-                disabled={!canAddPermission}
-                onClick={addPermission}
-              />
-              <Button text="Cancel" onClick={toggleShowFields} />
+              <div className="flex justify-between gap-2">
+                <Button
+                  text="Cancel"
+                  onClick={toggleShowFields}
+                  variant="blue"
+                />
+                <Button
+                  text="Add Permission"
+                  disabled={!canAddPermission}
+                  onClick={addPermission}
+                />
+              </div>
             </>
           )}
           {showFields === "remove" && (
-            <>
-              <Button text="Done" onClick={toggleShowFields} />
-            </>
+            <div className="flex justify-start gap-2">
+              <Button text="Done" onClick={toggleShowFields} variant="blue" />
+            </div>
           )}
           {showFields === "" && (
-            <>
-              <Button text="Add Permission" onClick={showAddFields} />
-              <Button text="Remove Permissions" onClick={showRemoveFields} />
-            </>
+            <div className="flex justify-start gap-2">
+              <Button
+                text="Add Permission"
+                onClick={showAddFields}
+                variant="blue"
+              />
+              <Button
+                text="Remove Permissions"
+                onClick={showRemoveFields}
+                variant="blue"
+              />
+            </div>
           )}
         </>
       )}

@@ -102,7 +102,7 @@ export const PureLibrary = (library) => {
           />
           <p>The longest time any tool can be rented, in hours.</p>
         </fieldset>
-        <div className="mt-4 flex">
+        <div className="mt-4 flex justify-end gap-2">
           <Button
             onClick={save}
             disabled={!canSave}

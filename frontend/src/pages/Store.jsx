@@ -50,7 +50,7 @@ export const useStore = () => {
   const showUpdateStatus = permissions.isStoreAdmin();
   const canUpdateStatus = storeInfo.status != status;
   const cartSize = toolCart.filter((tool) => tool.storeId == storeId).length;
-  
+
   const goToCart = () => {
     navigate(`/stores/${storeId}/cart`);
   };
@@ -118,11 +118,13 @@ export const PureStore = (store) => {
       {showUpdateStatus && (
         <>
           <Select options={storeStatuses} value={status} onChange={setStatus} />
-          <Button
-            onClick={() => updateStatus()}
-            text="Update Status"
-            disabled={!canUpdateStatus}
-          />
+          <div className="flex justify-end gap-2">
+            <Button
+              onClick={() => updateStatus()}
+              text="Update Status"
+              disabled={!canUpdateStatus}
+            />
+          </div>
         </>
       )}
       <PureAddTool {...addTool} />
@@ -231,7 +233,9 @@ export const PureAddTool = (addTool) => {
         placeholder={`${defaultRentalHours}`}
       />
       <PureCategorySearch {...categorySearch} />
-      <Button onClick={createTool} text="Add Tool" disabled={!canAddTool} />
+      <div className="flex justify-end gap-2">
+        <Button onClick={createTool} text="Add Tool" disabled={!canAddTool} />
+      </div>
     </div>
   );
 };

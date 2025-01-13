@@ -74,7 +74,7 @@ export const PureCart = (cart) => {
   return (
     <div>
       <h1>Cart</h1>
-      <Button onClick={goToTools} text="All Tools" />
+      <Button onClick={goToTools} text="All Tools" variant="blue" />
       <ul>
         {toolCart.map((tool) => (
           <li key={tool.id}>
@@ -98,11 +98,13 @@ export const PureCart = (cart) => {
             value={storeCode}
             onChange={setStoreCode}
           />
-          <Button
-            onClick={handleCheckout}
-            text="Checkout"
-            disabled={!canCheckout}
-          />
+          <div className="flex justify-end gap-2">
+            <Button
+              onClick={handleCheckout}
+              text="Checkout"
+              disabled={!canCheckout}
+            />
+          </div>
         </>
       )}
     </div>

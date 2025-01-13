@@ -35,12 +35,14 @@ export const useNewStore = () => {
   });
 
   const handleCreateStore = async () => {
-    endpoints.createStore({
-      info,
-      accessToken,
-    }).then((data) => {
-      navigate(`/stores/${data.id}`);
-    });
+    endpoints
+      .createStore({
+        info,
+        accessToken,
+      })
+      .then((data) => {
+        navigate(`/stores/${data.id}`);
+      });
   };
 
   const handleCancel = () => {
@@ -67,7 +69,7 @@ export const useNewStore = () => {
     canCreateNewStore: info.name && info.emailAddress && info.phoneNumber,
     handleCreateStore,
     handleCancel,
-  }
+  };
 };
 
 export const PureNewStore = (newStore) => {
@@ -116,8 +118,14 @@ export const PureNewStore = (newStore) => {
         onChange={setOtherInformation}
         placeholder=""
       />
-      <Button onClick={handleCreateStore} text="Create New Store" disabled={!canCreateNewStore} />
-      <Button onClick={handleCancel} variant="blue" text="Cancel" />
+      <div className="flex justify-between gap-2">
+        <Button onClick={handleCancel} variant="blue" text="Cancel" />
+        <Button
+          onClick={handleCreateStore}
+          text="Create New Store"
+          disabled={!canCreateNewStore}
+        />
+      </div>
     </div>
   );
 };
@@ -125,4 +133,4 @@ export const PureNewStore = (newStore) => {
 export const NewStore = () => {
   const newStore = useNewStore();
   return <PureNewStore {...newStore} />;
-}
+};

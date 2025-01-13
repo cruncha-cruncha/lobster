@@ -124,7 +124,7 @@ export const PureStoreCart = (cart) => {
           </li>
         ))}
         <TextInput label="User ID" value={userCode} onChange={setUserCode} />
-        <div className="flex gap-2">
+        <div className="flex justify-end gap-2">
           <Button text="Return" disabled={!canReturn} onClick={handleReturn} />
           <Button
             text="Checkout"

@@ -116,7 +116,7 @@ export const PureStores = (stores) => {
     <div>
       <h1>Stores</h1>
       <div className="flex gap-2">
-        <Button onClick={goToNewStore} text="New Store" />
+        <Button onClick={goToNewStore} text="New Store" variant="blue" />
       </div>
       <TextInput
         value={params.term}

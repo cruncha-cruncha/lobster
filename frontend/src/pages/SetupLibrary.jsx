@@ -3,6 +3,8 @@ import { CenteredLoadingDots } from "../components/loading/LoadingDots";
 import { useInfoModal, PureInfoModal } from "../components/InfoModal";
 import * as endpoints from "../api/endpoints";
 import { useLibraryInfo } from "../state/libraryInfo";
+import { Button } from "../components/Button";
+import { TextInput } from "../components/TextInput";
 
 export const useSetupLibrary = () => {
   const libraryInfo = useLibraryInfo();
@@ -64,19 +66,12 @@ export const PureSetupLibrary = (setupLibrary) => {
           After setup, you will be taken to a login screen. Your account will
           get all permissions.
         </p>
-        <div className="mt-4 flex justify-center">
-          <button
-            className={
-              "rounded-full px-4 py-2 transition-colors" +
-              (canConfirm
-                ? " bg-emerald-200 hover:bg-emerald-900 hover:text-white"
-                : " bg-stone-300 text-white")
-            }
+        <div className="mt-4 flex justify-end gap-2">
+          <Button 
             onClick={onConfirm}
-            disabled={!canConfirm}
-          >
-            <span>Confirm</span>
-          </button>
+            text="Confirm"
+            disabled={!canConfirm}            
+          />
         </div>
       </div>
     </div>
