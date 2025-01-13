@@ -9,8 +9,6 @@ export const useSetupLibrary = () => {
   const [name, _setName] = useState("");
 
   const onConfirm = async () => {
-    console.log("confirming");
-
     endpoints
       .createLibrary({ name })
       .then((_) => {

@@ -19,7 +19,8 @@ export const Rentals = () => {
   const navigate = useNavigate();
   const [urlParams, setUrlParams] = useSearchParams();
   const urlStoreId = urlParams.get(URL_STORE_ID_KEY);
-  const { toolCart, addTool, removeTool, inCart } = useToolCart();
+  const { toolCart, removeTool, clear: clearCart } = useToolCart();
+  const [storeCode, _setStoreCode] = useState("");
 
   const goToTools = () => {
     navigate("/tools");
@@ -32,6 +33,25 @@ export const Rentals = () => {
   const removeFromCart = (toolId) => {
     removeTool(toolId);
   };
+
+  const setStoreCode = (e) => {
+    _setStoreCode(e.target.value);
+  };
+
+    const handleCheckout = () => {
+      endpoints.checkOutTools({
+        info: {
+          storeCode,
+          toolIds: toolCart.map((tool) => Number(tool.id)),
+        },
+        accessToken
+      }).then(() => {
+        clearCart();
+      });
+    };
+
+  const showCheckoutFields = toolCart.length > 0;
+  const canCheckout = toolCart.length > 0 && storeCode != "";
 
   return (
     <div>
@@ -53,6 +73,20 @@ export const Rentals = () => {
           </li>
         ))}
       </ul>
+      {showCheckoutFields && (
+        <>
+          <TextInput
+            label="Store Code"
+            value={storeCode}
+            onChange={setStoreCode}
+          />
+          <Button
+            onClick={handleCheckout}
+            text="Checkout"
+            disabled={canCheckout}
+          />
+        </>
+      )}
     </div>
   );
 };

@@ -35,7 +35,6 @@ export const useNewStore = () => {
   });
 
   const handleCreateStore = async () => {
-    console.log("Creating store", info);
     endpoints.createStore({
       info,
       accessToken,

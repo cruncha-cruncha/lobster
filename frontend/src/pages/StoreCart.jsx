@@ -15,14 +15,11 @@ export const StoreCart = () => {
   const params = useParams();
   const { accessToken } = useAuth();
   const navigate = useNavigate();
-  const { toolCart: _toolCart, addTool, removeTool, inCart } = useToolCart();
+  const { toolCart: _toolCart, removeTool, clear: clearCart } = useToolCart();
   const [userCode, _setUserCode] = useState("");
   const storeId = params.id;
 
   const toolCart = _toolCart.filter((tool) => tool.storeId == storeId);
-  console.log("store cart", _toolCart, toolCart);
-
-  console.log(toolCart);
 
   const goToStoreTools = () => {
     navigate(`/tools?${URL_STORE_ID_KEY}=${storeId}`);
@@ -48,29 +45,25 @@ export const StoreCart = () => {
   const canReturn = toolCart.length > 0 && userCode == "";
 
   const handleCheckout = () => {
-    // do something
     endpoints.checkOutTools({
       info: {
         userCode,
         toolIds: toolCart.map((tool) => Number(tool.id)),
       },
       accessToken
-    }).then((data) => {
-      console.log(data);
-      // clear cart
+    }).then(() => {
+      clearCart();
     });
   };
 
   const handleReturn = () => {
-    // do something
     endpoints.checkInTools({
       info: {
         toolIds: toolCart.map((tool) => Number(tool.id)),
       },
       accessToken
-    }).then((data) => {
-      console.log(data);
-      // clear cart
+    }).then(() => {
+      clearCart();
     });
   };
 

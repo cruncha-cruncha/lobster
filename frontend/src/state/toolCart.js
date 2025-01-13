@@ -1,9 +1,4 @@
-import { useCallback, useEffect } from "react";
-import { useNavigate } from "react-router";
 import { atom, useAtom } from "jotai";
-import { jwtDecode } from "jwt-decode";
-
-import * as endpoints from "../api/endpoints";
 
 const toolCartAtom = atom([]);
 
@@ -22,5 +17,9 @@ export const useToolCart = () => {
     return toolCart.some((tool) => tool.id == toolId);
   }
 
-  return { toolCart, addTool, removeTool, inCart };
+  const clear = () => {
+    setToolCart([]);
+  };
+
+  return { toolCart, addTool, removeTool, clear, inCart };
 }
