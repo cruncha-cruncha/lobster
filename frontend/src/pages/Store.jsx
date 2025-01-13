@@ -117,7 +117,14 @@ export const PureStore = (store) => {
       <p>{JSON.stringify(storeInfo)}</p>
       {showUpdateStatus && (
         <>
-          <Select options={storeStatuses} value={status} onChange={setStatus} />
+          <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
+            <Select
+              label="Status"
+              options={storeStatuses}
+              value={status}
+              onChange={setStatus}
+            />
+          </div>
           <div className="flex justify-end gap-2">
             <Button
               onClick={() => updateStatus()}
@@ -214,25 +221,31 @@ export const PureAddTool = (addTool) => {
   return (
     <div>
       <p>New Tool</p>
-      <TextInput
-        label="Real ID"
-        value={realId}
-        onChange={setRealId}
-        placeholder="X5J2"
-      />
-      <TextInput
-        label="Description"
-        value={description}
-        onChange={setDescription}
-        placeholder="A red screw driver, square head"
-      />
-      <TextInput
-        label="Rental Hours"
-        value={rentalHours}
-        onChange={setRentalHours}
-        placeholder={`${defaultRentalHours}`}
-      />
-      <PureCategorySearch {...categorySearch} />
+      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
+        <div className="md:col-span-2">
+          <TextInput
+            label="Description"
+            value={description}
+            onChange={setDescription}
+            placeholder="A red screw driver, square head"
+          />
+        </div>
+        <PureCategorySearch {...categorySearch} />
+        <TextInput
+          label="Real ID"
+          value={realId}
+          onChange={setRealId}
+          placeholder="X5J2"
+        />
+        <div className="md:col-start-2">
+          <TextInput
+            label="Rental Hours"
+            value={rentalHours}
+            onChange={setRentalHours}
+            placeholder={`${defaultRentalHours}`}
+          />
+        </div>
+      </div>
       <div className="flex justify-end gap-2">
         <Button onClick={createTool} text="Add Tool" disabled={!canAddTool} />
       </div>

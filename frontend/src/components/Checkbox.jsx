@@ -1,13 +1,13 @@
 export const Checkbox = ({ label, checked, onChange, disabled }) => {
   return (
-    <div>
-      <label>{label}</label>
+    <fieldset className="mt-1">
       <input
         type="checkbox"
         checked={checked}
         onChange={onChange}
         disabled={disabled}
       />
-    </div>
+      <label className="ml-1">{label}</label>
+    </fieldset>
   );
 };

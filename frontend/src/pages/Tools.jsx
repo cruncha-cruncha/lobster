@@ -200,20 +200,22 @@ export const PureTools = (tools) => {
           />
         </div>
       )}
-      <Select
-        label="Status"
-        value={status}
-        onChange={setStatus}
-        options={toolStatuses}
-      />
-      <TextInput
-        label="Search Term"
-        value={searchTerm}
-        onChange={setSearchTerm}
-        placeholder="screw driver"
-      />
-      <PureCategorySearch {...categorySearch} />
-      <PureStoreSelect {...storeSelect} />
+      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
+        <TextInput
+          label="Search Term"
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder="screw driver"
+        />
+        <PureStoreSelect {...storeSelect} />
+        <PureCategorySearch {...categorySearch} />
+        <Select
+          label="Status"
+          value={status}
+          onChange={setStatus}
+          options={toolStatuses}
+        />
+      </div>
       {warnSingleStore && <p>currently filtering by a store</p>}
       <ul>
         {toolsList.map((tool) => (
@@ -328,7 +330,7 @@ export const PureCategorySearch = (categorySearch) => {
   } = categorySearch;
 
   return (
-    <>
+    <div>
       <SearchSelect
         label="Category"
         value={categoryTerm}
@@ -351,7 +353,7 @@ export const PureCategorySearch = (categorySearch) => {
           onChange={setMatchAllCats}
         />
       )}
-    </>
+    </div>
   );
 };
 
@@ -421,7 +423,7 @@ export const PureStoreSelect = (storeSelect) => {
   } = storeSelect;
 
   return (
-    <>
+    <div>
       <SearchSelect
         label="Store"
         value={storeTerm}
@@ -437,7 +439,7 @@ export const PureStoreSelect = (storeSelect) => {
           </li>
         ))}
       </ul>
-    </>
+    </div>
   );
 };
 

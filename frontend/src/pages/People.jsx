@@ -96,9 +96,11 @@ export const usePeople = () => {
 
   {
     const { data, isLoading, error, mutate } = useSWR(
-      (!urlStoreId || !accessToken || params.storeId != 0) ? null : `get store ${urlStoreId}, using ${accessToken}`,
+      !urlStoreId || !accessToken || params.storeId != 0
+        ? null
+        : `get store ${urlStoreId}, using ${accessToken}`,
       () => endpoints.getStore({ id: urlStoreId, accessToken }),
-    )
+    );
 
     useEffect(() => {
       if (data) {
@@ -177,12 +179,20 @@ export const PurePeople = (people) => {
   return (
     <div>
       <h1>People</h1>
-      <div>
-        <TextInput
-          value={params.searchTerm}
-          onChange={setSearchTerm}
-          placeholder="Maverick"
-          label="Search"
+      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
+        <div className="md:col-span-2">
+          <TextInput
+            value={params.searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Maverick"
+            label="Search"
+          />
+        </div>
+        <Select
+          label="Role"
+          options={roles}
+          value={params.role}
+          onChange={setRole}
         />
         <Select
           label="Status"
@@ -190,19 +200,15 @@ export const PurePeople = (people) => {
           value={params.status}
           onChange={setStatus}
         />
-        <Select
-          label="Role"
-          options={roles}
-          value={params.role}
-          onChange={setRole}
-        />
         <Checkbox
           label="Related to Store"
           checked={params.withStore}
           onChange={setWithStore}
         />
         {params.withStore && (
-          <PureSingleStoreSelect {...storeSelect} />
+          <div className="md:col-span-2">
+            <PureSingleStoreSelect {...storeSelect} />
+          </div>
         )}
       </div>
       <div>

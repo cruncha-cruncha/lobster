@@ -239,20 +239,31 @@ export const PureRentals = (rentals) => {
   return (
     <div>
       <h1>Rentals</h1>
-      <PureStoreSelect {...storeSelect} />
-      <PureUserSelect {...userSelect} />
-      <PureToolSelect {...toolSelect} />
-      <Checkbox
-        label="Still Open"
-        checked={stillOpen}
-        onChange={setStillOpen}
-      />
-      <Checkbox label="Order Asc" checked={orderAsc} onChange={setOrderAsc} />
-      <Checkbox
-        label="Overdue Only"
-        checked={overdueOnly}
-        onChange={setOverdueOnly}
-      />
+      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-y-2">
+          <PureUserSelect {...userSelect} />
+          <PureStoreSelect {...storeSelect} />
+          <PureToolSelect {...toolSelect} />
+        </div>
+        <div className="mt-1 flex gap-4 md:mt-0 md:block">
+          <p className="mt-1 md:mt-0">Rentals</p>
+          <Checkbox
+            label="Still Open"
+            checked={stillOpen}
+            onChange={setStillOpen}
+          />
+          <Checkbox
+            label="Overdue Only"
+            checked={overdueOnly}
+            onChange={setOverdueOnly}
+          />
+          <Checkbox
+            label="Order Asc"
+            checked={orderAsc}
+            onChange={setOrderAsc}
+          />
+        </div>
+      </div>
       <ul>
         {rentalList.map((rental) => (
           <li key={rental.id} onClick={() => goToRental(rental.id)}>
@@ -333,7 +344,7 @@ export const PureUserSelect = (userSelect) => {
     userSelect;
 
   return (
-    <>
+    <div>
       <SearchSelect
         label="User"
         value={userTerm}
@@ -349,7 +360,7 @@ export const PureUserSelect = (userSelect) => {
           </li>
         ))}
       </ul>
-    </>
+    </div>
   );
 };
 
@@ -416,7 +427,7 @@ export const PureToolSelect = (toolSelect) => {
     toolSelect;
 
   return (
-    <>
+    <div>
       <SearchSelect
         label="Tool"
         value={toolTerm}
@@ -432,6 +443,6 @@ export const PureToolSelect = (toolSelect) => {
           </li>
         ))}
       </ul>
-    </>
+    </div>
   );
 };

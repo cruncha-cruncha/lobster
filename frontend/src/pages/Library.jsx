@@ -84,16 +84,16 @@ export const PureLibrary = (library) => {
     <div>
       <h2>Library Settings</h2>
       <p>(id: "{uuid}")</p>
-      <form>
-        <fieldset className="my-4">
+      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
+        <div className="md:col-span-2">
           <TextInput
             label="Name"
             placeholder="Library Name"
             value={info.name}
             onChange={setName}
           />
-        </fieldset>
-        <fieldset className="my-4">
+        </div>
+        <div className="md:col-start-2">
           <TextInput
             label="Max Rental Period"
             placeholder="hours"
@@ -101,16 +101,16 @@ export const PureLibrary = (library) => {
             onChange={setMaximumRentalHours}
           />
           <p>The longest time any tool can be rented, in hours.</p>
-        </fieldset>
-        <div className="mt-4 flex justify-end gap-2">
-          <Button
-            onClick={save}
-            disabled={!canSave}
-            text="Save"
-            loading={isLoading}
-          />
         </div>
-      </form>
+      </div>
+      <div className="flex justify-end gap-2">
+        <Button
+          onClick={save}
+          disabled={!canSave}
+          text="Save"
+          loading={isLoading}
+        />
+      </div>
     </div>
   );
 };

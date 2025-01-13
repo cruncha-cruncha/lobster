@@ -118,18 +118,20 @@ export const PureStores = (stores) => {
       <div className="flex gap-2">
         <Button onClick={goToNewStore} text="New Store" variant="blue" />
       </div>
-      <TextInput
-        value={params.term}
-        onChange={setTerm}
-        placeholder="Some Store"
-        label="Store Name"
-      />
-      <Select
-        label="Status"
-        options={storeStatuses}
-        value={params.status}
-        onChange={setStatus}
-      />
+      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
+        <TextInput
+          value={params.term}
+          onChange={setTerm}
+          placeholder="Some Store"
+          label="Store Name"
+        />
+        <Select
+          label="Status"
+          options={storeStatuses}
+          value={params.status}
+          onChange={setStatus}
+        />
+      </div>
       <div>
         <ul>
           {storeList.map((store) => (

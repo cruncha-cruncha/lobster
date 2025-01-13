@@ -205,24 +205,28 @@ export const PureTool = (tool) => {
           />
         )}
       </div>
-      <Select
-        label="Status"
-        value={info.status}
-        options={toolStatuses}
-        onChange={setStatus}
-      />
-      <TextInput
-        label="Description"
-        value={info.description}
-        onChange={setDescription}
-      />
-      <TextInput label="Real ID" value={info.realId} onChange={setRealId} />
-      <TextInput
-        label="Rental Hours"
-        value={info.rentalHours || ""}
-        onChange={setRentalHours}
-      />
-      <PureCategorySearch {...categorySearch} />
+      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
+        <div className="md:col-span-2">
+          <TextInput
+            label="Description"
+            value={info.description}
+            onChange={setDescription}
+          />
+        </div>
+        <PureCategorySearch {...categorySearch} />
+        <TextInput label="Real ID" value={info.realId} onChange={setRealId} />
+        <TextInput
+          label="Rental Hours"
+          value={info.rentalHours || ""}
+          onChange={setRentalHours}
+        />
+        <Select
+          label="Status"
+          value={info.status}
+          options={toolStatuses}
+          onChange={setStatus}
+        />
+      </div>
       <div className="flex justify-end gap-2">
         <Button text="Update" onClick={updateTool} />
       </div>
