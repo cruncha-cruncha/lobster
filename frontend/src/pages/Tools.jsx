@@ -302,12 +302,17 @@ export const useCategorySearch = () => {
   };
 
   const removeCategory = (catId) => {
-    setCategories(categories.filter((c) => c.id != catId));
+    setCategories((prev) => prev.filter((c) => c.id != catId));
   };
 
   const setMatchAllCats = (e) => {
     _setMatchAllCats(e.target.checked);
   };
+
+  const clear = () => {
+    setCategories([]);
+    _setCategoryTerm("");
+  }
 
   return {
     categories,
@@ -319,6 +324,7 @@ export const useCategorySearch = () => {
     showMatchAllCats: true,
     matchAllCats,
     setMatchAllCats,
+    clear,
   };
 };
 

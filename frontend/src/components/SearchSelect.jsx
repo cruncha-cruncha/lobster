@@ -6,7 +6,7 @@ export const SearchSelect = ({
   value,
   onChange,
   onSelect,
-  options,
+  options = [],
   disabled,
   showLastSelected = true,
 }) => {

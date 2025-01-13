@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useReducer } from "react";
 import { useNavigate, useParams } from "react-router";
 import useSWR from "swr";
 import { useConstants } from "../state/constants";
@@ -15,25 +15,14 @@ export const URL_STORE_ID_KEY = "storeId";
 export const useStore = () => {
   const navigate = useNavigate();
   const params = useParams();
-  const { storeStatuses } = useConstants();
   const { toolCart } = useToolCart();
   const { accessToken, permissions } = useAuth();
-  const [storeInfo, setStoreInfo] = useState({});
-  const [status, _setStatus] = useState(0);
-  const addTool = useAddTool({ storeId: params.id });
   const storeId = params.id;
 
   const { data, error, isLoading } = useSWR(
     !accessToken ? null : `get store ${storeId}, using ${accessToken}`,
     () => endpoints.getStore({ id: storeId, accessToken }),
   );
-
-  useEffect(() => {
-    if (data) {
-      setStoreInfo(data);
-      _setStatus((prev) => (prev === 0 ? data.status : prev));
-    }
-  }, [data]);
 
   const goToStores = () => {
     navigate("/stores");
@@ -47,73 +36,55 @@ export const useStore = () => {
     navigate(`/tools?${URL_STORE_ID_KEY}=${storeId}`);
   };
 
-  const showUpdateStatus = permissions.isStoreAdmin();
-  const canUpdateStatus = storeInfo.status != status;
   const cartSize = toolCart.filter((tool) => tool.storeId == storeId).length;
 
   const goToCart = () => {
     navigate(`/stores/${storeId}/cart`);
   };
 
-  const updateStatus = () => {
-    endpoints
-      .updateStoreStatus({
-        id: storeId,
-        status: Number(status),
-        accessToken,
-      })
-      .then((data) => {
-        setStoreInfo(data);
-      });
-  };
-
-  const setStatus = (e) => {
-    _setStatus(e.target.value);
-  };
-
   const goToRentals = () => {
     navigate(`/rentals?${URL_STORE_ID_KEY}=${storeId}`);
   };
 
+  const showEditStore = permissions.isStoreRep(storeId);
+  const showEditStoreStatus = permissions.isStoreAdmin();
+  const showAddTool = permissions.isToolManager(storeId);
+
   return {
-    storeInfo,
-    storeStatuses,
-    status,
-    setStatus,
-    showUpdateStatus,
-    canUpdateStatus,
+    data,
+    storeId,
+    storeName: data?.name || "Store",
     goToStores,
     goToRentals,
     goToPeople,
     goToTools,
-    updateStatus,
-    addTool,
     goToCart,
     cartSize,
+    showEditStore,
+    showEditStoreStatus,
+    showAddTool,
   };
 };
 
 export const PureStore = (store) => {
-  const {
-    storeInfo,
-    storeStatuses,
-    status,
-    setStatus,
-    showUpdateStatus,
-    canUpdateStatus,
+  const { 
+    data,
+    storeId,
+    storeName,
     goToStores,
     goToRentals,
     goToPeople,
     goToTools,
-    updateStatus,
-    addTool,
     goToCart,
     cartSize,
+    showEditStore,
+    showEditStoreStatus,
+    showAddTool,
   } = store;
 
   return (
     <div>
-      <h1 className="mt-2 px-2 text-xl">{storeInfo.name}</h1>
+      <h1 className="mt-2 px-2 text-xl">{storeName}</h1>
       <div className="my-2 flex flex-wrap justify-start gap-2 px-2">
         <Button
           onClick={() => goToTools()}
@@ -146,29 +117,254 @@ export const PureStore = (store) => {
           size="sm"
         />
       </div>
-      <p className="px-2">{JSON.stringify(storeInfo)}</p>
-      {showUpdateStatus && (
-        <div className="px-2">
-          <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
-            <Select
-              label="Status"
-              options={storeStatuses}
-              value={status}
-              onChange={setStatus}
-            />
-          </div>
-          <div className="mt-3 flex justify-end gap-2">
-            <Button
-              onClick={() => updateStatus()}
-              text="Update Status"
-              disabled={!canUpdateStatus}
-            />
-          </div>
-        </div>
-      )}
-      <PureAddTool {...addTool} />
+      <p className="px-2">{JSON.stringify(data)}</p>
+      {showEditStore && <EditStore storeId={storeId} />}
+      {showEditStoreStatus && <EditStoreStatus storeId={storeId} />}
+      {showAddTool && <AddTool storeId={storeId} />}
     </div>
   );
+};
+
+const editStoreReducer = (state, action) => {
+  switch (action.type) {
+    case "name":
+      return { ...state, name: action.value };
+    case "location":
+      return { ...state, location: action.value };
+    case "emailAddress":
+      return { ...state, emailAddress: action.value };
+    case "phoneNumber":
+      return { ...state, phoneNumber: action.value };
+    case "rentalInformation":
+      return { ...state, rentalInformation: action.value };
+    case "otherInformation":
+      return { ...state, otherInformation: action.value };
+    default:
+      return state;
+  }
+};
+
+export const useEditStore = ({ storeId }) => {
+  const { accessToken, permissions } = useAuth();
+  const [info, infoDispatch] = useReducer(editStoreReducer, {
+    name: "",
+    location: "",
+    emailAddress: "",
+    phoneNumber: "",
+    rentalInformation: "",
+    otherInformation: "",
+  });
+
+  const { data, error, isLoading, mutate } = useSWR(
+    !accessToken ? null : `get store ${storeId}, using ${accessToken}`,
+    () => endpoints.getStore({ id: storeId, accessToken }),
+  );
+
+  useEffect(() => {
+    if (data) {
+      infoDispatch({ type: "name", value: data.name });
+      infoDispatch({ type: "location", value: data.location });
+      infoDispatch({ type: "emailAddress", value: data.emailAddress });
+      infoDispatch({ type: "phoneNumber", value: data.phoneNumber });
+      infoDispatch({
+        type: "rentalInformation",
+        value: data.rentalInformation,
+      });
+      infoDispatch({ type: "otherInformation", value: data.otherInformation });
+    }
+  }, [data]);
+
+  const setName = (e) => infoDispatch({ type: "name", value: e.target.value });
+  const setLocation = (e) =>
+    infoDispatch({ type: "location", value: e.target.value });
+  const setEmailAddress = (e) =>
+    infoDispatch({ type: "emailAddress", value: e.target.value });
+  const setPhoneNumber = (e) =>
+    infoDispatch({ type: "phoneNumber", value: e.target.value });
+  const setRentalInformation = (e) =>
+    infoDispatch({ type: "rentalInformation", value: e.target.value });
+  const setOtherInformation = (e) =>
+    infoDispatch({ type: "otherInformation", value: e.target.value });
+
+  const canUpdate =
+    !isLoading &&
+    (data?.name != info.name ||
+      data?.location != info.location ||
+      data?.emailAddress != info.emailAddress ||
+      data?.phoneNumber != info.phoneNumber ||
+      data?.rentalInformation != info.rentalInformation ||
+      data?.otherInformation != info.otherInformation);
+
+  const handleUpdate = () => {
+    const payload = {
+      name: info.name,
+      location: info.location,
+      emailAddress: info.emailAddress,
+      phoneNumber: info.phoneNumber,
+      rentalInformation: info.rentalInformation,
+      otherInformation: info.otherInformation,
+    };
+
+    endpoints
+      .updateStore({
+        id: Number(storeId),
+        info: payload,
+        accessToken,
+      })
+      .then(() => {
+        mutate();
+      });
+  };
+
+  return {
+    info,
+    setName,
+    setLocation,
+    setEmailAddress,
+    setPhoneNumber,
+    setRentalInformation,
+    setOtherInformation,
+    canUpdate,
+    handleUpdate,
+  };
+};
+
+export const PureEditStore = (editStore) => {
+  const {
+    info,
+    setName,
+    setLocation,
+    setEmailAddress,
+    setPhoneNumber,
+    setRentalInformation,
+    setOtherInformation,
+    canUpdate,
+    handleUpdate,
+  } = editStore;
+
+  return (
+    <div>
+      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 px-2 md:grid-cols-2">
+        <TextInput
+          label="Name"
+          value={info.name}
+          onChange={setName}
+          placeholder="Maple Key Tools"
+        />
+        <TextInput
+          label="Location"
+          value={info.location}
+          onChange={setLocation}
+          placeholder="123 Main St, Ottawa, ON, K1R 7T7"
+        />
+        <TextInput
+          label="Email Address"
+          value={info.emailAddress}
+          onChange={setEmailAddress}
+          placeholder="store-contact@example.com"
+        />
+        <TextInput
+          label="Phone Number"
+          value={info.phoneNumber}
+          onChange={setPhoneNumber}
+          placeholder="216-245-2368"
+        />
+        <TextInput
+          label="Read Before Renting"
+          value={info.rentalInformation}
+          onChange={setRentalInformation}
+          placeholder="By appointment only ..."
+        />
+        <TextInput
+          label="Other Information"
+          value={info.otherInformation}
+          onChange={setOtherInformation}
+          placeholder=""
+        />
+      </div>
+      <div className="mt-3 flex justify-end gap-2 px-2">
+        <Button text="Update" disabled={!canUpdate} onClick={handleUpdate} />
+      </div>
+    </div>
+  );
+};
+
+export const EditStore = (params) => {
+  const editStore = useEditStore(params);
+  return <PureEditStore {...editStore} />;
+};
+
+export const useEditStoreStatus = ({ storeId }) => {
+  const { accessToken, permissions } = useAuth();
+  const { storeStatuses } = useConstants();
+  const [status, _setStatus] = useState(0);
+
+  const { data, error, isLoading, mutate } = useSWR(
+    !accessToken ? null : `get store ${storeId}, using ${accessToken}`,
+    () => endpoints.getStore({ id: storeId, accessToken }),
+  );
+
+  useEffect(() => {
+    if (data) {
+      _setStatus((prev) => (prev === 0 ? data.status : prev));
+    }
+  }, [data]);
+
+  const setStatus = (e) => {
+    _setStatus(e.target.value);
+  };
+
+  const handleUpdate = () => {
+    endpoints
+      .updateStoreStatus({
+        id: storeId,
+        status: Number(status),
+        accessToken,
+      })
+      .then(() => {
+        mutate();
+      });
+  };
+
+  const canEditStatus = !isLoading && status != data?.status;
+
+  return {
+    status,
+    setStatus,
+    storeStatuses,
+    handleUpdate,
+    canEditStatus,
+  };
+};
+
+export const PureEditStoreStatus = (editStoreStatus) => {
+  const { status, setStatus, storeStatuses, handleUpdate, canEditStatus } =
+    editStoreStatus;
+
+  return (
+    <div className="px-2">
+      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
+        <Select
+          label="Status"
+          options={storeStatuses}
+          value={status}
+          onChange={setStatus}
+        />
+      </div>
+      <div className="mt-3 flex justify-end gap-2">
+        <Button
+          onClick={handleUpdate}
+          text="Update Status"
+          disabled={!canEditStatus}
+        />
+      </div>
+    </div>
+  );
+};
+
+export const EditStoreStatus = (params) => {
+  const editStoreStatus = useEditStoreStatus(params);
+  return <PureEditStoreStatus {...editStoreStatus} />;
 };
 
 export const useAddTool = ({ storeId }) => {
@@ -177,9 +373,8 @@ export const useAddTool = ({ storeId }) => {
   const [realId, _setRealId] = useState("");
   const [description, _setDescription] = useState("");
   const [rentalHours, _setRentalHours] = useState(defaultRentalHours);
-  const categorySearch = useCategorySearch();
+  const _categorySearch = useCategorySearch();
 
-  // rental hours
   // pictures
 
   const setRealId = (e) => {
@@ -191,13 +386,10 @@ export const useAddTool = ({ storeId }) => {
   };
 
   const setRentalHours = (e) => {
-    _setRentalHours(val);
+    _setRentalHours(e.target.value);
   };
 
-  // const showAddTool = if user is tool manager for store
-
-  const canAddTool = true;
-  // realId !== "" && description !== "" && categories.length > 0;
+  const canAddTool = realId !== "" && description !== "" && _categorySearch.categories.length > 0;
 
   const createTool = () => {
     return endpoints
@@ -216,6 +408,11 @@ export const useAddTool = ({ storeId }) => {
       .then((data) => {
         console.log(data);
         // do something? success message? clear fields? navigate to tool? button to go to tool?
+
+        setDescription("");
+        _categorySearch.clear();
+        setRealId("");
+        setRentalHours(defaultRentalHours);
       });
   };
 
@@ -228,7 +425,7 @@ export const useAddTool = ({ storeId }) => {
     setRentalHours,
     defaultRentalHours,
     categorySearch: {
-      ...categorySearch,
+      ..._categorySearch,
       showMatchAllCats: false,
     },
     createTool,
@@ -283,6 +480,11 @@ export const PureAddTool = (addTool) => {
       </div>
     </div>
   );
+};
+
+export const AddTool = (params) => {
+  const addTool = useAddTool(params);
+  return <PureAddTool {...addTool} />;
 };
 
 export const Store = () => {
