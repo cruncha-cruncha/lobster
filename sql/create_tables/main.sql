@@ -121,6 +121,20 @@ CREATE TABLE main.grievances (
         REFERENCES fixed.grievance_statuses(id)
 );
 
+CREATE INDEX IF NOT EXISTS idx_grievances_author_id ON main.grievances USING btree(author_id);
+CREATE INDEX IF NOT EXISTS idx_grievances_accused_id ON main.grievances USING btree(accused_id);
+
+CREATE TABLE main.grievance_replies (
+    id INTEGER GENERATED ALWAYS AS IDENTITY,
+    grievance_id INTEGER NOT NULL,
+    author_id INTEGER NOT NULL,
+    text TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
+    PRIMARY KEY (id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_grievance_replies_grievance_id ON main.grievance_replies USING btree(grievance_id);
+
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 CREATE INDEX IF NOT EXISTS idx_fuzzy_users ON main.users
