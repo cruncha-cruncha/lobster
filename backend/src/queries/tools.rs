@@ -61,7 +61,6 @@ pub async fn insert(
 pub async fn update(
     tool_id: tool::Id,
     real_id: Option<tool::RealId>,
-    store_id: Option<tool::StoreId>,
     rental_hours: Option<tool::RentalHours>,
     description: Option<tool::Description>,
     pictures: Option<tool::Pictures>,
@@ -74,17 +73,15 @@ pub async fn update(
         UPDATE main.tools
         SET
             real_id = COALESCE($2, real_id),
-            store_id = COALESCE($3, store_id),
-            rental_hours = COALESCE($4, rental_hours),
-            description = COALESCE($5, description),
-            pictures = COALESCE($6, pictures),
-            status = COALESCE($7, status)
+            rental_hours = COALESCE($3, rental_hours),
+            description = COALESCE($4, description),
+            pictures = COALESCE($5, pictures),
+            status = COALESCE($6, status)
         WHERE id = $1
         RETURNING *;
         "#,
         tool_id,
         real_id,
-        store_id,
         rental_hours,
         description,
         pictures.as_deref(),

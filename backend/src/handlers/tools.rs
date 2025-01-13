@@ -218,7 +218,6 @@ pub async fn update(
     let tool = match tools::update(
         tool_id,
         payload.real_id,
-        None,
         payload.rental_hours,
         payload.description,
         payload.pictures,
