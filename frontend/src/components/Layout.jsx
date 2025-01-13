@@ -8,33 +8,49 @@ export const Layout = () => {
   const auth = useAuth({ mustBeLoggedIn: true });
   const [showMenu, setShowMenu] = useState(false);
 
+  const closeMenuIfOpen = () => {
+    if (showMenu) {
+      setShowMenu(false);
+    }
+  };
+
   return (
-    <div className="flex min-h-full items-stretch justify-center">
+    <div
+      className="flex min-h-full items-stretch justify-center"
+      onClick={closeMenuIfOpen}
+    >
       <div className="relative w-full max-w-5xl p-2">
-        <div className="flex justify-between">
-          <h1>{libraryInfo.name}</h1>
+        <div className="text-center">
           <div
-            className="relative"
+            className="relative cursor-pointer"
             onClick={() => setShowMenu((prev) => !prev)}
           >
-            <span className="cursor-pointer">menu</span>
+            <p>{libraryInfo.name}</p>
             <div
               className={
-                "flex flex-col items-end bg-white px-2 [&>*]:my-1" +
-                (showMenu ? " absolute -right-2" : " hidden")
+                "w-full bg-white" + (showMenu ? " absolute" : " hidden")
               }
             >
-              <NavLink to="/people" className="!mt-2">
-                People
-              </NavLink>
-              <NavLink to="/grievances">Grievances</NavLink>
-              <NavLink to="/rentals">Rentals</NavLink>
-              <NavLink to="/tools">Tools</NavLink>
-              <NavLink to="/stores">Stores</NavLink>
-              <NavLink to="/library">Library</NavLink>
-              <button onClick={() => auth.logout()} className="block">
-                logout
-              </button>
+              <div
+                className={
+                  "mt-1 w-full border-y border-black pb-2 text-left transition-colors *:my-1 *:block *:px-2 *:duration-150 hover:*:bg-blue-900 hover:*:text-white"
+                }
+              >
+                <NavLink to="/people" className="!mt-2 hover:bg-blue-900">
+                  People
+                </NavLink>
+                <NavLink to="/grievances">Grievances</NavLink>
+                <NavLink to="/rentals">Rentals</NavLink>
+                <NavLink to="/tools">Tools</NavLink>
+                <NavLink to="/stores">Stores</NavLink>
+                <NavLink to="/library">Library</NavLink>
+                <button
+                  onClick={() => auth.logout()}
+                  className="block w-full text-left hover:!bg-transparent hover:!text-black"
+                >
+                  logout
+                </button>
+              </div>
             </div>
           </div>
         </div>
