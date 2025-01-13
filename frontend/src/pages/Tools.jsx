@@ -146,7 +146,7 @@ export const useTools = () => {
     storeSelect,
     toolsList: toolsList.map((tool) => ({
       ...tool,
-      canAddToCart: !inCart(tool.id) && tool.status == "1",
+      canAddToCart: !inCart(tool.id),
       canRemoveFromCart: inCart(tool.id),
     })),
     goToTool,

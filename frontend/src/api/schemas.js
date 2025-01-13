@@ -262,6 +262,28 @@ const toolCategorySearchResultsSchema = {
   required: ["categories"],
 };
 
+const singleRentalSchema = {
+  type: "object",
+  $id: "#singleRental",
+  properties: {
+    id: { type: "number" },
+    toolId: { type: "number" },
+    renterId: { type: "number" },
+    startDate: { type: "string" },
+    endDate: { type: ["string", "null"] },
+  },
+  required: ["id", "toolId", "renterId", "startDate", "endDate"],
+};
+
+const rentalSearchResultsSchema = {
+  type: "object",
+  $id: "#rentalSearchResults",
+  properties: {
+    rentals: { type: "array", items: { $ref: "#singleRental" } },
+  },
+  required: ["rentals"],
+};
+
 const makeLazyValidator = (schema) => {
   let validate = null;
   return (data) => {
@@ -344,3 +366,10 @@ export const validateToolCategorySearchResults = makeLazyValidator([
 ]);
 
 export const validateToolCategory = makeLazyValidator(toolCategorySchema);
+
+export const validateSingleRental = makeLazyValidator(singleRentalSchema);
+
+export const validateRentalSearchResults = makeLazyValidator([
+  singleRentalSchema,
+  rentalSearchResultsSchema,
+]);

@@ -104,8 +104,7 @@ export const useTool = () => {
     dispatch({ type: "rentalHours", value: e.target.value });
   };
 
-  const canAddToCart =
-    !toolCart.some((tool) => tool.id == toolId) && info.status == 1;
+  const canAddToCart = !toolCart.some((tool) => tool.id == toolId);
   const canRemoveFromCart = toolCart.some((tool) => tool.id == toolId);
 
   const addToCart = () => {
@@ -125,8 +124,7 @@ export const useTool = () => {
           storeId: Number(data.storeId),
           categoryIds: categorySearch.categories.map((cat) => cat.id),
           description: info.description,
-          rentalHours:
-            parseInt(info.rentalHours, 10) || data.rentalHours,
+          rentalHours: parseInt(info.rentalHours, 10) || data.rentalHours,
           pictures: [],
           status: Number(info.status),
         },

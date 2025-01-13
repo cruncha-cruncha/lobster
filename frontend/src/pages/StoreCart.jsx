@@ -16,10 +16,13 @@ export const StoreCart = () => {
   const { accessToken } = useAuth();
   const navigate = useNavigate();
   const { toolCart: _toolCart, addTool, removeTool, inCart } = useToolCart();
-  const [userId, _setUserId] = useState("");
+  const [userCode, _setUserCode] = useState("");
   const storeId = params.id;
 
   const toolCart = _toolCart.filter((tool) => tool.storeId == storeId);
+  console.log("store cart", _toolCart, toolCart);
+
+  console.log(toolCart);
 
   const goToStoreTools = () => {
     navigate(`/tools?${URL_STORE_ID_KEY}=${storeId}`);
@@ -37,19 +40,38 @@ export const StoreCart = () => {
     removeTool(toolId);
   };
 
-  const setUserId = (e) => {
-    _setUserId(e.target.value);
+  const setUserCode = (e) => {
+    _setUserCode(e.target.value);
   };
 
-  const canCheckout = toolCart.length > 0 && userId != "";
-  const canReturn = toolCart.length > 0 && userId == "";
+  const canCheckout = toolCart.length > 0 && userCode != "";
+  const canReturn = toolCart.length > 0 && userCode == "";
 
   const handleCheckout = () => {
     // do something
+    endpoints.checkOutTools({
+      info: {
+        userCode,
+        toolIds: toolCart.map((tool) => Number(tool.id)),
+      },
+      accessToken
+    }).then((data) => {
+      console.log(data);
+      // clear cart
+    });
   };
 
   const handleReturn = () => {
     // do something
+    endpoints.checkInTools({
+      info: {
+        toolIds: toolCart.map((tool) => Number(tool.id)),
+      },
+      accessToken
+    }).then((data) => {
+      console.log(data);
+      // clear cart
+    });
   };
 
   return (
@@ -74,7 +96,7 @@ export const StoreCart = () => {
             </div>
           </li>
         ))}
-        <TextInput label="User ID" value={userId} onChange={setUserId} />
+        <TextInput label="User ID" value={userCode} onChange={setUserCode} />
         <div className="flex gap-2">
           <Button text="Return" disabled={!canReturn} onClick={handleReturn} />
           <Button

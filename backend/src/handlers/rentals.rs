@@ -61,17 +61,22 @@ pub async fn check_in(
         return Err((StatusCode::BAD_REQUEST, "No tools to check in".to_string()));
     }
 
-    let tools = match tools::select(tools::SelectParams{
-        ids: payload.tool_ids.clone(),
-        term: "".to_string(),
-        statuses: vec![],
-        store_ids: vec![],
-        category_ids: vec![],
-        match_all_categories: false,
-        real_ids: vec![],
-        offset: 0,
-        limit: payload.tool_ids.len() as i64,
-    }, &state.db).await {
+    let tools = match tools::select(
+        tools::SelectParams {
+            ids: payload.tool_ids.clone(),
+            term: "".to_string(),
+            statuses: vec![],
+            store_ids: vec![],
+            category_ids: vec![],
+            match_all_categories: false,
+            real_ids: vec![],
+            offset: 0,
+            limit: payload.tool_ids.len() as i64,
+        },
+        &state.db,
+    )
+    .await
+    {
         Ok(tools) => tools,
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     };
@@ -82,7 +87,10 @@ pub async fn check_in(
 
     for tool in &tools {
         if !claims.is_tool_manager(tool.store_id) {
-            return Err((StatusCode::FORBIDDEN, "User is not a tool manager of all the stores".to_string()));
+            return Err((
+                StatusCode::FORBIDDEN,
+                "User is not a tool manager of all the stores".to_string(),
+            ));
         }
     }
 
@@ -91,25 +99,41 @@ pub async fn check_in(
             continue;
         }
 
-        match tools::update(tool.id, None, Some(tool::ToolStatus::Available as i32), None, None, None, None, &state.db).await {
-            Ok(_) => {},
+        match tools::update(
+            tool.id,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(tool::ToolStatus::Available as i32),
+            &state.db,
+        )
+        .await
+        {
+            Ok(_) => {}
             Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
         }
     }
 
-    let rentals = match rentals::select(rentals::SelectParams{
-        renter_ids: vec![],
-        tool_ids: payload.tool_ids.clone(),
-        store_ids: vec![],
-        start_date: common::DateBetween::none(),
-        end_date: common::DateBetween::none(),
-        open: true,
-        overdue: None,
-        order_by: rentals::OrderBy::StartDate,
-        order_asc: false,
-        offset: 0,
-        limit: payload.tool_ids.len() as i64,
-    }, &state.db).await {
+    let rentals = match rentals::select(
+        rentals::SelectParams {
+            renter_ids: vec![],
+            tool_ids: payload.tool_ids.clone(),
+            store_ids: vec![],
+            start_date: common::DateBetween::none(),
+            end_date: common::DateBetween::none(),
+            open: true,
+            overdue: None,
+            order_by: rentals::OrderBy::StartDate,
+            order_asc: false,
+            offset: 0,
+            limit: payload.tool_ids.len() as i64,
+        },
+        &state.db,
+    )
+    .await
+    {
         Ok(rentals) => rentals,
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     };
@@ -117,7 +141,7 @@ pub async fn check_in(
     let now = time::OffsetDateTime::now_utc();
     for rental in &rentals {
         match rentals::update(rental.id, None, Some(now), &state.db).await {
-            Ok(_) => {},
+            Ok(_) => {}
             Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
         }
     }
@@ -135,24 +159,35 @@ pub async fn check_out(
     }
 
     if payload.user_code.is_none() && payload.store_code.is_none() {
-        return Err((StatusCode::BAD_REQUEST, "Either user code or store code must be provided".to_string()));
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "Either user code or store code must be provided".to_string(),
+        ));
     }
 
     if payload.user_code.is_some() && payload.store_code.is_some() {
-        return Err((StatusCode::BAD_REQUEST, "Both user code and store code cannot be provided".to_string()));
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "Both user code and store code cannot be provided".to_string(),
+        ));
     }
 
-    let tools = match tools::select(tools::SelectParams{
-        ids: payload.tool_ids.clone(),
-        term: "".to_string(),
-        statuses: vec![],
-        store_ids: vec![],
-        category_ids: vec![],
-        match_all_categories: false,
-        real_ids: vec![],
-        offset: 0,
-        limit: payload.tool_ids.len() as i64,
-    }, &state.db).await {
+    let tools = match tools::select(
+        tools::SelectParams {
+            ids: payload.tool_ids.clone(),
+            term: "".to_string(),
+            statuses: vec![],
+            store_ids: vec![],
+            category_ids: vec![],
+            match_all_categories: false,
+            real_ids: vec![],
+            offset: 0,
+            limit: payload.tool_ids.len() as i64,
+        },
+        &state.db,
+    )
+    .await
+    {
         Ok(tools) => tools,
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     };
@@ -164,11 +199,14 @@ pub async fn check_out(
     if payload.user_code.is_some() {
         for tool in &tools {
             if !claims.is_tool_manager(tool.store_id) {
-                return Err((StatusCode::FORBIDDEN, "User is not a tool manager of all the stores".to_string()));
+                return Err((
+                    StatusCode::FORBIDDEN,
+                    "User is not a tool manager of all the stores".to_string(),
+                ));
             }
         }
     }
-    
+
     if payload.store_code.is_some() {
         let code = payload.store_code.unwrap();
         let store = match stores::select_by_code(code, &state.db).await {
@@ -178,21 +216,40 @@ pub async fn check_out(
 
         for tool in &tools {
             if tool.store_id != store.id {
-                return Err((StatusCode::FORBIDDEN, "Some tools do not belong to the store".to_string()));
+                return Err((
+                    StatusCode::FORBIDDEN,
+                    "Some tools do not belong to the store".to_string(),
+                ));
             }
         }
     }
 
     for tool in &tools {
-        match tools::update(tool.id, None, Some(tool::ToolStatus::Rented as i32), None, None, None, None, &state.db).await {
-            Ok(_) => {},
+        match tools::update(
+            tool.id,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(tool::ToolStatus::Rented as i32),
+            &state.db,
+        )
+        .await
+        {
+            Ok(_) => {}
             Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
         }
     }
 
     let mut renter_id = match claims.subject_as_user_id() {
         Some(id) => id,
-        None => return Err((StatusCode::INTERNAL_SERVER_ERROR, "No user id found in claims".to_string())),
+        None => {
+            return Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "No user id found in claims".to_string(),
+            ))
+        }
     };
     if payload.user_code.is_some() {
         let code = payload.user_code.unwrap();
@@ -206,7 +263,7 @@ pub async fn check_out(
     let now = time::OffsetDateTime::now_utc();
     for tool in &tools {
         match rentals::insert(tool.id, renter_id, now, None, &state.db).await {
-            Ok(_) => {},
+            Ok(_) => {}
             Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
         }
     }
@@ -221,26 +278,29 @@ pub async fn get_filtered(
 ) -> Result<Json<FilteredResponse>, (StatusCode, String)> {
     let (offset, limit) = common::calculate_offset_limit(params.page.unwrap_or_default());
 
-    let rentals = match rentals::select(rentals::SelectParams{
-        renter_ids: params.renter_ids.unwrap_or_default(),
-        tool_ids: params.tool_ids.unwrap_or_default(),
-        store_ids: params.store_ids.unwrap_or_default(),
-        start_date: params.start_date.unwrap_or_default(),
-        end_date: params.end_date.unwrap_or_default(),
-        open: params.open.unwrap_or_default(),
-        overdue: params.overdue,
-        order_by: params.order_by.unwrap_or(rentals::OrderBy::StartDate),
-        order_asc: params.order_asc.unwrap_or_default(),
-        offset,
-        limit,
-    }, &state.db).await {
+    let rentals = match rentals::select(
+        rentals::SelectParams {
+            renter_ids: params.renter_ids.unwrap_or_default(),
+            tool_ids: params.tool_ids.unwrap_or_default(),
+            store_ids: params.store_ids.unwrap_or_default(),
+            start_date: params.start_date.unwrap_or_default(),
+            end_date: params.end_date.unwrap_or_default(),
+            open: params.open.unwrap_or_default(),
+            overdue: params.overdue,
+            order_by: params.order_by.unwrap_or(rentals::OrderBy::StartDate),
+            order_asc: params.order_asc.unwrap_or_default(),
+            offset,
+            limit,
+        },
+        &state.db,
+    )
+    .await
+    {
         Ok(r) => r,
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     };
 
-    Ok(Json(FilteredResponse{
-        rentals,
-    }))
+    Ok(Json(FilteredResponse { rentals }))
 }
 
 pub async fn get_by_id(
@@ -248,12 +308,10 @@ pub async fn get_by_id(
     Path(rental_id): Path<i32>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<rental::Rental>, (StatusCode, String)> {
-    rentals::select_by_id(
-        rental_id,
-        &state.db,
-    ).await
-    .map(|r| Json(r))
-    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
+    rentals::select_by_id(rental_id, &state.db)
+        .await
+        .map(|r| Json(r))
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
 }
 
 pub async fn update(
@@ -262,12 +320,8 @@ pub async fn update(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<SettableRentalData>,
 ) -> Result<Json<rental::Rental>, (StatusCode, String)> {
-    rentals::update(
-        rental_id,
-        None,
-        payload.end_date,
-        &state.db,
-    ).await
-    .map(|r| Json(r))
-    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
+    rentals::update(rental_id, None, payload.end_date, &state.db)
+        .await
+        .map(|r| Json(r))
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
 }

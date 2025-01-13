@@ -117,11 +117,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .route("/rentals", routing::get(handlers::rentals::get_filtered))
         .route(
             "/rentals/check-in",
-            routing::patch(handlers::rentals::check_in),
+            routing::post(handlers::rentals::check_in),
         )
         .route(
             "/rentals/check-out",
-            routing::patch(handlers::rentals::check_out),
+            routing::post(handlers::rentals::check_out),
         )
         .route(
             "/rentals/:rental_id",

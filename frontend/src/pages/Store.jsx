@@ -204,6 +204,7 @@ export const PureAddTool = (addTool) => {
     setDescription,
     rentalHours,
     setRentalHours,
+    defaultRentalHours,
     categorySearch,
     createTool,
     canAddTool,

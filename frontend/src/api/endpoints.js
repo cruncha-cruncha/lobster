@@ -14,6 +14,8 @@ import {
   validateToolSearchResults,
   validateToolCategorySearchResults,
   validateToolCategory,
+  validateSingleRental,
+  validateRentalSearchResults,
 } from "./schemas";
 
 const serverUrl = import.meta.env.VITE_SERVER_URL || "http://127.0.0.1:3000";
@@ -423,7 +425,7 @@ export const getToolCategory = async ({ id, accessToken }) => {
   }
 
   return data;
-}
+};
 
 export const searchToolCategories = async ({ params, accessToken }) => {
   const str_params = obj_to_query(params);
@@ -438,6 +440,64 @@ export const searchToolCategories = async ({ params, accessToken }) => {
   if (!validateToolCategorySearchResults(data)) {
     throw new Error(400);
   }
+
+  return data;
+};
+
+export const getRental = async ({ id, accessToken }) => {
+  const data = await handle(`${serverUrl}/rentals/${id}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!validateSingleRental(data)) {
+    throw new Error(400);
+  }
+
+  return data;
+};
+
+export const searchRentals = async ({ params, accessToken }) => {
+  const str_params = obj_to_query(params);
+
+  const data = await handle(`${serverUrl}/rentals?${str_params}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!validateRentalSearchResults(data)) {
+    throw new Error(400);
+  }
+
+  return data;
+};
+
+export const checkInTools = async ({ info, accessToken }) => {
+  const data = await handle(`${serverUrl}/rentals/check-in`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(info),
+  });
+
+  return data;
+};
+
+export const checkOutTools = async ({ info, accessToken }) => {
+  const data = await handle(`${serverUrl}/rentals/check-out`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(info),
+  });
 
   return data;
 };
