@@ -96,11 +96,12 @@ pub async fn select(
     params: SelectParams,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<Vec<tool::Tool>, String> {
-    let mut min_category_matches = 1;
-    if params.match_all_categories {
+    let mut min_category_matches = 0;
+    if !params.match_all_categories {
+        // counterintuitive, but makes the query work
         min_category_matches = i32::try_from(params.category_ids.len()).unwrap_or(1);
     }
-    
+
     sqlx::query_as!(
         tool::Tool,
         r#"
@@ -118,14 +119,14 @@ pub async fn select(
         ORDER BY mt.id 
         OFFSET $8 LIMIT $9;
         "#,
-        &params.ids,
+        &params.ids, // 1
         params.term,
         &params.statuses,
-        &params.store_ids,
+        &params.store_ids, // 4
         &params.real_ids,
         &params.category_ids,
         min_category_matches,
-        params.offset,
+        params.offset, // 8
         params.limit,
     )
     .fetch_all(db)
