@@ -44,6 +44,7 @@ pub struct FilterParams {
 #[serde(rename_all = "camelCase")]
 pub struct SettableRentalData {
     pub end_date: Option<rental::EndDate>,
+    pub no_end_date: Option<bool>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -318,6 +319,20 @@ pub async fn update(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<SettableRentalData>,
 ) -> Result<Json<rental::Rental>, (StatusCode, String)> {
+    if payload.no_end_date.is_some() && payload.end_date.is_some() {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "Both end date and no end date cannot be provided".to_string(),
+        ));
+    }
+
+    if payload.no_end_date.is_some() && payload.no_end_date.unwrap() {
+        match rentals::clear_fields(rental_id, true, &state.db).await {
+            Ok(_) => {}
+            Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
+        }
+    }
+
     rentals::update(rental_id, None, payload.end_date, &state.db)
         .await
         .map(|r| Json(r))
