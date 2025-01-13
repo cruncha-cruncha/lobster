@@ -35,7 +35,7 @@ export const useRental = () => {
   const updateRental = () => {
     const formattedEndDate = formatDateForBackend(endDate);
     const info = {
-      endDate: formattedEndDate,
+      ...(!formattedEndDate ? {} : { endDate: formattedEndDate }),
       ...(!formattedEndDate ? { noEndDate: true } : {}),
     };
 

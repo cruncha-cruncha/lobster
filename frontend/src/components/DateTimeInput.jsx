@@ -32,6 +32,8 @@ export const formatDateForInput = (dateStr) => {
   })();
   const diff = minutesOffset - localMinutesOffset;
 
+  // TODO: this is incorrect it hours ends up being negative
+
   if (diff === 0) return `${data[1]}T${data[2]}`;
   let [hours, minutes] = data[2].split(":");
   hours = (parseInt(hours) + Math.floor(diff / 60)).toString().padStart(2, '0');
@@ -40,9 +42,9 @@ export const formatDateForInput = (dateStr) => {
 };
 
 export const formatDateForBackend = (dateStr) => {
-  if (!dateStr) return "st";
+  if (!dateStr) return "";
   const data = RegExp(/(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/).exec(dateStr);
-  if (!data) return "bleg";
+  if (!data) return "";
 
   const offset = new Date().getTimezoneOffset();
   const sign = offset < 0 ? "+" : "-";
