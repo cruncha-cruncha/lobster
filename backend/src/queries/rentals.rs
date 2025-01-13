@@ -1,5 +1,5 @@
+use crate::common;
 use crate::db_structs::{rental, tool};
-use crate::{common, db_structs::store};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -112,7 +112,7 @@ pub async fn select(
             AND (($6::timestamp with time zone IS NULL AND $7::timestamp with time zone IS NULL AND mr.end_date IS NULL)
                 OR (COALESCE($6, '1970-01-01 00:00:00+00'::timestamp with time zone) <= mr.end_date AND mr.end_date < COALESCE($7, '9999-12-31 23:59:59+00'::timestamp with time zone)))
             AND (mr.end_date IS NULL = $8::bool)
-            AND ($9::bool IS NULL OR (mr.start_date + interval '1' HOUR * t.rental_hours >= CURRENT_TIMESTAMP) = $9::bool)
+            AND ($9::bool IS NULL OR ((mr.start_date + interval '1' HOUR * t.rental_hours) < CURRENT_TIMESTAMP) = $9::bool)
         ORDER BY (
             CASE $11::bool
                 WHEN TRUE THEN CASE $10::integer

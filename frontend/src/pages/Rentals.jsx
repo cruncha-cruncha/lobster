@@ -28,6 +28,7 @@ export const useRentals = () => {
   const [stillOpen, _setStillOpen] = useState(true);
   const [page, _setPage] = useState(1);
   const [orderAsc, _setOrderAsc] = useState(true);
+  const [overdueOnly, _setOverdueOnly] = useState(false);
 
   const urlStoreId = urlParams.get(URL_STORE_ID_KEY);
   const urlToolId = urlParams.get(URL_TOOL_ID_KEY);
@@ -152,7 +153,7 @@ export const useRentals = () => {
 
   const setOrderAsc = (e) => {
     _setOrderAsc(e.target.checked);
-  }
+  };
 
   const endpointParams = {
     storeIds: urlStoreId ? [urlStoreId] : storeSelect.stores.map((s) => s.id),
@@ -161,6 +162,7 @@ export const useRentals = () => {
     open: stillOpen,
     page,
     orderAsc,
+    ...(overdueOnly ? { overdue: true } : {}),
   };
 
   const { data, isLoading, error, mutate } = useSWR(
@@ -182,6 +184,10 @@ export const useRentals = () => {
     _setStillOpen(e.target.checked);
   };
 
+  const setOverdueOnly = (e) => {
+    _setOverdueOnly(e.target.checked);
+  };
+
   const prevPage = () => {
     if (page > 1) {
       _setPage(page - 1);
@@ -198,6 +204,8 @@ export const useRentals = () => {
     setStillOpen,
     orderAsc,
     setOrderAsc,
+    overdueOnly,
+    setOverdueOnly,
     rentalList: rentals,
     prevPage,
     nextPage,
@@ -214,6 +222,8 @@ export const PureRentals = (rentals) => {
     setStillOpen,
     orderAsc,
     setOrderAsc,
+    overdueOnly,
+    setOverdueOnly,
     rentalList,
     prevPage,
     nextPage,
@@ -231,10 +241,11 @@ export const PureRentals = (rentals) => {
         checked={stillOpen}
         onChange={setStillOpen}
       />
+      <Checkbox label="Order Asc" checked={orderAsc} onChange={setOrderAsc} />
       <Checkbox
-        label="Order Asc"
-        checked={orderAsc}
-        onChange={setOrderAsc}
+        label="Overdue Only"
+        checked={overdueOnly}
+        onChange={setOverdueOnly}
       />
       <ul>
         {rentalList.map((rental) => (
