@@ -248,29 +248,32 @@ export const PureTools = (tools) => {
 
 export const useCategorySearch = () => {
   const { accessToken } = useAuth();
+  const { cache } = useSWRConfig();
   const { toolCategories: allCategories } = useToolCategories();
   const [categories, setCategories] = useState([]);
   const [categoryTerm, _setCategoryTerm] = useState("");
   const [categoryOptions, setCategoryOptions] = useState([]);
   const [matchAllCats, _setMatchAllCats] = useState(true);
 
-  const fetchCategories = () => {
-    if (!accessToken) return;
-    return endpoints
-      .searchToolCategories({
-        params: {
-          term: categoryTerm,
-        },
-        accessToken,
-      })
-      .then((data) => {
-        setCategoryOptions(data.categories);
-      });
+  const endPointParams = {
+    term: categoryTerm,
   };
 
+  const { data, isLoading, error, mutate } = useSWR(
+    !accessToken
+      ? null
+      : `get categories, using ${accessToken} and ${JSON.stringify(
+          endPointParams,
+        )}`,
+    () =>
+      endpoints.searchToolCategories({ params: endPointParams, accessToken }),
+  );
+
   useEffect(() => {
-    fetchCategories();
-  }, [categoryTerm, accessToken]);
+    if (data) {
+      setCategoryOptions(data.categories);
+    }
+  }, [data]);
 
   const setCategoryTerm = (e) => {
     _setCategoryTerm(e.target.value);
@@ -283,9 +286,10 @@ export const useCategorySearch = () => {
       newCat = categoryOptions.find((c) => c.id == catId);
       if (!newCat) {
         newCat = await endpoints.getToolCategory({ id: catId, accessToken });
+        cache.set(`get category ${catId}, using ${accessToken}`, newCat);
       }
     }
-    !!newCat && setCategories([...categories, newCat]);
+    !!newCat && setCategories(prev => [...prev, newCat]);
   };
 
   const removeCategory = (catId) => {
@@ -357,23 +361,24 @@ export const useStoreSelect = () => {
   const [storeTerm, _setStoreTerm] = useState("");
   const [storeOptions, setStoreOptions] = useState([]);
 
-  const fetchStores = () => {
-    if (!accessToken) return;
-    return endpoints
-      .getStores({
-        params: {
-          term: storeTerm,
-        },
-        accessToken,
-      })
-      .then((data) => {
-        setStoreOptions(data.stores);
-      });
+  const endpointParams = {
+    term: storeTerm,
   };
 
+  const { data, isLoading, error, mutate } = useSWR(
+    !accessToken
+      ? null
+      : `get stores, using ${accessToken} and ${JSON.stringify(
+          endpointParams,
+        )}`,
+    () => endpoints.getStores({ params: endpointParams, accessToken }),
+  );
+
   useEffect(() => {
-    fetchStores();
-  }, [storeTerm, accessToken]);
+    if (data) {
+      setStoreOptions(data.stores);
+    }
+  }, [data]);
 
   const setStoreTerm = (e) => {
     _setStoreTerm(e.target.value);
@@ -386,7 +391,7 @@ export const useStoreSelect = () => {
       newStore = await endpoints.getStore({ id: storeId, accessToken });
       cache.set(`get store ${storeId}, using ${accessToken}`, newStore);
     }
-    !!newStore && setStores([...stores, newStore]);
+    !!newStore && setStores(prev => [...prev, newStore]);
   };
 
   const removeStore = (storeId) => {
