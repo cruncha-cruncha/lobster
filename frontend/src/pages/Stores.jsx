@@ -114,7 +114,7 @@ export const PureStores = (stores) => {
 
   return (
     <div>
-      <div className="mt-2 flex items-center gap-2">
+      <div className="mt-2 flex items-center gap-2 px-2">
         <h2 className="mr-2 text-xl">Stores</h2>
         <div className="flex gap-2">
           <Button
@@ -125,7 +125,7 @@ export const PureStores = (stores) => {
           />
         </div>
       </div>
-      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
+      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 px-2">
         <TextInput
           value={params.term}
           onChange={setTerm}

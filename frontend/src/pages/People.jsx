@@ -178,8 +178,8 @@ export const PurePeople = (people) => {
 
   return (
     <div>
-      <h2 className="mt-2 text-xl">People</h2>
-      <div className="mb-3 mt-1 grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
+      <h2 className="mt-2 px-2 text-xl">People</h2>
+      <div className="mb-3 mt-1 grid grid-cols-1 gap-x-4 gap-y-2 px-2 md:grid-cols-2">
         <div className="md:col-span-2">
           <TextInput
             value={params.searchTerm}

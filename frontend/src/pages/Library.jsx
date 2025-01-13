@@ -82,9 +82,9 @@ export const PureLibrary = (library) => {
 
   return (
     <div>
-      <h1 className="my-2 text-xl">Library Settings</h1>
-      <p>(id: "{uuid}")</p>
-      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
+      <h1 className="my-2 px-2 text-xl">Library Settings</h1>
+      <p className="px-2">(id: "{uuid}")</p>
+      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 px-2 md:grid-cols-2">
         <div className="md:col-span-2">
           <TextInput
             label="Name"
@@ -103,7 +103,7 @@ export const PureLibrary = (library) => {
           <p>The longest time any tool can be rented, in hours.</p>
         </div>
       </div>
-      <div className="mt-3 flex justify-end gap-2">
+      <div className="mt-3 flex justify-end gap-2 px-2">
         <Button
           onClick={save}
           disabled={!canSave}

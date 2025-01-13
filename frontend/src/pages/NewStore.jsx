@@ -94,8 +94,8 @@ export const PureNewStore = (newStore) => {
 
   return (
     <div>
-      <h1 className="my-2 text-xl">New Store</h1>
-      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
+      <h1 className="my-2 px-2 text-xl">New Store</h1>
+      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 px-2 md:grid-cols-2">
         <TextInput
           label="Name"
           value={info.name}
@@ -133,7 +133,7 @@ export const PureNewStore = (newStore) => {
           placeholder=""
         />
       </div>
-      <div className="mt-3 flex justify-between gap-2">
+      <div className="mt-3 flex justify-between gap-2 px-2">
         <Button onClick={handleCancel} variant="blue" text="Cancel" />
         <Button
           onClick={handleCreateStore}

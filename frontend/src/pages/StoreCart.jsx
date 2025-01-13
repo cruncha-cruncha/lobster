@@ -117,8 +117,8 @@ export const PureStoreCart = (cart) => {
 
   return (
     <div>
-      <h1 className="mt-2 text-xl">Store Cart</h1>
-      <div className="mt-2 flex justify-start gap-2">
+      <h1 className="mt-2 px-2 text-xl">Store Cart</h1>
+      <div className="mt-2 flex justify-start gap-2 px-2">
         <Button
           onClick={goToStoreTools}
           text="Store Tools"
@@ -127,12 +127,12 @@ export const PureStoreCart = (cart) => {
         />
         <Button onClick={goToStore} text="Store" variant="blue" size="sm" />
       </div>
-      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
+      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 px-2">
         <QuickFindStoreTool storeId={storeId} onSingle={addToCart} />
       </div>
       <ul className="border-x-2 border-stone-400 p-2">
         {toolCart.length == 0 && (
-          <li className="text-stone-400">Cart is Empty</li>
+          <li className="text-stone-400">Cart is empty</li>
         )}
         {toolCart.map((tool) => (
           <li key={tool.id}>
@@ -150,10 +150,10 @@ export const PureStoreCart = (cart) => {
           </li>
         ))}
       </ul>
-      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
+      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 px-2">
         <TextInput label="User ID" value={userCode} onChange={setUserCode} />
       </div>
-      <div className="mt-3 flex justify-end gap-2">
+      <div className="mt-3 flex justify-end gap-2 px-2">
         <Button text="Return" disabled={!canReturn} onClick={handleReturn} />
         <Button
           text="Checkout"

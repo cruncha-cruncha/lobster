@@ -113,7 +113,8 @@ export const PureStore = (store) => {
 
   return (
     <div>
-      <div className="mt-2 flex justify-start gap-2">
+      <h1 className="mt-2 px-2 text-xl">{storeInfo.name}</h1>
+      <div className="my-2 flex flex-wrap justify-start gap-2 px-2">
         <Button
           onClick={() => goToTools()}
           text="Tools"
@@ -145,10 +146,9 @@ export const PureStore = (store) => {
           size="sm"
         />
       </div>
-      <h1>{storeInfo.name}</h1>
-      <p>{JSON.stringify(storeInfo)}</p>
+      <p className="px-2">{JSON.stringify(storeInfo)}</p>
       {showUpdateStatus && (
-        <>
+        <div className="px-2">
           <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
             <Select
               label="Status"
@@ -164,7 +164,7 @@ export const PureStore = (store) => {
               disabled={!canUpdateStatus}
             />
           </div>
-        </>
+        </div>
       )}
       <PureAddTool {...addTool} />
     </div>
@@ -252,8 +252,8 @@ export const PureAddTool = (addTool) => {
 
   return (
     <div>
-      <h2 className="text-xl">New Tool</h2>
-      <div className="mb-3 mt-1 grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
+      <h2 className="px-2 text-lg">New Tool</h2>
+      <div className="mb-3 mt-1 grid grid-cols-1 gap-x-4 gap-y-2 px-2 md:grid-cols-2">
         <div className="md:col-span-2">
           <TextInput
             label="Description"
@@ -278,7 +278,7 @@ export const PureAddTool = (addTool) => {
           />
         </div>
       </div>
-      <div className="mt-3 flex justify-end gap-2">
+      <div className="mt-3 flex justify-end gap-2 px-2">
         <Button onClick={createTool} text="Add Tool" disabled={!canAddTool} />
       </div>
     </div>

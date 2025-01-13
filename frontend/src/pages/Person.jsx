@@ -50,8 +50,8 @@ export const PurePerson = (person) => {
 
   return (
     <div>
-      <h1 className="mt-2 text-xl">{username}</h1>
-      <div className="my-2 flex justify-start gap-2">
+      <h1 className="mt-2 px-2 text-xl">{username}</h1>
+      <div className="my-2 flex justify-start gap-2 px-2">
         <Button onClick={goToRentals} text="Rentals" variant="blue" size="sm" />
         <Button
           onClick={goToPeople}
@@ -158,7 +158,7 @@ const PureUserInfo = (userInfo) => {
   } = userInfo;
 
   return (
-    <div>
+    <div className="px-2">
       <p>{JSON.stringify(data)}</p>
       {showUpdateUserName && (
         <>
@@ -269,9 +269,9 @@ const PureUserStatus = (userStatus) => {
   } = userStatus;
 
   return (
-    <div>
+    <>
       {showUpdateStatus && (
-        <>
+        <div className="px-2">
           <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
             <Select
               label="Status"
@@ -288,9 +288,9 @@ const PureUserStatus = (userStatus) => {
               disabled={!canUpdateStatus}
             />
           </div>
-        </>
+        </div>
       )}
-    </div>
+    </>
   );
 };
 
@@ -481,7 +481,7 @@ const PureUserPermissions = (userPermissions) => {
 
   return (
     <div>
-      <h2 className="text-lg">Permissions</h2>
+      <h2 className="px-2 text-lg">Permissions</h2>
       <ul className="mt-1 border-x-2 border-stone-400 px-2">
         {libraryPermissions.length <= 0 && storePermissions.length <= 0 && (
           <li className="text-stone-400">none found</li>
@@ -522,7 +522,7 @@ const PureUserPermissions = (userPermissions) => {
         ))}
       </ul>
       {showModifyPermissions && (
-        <>
+        <div className="px-2">
           {showFields === "add" && (
             <>
               <div className="my-3 grid grid-cols-1 gap-x-4 gap-y-2">
@@ -567,7 +567,7 @@ const PureUserPermissions = (userPermissions) => {
               />
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );

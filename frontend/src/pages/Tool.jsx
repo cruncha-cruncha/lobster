@@ -191,8 +191,8 @@ export const PureTool = (tool) => {
 
   return (
     <div>
-      <h2 className="mt-2 text-xl">{data?.realId || "Tool"}</h2>
-      <div className="my-2 flex gap-2">
+      <h2 className="mt-2 px-2 text-xl">{data?.realId || "Tool"}</h2>
+      <div className="my-2 flex gap-2 px-2">
         <Button text="All Tools" onClick={goToTools} variant="blue" size="sm" />
         <Button
           text="Store Tools"
@@ -203,8 +203,8 @@ export const PureTool = (tool) => {
         <Button text="Rentals" onClick={goToRentals} variant="blue" size="sm" />
         <Button text="Store" onClick={goToStore} variant="blue" size="sm" />
       </div>
-      <p>{JSON.stringify(data)}</p>
-      <div className="flex justify-end gap-2">
+      <p className="px-2">{JSON.stringify(data)}</p>
+      <div className="flex justify-end gap-2 px-2">
         {canAddToCart && (
           <Button text="Add to Cart" onClick={() => addToCart(toolId)} />
         )}
@@ -216,7 +216,7 @@ export const PureTool = (tool) => {
           />
         )}
       </div>
-      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
+      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 px-2 md:grid-cols-2">
         <div className="md:col-span-2">
           <TextInput
             label="Description"
@@ -242,7 +242,7 @@ export const PureTool = (tool) => {
           onChange={setStatus}
         />
       </div>
-      <div className="mt-3 flex justify-end gap-2">
+      <div className="mt-3 flex justify-end gap-2 px-2">
         <Button text="Update" onClick={updateTool} />
       </div>
     </div>

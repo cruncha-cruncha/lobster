@@ -188,7 +188,7 @@ export const PureTools = (tools) => {
 
   return (
     <div>
-      <div className="mt-2 flex items-center gap-2">
+      <div className="mt-2 flex items-center gap-2 px-2">
         <h2 className="mr-2 text-xl">Tools</h2>
         <div
           className={
@@ -203,7 +203,7 @@ export const PureTools = (tools) => {
           />
         </div>
       </div>
-      <div className="mb-3 mt-1 grid grid-cols-1 gap-x-4 gap-y-2">
+      <div className="mb-3 mt-1 grid grid-cols-1 gap-x-4 gap-y-2 px-2">
         <TextInput
           label="Search"
           value={searchTerm}
