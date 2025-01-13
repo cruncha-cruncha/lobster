@@ -9,8 +9,6 @@ const reducer = (state, action) => {
   switch (action.type) {
     case "name":
       return { ...state, name: action.value };
-    case "maximumRentalHours":
-      return { ...state, maximumRentalHours: action.value };
     default:
       return state;
   }
@@ -23,15 +21,9 @@ export const useLibrary = () => {
 
   const [info, dispatch] = useReducer(reducer, {
     name: remoteInfo.name,
-    maximumRentalHours: remoteInfo.maximumRentalHours,
   });
 
-  const canSave =
-    (info.name !== remoteInfo.name ||
-      info.maximumRentalHours != remoteInfo.maximumRentalHours) &&
-    (info.maximumRentalHours === "" ||
-      parseInt(info.maximumRentalHours, 10) >= 0) &&
-    !isLoading;
+  const canSave = info.name !== remoteInfo.name && !isLoading;
 
   const save = (e) => {
     e.preventDefault();
@@ -42,8 +34,6 @@ export const useLibrary = () => {
       .updateLibrary({
         info: {
           name: info.name,
-          maximumRentalHours:
-            parseInt(info.maximumRentalHours, 10) || data.maximumRentalHours,
         },
         accessToken: auth.accessToken,
       })
@@ -61,8 +51,6 @@ export const useLibrary = () => {
     uuid: remoteInfo.uuid,
     info,
     setName: (e) => dispatch({ type: "name", value: e.target.value }),
-    setMaximumRentalHours: (e) =>
-      dispatch({ type: "maximumRentalHours", value: e.target.value }),
     isLoading,
     canSave,
     save,
@@ -70,38 +58,19 @@ export const useLibrary = () => {
 };
 
 export const PureLibrary = (library) => {
-  const {
-    uuid,
-    info,
-    setName,
-    setMaximumRentalHours,
-    canSave,
-    save,
-    isLoading,
-  } = library;
+  const { uuid, info, setName, canSave, save, isLoading } = library;
 
   return (
     <div>
       <h1 className="my-2 px-2 text-xl">Library Settings</h1>
       <p className="px-2">(id: "{uuid}")</p>
-      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 px-2 md:grid-cols-2">
-        <div className="md:col-span-2">
-          <TextInput
-            label="Name"
-            placeholder="Library Name"
-            value={info.name}
-            onChange={setName}
-          />
-        </div>
-        <div className="md:col-start-2">
-          <TextInput
-            label="Max Rental Period"
-            placeholder="hours"
-            value={info.maximumRentalHours}
-            onChange={setMaximumRentalHours}
-          />
-          <p>The longest time any tool can be rented, in hours.</p>
-        </div>
+      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 px-2">
+        <TextInput
+          label="Name"
+          placeholder="Library Name"
+          value={info.name}
+          onChange={setName}
+        />
       </div>
       <div className="mt-3 flex justify-end gap-2 px-2">
         <Button

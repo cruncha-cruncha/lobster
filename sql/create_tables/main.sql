@@ -3,7 +3,6 @@ CREATE SCHEMA IF NOT EXISTS main;
 CREATE TABLE main.library_information (
     uuid UUID DEFAULT gen_random_uuid() NOT NULL,
     name TEXT NOT NULL,
-    maximum_rental_hours INTEGER NOT NULL,
     PRIMARY KEY (uuid)
 );
 
