@@ -27,6 +27,7 @@ export const Rentals = () => {
   const [rentals, setRentals] = useState([]);
   const [stillOpen, _setStillOpen] = useState(true);
   const [page, _setPage] = useState(1);
+  const [orderAsc, _setOrderAsc] = useState(true);
 
   const urlStoreId = urlParams.get(URL_STORE_ID_KEY);
   const urlToolId = urlParams.get(URL_TOOL_ID_KEY);
@@ -149,12 +150,17 @@ export const Rentals = () => {
     }, [data]);
   }
 
+  const setOrderAsc = (e) => {
+    _setOrderAsc(e.target.checked);
+  }
+
   const endpointParams = {
     storeIds: urlStoreId ? [urlStoreId] : storeSelect.stores.map((s) => s.id),
     renterIds: urlPersonId ? [urlPersonId] : userSelect.users.map((u) => u.id),
     toolIds: urlToolId ? [urlToolId] : toolSelect.tools.map((t) => t.id),
     open: stillOpen,
     page,
+    orderAsc,
   };
 
   const { data, isLoading, error, mutate } = useSWR(
@@ -206,6 +212,11 @@ export const Rentals = () => {
         label="Still Open"
         checked={stillOpen}
         onChange={setStillOpen}
+      />
+      <Checkbox
+        label="Order Asc"
+        checked={orderAsc}
+        onChange={setOrderAsc}
       />
       <ul>
         {rentals.map((rental) => (
