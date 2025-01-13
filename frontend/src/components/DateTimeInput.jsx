@@ -2,7 +2,7 @@ import { parse, format, add } from "date-fns";
 
 export const DateTimeInput = ({ label, value, onChange, disabled }) => {
   return (
-    <div>
+    <div className="w-full">
       <label>{label}</label>
       <div className="border-2 border-stone-800">
         <input

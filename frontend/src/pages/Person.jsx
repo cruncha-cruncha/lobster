@@ -14,17 +14,24 @@ export const URL_PERSON_ID_KEY = "personId";
 export const usePerson = () => {
   const navigate = useNavigate();
   const params = useParams();
+  const userId = params.id;
 
   const goToPeople = () => {
     navigate("/people");
   };
 
-  const userInfo = useUserInfo({ id: params.id });
-  const userStatus = useUserStatus({ id: params.id });
-  const userPermissions = useUserPermissions({ id: params.id });
+  const goToRentals = () => {
+    navigate(`/rentals?${URL_PERSON_ID_KEY}=${userId}`);
+  };
+
+  const userInfo = useUserInfo({ id: userId });
+  const userStatus = useUserStatus({ id: userId });
+  const userPermissions = useUserPermissions({ id: userId });
 
   return {
+    username: userInfo.data.username || "Person",
     goToPeople,
+    goToRentals,
     userInfo,
     userStatus,
     userPermissions,
@@ -32,12 +39,22 @@ export const usePerson = () => {
 };
 
 export const PurePerson = (person) => {
-  const { goToPeople, userInfo, userStatus, userPermissions } = person;
+  const {
+    goToPeople,
+    userInfo,
+    userStatus,
+    userPermissions,
+    goToRentals,
+    username,
+  } = person;
 
   return (
     <div>
-      <h1>Person</h1>
-      <Button onClick={goToPeople} text="All People" variant="blue" />
+      <div className="flex gap-2">
+        <Button onClick={goToRentals} text="Rentals" variant="blue" />
+        <Button onClick={goToPeople} text="All People" variant="blue" />
+      </div>
+      <h1>{username}</h1>
       <PureUserInfo {...userInfo} />
       <PureUserStatus {...userStatus} />
       <PureUserPermissions {...userPermissions} />

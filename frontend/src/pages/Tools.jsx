@@ -342,10 +342,11 @@ export const PureCategorySearch = (categorySearch) => {
           />
         </div>
         {showMatchAllCats && (
-          <div className="grow-0">
+          <div className="flex-final">
             <label>&nbsp;</label>
             <div className="[&_fieldset]:mt-0 [&_label]:border-2 [&_label]:border-transparent [&_label]:py-1">
               <Checkbox
+                id="tool-categories-match-all"
                 label="Match All"
                 checked={matchAllCats}
                 onChange={setMatchAllCats}

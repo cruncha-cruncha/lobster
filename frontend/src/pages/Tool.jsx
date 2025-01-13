@@ -142,6 +142,10 @@ export const useTool = () => {
     showMatchAllCats: false,
   };
 
+  const goToRentals = () => {
+    navigate(`/rentals?${URL_TOOL_ID_KEY}=${toolId}`);
+  };
+
   return {
     toolId,
     info,
@@ -149,6 +153,7 @@ export const useTool = () => {
     goToTools,
     goToStoreTools,
     goToStore,
+    goToRentals,
     toolStatuses,
     setStatus,
     setDescription,
@@ -171,6 +176,7 @@ export const PureTool = (tool) => {
     goToTools,
     goToStoreTools,
     goToStore,
+    goToRentals,
     toolStatuses,
     setStatus,
     setDescription,
@@ -189,6 +195,7 @@ export const PureTool = (tool) => {
       <div className="flex gap-2">
         <Button text="All Tools" onClick={goToTools} variant="blue" />
         <Button text="Store Tools" onClick={goToStoreTools} variant="blue" />
+        <Button text="Rentals" onClick={goToRentals} variant="blue" />
         <Button text="Store" onClick={goToStore} variant="blue" />
       </div>
       <p>{JSON.stringify(data)}</p>
@@ -212,8 +219,12 @@ export const PureTool = (tool) => {
             onChange={setDescription}
           />
         </div>
-        <PureCategorySearch {...categorySearch} />
-        <TextInput label="Real ID" value={info.realId} onChange={setRealId} />
+        <div className="md:col-span-2">
+          <PureCategorySearch {...categorySearch} />
+        </div>
+        <div className="md:col-span-2">
+          <TextInput label="Real ID" value={info.realId} onChange={setRealId} />
+        </div>
         <TextInput
           label="Rental Hours"
           value={info.rentalHours || ""}

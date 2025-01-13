@@ -44,3 +44,7 @@ option.placeholder {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+.flex-final {
+  flex: 0 0 auto;
+}

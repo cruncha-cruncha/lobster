@@ -99,7 +99,9 @@ export const PureRental = (tool) => {
         <Button text="Person" onClick={goToPerson} variant="blue" />
       </div>
       <p>{JSON.stringify(data)}</p>
-      <DateTimeInput label="End Date" value={endDate} onChange={setEndDate} />
+      <div className="mb-3 mt-2 flex flex-col gap-x-4 gap-y-2 md:flex-row">
+        <DateTimeInput label="End Date" value={endDate} onChange={setEndDate} />
+      </div>
       <div className="flex justify-end">
         <Button text="Update" onClick={updateRental} />
       </div>

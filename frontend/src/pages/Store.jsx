@@ -71,6 +71,10 @@ export const useStore = () => {
     _setStatus(e.target.value);
   };
 
+  const goToRentals = () => {
+    navigate(`/rentals?${URL_STORE_ID_KEY}=${storeId}`);
+  }
+
   return {
     storeInfo,
     storeStatuses,
@@ -79,6 +83,7 @@ export const useStore = () => {
     showUpdateStatus,
     canUpdateStatus,
     goToStores,
+    goToRentals,
     goToPeople,
     goToTools,
     updateStatus,
@@ -97,6 +102,7 @@ export const PureStore = (store) => {
     showUpdateStatus,
     canUpdateStatus,
     goToStores,
+    goToRentals,
     goToPeople,
     goToTools,
     updateStatus,
@@ -109,6 +115,7 @@ export const PureStore = (store) => {
     <div>
       <div className="flex gap-2">
         <Button onClick={() => goToTools()} text="Tools" variant="blue" />
+        <Button onClick={() => goToRentals()} text="Rentals" variant="blue" />
         <Button onClick={() => goToPeople()} text="People" variant="blue" />
         <Button onClick={() => goToStores()} text="All Stores" variant="blue" />
         <Button onClick={goToCart} text={`Cart (${cartSize})`} variant="blue" />

@@ -239,19 +239,22 @@ export const PureRentals = (rentals) => {
   return (
     <div>
       <div className="mb-3 mt-2 flex flex-col gap-x-4 gap-y-2 md:flex-row">
-        <div className="mt-1 flex grow-0 gap-4 md:mt-0 md:block">
+        <div className="flex-final mt-1 flex gap-4 md:mt-0 md:block">
           <p className="mt-1 md:mt-0">Rentals</p>
           <Checkbox
+            id="rental-still-open"
             label="Still Open"
             checked={stillOpen}
             onChange={setStillOpen}
           />
           <Checkbox
+            id="rental-overdue-only"
             label="Overdue Only"
             checked={overdueOnly}
             onChange={setOverdueOnly}
           />
           <Checkbox
+            id="rental-order-asc"
             label="Order Asc"
             checked={orderAsc}
             onChange={setOrderAsc}

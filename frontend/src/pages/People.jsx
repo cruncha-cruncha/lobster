@@ -200,6 +200,7 @@ export const PurePeople = (people) => {
           onChange={setStatus}
         />
         <Checkbox
+          id="person-with-store"
           label="Related to Store"
           checked={params.withStore}
           onChange={setWithStore}
