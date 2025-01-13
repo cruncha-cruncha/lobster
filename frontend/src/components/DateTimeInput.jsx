@@ -1,3 +1,5 @@
+import { parse, format, add } from "date-fns";
+
 export const DateTimeInput = ({ label, value, onChange, disabled }) => {
   return (
     <div>
@@ -17,38 +19,21 @@ export const DateTimeInput = ({ label, value, onChange, disabled }) => {
 
 export const formatDateForInput = (dateStr) => {
   if (!dateStr) return "";
-  const data = RegExp(
-    /(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}):\d{2}.\d* (?:\+|\-)(\d{2}:\d{2}):\d{2}/,
-  ).exec(dateStr);
-  if (!data) return "";
+  const date = parse(dateStr, "yyyy-MM-dd HH:mm:ss.SSSSSS XXXXX", new Date());
+  if (!date) return "";
 
   const localMinutesOffset = new Date().getTimezoneOffset();
-  const minutesOffset = (() => {
-    const sign = data[3].split(":")[0] === "+" ? 1 : -1;
-    let [hours, minutes] = data[3].split(":");
-    hours = parseInt(hours);
-    minutes = parseInt(minutes);
-    return sign * (hours * 60 + minutes);
-  })();
+  const minutesOffset = date.getTimezoneOffset();
   const diff = minutesOffset - localMinutesOffset;
 
-  // TODO: this is incorrect it hours ends up being negative
-
-  if (diff === 0) return `${data[1]}T${data[2]}`;
-  let [hours, minutes] = data[2].split(":");
-  hours = (parseInt(hours) + Math.floor(diff / 60)).toString().padStart(2, '0');
-  minutes = (parseInt(minutes) + (diff % 60)).toString().padStart(2, '0');
-  return `${data[1]}T${hours}:${minutes}`;
+  add(date, { minutes: diff });
+  return format(date, "yyyy-MM-dd'T'HH:mm");
 };
 
 export const formatDateForBackend = (dateStr) => {
   if (!dateStr) return "";
-  const data = RegExp(/(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/).exec(dateStr);
-  if (!data) return "";
+  const date = parse(dateStr, "yyyy-MM-dd'T'HH:mm", new Date());
+  if (!date) return "";
 
-  const offset = new Date().getTimezoneOffset();
-  const sign = offset < 0 ? "+" : "-";
-  const hours = Math.abs(Math.floor(offset / 60)).toString().padStart(2, '0');
-  const minutes = Math.abs(offset % 60).toString().padStart(2, '0');
-  return `${data[1]} ${data[2]}:00.000000 ${sign}${hours}:${minutes}:00`;
+  return format(date, "yyyy-MM-dd HH:mm:ss.SSSSSS XXXXX");
 };
