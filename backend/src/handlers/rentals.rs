@@ -53,6 +53,21 @@ pub struct FilteredResponse {
     pub rentals: Vec<rental::Rental>,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RentalWithText {
+    pub id: rental::Id,
+    pub tool_id: rental::ToolId,
+    pub tool_real_id: tool::RealId,
+    pub tool_description: tool::Description,
+    pub store_id: tool::StoreId,
+    pub store_name: store::Name,
+    pub renter_id: rental::RenterId,
+    pub renter_username: user::Username,
+    pub start_date: rental::StartDate,
+    pub end_date: Option<rental::EndDate>,
+}
+
 pub async fn check_in(
     claims: Claims,
     State(state): State<Arc<AppState>>,
@@ -306,11 +321,80 @@ pub async fn get_by_id(
     _claims: Claims,
     Path(rental_id): Path<i32>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<rental::Rental>, (StatusCode, String)> {
-    rentals::select_by_id(rental_id, &state.db)
-        .await
-        .map(|r| Json(r))
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
+) -> Result<Json<RentalWithText>, (StatusCode, String)> {
+    let rental = match rentals::select_by_id(rental_id, &state.db).await {
+        Ok(r) => r,
+        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
+    };
+
+    let user = match users::select_by_id(
+        rental.renter_id,
+        &state.db,
+    ).await {
+        Ok(u) => {
+            if u.is_none() {
+                return Err((StatusCode::NOT_FOUND, "User not found".to_string()));
+            }
+            u.unwrap()
+        },
+        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
+    };
+
+    let tool = match tools::select(
+        tools::SelectParams {
+            ids: vec![rental.tool_id],
+            term: "".to_string(),
+            statuses: vec![],
+            store_ids: vec![],
+            category_ids: vec![],
+            match_all_categories: false,
+            real_ids: vec![],
+            offset: 0,
+            limit: 1,
+        }, &state.db,
+    )
+    .await
+    {
+        Ok(mut t) => {
+            if t.is_empty() {
+                return Err((StatusCode::NOT_FOUND, "Tool not found".to_string()));
+            }
+            t.pop().unwrap()
+        },
+        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
+    };
+
+    let store = match stores::select(
+        stores::SelectParams {
+            ids: vec![tool.store_id],
+            statuses: vec![],
+            term: "".to_string(),
+            offset: 0,
+            limit: 1,
+        },
+        &state.db,
+    ).await {
+        Ok(mut s) => {
+            if s.is_empty() {
+                return Err((StatusCode::NOT_FOUND, "Store not found".to_string()));
+            }
+            s.pop().unwrap()
+        },
+        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
+    };
+
+    Ok(Json(RentalWithText {
+        id: rental.id,
+        tool_id: rental.tool_id,
+        tool_real_id: tool.real_id,
+        tool_description: tool.description,
+        store_id: tool.store_id,
+        store_name: store.name,
+        renter_id: rental.renter_id,
+        renter_username: user.username,
+        start_date: rental.start_date,
+        end_date: rental.end_date,
+    }))
 }
 
 pub async fn update(

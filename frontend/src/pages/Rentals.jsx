@@ -196,6 +196,10 @@ export const useRentals = () => {
 
   const nextPage = () => _setPage(page + 1);
 
+  const goToRental = (rentalId) => {
+    navigate(`/rentals/${rentalId}`);
+  };
+
   return {
     storeSelect,
     userSelect,
@@ -207,6 +211,7 @@ export const useRentals = () => {
     overdueOnly,
     setOverdueOnly,
     rentalList: rentals,
+    goToRental,
     prevPage,
     nextPage,
     page,
@@ -225,6 +230,7 @@ export const PureRentals = (rentals) => {
     overdueOnly,
     setOverdueOnly,
     rentalList,
+    goToRental,
     prevPage,
     nextPage,
     page,
@@ -249,7 +255,9 @@ export const PureRentals = (rentals) => {
       />
       <ul>
         {rentalList.map((rental) => (
-          <li key={rental.id}>{JSON.stringify(rental)}</li>
+          <li key={rental.id} onClick={() => goToRental(rental.id)}>
+            {JSON.stringify(rental)}
+          </li>
         ))}
       </ul>
       <PrevNext prev={prevPage} next={nextPage} pageNumber={page} />

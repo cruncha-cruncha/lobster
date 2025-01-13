@@ -15,6 +15,7 @@ import {
   validateToolCategorySearchResults,
   validateToolCategory,
   validateSingleRental,
+  validateRentalWithText,
   validateRentalSearchResults,
 } from "./schemas";
 
@@ -452,12 +453,29 @@ export const getRental = async ({ id, accessToken }) => {
     },
   });
 
-  if (!validateSingleRental(data)) {
+  if (!validateRentalWithText(data)) {
     throw new Error(400);
   }
 
   return data;
 };
+
+export const updateRental = async ({ id, info, accessToken }) => {
+  const data = await handle(`${serverUrl}/rentals/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(info),
+  });
+
+  if (!validateSingleRental(data)) {
+    throw new Error(400);
+  }
+
+  return data;
+}
 
 export const searchRentals = async ({ params, accessToken }) => {
   const str_params = obj_to_query(params);
