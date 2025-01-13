@@ -91,13 +91,13 @@ export const useRentals = () => {
   // filter by store if urlStoreId is present
   {
     useEffect(() => {
-      if (!urlStoreId) return;
+      if (!urlStoreId || !accessToken) return;
       _storeSelect.addStore(urlStoreId);
-    }, [urlStoreId]);
+    }, [urlStoreId, accessToken]);
 
     const { data } = useSWR(
-      !urlStoreId ? null : `get store ${urlStoreId}`,
-      () => endpoints.getStore({ id: urlStoreId }),
+      !urlStoreId || !accessToken ? null : `get store ${urlStoreId}, using ${accessToken}`,
+      () => endpoints.getStore({ id: urlStoreId, accessToken }),
     );
 
     useEffect(() => {

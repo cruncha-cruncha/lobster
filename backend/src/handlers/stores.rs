@@ -1,7 +1,7 @@
 use crate::auth::claims;
 use crate::common;
 use crate::db_structs::permission;
-use crate::queries::{stores, permissions};
+use crate::queries::{permissions, stores};
 use crate::AppState;
 use crate::{auth::claims::Claims, db_structs::store};
 use axum::{
@@ -195,6 +195,12 @@ pub async fn get_by_id(
         return Err((StatusCode::NOT_FOUND, "not found".to_string()));
     }
 
+    let can_see_contact_info = !claims.is_none();
+    if !can_see_contact_info {
+        stores[0].email_address = None;
+        stores[0].phone_number = "".to_string();
+    }
+
     let can_see_code = claims.is_store_admin()
         || claims.is_store_rep(store_id)
         || claims.is_tool_manager(store_id);
@@ -211,6 +217,7 @@ pub async fn get_filtered(
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<FilteredResponse>, (StatusCode, String)> {
     let (offset, limit) = common::calculate_offset_limit(params.page.unwrap_or_default());
+    let can_see_contact_info = !claims.is_none();
     let can_see_code = claims.is_store_admin();
 
     let stores = match stores::select(
@@ -226,6 +233,12 @@ pub async fn get_filtered(
     .await
     {
         Ok(mut res) => {
+            if !can_see_contact_info {
+                res.iter_mut().for_each(|s| {
+                    s.email_address = None;
+                    s.phone_number = "".to_string();
+                });
+            }
             if !can_see_code {
                 res.iter_mut().for_each(|s| s.code = String::new());
             }

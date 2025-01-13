@@ -24,6 +24,7 @@ const paramsReducer = (state, action) => {
 };
 
 export const useStores = () => {
+  const { accessToken } = useAuth();
   const navigate = useNavigate();
   const { storeStatuses } = useConstants();
 
@@ -69,8 +70,8 @@ export const useStores = () => {
   };
 
   const { data, error, isLoading, mutate } = useSWR(
-    `get stores, using ${JSON.stringify(endpointParams)}`,
-    () => endpoints.searchStores({ params: endpointParams }),
+    !accessToken ? null : `get stores, using ${accessToken} and ${JSON.stringify(endpointParams)}`,
+    () => endpoints.searchStores({ params: endpointParams, accessToken }),
   );
 
   useEffect(() => {

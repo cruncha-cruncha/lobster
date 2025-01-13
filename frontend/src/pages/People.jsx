@@ -96,8 +96,8 @@ export const usePeople = () => {
 
   {
     const { data, isLoading, error, mutate } = useSWR(
-      !urlStoreId || params.storeId != 0 ? null : `get store ${urlStoreId}`,
-      () => endpoints.getStore({ id: urlStoreId }),
+      !urlStoreId || !accessToken || params.storeId != 0 ? null : `get store ${urlStoreId}, using ${accessToken}`,
+      () => endpoints.getStore({ id: urlStoreId, accessToken }),
     );
 
     useEffect(() => {
@@ -235,6 +235,7 @@ export const PurePeople = (people) => {
 };
 
 export const useSingleStoreSelect = () => {
+  const { accessToken } = useAuth();
   const [storeId, _setStoreId] = useState("");
   const [storeTerm, _setStoreTerm] = useState("");
   const [storeOptions, setStoreOptions] = useState([]);
@@ -254,8 +255,8 @@ export const useSingleStoreSelect = () => {
   };
 
   const { data, isLoading, error, mutate } = useSWR(
-    `get stores, using ${JSON.stringify(endpointParams)}`,
-    () => endpoints.searchStores({ params: endpointParams }),
+    !accessToken ? null : `get stores, using ${accessToken} and ${JSON.stringify(endpointParams)}`,
+    () => endpoints.searchStores({ params: endpointParams, accessToken }),
   );
 
   useEffect(() => {

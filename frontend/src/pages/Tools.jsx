@@ -30,6 +30,7 @@ export const buildToolList = (data) => {
 };
 
 export const useTools = () => {
+  const { accessToken } = useAuth();
   const navigate = useNavigate();
   const [urlParams, setUrlParams] = useSearchParams();
   const urlStoreId = urlParams.get(URL_STORE_ID_KEY);
@@ -65,13 +66,13 @@ export const useTools = () => {
 
   {
     useEffect(() => {
-      if (!urlStoreId) return;
+      if (!urlStoreId || !accessToken) return;
       _storeSelect.addStore(urlStoreId);
-    }, [urlStoreId]);
+    }, [urlStoreId, accessToken]);
 
     const { data } = useSWR(
-      !urlStoreId ? null : `get store ${urlStoreId}`,
-      () => endpoints.getStore({ id: urlStoreId }),
+      !urlStoreId || !accessToken ? null : `get store ${urlStoreId}, using ${accessToken}`,
+      () => endpoints.getStore({ id: urlStoreId, accessToken }),
     );
 
     useEffect(() => {
@@ -361,6 +362,7 @@ export const PureCategorySearch = (categorySearch) => {
 };
 
 export const useStoreSelect = () => {
+  const { accessToken } = useAuth();
   const { cache } = useSWRConfig();
   const [stores, setStores] = useState([]);
   const [storeTerm, _setStoreTerm] = useState("");
@@ -371,8 +373,8 @@ export const useStoreSelect = () => {
   };
 
   const { data, isLoading, error, mutate } = useSWR(
-    `get stores, using ${JSON.stringify(endpointParams)}`,
-    () => endpoints.searchStores({ params: endpointParams }),
+    !accessToken ? null : `get stores, using ${accessToken} and ${JSON.stringify(endpointParams)}`,
+    () => endpoints.searchStores({ params: endpointParams, accessToken }),
   );
 
   useEffect(() => {
@@ -389,7 +391,7 @@ export const useStoreSelect = () => {
     if (stores.find((s) => s.id == storeId)) return;
     let newStore = storeOptions.find((s) => s.id == storeId);
     if (!newStore) {
-      newStore = await endpoints.getStore({ id: storeId });
+      newStore = await endpoints.getStore({ id: storeId, accessToken });
       cache.set(`get store ${storeId}`, newStore);
     }
     !!newStore &&

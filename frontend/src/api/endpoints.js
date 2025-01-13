@@ -254,11 +254,14 @@ export const updateStoreStatus = async ({ id, status, accessToken }) => {
   return data;
 };
 
-export const searchStores = async ({ params }) => {
+export const searchStores = async ({ params, accessToken }) => {
   const str_params = obj_to_query(params);
 
   const data = await handle(`${serverUrl}/stores?${str_params}`, {
     method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
   });
 
   if (!validateStoreSearchResults(data)) {
@@ -268,9 +271,12 @@ export const searchStores = async ({ params }) => {
   return data;
 };
 
-export const getStore = async ({ id }) => {
+export const getStore = async ({ id, accessToken }) => {
   const data = await handle(`${serverUrl}/stores/${id}`, {
     method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
   });
 
   if (!validateStoreInfo(data)) {
