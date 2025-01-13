@@ -10,12 +10,18 @@ import { Select } from "../components/Select";
 import { useCategorySearch, PureCategorySearch } from "./Tools";
 import { useToolCart } from "../state/toolCart";
 import { URL_STORE_ID_KEY } from "./Store";
+import { SearchSelect } from "../components/SearchSelect";
 
 export const useStoreCart = () => {
   const params = useParams();
   const { accessToken } = useAuth();
   const navigate = useNavigate();
-  const { toolCart: _toolCart, removeTool, clear: clearCart } = useToolCart();
+  const {
+    toolCart: _toolCart,
+    addTool,
+    removeTool,
+    clear: clearCart,
+  } = useToolCart();
   const [userCode, _setUserCode] = useState("");
   const storeId = params.id;
 
@@ -31,6 +37,10 @@ export const useStoreCart = () => {
 
   const goToTool = (toolId) => {
     navigate(`/tools/${toolId}`);
+  };
+
+  const addToCart = (tool) => {
+    addTool(tool);
   };
 
   const removeFromCart = (toolId) => {
@@ -72,10 +82,12 @@ export const useStoreCart = () => {
   };
 
   return {
+    storeId,
     goToStoreTools,
     goToStore,
     goToTool,
     toolCart,
+    addToCart,
     removeFromCart,
     setUserCode,
     handleCheckout,
@@ -88,10 +100,12 @@ export const useStoreCart = () => {
 
 export const PureStoreCart = (cart) => {
   const {
+    storeId,
     goToStoreTools,
     goToStore,
     goToTool,
     toolCart,
+    addToCart,
     removeFromCart,
     setUserCode,
     handleCheckout,
@@ -112,6 +126,7 @@ export const PureStoreCart = (cart) => {
         />
         <Button onClick={goToStore} text="Store" variant="blue" size="sm" />
       </div>
+      <QuickFindStoreTool storeId={storeId} onSingle={addToCart} />
       <h1>Store Cart</h1>
       <ul>
         {toolCart.map((tool) => (
@@ -148,4 +163,75 @@ export const PureStoreCart = (cart) => {
 export const StoreCart = () => {
   const cart = useStoreCart();
   return <PureStoreCart {...cart} />;
+};
+
+export const useQuickFindStoreTool = ({ storeId, onSingle }) => {
+  const [realId, _setRealId] = useState("");
+
+  const setRealId = (e) => {
+    _setRealId(e.target.value);
+  };
+
+  const endpointParams = {
+    term: realId,
+    storeIds: [Number(storeId)],
+  };
+
+  const { data, isLoading, error, mutate } = useSWR(
+    `get tools, using ${JSON.stringify(endpointParams)}`,
+    () => endpoints.searchTools({ params: endpointParams }),
+  );
+
+  const toolOptions = (() => {
+    if (!realId || !data || data.length <= 1) {
+      return [];
+    }
+
+    return data.tools.map((tool) => ({
+      id: tool.id,
+      name: `${tool.realId}, ${tool.description}`,
+    }));
+  })();
+
+  useEffect(() => {
+    if (data && data.tools.length == 1) {
+      onSingle(data.tools[0]);
+      _setRealId("");
+    }
+  }, [data?.tools]);
+
+  const handleSelect = (toolId) => {
+    const tool = data.tools.find((t) => t.id == toolId);
+    onSingle(tool);
+    _setRealId("");
+  };
+
+  return {
+    realId,
+    setRealId,
+    toolOptions,
+    handleSelect,
+  };
+};
+
+export const PureQuickFindStoreTool = (quickFindStoreTool) => {
+  const { realId, setRealId, toolOptions, handleSelect } = quickFindStoreTool;
+
+  return (
+    <>
+      <SearchSelect
+        label="Add Tool By Real ID"
+        value={realId}
+        onChange={setRealId}
+        onSelect={handleSelect}
+        options={toolOptions}
+        showLastSelected={false}
+      />
+    </>
+  );
+};
+
+export const QuickFindStoreTool = (params) => {
+  const quickFindStoreTool = useQuickFindStoreTool(params);
+  return <PureQuickFindStoreTool {...quickFindStoreTool} />;
 };

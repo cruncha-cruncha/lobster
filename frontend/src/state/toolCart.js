@@ -6,7 +6,7 @@ export const useToolCart = () => {
   const [toolCart, setToolCart] = useAtom(toolCartAtom);
 
   const addTool = (tool) => {
-    setToolCart([...toolCart, tool]);
+    setToolCart((prev) => [...prev.filter((t) => t.id != tool.id), tool]);
   };
 
   const removeTool = (toolId) => {
@@ -15,11 +15,11 @@ export const useToolCart = () => {
 
   const inCart = (toolId) => {
     return toolCart.some((tool) => tool.id == toolId);
-  }
+  };
 
   const clear = () => {
     setToolCart([]);
   };
 
   return { toolCart, addTool, removeTool, clear, inCart };
-}
+};
