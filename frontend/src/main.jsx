@@ -11,6 +11,7 @@ import { People } from "./pages/People";
 import { Person } from "./pages/Person";
 import { Grievances } from "./pages/Grievances";
 import { Rentals } from "./pages/Rentals";
+import { Cart } from "./pages/Cart";
 import { Stores } from "./pages/Stores";
 import { Store } from "./pages/Store";
 import { NewStore } from "./pages/NewStore";
@@ -61,6 +62,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="/people/:id" element={<Person />} />
             <Route path="/grievances" element={<Grievances />} />
             <Route path="/rentals" element={<Rentals />} />
+            <Route path="/cart" element={<Cart />} />
             <Route index element={<Tools />} />
             <Route path="/tools" element={<Tools />} />
             <Route path="/tools/:id" element={<Tool />} />

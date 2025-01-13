@@ -34,7 +34,7 @@ export const useTools = () => {
   const navigate = useNavigate();
   const [urlParams, setUrlParams] = useSearchParams();
   const urlStoreId = urlParams.get(URL_STORE_ID_KEY);
-  const { addTool, removeTool, inCart } = useToolCart();
+  const { toolCart, addTool, removeTool, inCart } = useToolCart();
 
   const { toolStatuses } = useConstants();
   const [toolsList, setToolsList] = useState([]);
@@ -136,6 +136,10 @@ export const useTools = () => {
     removeTool(toolId);
   };
 
+  const goToCart = () => {
+    navigate("/cart");
+  };
+
   return {
     toolStatuses: [{ id: "0", name: "All" }, ...toolStatuses],
     status,
@@ -156,6 +160,9 @@ export const useTools = () => {
     page,
     addToCart,
     removeFromCart,
+    showGoToCart: toolCart.length > 0,
+    goToCart,
+    cartSize: toolCart.length,
   };
 };
 
@@ -176,6 +183,9 @@ export const PureTools = (tools) => {
     page,
     addToCart,
     removeFromCart,
+    showGoToCart,
+    goToCart,
+    cartSize,
   } = tools;
 
   return (
@@ -196,12 +206,23 @@ export const PureTools = (tools) => {
       <PureCategorySearch {...categorySearch} />
       <PureStoreSelect {...storeSelect} />
       {warnSingleStore && <p>currently filtering by a store</p>}
+      {showGoToCart && (
+        <div>
+          <Button
+            onClick={goToCart}
+            text={`Cart (${cartSize})`}
+            variant="blue"
+          />
+        </div>
+      )}
       <ul>
         {toolsList.map((tool) => (
           <li key={tool.id}>
             <div className="flex justify-between">
               <div onClick={() => goToTool(tool.id)} className="cursor-pointer">
-                <p>{tool.realId}, {tool.description}</p>
+                <p>
+                  {tool.realId}, {tool.description}
+                </p>
                 {/* <p>pictures: {JSON.stringify(tool.pictures)}</p> */}
               </div>
               <div className="flex gap-2">

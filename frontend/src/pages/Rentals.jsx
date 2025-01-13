@@ -17,76 +17,22 @@ import { useToolCart } from "../state/toolCart";
 export const Rentals = () => {
   const { accessToken } = useAuth();
   const navigate = useNavigate();
-  const [urlParams, setUrlParams] = useSearchParams();
-  const urlStoreId = urlParams.get(URL_STORE_ID_KEY);
-  const { toolCart, removeTool, clear: clearCart } = useToolCart();
-  const [storeCode, _setStoreCode] = useState("");
 
-  const goToTools = () => {
-    navigate("/tools");
-  };
+  // simple store search
+  // user search
+  // tool search
 
-  const goToTool = (toolId) => {
-    navigate(`/tools/${toolId}`);
-  };
+  // rental still open
+  // rental overdue
+  // start or end date range
+  // sort by start date or end date 
+  // sort order
 
-  const removeFromCart = (toolId) => {
-    removeTool(toolId);
-  };
-
-  const setStoreCode = (e) => {
-    _setStoreCode(e.target.value);
-  };
-
-    const handleCheckout = () => {
-      endpoints.checkOutTools({
-        info: {
-          storeCode,
-          toolIds: toolCart.map((tool) => Number(tool.id)),
-        },
-        accessToken
-      }).then(() => {
-        clearCart();
-      });
-    };
-
-  const showCheckoutFields = toolCart.length > 0;
-  const canCheckout = toolCart.length > 0 && storeCode != "";
+  // page
 
   return (
     <div>
       <h1>Rentals</h1>
-      <Button onClick={goToTools} text="All Tools" />
-      <ul>
-        {toolCart.map((tool) => (
-          <li key={tool.id}>
-            <div className="flex justify-between">
-              <div onClick={() => goToTool(tool.id)} className="cursor-pointer">
-                {tool.realId}, {tool.description}
-              </div>
-              <Button
-                onClick={() => removeFromCart(tool.id)}
-                text="Remove"
-                variant="red"
-              />
-            </div>
-          </li>
-        ))}
-      </ul>
-      {showCheckoutFields && (
-        <>
-          <TextInput
-            label="Store Code"
-            value={storeCode}
-            onChange={setStoreCode}
-          />
-          <Button
-            onClick={handleCheckout}
-            text="Checkout"
-            disabled={canCheckout}
-          />
-        </>
-      )}
     </div>
   );
 };
