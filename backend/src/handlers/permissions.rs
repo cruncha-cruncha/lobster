@@ -111,7 +111,13 @@ pub async fn add(
     }
 
     if permissions.len() > 0 {
-        match permissions::update_status(permissions[0].id, permission::PermissionStatus::Active as i32, &state.db).await {
+        match permissions::update_status(
+            permissions[0].id,
+            permission::PermissionStatus::Active as i32,
+            &state.db,
+        )
+        .await
+        {
             Ok(_) => Ok(Json(permissions.pop().unwrap())),
             Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
         }
@@ -180,10 +186,14 @@ pub async fn delete(
 }
 
 pub async fn get_by_user(
-    _claims: Claims,
+    claims: Claims,
     Path(user_id): Path<i32>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<UserPermissions>, (StatusCode, String)> {
+    if claims.is_none() {
+        return Err((StatusCode::UNAUTHORIZED, "No claims found".to_string()));
+    }
+
     let permissions = match permissions::select(
         permissions::SelectParams {
             ids: vec![],

@@ -96,10 +96,8 @@ export const usePeople = () => {
 
   {
     const { data, isLoading, error, mutate } = useSWR(
-      !urlStoreId || !accessToken || params.storeId != 0
-        ? null
-        : `get store ${urlStoreId}, using ${accessToken}`,
-      () => endpoints.getStore({ id: urlStoreId, accessToken }),
+      !urlStoreId || params.storeId != 0 ? null : `get store ${urlStoreId}`,
+      () => endpoints.getStore({ id: urlStoreId }),
     );
 
     useEffect(() => {
@@ -214,8 +212,15 @@ export const PurePeople = (people) => {
       <div>
         <ul className="mb-3">
           {peopleList.map((person) => (
-            <div key={person.id} onClick={() => goToPerson(person.id)} className="cursor-pointer mb-2">
-              <p>{person.username}{person.emailAddress && `, ${person.emailAddress}`}</p>
+            <div
+              key={person.id}
+              onClick={() => goToPerson(person.id)}
+              className="mb-2 cursor-pointer"
+            >
+              <p>
+                {person.username}
+                {person.emailAddress && `, ${person.emailAddress}`}
+              </p>
             </div>
           ))}
         </ul>
@@ -230,7 +235,6 @@ export const PurePeople = (people) => {
 };
 
 export const useSingleStoreSelect = () => {
-  const { accessToken } = useAuth();
   const [storeId, _setStoreId] = useState("");
   const [storeTerm, _setStoreTerm] = useState("");
   const [storeOptions, setStoreOptions] = useState([]);
@@ -250,12 +254,8 @@ export const useSingleStoreSelect = () => {
   };
 
   const { data, isLoading, error, mutate } = useSWR(
-    !accessToken
-      ? null
-      : `get stores, using ${accessToken} and ${JSON.stringify(
-          endpointParams,
-        )}`,
-    () => endpoints.getStores({ params: endpointParams, accessToken }),
+    `get stores, using ${JSON.stringify(endpointParams)}`,
+    () => endpoints.searchStores({ params: endpointParams }),
   );
 
   useEffect(() => {

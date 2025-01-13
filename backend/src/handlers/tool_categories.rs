@@ -103,7 +103,6 @@ pub async fn update(
 }
 
 pub async fn get_by_id(
-    _claims: Claims,
     Path(tool_category_id): Path<i32>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<tool_category::ToolCategory>, (StatusCode, String)> {
@@ -133,7 +132,6 @@ pub async fn get_by_id(
 }
 
 pub async fn get_all(
-    _claims: Claims,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<SearchResponse>, (StatusCode, String)> {
     let tool_categories = match tool_categories::select(
@@ -160,7 +158,6 @@ pub async fn get_all(
 }
 
 pub async fn get_filtered(
-    _claims: Claims,
     Query(params): Query<FilterParams>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<SearchResponse>, (StatusCode, String)> {

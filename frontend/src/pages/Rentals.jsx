@@ -91,15 +91,13 @@ export const useRentals = () => {
   // filter by store if urlStoreId is present
   {
     useEffect(() => {
-      if (!urlStoreId || !accessToken) return;
+      if (!urlStoreId) return;
       _storeSelect.addStore(urlStoreId);
-    }, [urlStoreId, accessToken]);
+    }, [urlStoreId]);
 
     const { data } = useSWR(
-      !urlStoreId || !accessToken
-        ? null
-        : `get store ${urlStoreId}, using ${accessToken}`,
-      () => endpoints.getStore({ id: urlStoreId, accessToken }),
+      !urlStoreId ? null : `get store ${urlStoreId}`,
+      () => endpoints.getStore({ id: urlStoreId }),
     );
 
     useEffect(() => {
@@ -133,15 +131,12 @@ export const useRentals = () => {
   // filter by tool if urlToolId is present
   {
     useEffect(() => {
-      if (!urlToolId || !accessToken) return;
+      if (!urlToolId) return;
       _toolSelect.addTool(urlToolId);
-    }, [urlToolId, accessToken]);
+    }, [urlToolId]);
 
-    const { data } = useSWR(
-      !urlToolId || !accessToken
-        ? null
-        : `get tool ${urlToolId}, using ${accessToken}`,
-      () => endpoints.getTool({ id: urlToolId, accessToken }),
+    const { data } = useSWR(!urlToolId ? null : `get tool ${urlToolId}`, () =>
+      endpoints.getTool({ id: urlToolId }),
     );
 
     useEffect(() => {
@@ -309,7 +304,7 @@ export const useUserSelect = () => {
   const { data, isLoading, error, mutate } = useSWR(
     !accessToken
       ? null
-      : `get users, using ${accessToken}, term ${JSON.stringify(
+      : `get users, using ${accessToken} and ${JSON.stringify(
           endpointParams,
         )}`,
     () => endpoints.getUsers({ params: endpointParams, accessToken }),
@@ -379,7 +374,6 @@ export const PureUserSelect = (userSelect) => {
 };
 
 export const useToolSelect = () => {
-  const { accessToken } = useAuth();
   const { cache } = useSWRConfig();
   const [tools, setTools] = useState([]);
   const [toolTerm, _setToolTerm] = useState("");
@@ -390,12 +384,8 @@ export const useToolSelect = () => {
   };
 
   const { data, isLoading, error, mutate } = useSWR(
-    !accessToken
-      ? null
-      : `get tools, using ${accessToken}, term ${JSON.stringify(
-          endpointParams,
-        )}`,
-    () => endpoints.searchTools({ params: endpointParams, accessToken }),
+    `get tools, using ${JSON.stringify(endpointParams)}`,
+    () => endpoints.searchTools({ params: endpointParams }),
   );
 
   useEffect(() => {
@@ -412,8 +402,8 @@ export const useToolSelect = () => {
     if (tools.find((t) => t.id == toolId)) return;
     let newTool = toolOptions.find((t) => t.id == toolId);
     if (!newTool) {
-      newTool = await endpoints.getTool({ id: toolId, accessToken });
-      cache.set(`get tool ${toolId}, using ${accessToken}`, newTool);
+      newTool = await endpoints.getTool({ id: toolId });
+      cache.set(`get tool ${toolId}`, newTool);
     }
     !!newTool &&
       setTools((prev) => [...prev.filter((t) => t.id != toolId), newTool]);

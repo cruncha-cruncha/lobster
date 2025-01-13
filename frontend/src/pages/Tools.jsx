@@ -30,7 +30,6 @@ export const buildToolList = (data) => {
 };
 
 export const useTools = () => {
-  const { accessToken } = useAuth();
   const navigate = useNavigate();
   const [urlParams, setUrlParams] = useSearchParams();
   const urlStoreId = urlParams.get(URL_STORE_ID_KEY);
@@ -66,15 +65,13 @@ export const useTools = () => {
 
   {
     useEffect(() => {
-      if (!urlStoreId || !accessToken) return;
+      if (!urlStoreId) return;
       _storeSelect.addStore(urlStoreId);
-    }, [urlStoreId, accessToken]);
+    }, [urlStoreId]);
 
     const { data } = useSWR(
-      !urlStoreId || !accessToken
-        ? null
-        : `get store ${urlStoreId}, using ${accessToken}`,
-      () => endpoints.getStore({ id: urlStoreId, accessToken }),
+      !urlStoreId ? null : `get store ${urlStoreId}`,
+      () => endpoints.getStore({ id: urlStoreId }),
     );
 
     useEffect(() => {
@@ -96,10 +93,8 @@ export const useTools = () => {
   };
 
   const { data, isLoading, error, mutate } = useSWR(
-    !accessToken
-      ? null
-      : `get tools, using ${accessToken} and ${JSON.stringify(endpointParams)}`,
-    () => endpoints.searchTools({ params: endpointParams, accessToken }),
+    `get tools, using ${JSON.stringify(endpointParams)}`,
+    () => endpoints.searchTools({ params: endpointParams }),
   );
 
   useEffect(() => {
@@ -191,12 +186,12 @@ export const PureTools = (tools) => {
   return (
     <div>
       {showGoToCart && (
-        <div className="flex justify-start gap-2 mt-2">
+        <div className="mt-2 flex justify-start gap-2">
           <Button
             onClick={goToCart}
             text={`Cart (${cartSize})`}
             variant="blue"
-            size="sm" 
+            size="sm"
           />
         </div>
       )}
@@ -252,7 +247,6 @@ export const PureTools = (tools) => {
 };
 
 export const useCategorySearch = () => {
-  const { accessToken } = useAuth();
   const { cache } = useSWRConfig();
   const { toolCategories: allCategories } = useToolCategories();
   const [categories, setCategories] = useState([]);
@@ -265,13 +259,9 @@ export const useCategorySearch = () => {
   };
 
   const { data, isLoading, error, mutate } = useSWR(
-    !accessToken
-      ? null
-      : `get categories, using ${accessToken} and ${JSON.stringify(
-          endPointParams,
-        )}`,
+    `get tool categories, using ${JSON.stringify(endPointParams)}`,
     () =>
-      endpoints.searchToolCategories({ params: endPointParams, accessToken }),
+      endpoints.searchToolCategories({ params: endPointParams }),
   );
 
   useEffect(() => {
@@ -290,8 +280,8 @@ export const useCategorySearch = () => {
     if (!newCat) {
       newCat = categoryOptions.find((c) => c.id == catId);
       if (!newCat) {
-        newCat = await endpoints.getToolCategory({ id: catId, accessToken });
-        cache.set(`get category ${catId}, using ${accessToken}`, newCat);
+        newCat = await endpoints.getToolCategory({ id: catId });
+        cache.set(`get tool category ${catId}`, newCat);
       }
     }
     !!newCat &&
@@ -371,7 +361,6 @@ export const PureCategorySearch = (categorySearch) => {
 };
 
 export const useStoreSelect = () => {
-  const { accessToken } = useAuth();
   const { cache } = useSWRConfig();
   const [stores, setStores] = useState([]);
   const [storeTerm, _setStoreTerm] = useState("");
@@ -382,12 +371,8 @@ export const useStoreSelect = () => {
   };
 
   const { data, isLoading, error, mutate } = useSWR(
-    !accessToken
-      ? null
-      : `get stores, using ${accessToken} and ${JSON.stringify(
-          endpointParams,
-        )}`,
-    () => endpoints.getStores({ params: endpointParams, accessToken }),
+    `get stores, using ${JSON.stringify(endpointParams)}`,
+    () => endpoints.searchStores({ params: endpointParams }),
   );
 
   useEffect(() => {
@@ -404,8 +389,8 @@ export const useStoreSelect = () => {
     if (stores.find((s) => s.id == storeId)) return;
     let newStore = storeOptions.find((s) => s.id == storeId);
     if (!newStore) {
-      newStore = await endpoints.getStore({ id: storeId, accessToken });
-      cache.set(`get store ${storeId}, using ${accessToken}`, newStore);
+      newStore = await endpoints.getStore({ id: storeId });
+      cache.set(`get store ${storeId}`, newStore);
     }
     !!newStore &&
       setStores((prev) => [...prev.filter((s) => s.id != storeId), newStore]);

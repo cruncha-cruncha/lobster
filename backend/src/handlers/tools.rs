@@ -330,7 +330,6 @@ pub async fn update(
 }
 
 pub async fn get_by_id(
-    _claims: Claims,
     Path(tool_id): Path<i32>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<ToolWithText>, (StatusCode, String)> {
@@ -411,7 +410,6 @@ pub async fn get_by_id(
 }
 
 pub async fn get_filtered(
-    _claims: Claims,
     Query(params): Query<FilterParams>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<ToolSearchResponse>, (StatusCode, String)> {

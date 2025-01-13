@@ -125,6 +125,23 @@ pub struct ClaimPermissions {
 // assumes that 1 = 'library_admin', 2 = 'user_admin', 3 = 'store_admin', 4 = 'store_rep', and 5 = 'tool_manager'
 // in the fixed.roles database table
 impl Claims {
+    pub fn none() -> Self {
+        Claims {
+            sub: "".to_string(),
+            purpose: ClaimPurpose::None,
+            permissions: ClaimPermissions {
+                library: vec![],
+                store: HashMap::new(),
+            },
+            exp: 0,
+            iat: 0,
+        }
+    }
+
+    pub fn is_none(&self) -> bool {
+        self.purpose == ClaimPurpose::None
+    }
+
     pub fn subject_as_user_id(&self) -> Option<user::Id> {
         self.sub.parse::<user::Id>().ok()
     }
@@ -174,7 +191,7 @@ where
 
         let header_value = match parts.headers.get(AUTHORIZATION) {
             Some(val) => val,
-            None => return Err((StatusCode::UNAUTHORIZED, "No auth header".to_string())),
+            None => return Ok(Claims::none()),
         };
 
         let auth_string = match header_value.to_str().ok().and_then(|s| {

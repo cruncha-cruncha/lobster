@@ -254,14 +254,11 @@ export const updateStoreStatus = async ({ id, status, accessToken }) => {
   return data;
 };
 
-export const getStores = async ({ params, accessToken }) => {
+export const searchStores = async ({ params }) => {
   const str_params = obj_to_query(params);
 
   const data = await handle(`${serverUrl}/stores?${str_params}`, {
     method: "GET",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
   });
 
   if (!validateStoreSearchResults(data)) {
@@ -271,13 +268,9 @@ export const getStores = async ({ params, accessToken }) => {
   return data;
 };
 
-export const getStore = async ({ id, accessToken }) => {
+export const getStore = async ({ id }) => {
   const data = await handle(`${serverUrl}/stores/${id}`, {
     method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
   });
 
   if (!validateStoreInfo(data)) {
@@ -366,12 +359,9 @@ export const updateTool = async ({ id, info, accessToken }) => {
   return data;
 };
 
-export const getTool = async ({ id, accessToken }) => {
+export const getTool = async ({ id }) => {
   const data = await handle(`${serverUrl}/tools/${id}`, {
     method: "GET",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
   });
 
   if (!validateSingleTool(data)) {
@@ -381,14 +371,11 @@ export const getTool = async ({ id, accessToken }) => {
   return data;
 };
 
-export const searchTools = async ({ params, accessToken }) => {
+export const searchTools = async ({ params }) => {
   const str_params = obj_to_query(params);
 
   const data = await handle(`${serverUrl}/tools?${str_params}`, {
     method: "GET",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
   });
 
   if (!validateToolSearchResults(data)) {
@@ -398,12 +385,9 @@ export const searchTools = async ({ params, accessToken }) => {
   return data;
 };
 
-export const getAllToolCategories = async ({ accessToken }) => {
+export const getAllToolCategories = async () => {
   const data = await handle(`${serverUrl}/tool-categories/all`, {
     method: "GET",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
   });
 
   if (!validateToolCategorySearchResults(data)) {
@@ -413,12 +397,9 @@ export const getAllToolCategories = async ({ accessToken }) => {
   return data;
 };
 
-export const getToolCategory = async ({ id, accessToken }) => {
+export const getToolCategory = async ({ id }) => {
   const data = await handle(`${serverUrl}/tool-categories/${id}`, {
     method: "GET",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
   });
 
   if (!validateToolCategory(data)) {
@@ -428,14 +409,11 @@ export const getToolCategory = async ({ id, accessToken }) => {
   return data;
 };
 
-export const searchToolCategories = async ({ params, accessToken }) => {
+export const searchToolCategories = async ({ params }) => {
   const str_params = obj_to_query(params);
 
   const data = await handle(`${serverUrl}/tool-categories?${str_params}`, {
     method: "GET",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
   });
 
   if (!validateToolCategorySearchResults(data)) {

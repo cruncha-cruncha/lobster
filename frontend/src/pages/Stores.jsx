@@ -26,7 +26,6 @@ const paramsReducer = (state, action) => {
 export const useStores = () => {
   const navigate = useNavigate();
   const { storeStatuses } = useConstants();
-  const { accessToken } = useAuth();
 
   const [storeList, setStoreList] = useState([]);
   const [params, paramsDispatch] = useReducer(paramsReducer, {
@@ -70,12 +69,8 @@ export const useStores = () => {
   };
 
   const { data, error, isLoading, mutate } = useSWR(
-    !accessToken
-      ? null
-      : `get stores, using ${accessToken} and ${JSON.stringify(
-          endpointParams,
-        )}`,
-    () => endpoints.getStores({ params: endpointParams, accessToken }),
+    `get stores, using ${JSON.stringify(endpointParams)}`,
+    () => endpoints.searchStores({ params: endpointParams }),
   );
 
   useEffect(() => {
@@ -115,7 +110,12 @@ export const PureStores = (stores) => {
   return (
     <div>
       <div className="mt-2 flex gap-2">
-        <Button onClick={goToNewStore} text="New Store" variant="blue" size="sm" />
+        <Button
+          onClick={goToNewStore}
+          text="New Store"
+          variant="blue"
+          size="sm"
+        />
       </div>
       <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
         <TextInput

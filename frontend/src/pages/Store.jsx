@@ -24,8 +24,8 @@ export const useStore = () => {
   const storeId = params.id;
 
   const { data, error, isLoading } = useSWR(
-    !accessToken ? null : `get store ${storeId}, using ${accessToken}`,
-    () => endpoints.getStore({ id: storeId, accessToken }),
+    `get store ${storeId}`,
+    () => endpoints.getStore({ id: storeId }),
   );
 
   useEffect(() => {

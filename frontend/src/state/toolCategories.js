@@ -7,12 +7,11 @@ import { useAuth } from "./auth";
 const toolCategoriesAtom = atom([]);
 
 export const useInitToolCategories = () => {
-  const { accessToken } = useAuth();
   const [toolCategories, setToolCategories] = useAtom(toolCategoriesAtom);
 
   const { data, isLoading, error } = useSWR(
-    !accessToken ? null : `get all tool categories, using ${accessToken}`,
-    () => endpoints.getAllToolCategories({ accessToken }),
+    `get all tool categories`,
+    () => endpoints.getAllToolCategories(),
     {
       revalidateOnFocus: false,
       keepPreviousData: true,
@@ -27,11 +26,10 @@ export const useInitToolCategories = () => {
 };
 
 export const useToolCategories = () => {
-  const { accessToken } = useAuth();
   const [toolCategories, setToolCategories] = useAtom(toolCategoriesAtom);
 
   const refresh = () => {
-    endpoints.getAllToolCategories({ accessToken }).then((data) => {
+    endpoints.getAllToolCategories().then((data) => {
       setToolCategories(data.categories);
     });
   };

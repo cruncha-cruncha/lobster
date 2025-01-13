@@ -286,10 +286,14 @@ pub async fn check_out(
 }
 
 pub async fn get_filtered(
-    _claims: Claims,
+    claims: Claims,
     Query(params): Query<FilterParams>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<FilteredResponse>, (StatusCode, String)> {
+    if claims.is_none() {
+        return Err((StatusCode::UNAUTHORIZED, "No claims found".to_string()));
+    }
+
     let (offset, limit) = common::calculate_offset_limit(params.page.unwrap_or_default());
 
     let rentals = match rentals::select(
@@ -318,25 +322,26 @@ pub async fn get_filtered(
 }
 
 pub async fn get_by_id(
-    _claims: Claims,
+    claims: Claims,
     Path(rental_id): Path<i32>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<RentalWithText>, (StatusCode, String)> {
+    if claims.is_none() {
+        return Err((StatusCode::UNAUTHORIZED, "No claims found".to_string()));
+    }
+
     let rental = match rentals::select_by_id(rental_id, &state.db).await {
         Ok(r) => r,
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     };
 
-    let user = match users::select_by_id(
-        rental.renter_id,
-        &state.db,
-    ).await {
+    let user = match users::select_by_id(rental.renter_id, &state.db).await {
         Ok(u) => {
             if u.is_none() {
                 return Err((StatusCode::NOT_FOUND, "User not found".to_string()));
             }
             u.unwrap()
-        },
+        }
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     };
 
@@ -351,7 +356,8 @@ pub async fn get_by_id(
             real_ids: vec![],
             offset: 0,
             limit: 1,
-        }, &state.db,
+        },
+        &state.db,
     )
     .await
     {
@@ -360,7 +366,7 @@ pub async fn get_by_id(
                 return Err((StatusCode::NOT_FOUND, "Tool not found".to_string()));
             }
             t.pop().unwrap()
-        },
+        }
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     };
 
@@ -373,13 +379,15 @@ pub async fn get_by_id(
             limit: 1,
         },
         &state.db,
-    ).await {
+    )
+    .await
+    {
         Ok(mut s) => {
             if s.is_empty() {
                 return Err((StatusCode::NOT_FOUND, "Store not found".to_string()));
             }
             s.pop().unwrap()
-        },
+        }
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     };
 
@@ -398,7 +406,7 @@ pub async fn get_by_id(
 }
 
 pub async fn update(
-    _claims: Claims,
+    claims: Claims,
     Path(rental_id): Path<i32>,
     State(state): State<Arc<AppState>>,
     Json(payload): Json<SettableRentalData>,
@@ -415,6 +423,20 @@ pub async fn update(
             Ok(_) => {}
             Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
         }
+    }
+
+    let rental = match rentals::select_by_id(rental_id, &state.db).await {
+        Ok(r) => r,
+        Err(e) => return Err((StatusCode::NOT_FOUND, e)),
+    };
+
+    let tool = tools::select_by_id(rental.tool_id, &state.db).await.ok();
+
+    if tool.is_some() && !claims.is_tool_manager(tool.unwrap().store_id) {
+        return Err((
+            StatusCode::FORBIDDEN,
+            "User is not a tool manager of the store".to_string(),
+        ));
     }
 
     rentals::update(rental_id, None, payload.end_date, &state.db)

@@ -68,8 +68,8 @@ export const useTool = () => {
   };
 
   const { data, isLoading, error, mutate } = useSWR(
-    !accessToken ? null : `get tool ${toolId}, using ${accessToken}`,
-    () => endpoints.getTool({ id: toolId, accessToken }),
+    `get tool ${toolId}`,
+    () => endpoints.getTool({ id: toolId }),
   );
 
   useEffect(() => {

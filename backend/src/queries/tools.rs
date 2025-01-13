@@ -132,3 +132,21 @@ pub async fn select(
     .await
     .map_err(|e| e.to_string())
 }
+
+pub async fn select_by_id(
+    tool_id: tool::Id,
+    db: &sqlx::Pool<sqlx::Postgres>,
+) -> Result<tool::Tool, String> {
+    sqlx::query_as!(
+        tool::Tool,
+        r#"
+        SELECT *
+        FROM main.tools
+        WHERE id = $1;
+        "#,
+        tool_id,
+    )
+    .fetch_one(db)
+    .await
+    .map_err(|e| e.to_string())
+}
