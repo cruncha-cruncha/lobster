@@ -53,7 +53,8 @@ export const useNewStore = () => {
   };
 
   const setName = (e) => dispatch({ type: "name", value: e.target.value });
-  const setLocation = (e) => dispatch({ type: "location", value: e.target.value });
+  const setLocation = (e) =>
+    dispatch({ type: "location", value: e.target.value });
   const setEmailAddress = (e) =>
     dispatch({ type: "emailAddress", value: e.target.value });
   const setPhoneNumber = (e) =>
@@ -93,7 +94,7 @@ export const PureNewStore = (newStore) => {
 
   return (
     <div>
-      <h1>New Store</h1>
+      <h1 className="my-2 text-xl">New Store</h1>
       <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
         <TextInput
           label="Name"

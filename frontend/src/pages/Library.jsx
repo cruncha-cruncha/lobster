@@ -82,7 +82,7 @@ export const PureLibrary = (library) => {
 
   return (
     <div>
-      <h2>Library Settings</h2>
+      <h1 className="my-2 text-xl">Library Settings</h1>
       <p>(id: "{uuid}")</p>
       <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
         <div className="md:col-span-2">

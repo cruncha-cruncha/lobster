@@ -117,6 +117,7 @@ export const PureStoreCart = (cart) => {
 
   return (
     <div>
+      <h1 className="mt-2 text-xl">Store Cart</h1>
       <div className="mt-2 flex justify-start gap-2">
         <Button
           onClick={goToStoreTools}
@@ -126,12 +127,16 @@ export const PureStoreCart = (cart) => {
         />
         <Button onClick={goToStore} text="Store" variant="blue" size="sm" />
       </div>
-      <QuickFindStoreTool storeId={storeId} onSingle={addToCart} />
-      <h1>Store Cart</h1>
-      <ul>
+      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
+        <QuickFindStoreTool storeId={storeId} onSingle={addToCart} />
+      </div>
+      <ul className="border-x-2 border-stone-400 p-2">
+        {toolCart.length == 0 && (
+          <li className="text-stone-400">Cart is Empty</li>
+        )}
         {toolCart.map((tool) => (
           <li key={tool.id}>
-            <div className="flex justify-between">
+            <div className="flex items-center justify-between">
               <div onClick={() => goToTool(tool.id)} className="cursor-pointer">
                 {tool.realId}, {tool.description}
               </div>
@@ -144,18 +149,18 @@ export const PureStoreCart = (cart) => {
             </div>
           </li>
         ))}
-        <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
-          <TextInput label="User ID" value={userCode} onChange={setUserCode} />
-        </div>
-        <div className="mt-3 flex justify-end gap-2">
-          <Button text="Return" disabled={!canReturn} onClick={handleReturn} />
-          <Button
-            text="Checkout"
-            disabled={!canCheckout}
-            onClick={handleCheckout}
-          />
-        </div>
       </ul>
+      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
+        <TextInput label="User ID" value={userCode} onChange={setUserCode} />
+      </div>
+      <div className="mt-3 flex justify-end gap-2">
+        <Button text="Return" disabled={!canReturn} onClick={handleReturn} />
+        <Button
+          text="Checkout"
+          disabled={!canCheckout}
+          onClick={handleCheckout}
+        />
+      </div>
     </div>
   );
 };
@@ -220,7 +225,7 @@ export const PureQuickFindStoreTool = (quickFindStoreTool) => {
   return (
     <>
       <SearchSelect
-        label="Add Tool By Real ID"
+        label="Add Tool by Real ID"
         value={realId}
         onChange={setRealId}
         onSelect={handleSelect}

@@ -70,7 +70,11 @@ export const useStores = () => {
   };
 
   const { data, error, isLoading, mutate } = useSWR(
-    !accessToken ? null : `get stores, using ${accessToken} and ${JSON.stringify(endpointParams)}`,
+    !accessToken
+      ? null
+      : `get stores, using ${accessToken} and ${JSON.stringify(
+          endpointParams,
+        )}`,
     () => endpoints.searchStores({ params: endpointParams, accessToken }),
   );
 
@@ -110,13 +114,16 @@ export const PureStores = (stores) => {
 
   return (
     <div>
-      <div className="mt-2 flex gap-2">
-        <Button
-          onClick={goToNewStore}
-          text="New Store"
-          variant="blue"
-          size="sm"
-        />
+      <div className="mt-2 flex items-center gap-2">
+        <h2 className="mr-2 text-xl">Stores</h2>
+        <div className="flex gap-2">
+          <Button
+            onClick={goToNewStore}
+            text="New Store"
+            variant="blue"
+            size="sm"
+          />
+        </div>
       </div>
       <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
         <TextInput
@@ -133,7 +140,10 @@ export const PureStores = (stores) => {
         />
       </div>
       <div>
-        <ul className="mb-3">
+        <ul className="mb-3 mt-4 border-x-2 border-stone-400 px-2">
+          {storeList.length == 0 && (
+            <li className="text-stone-400">no results</li>
+          )}
           {storeList.map((store) => (
             <li
               key={store.id}
@@ -141,7 +151,12 @@ export const PureStores = (stores) => {
               className="mb-2 cursor-pointer"
             >
               <p>
-                {store.name}, {store.location || "no location"}
+                {store.name},{" "}
+                {store.location.trim() ? (
+                  store.location
+                ) : (
+                  <span className="text-stone-400">no location</span>
+                )}
               </p>
             </li>
           ))}

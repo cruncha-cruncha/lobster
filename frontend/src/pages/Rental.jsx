@@ -92,7 +92,7 @@ export const PureRental = (tool) => {
 
   return (
     <div>
-      <div className="mt-2 flex justify-start gap-2">
+      <div className="my-2 flex justify-start gap-2">
         <Button text="Rentals" onClick={goToRentals} variant="blue" size="sm" />
         <Button text="Tool" onClick={goToTool} variant="blue" size="sm" />
         <Button text="Store" onClick={goToStore} variant="blue" size="sm" />

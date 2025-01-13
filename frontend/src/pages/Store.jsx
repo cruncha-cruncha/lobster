@@ -151,6 +151,7 @@ export const PureStore = (store) => {
         <>
           <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
             <Select
+              label="Status"
               options={storeStatuses}
               value={status}
               onChange={setStatus}
@@ -251,8 +252,8 @@ export const PureAddTool = (addTool) => {
 
   return (
     <div>
-      <p>New Tool</p>
-      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
+      <h2 className="text-xl">New Tool</h2>
+      <div className="mb-3 mt-1 grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
         <div className="md:col-span-2">
           <TextInput
             label="Description"

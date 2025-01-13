@@ -73,11 +73,21 @@ export const PureCart = (cart) => {
 
   return (
     <div>
-      <div className="mt-2 flex justify-start gap-2">
-        <Button onClick={goToTools} text="All Tools" variant="blue" size="sm" />
+      <div className="my-2 flex items-center gap-2">
+        <h1 className="mr-2 text-xl">Cart</h1>
+        <div className="flex justify-start gap-2">
+          <Button
+            onClick={goToTools}
+            text="All Tools"
+            variant="blue"
+            size="sm"
+          />
+        </div>
       </div>
-      <h1>Cart</h1>
-      <ul>
+      <ul className="border-x-2 border-stone-400 p-2">
+      {toolCart.length == 0 && (
+          <li className="text-stone-400">Cart is Empty</li>
+        )}
         {toolCart.map((tool) => (
           <li key={tool.id}>
             <div className="flex justify-between">

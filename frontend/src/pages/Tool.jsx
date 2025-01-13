@@ -67,9 +67,8 @@ export const useTool = () => {
     dispatch({ type: "isLoading", value: false });
   };
 
-  const { data, isLoading, error, mutate } = useSWR(
-    `get tool ${toolId}`,
-    () => endpoints.getTool({ id: toolId }),
+  const { data, isLoading, error, mutate } = useSWR(`get tool ${toolId}`, () =>
+    endpoints.getTool({ id: toolId }),
   );
 
   useEffect(() => {
@@ -192,7 +191,8 @@ export const PureTool = (tool) => {
 
   return (
     <div>
-      <div className="flex gap-2">
+      <h2 className="mt-2 text-xl">{data?.realId || "Tool"}</h2>
+      <div className="my-2 flex gap-2">
         <Button text="All Tools" onClick={goToTools} variant="blue" size="sm" />
         <Button
           text="Store Tools"

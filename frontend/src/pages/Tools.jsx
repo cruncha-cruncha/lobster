@@ -71,7 +71,9 @@ export const useTools = () => {
     }, [urlStoreId, accessToken]);
 
     const { data } = useSWR(
-      !urlStoreId || !accessToken ? null : `get store ${urlStoreId}, using ${accessToken}`,
+      !urlStoreId || !accessToken
+        ? null
+        : `get store ${urlStoreId}, using ${accessToken}`,
       () => endpoints.getStore({ id: urlStoreId, accessToken }),
     );
 
@@ -186,8 +188,13 @@ export const PureTools = (tools) => {
 
   return (
     <div>
-      {showGoToCart && (
-        <div className="mt-2 flex justify-start gap-2">
+      <div className="mt-2 flex items-center gap-2">
+        <h2 className="mr-2 text-xl">Tools</h2>
+        <div
+          className={
+            "flex justify-start gap-2" + (showGoToCart ? "" : " invisible")
+          }
+        >
           <Button
             onClick={goToCart}
             text={`Cart (${cartSize})`}
@@ -195,10 +202,10 @@ export const PureTools = (tools) => {
             size="sm"
           />
         </div>
-      )}
-      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
+      </div>
+      <div className="mb-3 mt-1 grid grid-cols-1 gap-x-4 gap-y-2">
         <TextInput
-          label="Tool Search"
+          label="Search"
           value={searchTerm}
           onChange={setSearchTerm}
           placeholder="screwdriver"
@@ -213,10 +220,16 @@ export const PureTools = (tools) => {
         />
       </div>
       {warnSingleStore && <p>currently filtering by a store</p>}
-      <ul className="mb-3">
+      <ul className="mb-3 mt-4 border-x-2 border-stone-400 px-2">
+        {toolsList.length == 0 && (
+          <li className="text-stone-400">no results</li>
+        )}
         {toolsList.map((tool) => (
           <li key={tool.id} className="mb-2 flex justify-between">
-            <div onClick={() => goToTool(tool.id)} className="cursor-pointer">
+            <div
+              onClick={() => goToTool(tool.id)}
+              className="flex cursor-pointer items-center"
+            >
               <p>
                 {tool.realId}, {tool.description}
               </p>
@@ -261,8 +274,7 @@ export const useCategorySearch = () => {
 
   const { data, isLoading, error, mutate } = useSWR(
     `get tool categories, using ${JSON.stringify(endPointParams)}`,
-    () =>
-      endpoints.searchToolCategories({ params: endPointParams }),
+    () => endpoints.searchToolCategories({ params: endPointParams }),
   );
 
   useEffect(() => {
@@ -373,7 +385,11 @@ export const useStoreSelect = () => {
   };
 
   const { data, isLoading, error, mutate } = useSWR(
-    !accessToken ? null : `get stores, using ${accessToken} and ${JSON.stringify(endpointParams)}`,
+    !accessToken
+      ? null
+      : `get stores, using ${accessToken} and ${JSON.stringify(
+          endpointParams,
+        )}`,
     () => endpoints.searchStores({ params: endpointParams, accessToken }),
   );
 

@@ -96,7 +96,9 @@ export const usePeople = () => {
 
   {
     const { data, isLoading, error, mutate } = useSWR(
-      !urlStoreId || !accessToken || params.storeId != 0 ? null : `get store ${urlStoreId}, using ${accessToken}`,
+      !urlStoreId || !accessToken || params.storeId != 0
+        ? null
+        : `get store ${urlStoreId}, using ${accessToken}`,
       () => endpoints.getStore({ id: urlStoreId, accessToken }),
     );
 
@@ -176,7 +178,8 @@ export const PurePeople = (people) => {
 
   return (
     <div>
-      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
+      <h2 className="mt-2 text-xl">People</h2>
+      <div className="mb-3 mt-1 grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
         <div className="md:col-span-2">
           <TextInput
             value={params.searchTerm}
@@ -210,7 +213,10 @@ export const PurePeople = (people) => {
         )}
       </div>
       <div>
-        <ul className="mb-3">
+        <ul className="mb-3 mt-4 border-x-2 border-stone-400 px-2">
+          {peopleList.length == 0 && (
+            <li className="text-stone-400">no results</li>
+          )}
           {peopleList.map((person) => (
             <div
               key={person.id}
@@ -255,7 +261,11 @@ export const useSingleStoreSelect = () => {
   };
 
   const { data, isLoading, error, mutate } = useSWR(
-    !accessToken ? null : `get stores, using ${accessToken} and ${JSON.stringify(endpointParams)}`,
+    !accessToken
+      ? null
+      : `get stores, using ${accessToken} and ${JSON.stringify(
+          endpointParams,
+        )}`,
     () => endpoints.searchStores({ params: endpointParams, accessToken }),
   );
 

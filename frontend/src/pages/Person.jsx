@@ -50,7 +50,8 @@ export const PurePerson = (person) => {
 
   return (
     <div>
-      <div className="mt-2 flex justify-start gap-2">
+      <h1 className="mt-2 text-xl">{username}</h1>
+      <div className="my-2 flex justify-start gap-2">
         <Button onClick={goToRentals} text="Rentals" variant="blue" size="sm" />
         <Button
           onClick={goToPeople}
@@ -59,7 +60,7 @@ export const PurePerson = (person) => {
           size="sm"
         />
       </div>
-      <h1>{username}</h1>
+
       <PureUserInfo {...userInfo} />
       <PureUserStatus {...userStatus} />
       <PureUserPermissions {...userPermissions} />
@@ -480,51 +481,51 @@ const PureUserPermissions = (userPermissions) => {
 
   return (
     <div>
-      {libraryPermissions.length <= 0 && storePermissions.length <= 0 ? (
-        <p>No Permissions</p>
-      ) : (
-        <>
-          <p>Permissions</p>
-          <ul>
-            {libraryPermissions.map((permission) => (
-              <li key={permission.id} className="flex justify-between">
-                <span>{permission.roleName}</span>
-                {showFields === "remove" &&
-                  canRemovePermission(permission.id) && (
-                    <Button
-                      onClick={() =>
-                        removePermission({ permissionId: permission.id })
-                      }
-                      text="X"
-                      variant="red"
-                      size="sm"
-                    />
-                  )}
-              </li>
-            ))}
-            {storePermissions.map((info) => (
-              <li key={info.id} className="flex justify-between">
-                <span>
-                  {info.roleName} of {info.storeName}
-                </span>
-                {showFields === "remove" && canRemovePermission(info.id) && (
-                  <Button
-                    onClick={() => removePermission({ permissionId: info.id })}
-                    text="X"
-                    size="sm"
-                    variant="red"
-                  />
-                )}
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
+      <h2 className="text-lg">Permissions</h2>
+      <ul className="mt-1 border-x-2 border-stone-400 px-2">
+        {libraryPermissions.length <= 0 && storePermissions.length <= 0 && (
+          <li className="text-stone-400">none found</li>
+        )}
+        {libraryPermissions.map((permission) => (
+          <li key={permission.id} className="flex items-center justify-between">
+            <span>{permission.roleName}</span>
+            {showFields === "remove" && canRemovePermission(permission.id) && (
+              <div className="my-1">
+                <Button
+                  onClick={() =>
+                    removePermission({ permissionId: permission.id })
+                  }
+                  text="X"
+                  variant="red"
+                  size="sm"
+                />
+              </div>
+            )}
+          </li>
+        ))}
+        {storePermissions.map((info) => (
+          <li key={info.id} className="flex items-center justify-between">
+            <span>
+              {info.roleName} of {info.storeName}
+            </span>
+            {showFields === "remove" && canRemovePermission(info.id) && (
+              <div className="my-1">
+                <Button
+                  onClick={() => removePermission({ permissionId: info.id })}
+                  text="X"
+                  size="sm"
+                  variant="red"
+                />
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
       {showModifyPermissions && (
         <>
           {showFields === "add" && (
             <>
-              <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
+              <div className="my-3 grid grid-cols-1 gap-x-4 gap-y-2">
                 <Select
                   label="Role"
                   options={roleOptions}
