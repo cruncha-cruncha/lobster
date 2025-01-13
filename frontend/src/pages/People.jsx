@@ -212,11 +212,10 @@ export const PurePeople = (people) => {
         )}
       </div>
       <div>
-        <ul>
+        <ul className="mb-3">
           {peopleList.map((person) => (
-            <div key={person.id} onClick={() => goToPerson(person.id)}>
-              <p>{person.username}</p>
-              <p>{person.emailAddress}</p>
+            <div key={person.id} onClick={() => goToPerson(person.id)} className="cursor-pointer mb-2">
+              <p>{person.username}{person.emailAddress && `, ${person.emailAddress}`}</p>
             </div>
           ))}
         </ul>

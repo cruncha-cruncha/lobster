@@ -88,37 +88,43 @@ export const PureNewStore = (newStore) => {
   return (
     <div>
       <h1>New Store</h1>
-      <TextInput
-        label="Name"
-        value={info.name}
-        onChange={setName}
-        placeholder="My Store"
-      />
-      <TextInput
-        label="Email Address"
-        value={info.emailAddress}
-        onChange={setEmailAddress}
-        placeholder="my-email@example.com"
-      />
-      <TextInput
-        label="Phone Number"
-        value={info.phoneNumber}
-        onChange={setPhoneNumber}
-        placeholder="216-245-2368"
-      />
-      <TextInput
-        label="Read Before Renting"
-        value={info.rentalInformation}
-        onChange={setRentalInformation}
-        placeholder="Located at ... by appointment only ..."
-      />
-      <TextInput
-        label="Other Information"
-        value={info.otherInformation}
-        onChange={setOtherInformation}
-        placeholder=""
-      />
-      <div className="flex justify-between gap-2">
+      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
+        <TextInput
+          label="Name"
+          value={info.name}
+          onChange={setName}
+          placeholder="Maple Key Tools"
+        />
+        <TextInput
+          label="Location"
+          placeholder="123 Main St, Ottawa, ON, K1R 7T7"
+        />
+        <TextInput
+          label="Email Address"
+          value={info.emailAddress}
+          onChange={setEmailAddress}
+          placeholder="store-contact@example.com"
+        />
+        <TextInput
+          label="Phone Number"
+          value={info.phoneNumber}
+          onChange={setPhoneNumber}
+          placeholder="216-245-2368"
+        />
+        <TextInput
+          label="Read Before Renting"
+          value={info.rentalInformation}
+          onChange={setRentalInformation}
+          placeholder="By appointment only ..."
+        />
+        <TextInput
+          label="Other Information"
+          value={info.otherInformation}
+          onChange={setOtherInformation}
+          placeholder=""
+        />
+      </div>
+      <div className="mt-3 flex justify-between gap-2">
         <Button onClick={handleCancel} variant="blue" text="Cancel" />
         <Button
           onClick={handleCreateStore}

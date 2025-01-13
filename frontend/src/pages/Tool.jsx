@@ -193,10 +193,15 @@ export const PureTool = (tool) => {
   return (
     <div>
       <div className="flex gap-2">
-        <Button text="All Tools" onClick={goToTools} variant="blue" />
-        <Button text="Store Tools" onClick={goToStoreTools} variant="blue" />
-        <Button text="Rentals" onClick={goToRentals} variant="blue" />
-        <Button text="Store" onClick={goToStore} variant="blue" />
+        <Button text="All Tools" onClick={goToTools} variant="blue" size="sm" />
+        <Button
+          text="Store Tools"
+          onClick={goToStoreTools}
+          variant="blue"
+          size="sm"
+        />
+        <Button text="Rentals" onClick={goToRentals} variant="blue" size="sm" />
+        <Button text="Store" onClick={goToStore} variant="blue" size="sm" />
       </div>
       <p>{JSON.stringify(data)}</p>
       <div className="flex justify-end gap-2">
@@ -237,7 +242,7 @@ export const PureTool = (tool) => {
           onChange={setStatus}
         />
       </div>
-      <div className="flex justify-end gap-2">
+      <div className="mt-3 flex justify-end gap-2">
         <Button text="Update" onClick={updateTool} />
       </div>
     </div>

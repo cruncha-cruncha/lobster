@@ -73,7 +73,7 @@ export const useStore = () => {
 
   const goToRentals = () => {
     navigate(`/rentals?${URL_STORE_ID_KEY}=${storeId}`);
-  }
+  };
 
   return {
     storeInfo,
@@ -113,12 +113,37 @@ export const PureStore = (store) => {
 
   return (
     <div>
-      <div className="flex gap-2">
-        <Button onClick={() => goToTools()} text="Tools" variant="blue" />
-        <Button onClick={() => goToRentals()} text="Rentals" variant="blue" />
-        <Button onClick={() => goToPeople()} text="People" variant="blue" />
-        <Button onClick={() => goToStores()} text="All Stores" variant="blue" />
-        <Button onClick={goToCart} text={`Cart (${cartSize})`} variant="blue" />
+      <div className="mt-2 flex justify-start gap-2">
+        <Button
+          onClick={() => goToTools()}
+          text="Tools"
+          variant="blue"
+          size="sm"
+        />
+        <Button
+          onClick={() => goToRentals()}
+          text="Rentals"
+          variant="blue"
+          size="sm"
+        />
+        <Button
+          onClick={() => goToPeople()}
+          text="People"
+          variant="blue"
+          size="sm"
+        />
+        <Button
+          onClick={() => goToStores()}
+          text="All Stores"
+          variant="blue"
+          size="sm"
+        />
+        <Button
+          onClick={goToCart}
+          text={`Cart (${cartSize})`}
+          variant="blue"
+          size="sm"
+        />
       </div>
       <h1>{storeInfo.name}</h1>
       <p>{JSON.stringify(storeInfo)}</p>
@@ -131,7 +156,7 @@ export const PureStore = (store) => {
               onChange={setStatus}
             />
           </div>
-          <div className="flex justify-end gap-2">
+          <div className="mt-3 flex justify-end gap-2">
             <Button
               onClick={() => updateStatus()}
               text="Update Status"
@@ -252,7 +277,7 @@ export const PureAddTool = (addTool) => {
           />
         </div>
       </div>
-      <div className="flex justify-end gap-2">
+      <div className="mt-3 flex justify-end gap-2">
         <Button onClick={createTool} text="Add Tool" disabled={!canAddTool} />
       </div>
     </div>

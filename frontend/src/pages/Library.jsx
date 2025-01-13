@@ -103,7 +103,7 @@ export const PureLibrary = (library) => {
           <p>The longest time any tool can be rented, in hours.</p>
         </div>
       </div>
-      <div className="flex justify-end gap-2">
+      <div className="mt-3 flex justify-end gap-2">
         <Button
           onClick={save}
           disabled={!canSave}

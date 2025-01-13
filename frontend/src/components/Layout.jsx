@@ -16,7 +16,7 @@ export const Layout = () => {
 
   return (
     <div className="min-h-full" onClick={closeMenuIfOpen}>
-      <div className="relative w-full p-2">
+      <div className="relative w-full p-2 pb-0">
         <div
           className="relative cursor-pointer text-center"
           onClick={() => setShowMenu((prev) => !prev)}
@@ -51,7 +51,7 @@ export const Layout = () => {
         </div>
       </div>
       <div className="flex items-stretch justify-center">
-        <div className="relative w-full max-w-5xl p-2">
+        <div className="relative w-full max-w-5xl p-2 pt-0">
           <Outlet />
         </div>
       </div>

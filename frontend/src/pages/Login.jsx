@@ -61,22 +61,20 @@ export const PureLogin = (login) => {
       <PureInfoModal {...modal} />
       <div className="flex min-h-full items-stretch justify-center">
         <div className="relative flex w-full max-w-5xl justify-center">
-          <div className="absolute left-0 top-0 p-2">
+          <div className="absolute left-0 right-0 top-0 p-2 text-center">
             <h1>{libraryName}</h1>
           </div>
           <div className="flex w-full max-w-sm flex-col justify-center">
             <div className="p-2">
-              <h1 className="text-left text-xl">Login</h1>
+              <h1 className="mb-2 text-left text-xl">Login</h1>
               <form onSubmit={(e) => e.preventDefault()}>
-                <div className="my-2">
-                  <TextInput
-                    placeholder="email address"
-                    value={email}
-                    onChange={setEmail}
-                    disabled={loginLoading}
-                  />
-                </div>
-                <div className="mt-4 flex justify-end">
+                <TextInput
+                  placeholder="email address"
+                  value={email}
+                  onChange={setEmail}
+                  disabled={loginLoading}
+                />
+                <div className="mt-3 flex justify-end">
                   <Button
                     color="green"
                     text="Login"

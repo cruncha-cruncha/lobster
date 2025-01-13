@@ -103,11 +103,16 @@ export const PureStoreCart = (cart) => {
 
   return (
     <div>
-      <h1>Store Cart</h1>
-      <div className="flex gap-2">
-        <Button onClick={goToStoreTools} text="Store Tools" variant="blue" />
-        <Button onClick={goToStore} text="Store" variant="blue" />
+      <div className="mt-2 flex justify-start gap-2">
+        <Button
+          onClick={goToStoreTools}
+          text="Store Tools"
+          variant="blue"
+          size="sm"
+        />
+        <Button onClick={goToStore} text="Store" variant="blue" size="sm" />
       </div>
+      <h1>Store Cart</h1>
       <ul>
         {toolCart.map((tool) => (
           <li key={tool.id}>
@@ -119,12 +124,15 @@ export const PureStoreCart = (cart) => {
                 onClick={() => removeFromCart(tool.id)}
                 text="Remove"
                 variant="red"
+                size="sm"
               />
             </div>
           </li>
         ))}
-        <TextInput label="User ID" value={userCode} onChange={setUserCode} />
-        <div className="flex justify-end gap-2">
+        <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
+          <TextInput label="User ID" value={userCode} onChange={setUserCode} />
+        </div>
+        <div className="mt-3 flex justify-end gap-2">
           <Button text="Return" disabled={!canReturn} onClick={handleReturn} />
           <Button
             text="Checkout"

@@ -191,11 +191,12 @@ export const PureTools = (tools) => {
   return (
     <div>
       {showGoToCart && (
-        <div className="flex justify-start gap-2">
+        <div className="flex justify-start gap-2 mt-2">
           <Button
             onClick={goToCart}
             text={`Cart (${cartSize})`}
             variant="blue"
+            size="sm" 
           />
         </div>
       )}
@@ -216,28 +217,31 @@ export const PureTools = (tools) => {
         />
       </div>
       {warnSingleStore && <p>currently filtering by a store</p>}
-      <ul>
+      <ul className="mb-3">
         {toolsList.map((tool) => (
-          <li key={tool.id}>
-            <div className="flex justify-between">
-              <div onClick={() => goToTool(tool.id)} className="cursor-pointer">
-                <p>
-                  {tool.realId}, {tool.description}
-                </p>
-                {/* <p>pictures: {JSON.stringify(tool.pictures)}</p> */}
-              </div>
-              <div className="flex gap-2">
-                {tool.canAddToCart && (
-                  <Button onClick={() => addToCart(tool.id)} text="Add" />
-                )}
-                {tool.canRemoveFromCart && (
-                  <Button
-                    onClick={() => removeFromCart(tool.id)}
-                    text="Remove"
-                    variant="red"
-                  />
-                )}
-              </div>
+          <li key={tool.id} className="mb-2 flex justify-between">
+            <div onClick={() => goToTool(tool.id)} className="cursor-pointer">
+              <p>
+                {tool.realId}, {tool.description}
+              </p>
+              {/* <p>pictures: {JSON.stringify(tool.pictures)}</p> */}
+            </div>
+            <div className="flex gap-2">
+              {tool.canAddToCart && (
+                <Button
+                  onClick={() => addToCart(tool.id)}
+                  text="Add"
+                  size="sm"
+                />
+              )}
+              {tool.canRemoveFromCart && (
+                <Button
+                  onClick={() => removeFromCart(tool.id)}
+                  text="Remove"
+                  variant="red"
+                  size="sm"
+                />
+              )}
             </div>
           </li>
         ))}

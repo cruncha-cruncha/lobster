@@ -50,9 +50,14 @@ export const PurePerson = (person) => {
 
   return (
     <div>
-      <div className="flex gap-2">
-        <Button onClick={goToRentals} text="Rentals" variant="blue" />
-        <Button onClick={goToPeople} text="All People" variant="blue" />
+      <div className="mt-2 flex justify-start gap-2">
+        <Button onClick={goToRentals} text="Rentals" variant="blue" size="sm" />
+        <Button
+          onClick={goToPeople}
+          text="All People"
+          variant="blue"
+          size="sm"
+        />
       </div>
       <h1>{username}</h1>
       <PureUserInfo {...userInfo} />
@@ -266,14 +271,16 @@ const PureUserStatus = (userStatus) => {
     <div>
       {showUpdateStatus && (
         <>
-          <Select
-            label="Status"
-            value={status}
-            onChange={setStatus}
-            options={statusOptions}
-            disabled={statusLoading}
-          />
-          <div className="flex justify-end gap-2">
+          <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
+            <Select
+              label="Status"
+              value={status}
+              onChange={setStatus}
+              options={statusOptions}
+              disabled={statusLoading}
+            />
+          </div>
+          <div className="mt-3 flex justify-end gap-2">
             <Button
               text="Update Status"
               onClick={updateStatus}
@@ -480,32 +487,34 @@ const PureUserPermissions = (userPermissions) => {
           <p>Permissions</p>
           <ul>
             {libraryPermissions.map((permission) => (
-              <li key={permission.id}>
+              <li key={permission.id} className="flex justify-between">
+                <span>{permission.roleName}</span>
                 {showFields === "remove" &&
                   canRemovePermission(permission.id) && (
-                    <span
+                    <Button
                       onClick={() =>
                         removePermission({ permissionId: permission.id })
                       }
-                      className="cursor-pointer"
-                    >
-                      X
-                    </span>
-                  )}{" "}
-                {permission.roleName}
+                      text="X"
+                      variant="red"
+                      size="sm"
+                    />
+                  )}
               </li>
             ))}
             {storePermissions.map((info) => (
-              <li key={info.id}>
+              <li key={info.id} className="flex justify-between">
+                <span>
+                  {info.roleName} of {info.storeName}
+                </span>
                 {showFields === "remove" && canRemovePermission(info.id) && (
-                  <span
+                  <Button
                     onClick={() => removePermission({ permissionId: info.id })}
-                    className="cursor-pointer"
-                  >
-                    X
-                  </span>
-                )}{" "}
-                {info.roleName} of {info.storeName}
+                    text="X"
+                    size="sm"
+                    variant="red"
+                  />
+                )}
               </li>
             ))}
           </ul>
@@ -515,14 +524,16 @@ const PureUserPermissions = (userPermissions) => {
         <>
           {showFields === "add" && (
             <>
-              <Select
-                label="Role"
-                options={roleOptions}
-                value={selectedRole}
-                onChange={setSelectedRole}
-              />
-              {showStoreSearch && <PureSingleStoreSelect {...storeSelect} />}
-              <div className="flex justify-between gap-2">
+              <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
+                <Select
+                  label="Role"
+                  options={roleOptions}
+                  value={selectedRole}
+                  onChange={setSelectedRole}
+                />
+                {showStoreSearch && <PureSingleStoreSelect {...storeSelect} />}
+              </div>
+              <div className="mt-3 flex justify-between gap-2">
                 <Button
                   text="Cancel"
                   onClick={toggleShowFields}
@@ -537,12 +548,12 @@ const PureUserPermissions = (userPermissions) => {
             </>
           )}
           {showFields === "remove" && (
-            <div className="flex justify-start gap-2">
+            <div className="mt-3 flex justify-start gap-2">
               <Button text="Done" onClick={toggleShowFields} variant="blue" />
             </div>
           )}
           {showFields === "" && (
-            <div className="flex justify-start gap-2">
+            <div className="mt-3 flex justify-start gap-2">
               <Button
                 text="Add Permission"
                 onClick={showAddFields}

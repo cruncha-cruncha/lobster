@@ -182,10 +182,16 @@ export const useRentals = () => {
 
   const setStillOpen = (e) => {
     _setStillOpen(e.target.checked);
+    if (!e.target.checked) {
+      _setOverdueOnly(false);
+    }
   };
 
   const setOverdueOnly = (e) => {
     _setOverdueOnly(e.target.checked);
+    if (e.target.checked) {
+      _setStillOpen(true);
+    }
   };
 
   const prevPage = () => {
@@ -241,24 +247,26 @@ export const PureRentals = (rentals) => {
       <div className="mb-3 mt-2 flex flex-col gap-x-4 gap-y-2 md:flex-row">
         <div className="flex-final mt-1 flex gap-4 md:mt-0 md:block">
           <p className="mt-1 md:mt-0">Rentals</p>
-          <Checkbox
-            id="rental-still-open"
-            label="Still Open"
-            checked={stillOpen}
-            onChange={setStillOpen}
-          />
-          <Checkbox
-            id="rental-overdue-only"
-            label="Overdue Only"
-            checked={overdueOnly}
-            onChange={setOverdueOnly}
-          />
-          <Checkbox
-            id="rental-order-asc"
-            label="Order Asc"
-            checked={orderAsc}
-            onChange={setOrderAsc}
-          />
+          <div className="flex flex-wrap gap-x-4">
+            <Checkbox
+              id="rental-still-open"
+              label="Still Open"
+              checked={stillOpen}
+              onChange={setStillOpen}
+            />
+            <Checkbox
+              id="rental-overdue-only"
+              label="Overdue Only"
+              checked={overdueOnly}
+              onChange={setOverdueOnly}
+            />
+            <Checkbox
+              id="rental-order-asc"
+              label="Order Asc"
+              checked={orderAsc}
+              onChange={setOrderAsc}
+            />
+          </div>
         </div>
         <div className="grid grow grid-cols-1 gap-y-2">
           <PureUserSelect {...userSelect} />
@@ -266,9 +274,13 @@ export const PureRentals = (rentals) => {
           <PureToolSelect {...toolSelect} />
         </div>
       </div>
-      <ul>
+      <ul className="mb-3">
         {rentalList.map((rental) => (
-          <li key={rental.id} onClick={() => goToRental(rental.id)}>
+          <li
+            key={rental.id}
+            onClick={() => goToRental(rental.id)}
+            className="mb-2 cursor-pointer"
+          >
             {JSON.stringify(rental)}
           </li>
         ))}

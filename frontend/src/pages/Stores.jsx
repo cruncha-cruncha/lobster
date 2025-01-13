@@ -114,8 +114,8 @@ export const PureStores = (stores) => {
 
   return (
     <div>
-      <div className="flex gap-2">
-        <Button onClick={goToNewStore} text="New Store" variant="blue" />
+      <div className="mt-2 flex gap-2">
+        <Button onClick={goToNewStore} text="New Store" variant="blue" size="sm" />
       </div>
       <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
         <TextInput
@@ -132,16 +132,16 @@ export const PureStores = (stores) => {
         />
       </div>
       <div>
-        <ul>
+        <ul className="mb-3">
           {storeList.map((store) => (
-            <li key={store.id} onClick={() => goToStore(store.id)}>
-              <h2>{store.name}</h2>
-              <p>{store.location}</p>
-              <p>{store.hours}</p>
-              <p>{store.contact}</p>
-              <p>{store.description}</p>
-              <p>{store.status}</p>
-              <p>{store.createdAt}</p>
+            <li
+              key={store.id}
+              onClick={() => goToStore(store.id)}
+              className="mb-2 cursor-pointer"
+            >
+              <p>
+                {store.name}, {store.location || "no location"}
+              </p>
             </li>
           ))}
         </ul>

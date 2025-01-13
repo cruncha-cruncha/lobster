@@ -92,17 +92,17 @@ export const PureRental = (tool) => {
 
   return (
     <div>
-      <div className="flex gap-2">
-        <Button text="Rentals" onClick={goToRentals} variant="blue" />
-        <Button text="Tool" onClick={goToTool} variant="blue" />
-        <Button text="Store" onClick={goToStore} variant="blue" />
-        <Button text="Person" onClick={goToPerson} variant="blue" />
+      <div className="mt-2 flex justify-start gap-2">
+        <Button text="Rentals" onClick={goToRentals} variant="blue" size="sm" />
+        <Button text="Tool" onClick={goToTool} variant="blue" size="sm" />
+        <Button text="Store" onClick={goToStore} variant="blue" size="sm" />
+        <Button text="Person" onClick={goToPerson} variant="blue" size="sm" />
       </div>
       <p>{JSON.stringify(data)}</p>
       <div className="mb-3 mt-2 flex flex-col gap-x-4 gap-y-2 md:flex-row">
         <DateTimeInput label="End Date" value={endDate} onChange={setEndDate} />
       </div>
-      <div className="flex justify-end">
+      <div className="mt-3 flex justify-end gap-2">
         <Button text="Update" onClick={updateRental} />
       </div>
     </div>
