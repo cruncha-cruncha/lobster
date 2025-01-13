@@ -178,14 +178,13 @@ export const PurePeople = (people) => {
 
   return (
     <div>
-      <h1>People</h1>
       <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
         <div className="md:col-span-2">
           <TextInput
             value={params.searchTerm}
             onChange={setSearchTerm}
-            placeholder="Maverick"
-            label="Search"
+            placeholder="Enigo Montoya"
+            label="Username"
           />
         </div>
         <Select

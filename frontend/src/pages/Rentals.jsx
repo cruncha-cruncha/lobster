@@ -238,14 +238,8 @@ export const PureRentals = (rentals) => {
 
   return (
     <div>
-      <h1>Rentals</h1>
-      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
-        <div className="grid grid-cols-1 gap-y-2">
-          <PureUserSelect {...userSelect} />
-          <PureStoreSelect {...storeSelect} />
-          <PureToolSelect {...toolSelect} />
-        </div>
-        <div className="mt-1 flex gap-4 md:mt-0 md:block">
+      <div className="mb-3 mt-2 flex flex-col gap-x-4 gap-y-2 md:flex-row">
+        <div className="mt-1 flex grow-0 gap-4 md:mt-0 md:block">
           <p className="mt-1 md:mt-0">Rentals</p>
           <Checkbox
             label="Still Open"
@@ -262,6 +256,11 @@ export const PureRentals = (rentals) => {
             checked={orderAsc}
             onChange={setOrderAsc}
           />
+        </div>
+        <div className="grid grow grid-cols-1 gap-y-2">
+          <PureUserSelect {...userSelect} />
+          <PureStoreSelect {...storeSelect} />
+          <PureToolSelect {...toolSelect} />
         </div>
       </div>
       <ul>
@@ -346,7 +345,7 @@ export const PureUserSelect = (userSelect) => {
   return (
     <div>
       <SearchSelect
-        label="User"
+        label="Users"
         value={userTerm}
         onChange={setUserTerm}
         options={userOptions}
@@ -429,7 +428,7 @@ export const PureToolSelect = (toolSelect) => {
   return (
     <div>
       <SearchSelect
-        label="Tool"
+        label="Tools"
         value={toolTerm}
         onChange={setToolTerm}
         options={toolOptions}

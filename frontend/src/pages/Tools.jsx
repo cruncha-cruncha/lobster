@@ -190,7 +190,6 @@ export const PureTools = (tools) => {
 
   return (
     <div>
-      <h1>Tools</h1>
       {showGoToCart && (
         <div className="flex justify-start gap-2">
           <Button
@@ -200,15 +199,15 @@ export const PureTools = (tools) => {
           />
         </div>
       )}
-      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
+      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
         <TextInput
-          label="Search Term"
+          label="Tool Search"
           value={searchTerm}
           onChange={setSearchTerm}
-          placeholder="screw driver"
+          placeholder="screwdriver"
         />
-        <PureStoreSelect {...storeSelect} />
         <PureCategorySearch {...categorySearch} />
+        <PureStoreSelect {...storeSelect} />
         <Select
           label="Status"
           value={status}
@@ -331,14 +330,30 @@ export const PureCategorySearch = (categorySearch) => {
 
   return (
     <div>
-      <SearchSelect
-        label="Category"
-        value={categoryTerm}
-        onChange={setCategoryTerm}
-        options={categoryOptions}
-        onSelect={addCategory}
-        showLastSelected={false}
-      />
+      <div className="flex gap-2">
+        <div className="grow">
+          <SearchSelect
+            label="Categories"
+            value={categoryTerm}
+            onChange={setCategoryTerm}
+            options={categoryOptions}
+            onSelect={addCategory}
+            showLastSelected={false}
+          />
+        </div>
+        {showMatchAllCats && (
+          <div className="grow-0">
+            <label>&nbsp;</label>
+            <div className="[&_fieldset]:mt-0 [&_label]:border-2 [&_label]:border-transparent [&_label]:py-1">
+              <Checkbox
+                label="Match All"
+                checked={matchAllCats}
+                onChange={setMatchAllCats}
+              />
+            </div>
+          </div>
+        )}
+      </div>
       <ul>
         {categories.map((cat) => (
           <li key={cat.id} onClick={() => removeCategory(cat.id)}>
@@ -346,13 +361,6 @@ export const PureCategorySearch = (categorySearch) => {
           </li>
         ))}
       </ul>
-      {showMatchAllCats && (
-        <Checkbox
-          label="Match All Categories"
-          checked={matchAllCats}
-          onChange={setMatchAllCats}
-        />
-      )}
     </div>
   );
 };
@@ -425,7 +433,7 @@ export const PureStoreSelect = (storeSelect) => {
   return (
     <div>
       <SearchSelect
-        label="Store"
+        label="Stores"
         value={storeTerm}
         onChange={setStoreTerm}
         options={storeOptions}

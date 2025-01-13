@@ -139,17 +139,21 @@ const PureUserInfo = (userInfo) => {
       <p>{JSON.stringify(data)}</p>
       {showUpdateUserName && (
         <>
-          <TextInput
-            label="Username"
-            value={userName}
-            onChange={setUserName}
-            disabled={userNameLoading}
-          />
-          <Button
-            text="Update Username"
-            onClick={updateUserName}
-            disabled={!canUpdateUserName}
-          />
+          <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
+            <TextInput
+              label="Username"
+              value={userName}
+              onChange={setUserName}
+              disabled={userNameLoading}
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button
+              text="Update Username"
+              onClick={updateUserName}
+              disabled={!canUpdateUserName}
+            />
+          </div>
         </>
       )}
     </div>

@@ -119,7 +119,6 @@ export const PureStore = (store) => {
         <>
           <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
             <Select
-              label="Status"
               options={storeStatuses}
               value={status}
               onChange={setStatus}

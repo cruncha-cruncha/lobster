@@ -7,7 +7,7 @@ export const Checkbox = ({ label, checked, onChange, disabled }) => {
         onChange={onChange}
         disabled={disabled}
       />
-      <label className="ml-1">{label}</label>
+      <label className="ml-1 inline-block">{label}</label>
     </fieldset>
   );
 };
