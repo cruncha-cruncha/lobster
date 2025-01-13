@@ -11,7 +11,7 @@ import { PureSingleStoreSelect, useSingleStoreSelect } from "./People";
 
 export const URL_PERSON_ID_KEY = "personId";
 
-export const Person = () => {
+export const usePerson = () => {
   const navigate = useNavigate();
   const params = useParams();
 
@@ -23,6 +23,17 @@ export const Person = () => {
   const userStatus = useUserStatus({ id: params.id });
   const userPermissions = useUserPermissions({ id: params.id });
 
+  return {
+    goToPeople,
+    userInfo,
+    userStatus,
+    userPermissions,
+  };
+};
+
+export const PurePerson = (person) => {
+  const { goToPeople, userInfo, userStatus, userPermissions } = person;
+
   return (
     <div>
       <h1>Person</h1>
@@ -32,6 +43,11 @@ export const Person = () => {
       <PureUserPermissions {...userPermissions} />
     </div>
   );
+};
+
+export const Person = () => {
+  const person = usePerson();
+  return <PurePerson {...person} />;
 };
 
 const userNameStateReducer = (state, action) => {
@@ -278,31 +294,6 @@ export const useUserPermissions = ({ id }) => {
 
   const canUpdateStorePermissions = permissions.isStoreAdmin();
 
-  // {
-  //   const endpointParams = {
-  //     term: storeTerm,
-  //   };
-
-  //   const { data, isLoading, error, mutate } = useSWR(
-  //     !accessToken
-  //       ? null
-  //       : `get stores, using ${accessToken} and ${JSON.stringify(
-  //           endpointParams,
-  //         )}`,
-  //     () => endpoints.getStores({ params: endpointParams, accessToken }),
-  //   );
-
-  //   useEffect(() => {
-  //     if (data) {
-  //       setStoreOptions(data.stores);
-  //     }
-  //   }, [data]);
-  // }
-
-  // const setStoreTerm = (e) => {
-  //   _setStoreTerm(e.target.value);
-  // };
-
   const removePermission = async ({ permissionId }) => {
     setSaving(true);
     endpoints
@@ -357,12 +348,6 @@ export const useUserPermissions = ({ id }) => {
   });
 
   const selectedRoleName = roles.find(({ id }) => id == selectedRole)?.name;
-
-  // const setStoreId = (id) => {
-  //   _setStoreId(id);
-  //   const storeName = storeOptions.find((store) => store.id === id).name;
-  //   _setStoreTerm(storeName);
-  // };
 
   const canAddPermission = (() => {
     if (showFields !== "add") return false;
@@ -435,10 +420,6 @@ export const useUserPermissions = ({ id }) => {
     selectedRole,
     setSelectedRole: (e) => selectRoleOption(e.target.value),
     showStoreSearch,
-    // storeTerm,
-    // setStoreTerm,
-    // storeOptions,
-    // setStoreId,
     storeSelect,
     canAddPermission,
     addPermission,
@@ -460,10 +441,6 @@ const PureUserPermissions = (userPermissions) => {
     selectedRole,
     setSelectedRole,
     showStoreSearch,
-    // storeTerm,
-    // setStoreTerm,
-    // storeOptions,
-    // setStoreId,
     canAddPermission,
     addPermission,
     storeSelect,
@@ -521,16 +498,7 @@ const PureUserPermissions = (userPermissions) => {
                 value={selectedRole}
                 onChange={setSelectedRole}
               />
-              {showStoreSearch && (
-                // <SearchSelect
-                //   label="Store"
-                //   value={storeTerm}
-                //   onChange={setStoreTerm}
-                //   options={storeOptions}
-                //   onSelect={setStoreId}
-                // />
-                <PureSingleStoreSelect {...storeSelect} />
-              )}
+              {showStoreSearch && <PureSingleStoreSelect {...storeSelect} />}
               <Button
                 text="Add Permission"
                 disabled={!canAddPermission}

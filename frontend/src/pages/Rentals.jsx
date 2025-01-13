@@ -17,7 +17,7 @@ import { Button } from "../components/Button";
 import { useToolCart } from "../state/toolCart";
 import { useStoreSelect, PureStoreSelect } from "./Tools";
 
-export const Rentals = () => {
+export const useRentals = () => {
   const { accessToken } = useAuth();
   const navigate = useNavigate();
   const [urlParams, setUrlParams] = useSearchParams();
@@ -190,17 +190,35 @@ export const Rentals = () => {
 
   const nextPage = () => _setPage(page + 1);
 
-  // simple store search
-  // user search
-  // tool search
+  return {
+    storeSelect,
+    userSelect,
+    toolSelect,
+    stillOpen,
+    setStillOpen,
+    orderAsc,
+    setOrderAsc,
+    rentalList: rentals,
+    prevPage,
+    nextPage,
+    page,
+  };
+};
 
-  // rental still open
-  // rental overdue
-  // start or end date range
-  // sort by start date or end date
-  // sort order
-
-  // page
+export const PureRentals = (rentals) => {
+  const {
+    storeSelect,
+    userSelect,
+    toolSelect,
+    stillOpen,
+    setStillOpen,
+    orderAsc,
+    setOrderAsc,
+    rentalList,
+    prevPage,
+    nextPage,
+    page,
+  } = rentals;
 
   return (
     <div>
@@ -219,13 +237,18 @@ export const Rentals = () => {
         onChange={setOrderAsc}
       />
       <ul>
-        {rentals.map((rental) => (
+        {rentalList.map((rental) => (
           <li key={rental.id}>{JSON.stringify(rental)}</li>
         ))}
       </ul>
       <PrevNext prev={prevPage} next={nextPage} pageNumber={page} />
     </div>
   );
+};
+
+export const Rentals = () => {
+  const rentals = useRentals();
+  return <PureRentals {...rentals} />;
 };
 
 export const useUserSelect = () => {

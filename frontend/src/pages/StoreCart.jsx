@@ -11,7 +11,7 @@ import { useCategorySearch, PureCategorySearch } from "./Tools";
 import { useToolCart } from "../state/toolCart";
 import { URL_STORE_ID_KEY } from "./Store";
 
-export const StoreCart = () => {
+export const useStoreCart = () => {
   const params = useParams();
   const { accessToken } = useAuth();
   const navigate = useNavigate();
@@ -45,27 +45,61 @@ export const StoreCart = () => {
   const canReturn = toolCart.length > 0 && userCode == "";
 
   const handleCheckout = () => {
-    endpoints.checkOutTools({
-      info: {
-        userCode,
-        toolIds: toolCart.map((tool) => Number(tool.id)),
-      },
-      accessToken
-    }).then(() => {
-      clearCart();
-    });
+    endpoints
+      .checkOutTools({
+        info: {
+          userCode,
+          toolIds: toolCart.map((tool) => Number(tool.id)),
+        },
+        accessToken,
+      })
+      .then(() => {
+        clearCart();
+      });
   };
 
   const handleReturn = () => {
-    endpoints.checkInTools({
-      info: {
-        toolIds: toolCart.map((tool) => Number(tool.id)),
-      },
-      accessToken
-    }).then(() => {
-      clearCart();
-    });
+    endpoints
+      .checkInTools({
+        info: {
+          toolIds: toolCart.map((tool) => Number(tool.id)),
+        },
+        accessToken,
+      })
+      .then(() => {
+        clearCart();
+      });
   };
+
+  return {
+    goToStoreTools,
+    goToStore,
+    goToTool,
+    toolCart,
+    removeFromCart,
+    setUserCode,
+    handleCheckout,
+    handleReturn,
+    canCheckout,
+    canReturn,
+    userCode,
+  };
+};
+
+export const PureStoreCart = (cart) => {
+  const {
+    goToStoreTools,
+    goToStore,
+    goToTool,
+    toolCart,
+    removeFromCart,
+    setUserCode,
+    handleCheckout,
+    handleReturn,
+    canCheckout,
+    canReturn,
+    userCode,
+  } = cart;
 
   return (
     <div>
@@ -101,4 +135,9 @@ export const StoreCart = () => {
       </ul>
     </div>
   );
+};
+
+export const StoreCart = () => {
+  const cart = useStoreCart();
+  return <PureStoreCart {...cart} />;
 };

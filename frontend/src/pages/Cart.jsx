@@ -6,7 +6,7 @@ import { TextInput } from "../components/TextInput";
 import { Button } from "../components/Button";
 import { useToolCart } from "../state/toolCart";
 
-export const Cart = () => {
+export const useCart = () => {
   const { accessToken } = useAuth();
   const navigate = useNavigate();
   const { toolCart, removeTool, clear: clearCart } = useToolCart();
@@ -28,20 +28,48 @@ export const Cart = () => {
     _setStoreCode(e.target.value);
   };
 
-    const handleCheckout = () => {
-      endpoints.checkOutTools({
+  const handleCheckout = () => {
+    endpoints
+      .checkOutTools({
         info: {
           storeCode,
           toolIds: toolCart.map((tool) => Number(tool.id)),
         },
-        accessToken
-      }).then(() => {
+        accessToken,
+      })
+      .then(() => {
         clearCart();
       });
-    };
+  };
 
   const showCheckoutFields = toolCart.length > 0;
   const canCheckout = toolCart.length > 0 && storeCode != "";
+
+  return {
+    goToTools,
+    goToTool,
+    toolCart,
+    removeFromCart,
+    setStoreCode,
+    handleCheckout,
+    showCheckoutFields,
+    canCheckout,
+    storeCode,
+  };
+};
+
+export const PureCart = (cart) => {
+  const {
+    goToTools,
+    goToTool,
+    toolCart,
+    removeFromCart,
+    setStoreCode,
+    handleCheckout,
+    showCheckoutFields,
+    canCheckout,
+    storeCode,
+  } = cart;
 
   return (
     <div>
@@ -79,4 +107,9 @@ export const Cart = () => {
       )}
     </div>
   );
+};
+
+export const Cart = () => {
+  const cart = useCart();
+  return <PureCart {...cart} />;
 };
