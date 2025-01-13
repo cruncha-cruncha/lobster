@@ -9,6 +9,8 @@ const infoReducer = (state, action) => {
   switch (action.type) {
     case "name":
       return { ...state, name: action.value };
+    case "location":
+      return { ...state, location: action.value };
     case "emailAddress":
       return { ...state, emailAddress: action.value };
     case "phoneNumber":
@@ -28,6 +30,7 @@ export const useNewStore = () => {
 
   const [info, dispatch] = useReducer(infoReducer, {
     name: "",
+    location: "",
     emailAddress: "",
     phoneNumber: "",
     rentalInformation: "",
@@ -50,6 +53,7 @@ export const useNewStore = () => {
   };
 
   const setName = (e) => dispatch({ type: "name", value: e.target.value });
+  const setLocation = (e) => dispatch({ type: "location", value: e.target.value });
   const setEmailAddress = (e) =>
     dispatch({ type: "emailAddress", value: e.target.value });
   const setPhoneNumber = (e) =>
@@ -62,11 +66,12 @@ export const useNewStore = () => {
   return {
     info,
     setName,
+    setLocation,
     setEmailAddress,
     setPhoneNumber,
     setRentalInformation,
     setOtherInformation,
-    canCreateNewStore: info.name && info.emailAddress && info.phoneNumber,
+    canCreateNewStore: info.name && info.location && info.phoneNumber,
     handleCreateStore,
     handleCancel,
   };
@@ -76,6 +81,7 @@ export const PureNewStore = (newStore) => {
   const {
     info,
     setName,
+    setLocation,
     setEmailAddress,
     setPhoneNumber,
     setRentalInformation,
@@ -97,6 +103,8 @@ export const PureNewStore = (newStore) => {
         />
         <TextInput
           label="Location"
+          value={info.location}
+          onChange={setLocation}
           placeholder="123 Main St, Ottawa, ON, K1R 7T7"
         />
         <TextInput

@@ -16,16 +16,18 @@ use std::sync::Arc;
 #[serde(rename_all = "camelCase")]
 pub struct CreateStoreData {
     pub name: store::Name,
-    pub email_address: store::EmailAddress,
+    pub location: store::Location,
+    pub email_address: Option<store::EmailAddress>,
     pub phone_number: store::PhoneNumber,
-    pub rental_information: store::RentalInformation,
-    pub other_information: store::OtherInformation,
+    pub rental_information: Option<store::RentalInformation>,
+    pub other_information: Option<store::OtherInformation>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SettableStoreData {
     pub name: Option<store::Name>,
+    pub location: Option<store::Location>,
     pub email_address: Option<store::EmailAddress>,
     pub phone_number: Option<store::PhoneNumber>,
     pub rental_information: Option<store::RentalInformation>,
@@ -60,6 +62,7 @@ pub async fn create_new(
     let store = match stores::insert(
         payload.name,
         store::StoreStatus::Pending as i32,
+        payload.location,
         payload.email_address,
         payload.phone_number,
         payload.rental_information,
@@ -114,6 +117,7 @@ pub async fn update_info(
         store_id,
         payload.name,
         None,
+        payload.location,
         payload.email_address,
         payload.phone_number,
         payload.rental_information,
@@ -148,6 +152,7 @@ pub async fn update_status(
         store_id,
         None,
         Some(payload.status),
+        None,
         None,
         None,
         None,

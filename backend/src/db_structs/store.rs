@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 pub type Id = i32;
 pub type Name = String;
 pub type Status = i32;
+pub type Location = String;
 pub type EmailAddress = String;
 pub type PhoneNumber = String;
 pub type RentalInformation = String;
@@ -23,8 +24,9 @@ pub struct Store {
     pub id: Id,
     pub name: Name,
     pub status: Status,
+    pub location: Location,
     pub email_address: Option<EmailAddress>,
-    pub phone_number: Option<PhoneNumber>,
+    pub phone_number: PhoneNumber,
     pub rental_information: Option<RentalInformation>,
     pub other_information: Option<OtherInformation>,
     pub code: Code,

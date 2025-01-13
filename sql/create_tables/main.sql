@@ -47,8 +47,9 @@ CREATE TABLE main.stores (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     name TEXT NOT NULL,
     status INTEGER NOT NULL,
+    locatioin TEXT NOT NULL,
     email_address TEXT,
-    phone_number TEXT,
+    phone_number TEXT NOT NULL,
     rental_information TEXT,
     other_information TEXT,
     code TEXT NOT NULL,
@@ -144,7 +145,7 @@ CREATE INDEX IF NOT EXISTS idx_fuzzy_users_with_email ON main.users
   USING gist((username || ' ' || email_address) gist_trgm_ops(siglen=256));
 
 CREATE INDEX IF NOT EXISTS idx_fuzzy_stores ON main.stores
-  USING gist((name || ' ' || COALESCE(email_address, '') || ' ' || COALESCE(phone_number, '')) gist_trgm_ops(siglen=256));
+  USING gist((name || ' ' || location || ' ' || COALESCE(email_address, '') || ' ' || phone_number) gist_trgm_ops(siglen=256));
 
 CREATE INDEX IF NOT EXISTS idx_fuzzy_tool_categories ON main.tool_categories
   USING gist((name || ' ' || COALESCE(description, '') || ' ' || ARRAY_TO_STRING(synonyms, ' ')) gist_trgm_ops(siglen=256));
