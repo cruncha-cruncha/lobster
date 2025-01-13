@@ -1,11 +1,14 @@
 use super::store;
 use serde::{Deserialize, Serialize};
 
+pub const SHORT_DESCRIPTION_CHAR_LIMIT: usize = 80;
+
 pub type Id = i32;
 pub type RealId = String;
 pub type StoreId = store::Id;
 pub type RentalHours = i32;
-pub type Description = String;
+pub type ShortDescription = String;
+pub type LongDescription = String;
 pub type Pictures = Vec<String>;
 pub type Status = i32;
 
@@ -26,7 +29,8 @@ pub struct Tool {
     pub real_id: RealId,
     pub store_id: StoreId,
     pub rental_hours: RentalHours,
-    pub description: Description,
+    pub short_description: ShortDescription,
+    pub long_description: Option<LongDescription>,
     pub pictures: Pictures,
     pub status: Status,
 }

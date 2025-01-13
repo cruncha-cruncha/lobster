@@ -91,7 +91,7 @@ export const PureCart = (cart) => {
         {toolCart.map((tool) => (
           <li key={tool.id} className="flex items-center justify-between">
             <div onClick={() => goToTool(tool.id)} className="cursor-pointer">
-              {tool.realId}, {tool.description}
+              {tool.realId}{!tool.shortDescription.trim() ? "" : `, ${tool.shortDescription}`}
             </div>
             <Button
               onClick={() => removeFromCart(tool.id)}

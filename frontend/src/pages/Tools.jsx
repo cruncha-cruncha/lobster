@@ -231,7 +231,7 @@ export const PureTools = (tools) => {
               className="flex cursor-pointer items-center"
             >
               <p>
-                {tool.realId}, {tool.description}
+                {tool.realId}{!tool.shortDescription.trim() ? "" : `, ${tool.shortDescription}`}
               </p>
               {/* <p>pictures: {JSON.stringify(tool.pictures)}</p> */}
             </div>

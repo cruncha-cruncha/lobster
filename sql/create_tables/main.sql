@@ -46,7 +46,7 @@ CREATE TABLE main.stores (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     name TEXT NOT NULL,
     status INTEGER NOT NULL,
-    locatioin TEXT NOT NULL,
+    location TEXT NOT NULL,
     email_address TEXT,
     phone_number TEXT NOT NULL,
     rental_information TEXT,
@@ -74,7 +74,8 @@ CREATE TABLE main.tools (
     real_id TEXT NOT NULL,
     store_id INTEGER NOT NULL,
     rental_hours INTEGER NOT NULL,
-    description TEXT NOT NULL,
+    short_description TEXT NOT NULL,
+    long_description TEXT,
     pictures TEXT[] NOT NULL,
     status INTEGER NOT NULL,
     PRIMARY KEY (id),
@@ -144,10 +145,13 @@ CREATE INDEX IF NOT EXISTS idx_fuzzy_users_with_email ON main.users
   USING gist((username || ' ' || email_address) gist_trgm_ops(siglen=256));
 
 CREATE INDEX IF NOT EXISTS idx_fuzzy_stores ON main.stores
-  USING gist((name || ' ' || location || ' ' || COALESCE(email_address, '') || ' ' || phone_number) gist_trgm_ops(siglen=256));
+  USING gist((name || ' ' || location || ' ' || COALESCE(rental_information, '') || ' ' || COALESCE(other_information, '')) gist_trgm_ops(siglen=256));
+
+CREATE INDEX IF NOT EXISTS idx_fuzzy_stores_with_contact ON main.stores
+  USING gist((name || ' ' || location || ' ' || COALESCE(email_address, '') || ' ' || phone_number || ' ' || COALESCE(rental_information, '') || ' ' || COALESCE(other_information, '')) gist_trgm_ops(siglen=256));
 
 CREATE INDEX IF NOT EXISTS idx_fuzzy_tool_categories ON main.tool_categories
   USING gist((name || ' ' || COALESCE(description, '') || ' ' || ARRAY_TO_STRING(synonyms, ' ')) gist_trgm_ops(siglen=256));
 
 CREATE INDEX IF NOT EXISTS idx_fuzzy_tools ON main.tools
-  USING gist((real_id || ' ' || description) gist_trgm_ops(siglen=256));
+  USING gist((real_id || ' ' || short_description || ' ' || COALESCE(long_description, '')) gist_trgm_ops(siglen=256));

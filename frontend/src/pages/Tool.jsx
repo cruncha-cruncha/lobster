@@ -17,8 +17,10 @@ const reducer = (state, action) => {
   switch (action.type) {
     case "status":
       return { ...state, status: action.value };
-    case "description":
-      return { ...state, description: action.value };
+    case "shortDescription":
+      return { ...state, shortDescription: action.value };
+    case "longDescription":
+      return { ...state, longDescription: action.value };
     case "realId":
       return { ...state, realId: action.value };
     case "pictures":
@@ -43,7 +45,8 @@ export const useTool = () => {
   const { toolCart, addTool, removeTool } = useToolCart();
   const [info, dispatch] = useReducer(reducer, {
     status: "1",
-    description: "",
+    shortDescription: "",
+    longDescription: "",
     realId: "",
     pictures: [],
     rentalHours: 0,
@@ -54,7 +57,8 @@ export const useTool = () => {
 
   const updateLocalInfo = (data) => {
     dispatch({ type: "status", value: data.status });
-    dispatch({ type: "description", value: data.description });
+    dispatch({ type: "shortDescription", value: data.shortDescription });
+    dispatch({ type: "longDescription", value: data.longDescription || "" });
     data.categories.forEach((category) => {
       _categorySearch.addCategory(category.id);
     });
@@ -93,8 +97,12 @@ export const useTool = () => {
     dispatch({ type: "status", value: e.target.value });
   };
 
-  const setDescription = (e) => {
-    dispatch({ type: "description", value: e.target.value });
+  const setShortDescription = (e) => {
+    dispatch({ type: "shortDescription", value: e.target.value });
+  };
+
+  const setLongDescription = (e) => {
+    dispatch({ type: "longDescription", value: e.target.value });
   };
 
   const setRealId = (e) => {
@@ -124,7 +132,8 @@ export const useTool = () => {
           realId: info.realId,
           storeId: Number(data.storeId),
           categoryIds: categorySearch.categories.map((cat) => cat.id),
-          description: info.description,
+          shortDescription: info.shortDescription,
+          longDescription: info.longDescription,
           rentalHours: parseInt(info.rentalHours, 10) || data.rentalHours,
           pictures: [],
           status: Number(info.status),
@@ -155,7 +164,8 @@ export const useTool = () => {
     goToRentals,
     toolStatuses,
     setStatus,
-    setDescription,
+    setShortDescription,
+    setLongDescription,
     setRealId,
     setRentalHours,
     updateTool,
@@ -178,7 +188,8 @@ export const PureTool = (tool) => {
     goToRentals,
     toolStatuses,
     setStatus,
-    setDescription,
+    setShortDescription,
+    setLongDescription,
     setRealId,
     setRentalHours,
     updateTool,
@@ -217,18 +228,21 @@ export const PureTool = (tool) => {
         )}
       </div>
       <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 px-2 md:grid-cols-2">
+        <TextInput
+          label="Short Description"
+          value={info.shortDescription}
+          onChange={setShortDescription}
+        />
+        <TextInput label="Real ID" value={info.realId} onChange={setRealId} />
         <div className="md:col-span-2">
           <TextInput
-            label="Description"
-            value={info.description}
-            onChange={setDescription}
+            label="Long Description"
+            value={info.longDescription}
+            onChange={setLongDescription}
           />
         </div>
         <div className="md:col-span-2">
           <PureCategorySearch {...categorySearch} />
-        </div>
-        <div className="md:col-span-2">
-          <TextInput label="Real ID" value={info.realId} onChange={setRealId} />
         </div>
         <TextInput
           label="Rental Hours"

@@ -59,7 +59,7 @@ pub struct RentalWithText {
     pub id: rental::Id,
     pub tool_id: rental::ToolId,
     pub tool_real_id: tool::RealId,
-    pub tool_description: tool::Description,
+    pub tool_short_description: tool::ShortDescription,
     pub store_id: tool::StoreId,
     pub store_name: store::Name,
     pub renter_id: rental::RenterId,
@@ -117,6 +117,7 @@ pub async fn check_in(
 
         match tools::update(
             tool.id,
+            None,
             None,
             None,
             None,
@@ -242,6 +243,7 @@ pub async fn check_out(
     for tool in &tools {
         match tools::update(
             tool.id,
+            None,
             None,
             None,
             None,
@@ -395,7 +397,7 @@ pub async fn get_by_id(
         id: rental.id,
         tool_id: rental.tool_id,
         tool_real_id: tool.real_id,
-        tool_description: tool.description,
+        tool_short_description: tool.short_description,
         store_id: tool.store_id,
         store_name: store.name,
         renter_id: rental.renter_id,

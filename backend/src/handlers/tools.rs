@@ -1,5 +1,6 @@
 use crate::auth::claims::Claims;
 use crate::common;
+use crate::db_structs::tool::SHORT_DESCRIPTION_CHAR_LIMIT;
 use crate::db_structs::tool_classification::ToolClassification;
 use crate::db_structs::{store, tool, tool_category, tool_classification};
 use crate::queries::{stores, tool_categories, tool_classifications, tools};
@@ -19,7 +20,8 @@ pub struct NewToolData {
     pub store_id: store::Id,
     pub category_ids: Vec<tool_category::Id>,
     pub rental_hours: tool::RentalHours,
-    pub description: tool::Description,
+    pub short_description: tool::ShortDescription,
+    pub long_description: Option<tool::LongDescription>,
     pub pictures: tool::Pictures,
     pub status: Option<tool::Status>,
 }
@@ -30,7 +32,8 @@ pub struct UpdateToolData {
     pub real_id: Option<tool::RealId>,
     pub category_ids: Option<Vec<tool_category::Id>>,
     pub rental_hours: Option<tool::RentalHours>,
-    pub description: Option<tool::Description>,
+    pub short_description: Option<tool::ShortDescription>,
+    pub long_description: Option<tool::LongDescription>,
     pub pictures: Option<tool::Pictures>,
     pub status: Option<tool::Status>,
 }
@@ -54,7 +57,8 @@ pub struct ToolWithText {
     pub store_id: tool::StoreId,
     pub store_name: store::Name,
     pub rental_hours: tool::RentalHours,
-    pub description: tool::Description,
+    pub short_description: tool::ShortDescription,
+    pub long_description: Option<tool::LongDescription>,
     pub pictures: tool::Pictures,
     pub status: tool::Status,
     pub categories: Vec<tool_category::ToolCategory>,
@@ -67,7 +71,8 @@ pub struct ToolWithClassifications {
     pub real_id: tool::RealId,
     pub store_id: tool::StoreId,
     pub rental_hours: tool::RentalHours,
-    pub description: tool::Description,
+    pub short_description: tool::ShortDescription,
+    pub long_description: Option<tool::LongDescription>,
     pub pictures: tool::Pictures,
     pub status: tool::Status,
     pub classifications: Vec<tool_classification::CategoryId>,
@@ -93,11 +98,19 @@ pub async fn create_new(
         ));
     }
 
+    if payload.short_description.chars().count() > SHORT_DESCRIPTION_CHAR_LIMIT {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "Short description must be 80 characters or less".to_string(),
+        ));
+    }
+
     let tool = match tools::insert(
         payload.real_id.unwrap_or(common::rnd_code_str("t-")),
         payload.store_id,
         payload.rental_hours,
-        payload.description,
+        payload.short_description,
+        payload.long_description,
         payload.pictures,
         payload.status.unwrap_or(tool::ToolStatus::Available as i32),
         &state.db,
@@ -170,7 +183,8 @@ pub async fn create_new(
         store_id: tool.store_id,
         store_name,
         rental_hours: tool.rental_hours,
-        description: tool.description,
+        short_description: tool.short_description,
+        long_description: tool.long_description,
         pictures: tool.pictures,
         status: tool.status,
         categories,
@@ -215,11 +229,27 @@ pub async fn update(
         }
     }
 
+    if payload.short_description.is_some()
+        && payload
+            .short_description
+            .as_deref()
+            .unwrap()
+            .chars()
+            .count()
+            > SHORT_DESCRIPTION_CHAR_LIMIT
+    {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "Short description must be 80 characters or less".to_string(),
+        ));
+    }
+
     let tool = match tools::update(
         tool_id,
         payload.real_id,
         payload.rental_hours,
-        payload.description,
+        payload.short_description,
+        payload.long_description,
         payload.pictures,
         payload.status,
         &state.db,
@@ -322,7 +352,8 @@ pub async fn update(
         store_id: tool.store_id,
         store_name,
         rental_hours: tool.rental_hours,
-        description: tool.description,
+        short_description: tool.short_description,
+        long_description: tool.long_description,
         pictures: tool.pictures,
         status: tool.status,
         categories,
@@ -402,7 +433,8 @@ pub async fn get_by_id(
         store_id: tool.store_id,
         store_name,
         rental_hours: tool.rental_hours,
-        description: tool.description,
+        short_description: tool.short_description,
+        long_description: tool.long_description,
         pictures: tool.pictures,
         status: tool.status,
         categories,
@@ -443,12 +475,13 @@ pub async fn get_filtered(
 
     let mut classifications: Vec<ToolClassification> = vec![];
     if !tool_ids.is_empty() {
-        classifications = match tool_classifications::select(tool_ids.clone(), vec![], &state.db).await {
-            Ok(c) => c,
-            Err(e) => {
-                return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
-            }
-        };
+        classifications =
+            match tool_classifications::select(tool_ids.clone(), vec![], &state.db).await {
+                Ok(c) => c,
+                Err(e) => {
+                    return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+                }
+            };
     }
 
     let mut stores: Vec<store::Store> = vec![];
@@ -486,7 +519,8 @@ pub async fn get_filtered(
                 real_id: t.real_id.clone(),
                 store_id: t.store_id,
                 rental_hours: t.rental_hours,
-                description: t.description.clone(),
+                short_description: t.short_description.clone(),
+                long_description: t.long_description.clone(),
                 pictures: t.pictures.clone(),
                 status: t.status,
                 classifications,

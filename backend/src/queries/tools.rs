@@ -34,7 +34,8 @@ pub async fn insert(
     real_id: tool::RealId,
     store_id: store::Id,
     rental_hours: tool::RentalHours,
-    description: tool::Description,
+    short_description: tool::ShortDescription,
+    long_description: Option<tool::LongDescription>,
     pictures: tool::Pictures,
     status: tool::Status,
     db: &sqlx::Pool<sqlx::Postgres>,
@@ -42,14 +43,15 @@ pub async fn insert(
     sqlx::query_as!(
         tool::Tool,
         r#"
-        INSERT INTO main.tools (real_id, store_id, rental_hours, description, pictures, status)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO main.tools (real_id, store_id, rental_hours, short_description, long_description, pictures, status)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING *;
         "#,
         real_id,
         store_id,
         rental_hours,
-        description,
+        short_description,
+        long_description,
         &pictures,
         status,
     )
@@ -62,7 +64,8 @@ pub async fn update(
     tool_id: tool::Id,
     real_id: Option<tool::RealId>,
     rental_hours: Option<tool::RentalHours>,
-    description: Option<tool::Description>,
+    short_description: Option<tool::ShortDescription>,
+    long_description: Option<tool::LongDescription>,
     pictures: Option<tool::Pictures>,
     status: Option<tool::Status>,
     db: &sqlx::Pool<sqlx::Postgres>,
@@ -74,16 +77,18 @@ pub async fn update(
         SET
             real_id = COALESCE($2, real_id),
             rental_hours = COALESCE($3, rental_hours),
-            description = COALESCE($4, description),
-            pictures = COALESCE($5, pictures),
-            status = COALESCE($6, status)
+            short_description = COALESCE($4, short_description),
+            long_description = COALESCE($5, long_description),
+            pictures = COALESCE($6, pictures),
+            status = COALESCE($7, status)
         WHERE id = $1
         RETURNING *;
         "#,
         tool_id,
         real_id,
         rental_hours,
-        description,
+        short_description,
+        long_description,
         pictures.as_deref(),
         status,
     )
@@ -110,7 +115,7 @@ pub async fn select(
         LEFT JOIN main.tool_classifications tc ON mt.id = tc.tool_id
         WHERE
             (ARRAY_LENGTH($1::integer[], 1) IS NULL OR mt.id = ANY($1::integer[]))
-            AND ($2::text = '' OR $2::text <% (mt.real_id || ' ' || mt.description))
+            AND ($2::text = '' OR $2::text <% (mt.real_id || ' ' || mt.short_description || ' ' || COALESCE(mt.long_description, '')))
             AND (ARRAY_LENGTH($3::integer[], 1) IS NULL OR mt.status = ANY($3::integer[]))
             AND (ARRAY_LENGTH($4::integer[], 1) IS NULL OR mt.store_id = ANY($4::integer[]))
             AND (ARRAY_LENGTH($5::text[], 1) IS NULL OR mt.real_id = ANY($5::text[]))

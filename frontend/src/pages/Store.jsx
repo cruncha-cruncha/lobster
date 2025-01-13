@@ -67,7 +67,7 @@ export const useStore = () => {
 };
 
 export const PureStore = (store) => {
-  const { 
+  const {
     data,
     storeId,
     storeName,
@@ -371,7 +371,8 @@ export const useAddTool = ({ storeId }) => {
   const defaultRentalHours = 48;
   const { accessToken } = useAuth();
   const [realId, _setRealId] = useState("");
-  const [description, _setDescription] = useState("");
+  const [shortDescription, _setShortDescription] = useState("");
+  const [longDescription, _setDescription] = useState("");
   const [rentalHours, _setRentalHours] = useState(defaultRentalHours);
   const _categorySearch = useCategorySearch();
 
@@ -381,7 +382,11 @@ export const useAddTool = ({ storeId }) => {
     _setRealId(e.target.value);
   };
 
-  const setDescription = (e) => {
+  const setShortDescription = (e) => {
+    _setShortDescription(e.target.value);
+  };
+
+  const setLongDescription = (e) => {
     _setDescription(e.target.value);
   };
 
@@ -389,7 +394,10 @@ export const useAddTool = ({ storeId }) => {
     _setRentalHours(e.target.value);
   };
 
-  const canAddTool = realId !== "" && description !== "" && _categorySearch.categories.length > 0;
+  const canAddTool =
+    realId !== "" &&
+    description !== "" &&
+    _categorySearch.categories.length > 0;
 
   const createTool = () => {
     return endpoints
@@ -398,7 +406,8 @@ export const useAddTool = ({ storeId }) => {
           realId,
           storeId: Number(storeId),
           categoryIds: [],
-          description,
+          shortDescription,
+          longDescription,
           rentalHours: parseInt(rentalHours, 10) || defaultRentalHours,
           pictures: [],
           status: 1,
@@ -409,7 +418,8 @@ export const useAddTool = ({ storeId }) => {
         console.log(data);
         // do something? success message? clear fields? navigate to tool? button to go to tool?
 
-        setDescription("");
+        setShortDescription("");
+        setLongDescription("");
         _categorySearch.clear();
         setRealId("");
         setRentalHours(defaultRentalHours);
@@ -419,8 +429,10 @@ export const useAddTool = ({ storeId }) => {
   return {
     realId,
     setRealId,
-    description,
-    setDescription,
+    shortDescription,
+    setShortDescription,
+    longDescription,
+    setLongDescription,
     rentalHours,
     setRentalHours,
     defaultRentalHours,
@@ -437,8 +449,10 @@ export const PureAddTool = (addTool) => {
   const {
     realId,
     setRealId,
-    description,
-    setDescription,
+    shortDescription,
+    setShortDescription,
+    longDescription,
+    setLongDescription,
     rentalHours,
     setRentalHours,
     defaultRentalHours,
@@ -451,29 +465,33 @@ export const PureAddTool = (addTool) => {
     <div>
       <h2 className="px-2 text-lg">New Tool</h2>
       <div className="mb-3 mt-1 grid grid-cols-1 gap-x-4 gap-y-2 px-2 md:grid-cols-2">
+        <TextInput
+          label="Short Description"
+          value={shortDescription}
+          onChange={setShortDescription}
+          placeholder="A red screw driver, square head"
+        />
+        <PureCategorySearch {...categorySearch} />
         <div className="md:col-span-2">
           <TextInput
-            label="Description"
-            value={description}
-            onChange={setDescription}
-            placeholder="A red screw driver, square head"
+            label="Long Description"
+            value={longDescription}
+            onChange={setLongDescription}
+            placeholder=""
           />
         </div>
-        <PureCategorySearch {...categorySearch} />
         <TextInput
           label="Real ID"
           value={realId}
           onChange={setRealId}
           placeholder="X5J2"
         />
-        <div className="md:col-start-2">
-          <TextInput
-            label="Rental Hours"
-            value={rentalHours}
-            onChange={setRentalHours}
-            placeholder={`${defaultRentalHours}`}
-          />
-        </div>
+        <TextInput
+          label="Rental Hours"
+          value={rentalHours}
+          onChange={setRentalHours}
+          placeholder={`${defaultRentalHours}`}
+        />
       </div>
       <div className="mt-3 flex justify-end gap-2 px-2">
         <Button onClick={createTool} text="Add Tool" disabled={!canAddTool} />
