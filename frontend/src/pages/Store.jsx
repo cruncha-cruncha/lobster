@@ -48,10 +48,9 @@ export const useStore = () => {
   };
 
   const showUpdateStatus = permissions.isStoreAdmin();
-
   const canUpdateStatus = storeInfo.status != status;
-
   const cartSize = toolCart.filter((tool) => tool.storeId == storeId).length;
+  
   const goToCart = () => {
     navigate(`/stores/${storeId}/cart`);
   };
