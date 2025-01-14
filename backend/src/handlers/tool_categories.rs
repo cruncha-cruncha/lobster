@@ -128,7 +128,7 @@ pub async fn get_by_id(
         return Err((StatusCode::NOT_FOUND, "Tool category not found".to_string()));
     }
 
-    Ok(Json(tool_categories.pop().unwrap()))
+    Ok(Json(tool_categories.remove(0)))
 }
 
 pub async fn get_all(

@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SelectParams {
-    pub ids: Vec<tool::Id>,
     pub term: String,
     pub statuses: Vec<tool::Status>,
     pub store_ids: Vec<store::Id>,
@@ -114,45 +113,65 @@ pub async fn select(
         FROM main.tools mt
         LEFT JOIN main.tool_classifications tc ON mt.id = tc.tool_id
         WHERE
-            (ARRAY_LENGTH($1::integer[], 1) IS NULL OR mt.id = ANY($1::integer[]))
-            AND ($2::text = '' OR $2::text <% (mt.real_id || ' ' || mt.short_description || ' ' || COALESCE(mt.long_description, '')))
-            AND (ARRAY_LENGTH($3::integer[], 1) IS NULL OR mt.status = ANY($3::integer[]))
-            AND (ARRAY_LENGTH($4::integer[], 1) IS NULL OR mt.store_id = ANY($4::integer[]))
-            AND (ARRAY_LENGTH($5::text[], 1) IS NULL OR mt.real_id = ANY($5::text[]))
-            AND (ARRAY_LENGTH($6::integer[], 1) IS NULL OR tc.category_id = ANY($6::integer[]))
-        GROUP BY mt.id having count(*) >= COALESCE(NULLIF(ARRAY_LENGTH($6::integer[], 1), $7), 1)
+            ($1::text = '' OR $1::text <% (mt.real_id || ' ' || mt.short_description || ' ' || COALESCE(mt.long_description, '')))
+            AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR mt.status = ANY($2::integer[]))
+            AND (ARRAY_LENGTH($3::integer[], 1) IS NULL OR mt.store_id = ANY($3::integer[]))
+            AND (ARRAY_LENGTH($4::text[], 1) IS NULL OR mt.real_id = ANY($4::text[]))
+            AND (ARRAY_LENGTH($5::integer[], 1) IS NULL OR tc.category_id = ANY($5::integer[]))
+        GROUP BY mt.id having count(*) >= COALESCE(NULLIF(ARRAY_LENGTH($5::integer[], 1), $6), 1)
         ORDER BY mt.id 
-        OFFSET $8 LIMIT $9;
+        OFFSET $7 LIMIT $8;
         "#,
-        &params.ids, // 1
-        params.term,
+        params.term, // 1
         &params.statuses,
-        &params.store_ids, // 4
-        &params.real_ids,
+        &params.store_ids,
+        &params.real_ids, // 4
         &params.category_ids,
         min_category_matches,
-        params.offset, // 8
-        params.limit,
+        params.offset,
+        params.limit, // 8
     )
     .fetch_all(db)
     .await
     .map_err(|e| e.to_string())
 }
 
-pub async fn select_by_id(
-    tool_id: tool::Id,
+pub async fn select_by_ids(
+    tool_ids: Vec<tool::Id>,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<tool::Tool, String> {
+) -> Result<Vec<tool::Tool>, String> {
     sqlx::query_as!(
         tool::Tool,
         r#"
         SELECT *
         FROM main.tools
-        WHERE id = $1;
+        WHERE id = ANY($1::integer[]);
         "#,
-        tool_id,
+        &tool_ids,
     )
-    .fetch_one(db)
+    .fetch_all(db)
+    .await
+    .map_err(|e| e.to_string())
+}
+
+pub async fn select_exact_real(
+    real_id: tool::RealId,
+    status: tool::Status,
+    store_id: store::Id,
+    db: &sqlx::Pool<sqlx::Postgres>,
+) -> Result<Option<tool::Tool>, String> {
+    sqlx::query_as!(
+        tool::Tool,
+        r#"
+        SELECT *
+        FROM main.tools
+        WHERE real_id = $1 AND status = $2 AND store_id = $3;
+        "#,
+        real_id,
+        status,
+        store_id,
+    )
+    .fetch_optional(db)
     .await
     .map_err(|e| e.to_string())
 }

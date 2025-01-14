@@ -191,6 +191,31 @@ const toolCategorySchema = {
   required: ["id", "name", "synonyms", "description"],
 };
 
+const exactRealToolSchema = {
+  type: "object",
+  $id: "#exactTool",
+  properties: {
+    id: { type: "number" },
+    realId: { type: "string" },
+    storeId: { type: "number" },
+    rentalHours: { type: "number" },
+    shortDescription: { type: "string" },
+    longDescription: { type: ["string", "null"] },
+    pictures: { type: "array", items: { type: "string" } },
+    status: { type: "number" },
+  },
+  required: [
+    "id",
+    "realId",
+    "storeId",
+    "rentalHours",
+    "shortDescription",
+    "longDescription",
+    "pictures",
+    "status",
+  ],
+};
+
 const singleToolSchema = {
   type: "object",
   $id: "#singleTool",
@@ -409,3 +434,5 @@ export const validateRentalSearchResults = makeLazyValidator([
   singleRentalSchema,
   rentalSearchResultsSchema,
 ]);
+
+export const validateExactRealTool = makeLazyValidator(exactRealToolSchema);

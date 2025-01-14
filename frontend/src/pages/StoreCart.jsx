@@ -178,59 +178,37 @@ export const useQuickFindStoreTool = ({ storeId, onSingle }) => {
   };
 
   const endpointParams = {
-    term: realId,
-    storeIds: [Number(storeId)],
+    storeId: Number(storeId),
+    realId,
   };
 
   const { data, isLoading, error, mutate } = useSWR(
-    `get tools, using ${JSON.stringify(endpointParams)}`,
-    () => endpoints.searchTools({ params: endpointParams }),
+    !realId ? null : `get exact real tool, using ${JSON.stringify(endpointParams)}`,
+    () => endpoints.getExactRealTool({ params: endpointParams }),
   );
 
-  const toolOptions = (() => {
-    if (!realId || !data || data.length <= 1) {
-      return [];
-    }
-
-    return data.tools.map((tool) => ({
-      id: tool.id,
-      name: `${tool.realId}, ${tool.description}`,
-    }));
-  })();
-
   useEffect(() => {
-    if (data && data.tools.length == 1) {
-      onSingle(data.tools[0]);
+    if (data) {
+      onSingle(data);
       _setRealId("");
     }
-  }, [data?.tools]);
-
-  const handleSelect = (toolId) => {
-    const tool = data.tools.find((t) => t.id == toolId);
-    onSingle(tool);
-    _setRealId("");
-  };
+  }, [data]);
 
   return {
     realId,
     setRealId,
-    toolOptions,
-    handleSelect,
   };
 };
 
 export const PureQuickFindStoreTool = (quickFindStoreTool) => {
-  const { realId, setRealId, toolOptions, handleSelect } = quickFindStoreTool;
+  const { realId, setRealId } = quickFindStoreTool;
 
   return (
     <>
-      <SearchSelect
+      <TextInput
         label="Add Tool by Real ID"
         value={realId}
         onChange={setRealId}
-        onSelect={handleSelect}
-        options={toolOptions}
-        showLastSelected={false}
       />
     </>
   );

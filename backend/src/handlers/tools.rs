@@ -51,6 +51,13 @@ pub struct FilterParams {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct ExactParams {
+    pub real_id: tool::RealId,
+    pub store_id: tool::StoreId,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ToolWithText {
     pub id: tool::Id,
     pub real_id: tool::RealId,
@@ -198,26 +205,16 @@ pub async fn update(
     Json(payload): Json<UpdateToolData>,
 ) -> Result<Json<ToolWithText>, (StatusCode, String)> {
     // all the sql statements in this handler should be inside a transaction, but I'm ignoring that for now
-    match tools::select(
-        tools::SelectParams {
-            ids: vec![tool_id],
-            term: "".to_string(),
-            statuses: vec![],
-            store_ids: vec![],
-            category_ids: vec![],
-            match_all_categories: false,
-            real_ids: vec![],
-            offset: 0,
-            limit: 1,
-        },
-        &state.db,
-    )
-    .await
-    {
+    match tools::select_by_ids(vec![tool_id], &state.db).await {
         Ok(tools) => {
             if tools.is_empty() {
-                return Err((StatusCode::NOT_FOUND, "Tool not found".to_string()));
-            } else if !claims.is_tool_manager(tools[0].store_id) {
+                return Err((
+                    StatusCode::NOT_FOUND,
+                    "No tool with the given ID exists".to_string(),
+                ));
+            }
+
+            if !claims.is_tool_manager(tools[0].store_id) {
                 return Err((
                     StatusCode::FORBIDDEN,
                     "User is not a tool manager of this store".to_string(),
@@ -364,32 +361,20 @@ pub async fn get_by_id(
     Path(tool_id): Path<i32>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<ToolWithText>, (StatusCode, String)> {
-    let mut tools = match tools::select(
-        tools::SelectParams {
-            ids: vec![tool_id],
-            term: "".to_string(),
-            statuses: vec![],
-            store_ids: vec![],
-            category_ids: vec![],
-            match_all_categories: false,
-            real_ids: vec![],
-            offset: 0,
-            limit: 1,
-        },
-        &state.db,
-    )
-    .await
-    {
-        Ok(tools) => tools,
+    let mut tools = match tools::select_by_ids(vec![tool_id], &state.db).await {
+        Ok(t) => t,
         Err(e) => {
             return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
         }
     };
 
     if tools.is_empty() {
-        return Err((StatusCode::NOT_FOUND, "Tool not found".to_string()));
+        return Err((
+            StatusCode::NOT_FOUND,
+            "No tool with the given ID exists".to_string(),
+        ));
     }
-    let tool = tools.pop().unwrap();
+    let tool = tools.remove(0);
 
     let store_name = match stores::select(
         stores::SelectParams {
@@ -449,7 +434,6 @@ pub async fn get_filtered(
 
     let tools = match tools::select(
         tools::SelectParams {
-            ids: vec![],
             term: params.term.unwrap_or_default(),
             category_ids: params.categories.unwrap_or_default(),
             match_all_categories: params.match_all_categories.unwrap_or_default(),
@@ -554,4 +538,28 @@ pub async fn get_filtered(
         stores,
         categories,
     }))
+}
+
+pub async fn get_by_exact_real_id(
+    Query(params): Query<ExactParams>,
+    State(state): State<Arc<AppState>>,
+) -> Result<Json<tool::Tool>, (StatusCode, String)> {
+    match tools::select_exact_real(
+        params.real_id,
+        tool::ToolStatus::Available as i32,
+        params.store_id,
+        &state.db,
+    )
+    .await
+    {
+        Ok(t) => {
+            if t.is_none() {
+                return Err((StatusCode::NOT_FOUND, "Tool not found".to_string()));
+            }
+            Ok(Json(t.unwrap()))
+        }
+        Err(e) => {
+            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+        }
+    }
 }

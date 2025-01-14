@@ -77,22 +77,7 @@ pub async fn check_in(
         return Err((StatusCode::BAD_REQUEST, "No tools to check in".to_string()));
     }
 
-    let tools = match tools::select(
-        tools::SelectParams {
-            ids: payload.tool_ids.clone(),
-            term: "".to_string(),
-            statuses: vec![],
-            store_ids: vec![],
-            category_ids: vec![],
-            match_all_categories: false,
-            real_ids: vec![],
-            offset: 0,
-            limit: payload.tool_ids.len() as i64,
-        },
-        &state.db,
-    )
-    .await
-    {
+    let tools = match tools::select_by_ids(payload.tool_ids.clone(), &state.db).await {
         Ok(tools) => tools,
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     };
@@ -188,22 +173,7 @@ pub async fn check_out(
         ));
     }
 
-    let tools = match tools::select(
-        tools::SelectParams {
-            ids: payload.tool_ids.clone(),
-            term: "".to_string(),
-            statuses: vec![],
-            store_ids: vec![],
-            category_ids: vec![],
-            match_all_categories: false,
-            real_ids: vec![],
-            offset: 0,
-            limit: payload.tool_ids.len() as i64,
-        },
-        &state.db,
-    )
-    .await
-    {
+    let tools = match tools::select_by_ids(payload.tool_ids.clone(), &state.db).await {
         Ok(tools) => tools,
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     };
@@ -347,27 +317,12 @@ pub async fn get_by_id(
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     };
 
-    let tool = match tools::select(
-        tools::SelectParams {
-            ids: vec![rental.tool_id],
-            term: "".to_string(),
-            statuses: vec![],
-            store_ids: vec![],
-            category_ids: vec![],
-            match_all_categories: false,
-            real_ids: vec![],
-            offset: 0,
-            limit: 1,
-        },
-        &state.db,
-    )
-    .await
-    {
+    let tool = match tools::select_by_ids(vec![rental.tool_id], &state.db).await {
         Ok(mut t) => {
             if t.is_empty() {
                 return Err((StatusCode::NOT_FOUND, "Tool not found".to_string()));
             }
-            t.pop().unwrap()
+            t.remove(0)
         }
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     };
@@ -388,7 +343,7 @@ pub async fn get_by_id(
             if s.is_empty() {
                 return Err((StatusCode::NOT_FOUND, "Store not found".to_string()));
             }
-            s.pop().unwrap()
+            s.remove(0)
         }
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     };
@@ -432,7 +387,16 @@ pub async fn update(
         Err(e) => return Err((StatusCode::NOT_FOUND, e)),
     };
 
-    let tool = tools::select_by_id(rental.tool_id, &state.db).await.ok();
+    let tool = match tools::select_by_ids(vec![rental.tool_id], &state.db).await {
+        Ok(mut t) => {
+            if t.is_empty() {
+                None
+            } else {
+                Some(t.remove(0))
+            }
+        }
+        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
+    };
 
     if tool.is_some() && !claims.is_tool_manager(tool.unwrap().store_id) {
         return Err((

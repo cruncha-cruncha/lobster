@@ -107,7 +107,7 @@ pub async fn add(
 
     if permissions.len() > 0 && permissions[0].status == permission::PermissionStatus::Active as i32
     {
-        return Ok(Json(permissions.pop().unwrap()));
+        return Ok(Json(permissions.remove(0)));
     }
 
     if permissions.len() > 0 {
@@ -118,7 +118,7 @@ pub async fn add(
         )
         .await
         {
-            Ok(_) => Ok(Json(permissions.pop().unwrap())),
+            Ok(_) => Ok(Json(permissions.remove(0))),
             Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
         }
     } else {

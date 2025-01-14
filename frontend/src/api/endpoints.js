@@ -11,6 +11,7 @@ import {
   validateUserPermissions,
   validateSinglePermission,
   validateSingleTool,
+  validateExactRealTool,
   validateToolSearchResults,
   validateToolCategorySearchResults,
   validateToolCategory,
@@ -377,6 +378,20 @@ export const getTool = async ({ id }) => {
   return data;
 };
 
+export const getExactRealTool = async ({ params }) => {
+  const str_params = obj_to_query(params);
+
+  const data = await handle(`${serverUrl}/tools/exact-real-id?${str_params}`, {
+    method: "GET",
+  });
+
+  if (!validateExactRealTool(data)) {
+    throw new Error(400);
+  }
+
+  return data;
+};
+
 export const searchTools = async ({ params }) => {
   const str_params = obj_to_query(params);
 
@@ -459,7 +474,7 @@ export const updateRental = async ({ id, info, accessToken }) => {
   }
 
   return data;
-}
+};
 
 export const searchRentals = async ({ params, accessToken }) => {
   const str_params = obj_to_query(params);

@@ -114,6 +114,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
             "/tools/:tool_id",
             routing::patch(handlers::tools::update).get(handlers::tools::get_by_id),
         )
+        .route(
+            "/tools/exact-real-id", 
+            routing::get(handlers::tools::get_by_exact_real_id)
+        )
         .route("/rentals", routing::get(handlers::rentals::get_filtered))
         .route(
             "/rentals/check-in",
