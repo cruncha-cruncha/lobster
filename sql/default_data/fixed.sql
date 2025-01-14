@@ -14,5 +14,5 @@ INSERT INTO fixed.tool_statuses (name)
 VALUES ('available'), ('rented'), ('maintenance'), ('broken'), ('lost'), ('stolen'), ('retired');
 
 INSERT INTO fixed.grievance_statuses (name)
-VALUES ('open'), ('closed');
+VALUES ('open'), ('investigating'), ('evidencial'), ('spurious'), ('petty'), ('uncouth'), ('cautionary'), ('consequential'), ('bourgeois'), ('eggregious'), ('bannable'), ('outrageous'), ('horrific'), ('shocking'), ('reprehensible'), ('unforgivable'), ('forgiven'), ('justice_served'), ('resolved'), ('warning'), ('no_action'), ('closed');
 

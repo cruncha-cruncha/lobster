@@ -115,8 +115,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
             routing::patch(handlers::tools::update).get(handlers::tools::get_by_id),
         )
         .route(
-            "/tools/exact-real-id", 
-            routing::get(handlers::tools::get_by_exact_real_id)
+            "/tools/exact-real-id",
+            routing::get(handlers::tools::get_by_exact_real_id),
         )
         .route("/rentals", routing::get(handlers::rentals::get_filtered))
         .route(
@@ -130,6 +130,23 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .route(
             "/rentals/:rental_id",
             routing::patch(handlers::rentals::update).get(handlers::rentals::get_by_id),
+        )
+        .route(
+            "/grievances",
+            routing::get(handlers::grievances::get_filtered).post(handlers::grievances::create_new),
+        )
+        .route(
+            "/grievances/:grievance_id",
+            routing::get(handlers::grievances::get_by_id),
+        )
+        .route(
+            "/grievances/:grievance_id/status",
+            routing::patch(handlers::grievances::update_status),
+        )
+        .route(
+            "/grievance/:grievance_id/replies",
+            routing::get(handlers::grievance_replies::get_by_grievance_id)
+                .post(handlers::grievance_replies::create_new),
         );
 
     #[cfg(feature = "cors")]

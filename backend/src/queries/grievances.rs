@@ -15,9 +15,9 @@ pub struct GrievanceWithNames {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SelectParams {
+    pub author_ids: Vec<grievance::AuthorId>,
+    pub accused_ids: Vec<grievance::AccusedId>,
     pub statuses: Vec<grievance::Status>,
-    pub author_ids: Vec<user::Id>,
-    pub accused_ids: Vec<user::Id>,
     pub offset: i64,
     pub limit: i64,
 }
@@ -116,6 +116,33 @@ pub async fn select(
         params.limit,
     )
     .fetch_all(db)
+    .await
+    .map_err(|e| e.to_string())
+}
+
+pub async fn select_by_id(
+    grievance_id: grievance::Id,
+    db: &sqlx::Pool<sqlx::Postgres>,
+) -> Result<GrievanceWithNames, String> {
+    sqlx::query_as!(
+        GrievanceWithNames,
+        r#"
+        SELECT 
+            g.id,
+            g.title,
+            g.description,
+            g.created_at,
+            g.status,
+            (u1.id, u1.username) as "author: common::UserWithName",
+            (u2.id, u2.username) as "accused: common::UserWithName"
+        FROM main.grievances g
+        LEFT JOIN main.users u1 ON g.author_id = u1.id
+        LEFT JOIN main.users u2 ON g.accused_id = u2.id
+        WHERE g.id = $1;
+        "#,
+        grievance_id,
+    )
+    .fetch_one(db)
     .await
     .map_err(|e| e.to_string())
 }

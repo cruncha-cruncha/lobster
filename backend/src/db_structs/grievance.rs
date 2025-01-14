@@ -10,7 +10,27 @@ pub type Status = i32;
 
 pub enum GrievanceStatus {
     Open = 1,
-    Closed = 2,
+    Investigating = 2,
+    Evidencial = 3,
+    Spurious = 4,
+    Petty = 5,
+    Uncouth = 6,
+    Cautionary = 7,
+    Consequential = 8,
+    Bourgeois = 9,
+    Eggregious = 10,
+    Bannable = 11,
+    Outrageous = 12,
+    Horrific = 13,
+    Shocking = 14,
+    Reprehensible = 15,
+    Unforgivable = 16,
+    Forgiven = 17,
+    JusticeServed = 18,
+    Resolved = 19,
+    Warning = 20,
+    NoAction = 21,
+    Closed = 22,
 }
 
 #[derive(Debug, sqlx::FromRow, Serialize, Deserialize)]
