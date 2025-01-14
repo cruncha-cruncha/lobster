@@ -48,7 +48,7 @@ export const useStore = () => {
 
   const showEditStore = permissions.isStoreRep(storeId);
   const showEditStoreStatus = permissions.isStoreAdmin();
-  const showAddTool = permissions.isToolManager(storeId);
+  const showAddTool = permissions.isToolManager(storeId) && data?.status == 1;
 
   return {
     data,
