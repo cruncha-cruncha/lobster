@@ -112,6 +112,33 @@ pub async fn create_new(
         ));
     }
 
+    let store = match stores::select(
+        stores::SelectParams {
+            ids: vec![payload.store_id],
+            statuses: vec![],
+            term: "".to_string(),
+            offset: 0,
+            limit: 1,
+        },
+        &state.db,
+    )
+    .await
+    {
+        Ok(mut s) => {
+            if s.is_empty() {
+                return Err((StatusCode::NOT_FOUND, "Store not found".to_string()));
+            }
+            s.remove(0)
+        }
+        Err(e) => {
+            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+        }
+    };
+
+    if store.status != store::StoreStatus::Active as i32 {
+        return Err((StatusCode::BAD_REQUEST, "Store is not active".to_string()));
+    }
+
     let tool = match tools::insert(
         payload.real_id.unwrap_or(common::rnd_code_str("t-")),
         payload.store_id,
