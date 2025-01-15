@@ -9,13 +9,11 @@ import { Checkbox } from "../components/Checkbox";
 import { useAuth } from "../state/auth";
 import { useDebounce } from "../components/useDebounce";
 import * as endpoints from "../api/endpoints";
-import { PrevNext } from "../components/PrevNext";
+import { usePrevNext, PurePrevNext } from "../components/PrevNext";
 import { URL_STORE_ID_KEY } from "./Store";
 
 const paramsReducer = (state, action) => {
   switch (action.type) {
-    case "page":
-      return { ...state, page: action.value };
     case "status":
       return { ...state, status: action.value, page: 1 };
     case "searchTerm":
@@ -37,6 +35,7 @@ export const usePeople = () => {
   const { roles, userStatuses } = useConstants();
   const { accessToken } = useAuth();
   const [peopleList, setPeopleList] = useState([]);
+  const pageControl = usePrevNext();
   const _storeSelect = useSingleStoreSelect();
   const [params, paramsDispatch] = useReducer(paramsReducer, {
     searchTerm: "",
@@ -48,15 +47,6 @@ export const usePeople = () => {
   });
   const debouncedParams = useDebounce(params, 200);
   const urlStoreId = urlParams.get(URL_STORE_ID_KEY);
-
-  const prevPage = () => {
-    if (params.page > 1) {
-      paramsDispatch({ type: "page", value: params.page - 1 });
-    }
-  };
-
-  const nextPage = () =>
-    paramsDispatch({ type: "page", value: params.page + 1 });
 
   const setStatus = (e) =>
     paramsDispatch({ type: "status", value: e.target.value });
@@ -122,7 +112,7 @@ export const usePeople = () => {
         : [parseInt(debouncedParams.status, 10)],
     roles:
       debouncedParams.role === "0" ? "" : [parseInt(debouncedParams.role, 10)],
-    page: debouncedParams.page,
+    page: pageControl.pageNumber,
   };
 
   const { data, isLoading, error, mutate } = useSWR(
@@ -146,16 +136,14 @@ export const usePeople = () => {
     roles: [{ id: "0", name: "Any" }, ...roles],
     userStatuses: [{ id: "0", name: "Any" }, ...userStatuses],
     params,
-    debouncedParams,
     peopleList,
-    prevPage,
-    nextPage,
     setStatus,
     setSearchTerm,
     setRole,
     setWithStore,
     storeSelect,
     goToPerson,
+    pageControl,
   };
 };
 
@@ -164,16 +152,14 @@ export const PurePeople = (people) => {
     roles,
     userStatuses,
     params,
-    debouncedParams,
     peopleList,
-    prevPage,
-    nextPage,
     setStatus,
     setSearchTerm,
     setRole,
     setWithStore,
     storeSelect,
     goToPerson,
+    pageControl,
   } = people;
 
   return (
@@ -231,11 +217,7 @@ export const PurePeople = (people) => {
           ))}
         </ul>
       </div>
-      <PrevNext
-        prev={prevPage}
-        next={nextPage}
-        pageNumber={debouncedParams.page}
-      />
+      <PurePrevNext {...pageControl} />
     </div>
   );
 };

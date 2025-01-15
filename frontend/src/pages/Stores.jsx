@@ -8,12 +8,10 @@ import { Button } from "../components/Button";
 import { TextInput } from "../components/TextInput";
 import { Select } from "../components/Select";
 import { useDebounce } from "../components/useDebounce";
-import { PrevNext } from "../components/PrevNext";
+import { usePrevNext, PurePrevNext } from "../components/PrevNext";
 
 const paramsReducer = (state, action) => {
   switch (action.type) {
-    case "page":
-      return { ...state, page: action.value };
     case "status":
       return { ...state, status: action.value, page: 1 };
     case "term":
@@ -27,10 +25,9 @@ export const useStores = () => {
   const { accessToken } = useAuth();
   const navigate = useNavigate();
   const { storeStatuses } = useConstants();
-
+  const pageControl = usePrevNext();
   const [storeList, setStoreList] = useState([]);
   const [params, paramsDispatch] = useReducer(paramsReducer, {
-    page: 1,
     status: "1",
     term: "",
   });
@@ -43,15 +40,6 @@ export const useStores = () => {
     navigate(`/stores/${id}`);
   };
 
-  const prevPage = () => {
-    if (params.page > 1) {
-      paramsDispatch({ type: "page", value: params.page - 1 });
-    }
-  };
-
-  const nextPage = () =>
-    paramsDispatch({ type: "page", value: params.page + 1 });
-
   const setStatus = (e) =>
     paramsDispatch({ type: "status", value: e.target.value });
 
@@ -62,7 +50,7 @@ export const useStores = () => {
 
   const endpointParams = {
     term: debouncedParams.term,
-    page: debouncedParams.page,
+    page: pageControl.pageNumber,
     statuses:
       debouncedParams.status == "0"
         ? ""
@@ -88,13 +76,11 @@ export const useStores = () => {
     storeList,
     storeStatuses: [{ id: "0", name: "Any" }, ...storeStatuses],
     params,
-    debouncedParams,
     goToNewStore,
     goToStore,
-    prevPage,
-    nextPage,
     setStatus,
     setTerm,
+    pageControl,
   };
 };
 
@@ -102,14 +88,12 @@ export const PureStores = (stores) => {
   const {
     goToNewStore,
     goToStore,
-    prevPage,
-    nextPage,
     params,
-    debouncedParams,
     setTerm,
     setStatus,
     storeStatuses,
     storeList,
+    pageControl,
   } = stores;
 
   return (
@@ -162,11 +146,7 @@ export const PureStores = (stores) => {
           ))}
         </ul>
       </div>
-      <PrevNext
-        prev={prevPage}
-        next={nextPage}
-        pageNumber={debouncedParams.page}
-      />
+      <PurePrevNext {...pageControl} />
     </div>
   );
 };

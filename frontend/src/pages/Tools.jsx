@@ -10,7 +10,7 @@ import { SearchSelect } from "../components/SearchSelect";
 import { Checkbox } from "../components/Checkbox";
 import { URL_STORE_ID_KEY } from "./Store";
 import { useToolCategories } from "../state/toolCategories";
-import { PrevNext } from "../components/PrevNext";
+import { usePrevNext, PurePrevNext } from "../components/PrevNext";
 import { Button } from "../components/Button";
 import { useToolCart } from "../state/toolCart";
 
@@ -41,7 +41,7 @@ export const useTools = () => {
 
   const [status, _setStatus] = useState("1");
   const [searchTerm, _setSearchTerm] = useState("");
-  const [page, _setPage] = useState(1);
+  const pageControl = usePrevNext();
 
   const categorySearch = useCategorySearch();
   const _storeSelect = useStoreSelect();
@@ -92,7 +92,7 @@ export const useTools = () => {
     statuses: status === "0" ? "" : [parseInt(status, 10)],
     categories: categorySearch.categories.map((cat) => cat.id),
     matchAllCategories: categorySearch.matchAllCats,
-    page,
+    page: pageControl.pageNumber,
   };
 
   const { data, isLoading, error, mutate } = useSWR(
@@ -117,14 +117,6 @@ export const useTools = () => {
   const goToTool = (toolId) => {
     navigate(`/tools/${toolId}`);
   };
-
-  const prevPage = () => {
-    if (page > 1) {
-      _setPage(page - 1);
-    }
-  };
-
-  const nextPage = () => _setPage(page + 1);
 
   const addToCart = (toolId) => {
     addTool(toolsList.find((tool) => tool.id == toolId));
@@ -153,14 +145,12 @@ export const useTools = () => {
     })),
     goToTool,
     warnSingleStore: !!urlStoreId,
-    prevPage,
-    nextPage,
-    page,
     addToCart,
     removeFromCart,
     showGoToCart: toolCart.length > 0,
     goToCart,
     cartSize: toolCart.length,
+    pageControl,
   };
 };
 
@@ -176,14 +166,12 @@ export const PureTools = (tools) => {
     toolsList,
     goToTool,
     warnSingleStore,
-    prevPage,
-    nextPage,
-    page,
     addToCart,
     removeFromCart,
     showGoToCart,
     goToCart,
     cartSize,
+    pageControl,
   } = tools;
 
   return (
@@ -258,7 +246,7 @@ export const PureTools = (tools) => {
           </li>
         ))}
       </ul>
-      <PrevNext prev={prevPage} next={nextPage} pageNumber={page} />
+      <PurePrevNext {...pageControl} />
     </div>
   );
 };

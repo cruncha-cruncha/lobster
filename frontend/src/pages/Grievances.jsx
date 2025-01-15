@@ -1,14 +1,11 @@
 import { useState, useEffect } from "react";
-import useSWR, { useSWRConfig } from "swr";
+import useSWR from "swr";
 import { useAuth } from "../state/auth";
 import * as endpoints from "../api/endpoints";
 import { useNavigate, useSearchParams } from "react-router";
 import { useConstants } from "../state/constants";
-import { TextInput } from "../components/TextInput";
 import { Select } from "../components/Select";
-import { SearchSelect } from "../components/SearchSelect";
-import { Checkbox } from "../components/Checkbox";
-import { PrevNext } from "../components/PrevNext";
+import { usePrevNext, PurePrevNext } from "../components/PrevNext";
 import { Button } from "../components/Button";
 import { PureUserSelect, useUserSelect } from "./Rentals";
 
@@ -23,7 +20,7 @@ export const Grievances = () => {
   const [status, _setStatus] = useState("0");
   const [statuses, _setStatuses] = useState([]);
   const [grievances, setGrievances] = useState([]);
-  const [page, setPage] = useState(1);
+  const pageControl = usePrevNext();
   const _authorSelect = useUserSelect();
   const _accusedSelect = useUserSelect();
   const urlAuthorId = urlParams.get(URL_AUTHOR_ID_KEY);
@@ -141,7 +138,7 @@ export const Grievances = () => {
       ? accusedSelect.users.map((u) => u.id)
       : [urlAccusedId],
     statuses: statuses.map((s) => s.id),
-    page,
+    page: pageControl.pageNumber,
   };
 
   const { data, isLoading, error, mutate } = useSWR(
@@ -166,19 +163,6 @@ export const Grievances = () => {
       setGrievances(data.grievances);
     }
   }, [data]);
-
-  const prevPage = () => {
-    setPage((prev) => {
-      if (prev > 1) {
-        return prev - 1;
-      }
-      return prev;
-    });
-  };
-
-  const nextPage = () => {
-    setPage((prev) => prev + 1);
-  };
 
   const grievanceStatuses = [{ id: "0", name: "All" }, ..._grievanceStatuses];
 
@@ -230,7 +214,7 @@ export const Grievances = () => {
           </li>
         ))}
       </ul>
-      <PrevNext prev={prevPage} next={nextPage} pageNumber={page} />
+      <PurePrevNext {...pageControl} />
     </div>
   );
 };

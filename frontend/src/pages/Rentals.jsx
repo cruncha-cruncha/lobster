@@ -3,18 +3,12 @@ import useSWR, { useSWRConfig } from "swr";
 import { useAuth } from "../state/auth";
 import * as endpoints from "../api/endpoints";
 import { useNavigate, useSearchParams } from "react-router";
-import { useConstants } from "../state/constants";
-import { TextInput } from "../components/TextInput";
-import { Select } from "../components/Select";
 import { SearchSelect } from "../components/SearchSelect";
 import { Checkbox } from "../components/Checkbox";
 import { URL_STORE_ID_KEY } from "./Store";
 import { URL_TOOL_ID_KEY } from "./Tool";
 import { URL_PERSON_ID_KEY } from "./Person";
-import { useToolCategories } from "../state/toolCategories";
-import { PrevNext } from "../components/PrevNext";
-import { Button } from "../components/Button";
-import { useToolCart } from "../state/toolCart";
+import { usePrevNext, PurePrevNext } from "../components/PrevNext";
 import { useStoreSelect, PureStoreSelect } from "./Tools";
 
 export const useRentals = () => {
@@ -26,7 +20,7 @@ export const useRentals = () => {
   const _toolSelect = useToolSelect();
   const [rentals, setRentals] = useState([]);
   const [stillOpen, _setStillOpen] = useState(true);
-  const [page, _setPage] = useState(1);
+  const pageControl = usePrevNext();
   const [orderAsc, _setOrderAsc] = useState(true);
   const [overdueOnly, _setOverdueOnly] = useState(false);
 
@@ -157,7 +151,7 @@ export const useRentals = () => {
     renterIds: urlPersonId ? [urlPersonId] : userSelect.users.map((u) => u.id),
     toolIds: urlToolId ? [urlToolId] : toolSelect.tools.map((t) => t.id),
     open: stillOpen,
-    page,
+    page: pageControl.pageNumber,
     orderAsc,
     ...(overdueOnly ? { overdue: true } : {}),
   };
@@ -191,14 +185,6 @@ export const useRentals = () => {
     }
   };
 
-  const prevPage = () => {
-    if (page > 1) {
-      _setPage(page - 1);
-    }
-  };
-
-  const nextPage = () => _setPage(page + 1);
-
   const goToRental = (rentalId) => {
     navigate(`/rentals/${rentalId}`);
   };
@@ -215,9 +201,7 @@ export const useRentals = () => {
     setOverdueOnly,
     rentalList: rentals,
     goToRental,
-    prevPage,
-    nextPage,
-    page,
+    pageControl,
   };
 };
 
@@ -234,9 +218,7 @@ export const PureRentals = (rentals) => {
     setOverdueOnly,
     rentalList,
     goToRental,
-    prevPage,
-    nextPage,
-    page,
+    pageControl,
   } = rentals;
 
   return (
@@ -285,7 +267,7 @@ export const PureRentals = (rentals) => {
           </li>
         ))}
       </ul>
-      <PrevNext prev={prevPage} next={nextPage} pageNumber={page} />
+      <PurePrevNext {...pageControl} />
     </div>
   );
 };
@@ -346,7 +328,7 @@ export const useUserSelect = () => {
 
   const clear = () => {
     setUsers([]);
-  }
+  };
 
   return {
     users,
@@ -354,7 +336,7 @@ export const useUserSelect = () => {
     setUserTerm,
     userOptions: userOptions.map((u) => ({
       id: u.id,
-      name: `${u.username}${u.emailAddress? `, ${u.emailAddress}` : ""}`,
+      name: `${u.username}${u.emailAddress ? `, ${u.emailAddress}` : ""}`,
     })),
     removeUser,
     addUser,
@@ -437,7 +419,7 @@ export const useToolSelect = () => {
   };
 
   const removeTool = (toolId) => {
-    setTools(prev => prev.filter((t) => t.id != toolId));
+    setTools((prev) => prev.filter((t) => t.id != toolId));
   };
 
   return {
@@ -446,7 +428,9 @@ export const useToolSelect = () => {
     setToolTerm,
     toolOptions: toolOptions.map((t) => ({
       id: t.id,
-      name: `${t.realId}${!t.shortDescription.trim() ? "" : `, ${t.shortDescription}`}`,
+      name: `${t.realId}${
+        !t.shortDescription.trim() ? "" : `, ${t.shortDescription}`
+      }`,
     })),
     removeTool,
     addTool,

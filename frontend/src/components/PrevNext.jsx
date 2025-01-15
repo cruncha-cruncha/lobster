@@ -1,4 +1,24 @@
-export const PrevNext = ({ prev, next, pageNumber }) => {
+import { useState } from "react";
+
+export const usePrevNext = ({ pageNumber = 1 } = {}) => {
+  const [page, setPage] = useState(pageNumber);
+
+  const prevPage = () => {
+    setPage((prev) => (prev > 1 ? prev - 1 : 1));
+  };
+
+  const nextPage = () => setPage((prev) => prev + 1);
+
+  return {
+    prev: prevPage,
+    next: nextPage,
+    pageNumber: page,
+  };
+};
+
+export const PurePrevNext = (prevNext) => {
+  const { prev, next, pageNumber } = prevNext;
+
   const prevClasses =
     "rounded-r-full pl-6 pr-4 py-2 transition-colors" +
     (pageNumber > 1
@@ -19,7 +39,12 @@ export const PrevNext = ({ prev, next, pageNumber }) => {
   return (
     <div className="flex items-center justify-center">
       <div className="flex">
-        <button onClick={prev} className={prevClasses} style={prevStyle} disabled={pageNumber <= 1}>
+        <button
+          onClick={prev}
+          className={prevClasses}
+          style={prevStyle}
+          disabled={pageNumber <= 1}
+        >
           <span>Prev</span>
         </button>
       </div>
