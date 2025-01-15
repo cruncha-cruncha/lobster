@@ -26,9 +26,8 @@ export const useNewGrievance = () => {
         info,
         accessToken,
       })
-      .then(() => {
-        console.log("Grievance created");
-        // do something
+      .then((data) => {
+        navigate(`/grievances/${data.id}`);
       });
   };
 
