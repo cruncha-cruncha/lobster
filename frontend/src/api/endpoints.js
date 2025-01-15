@@ -18,6 +18,11 @@ import {
   validateSingleRental,
   validateRentalWithText,
   validateRentalSearchResults,
+  validateSingleGrievance,
+  validateGrievanceWithNames,
+  validateGrievanceSearchResults,
+  validateSingleGrievanceReply,
+  validateGrievanceReplies,
 } from "./schemas";
 
 const serverUrl = import.meta.env.VITE_SERVER_URL || "http://127.0.0.1:3000";
@@ -146,7 +151,7 @@ export const refresh = async ({ refreshToken }) => {
   return data;
 };
 
-export const getUsers = async ({ params, accessToken }) => {
+export const searchUsers = async ({ params, accessToken }) => {
   const str_params = obj_to_query(params);
 
   const data = await handle(`${serverUrl}/users?${str_params}`, {
@@ -518,3 +523,104 @@ export const checkOutTools = async ({ info, accessToken }) => {
 
   return data;
 };
+
+export const createGrievance = async ({ info, accessToken }) => {
+  const data = await handle(`${serverUrl}/grievances`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(info),
+  });
+
+  if (!validateSingleGrievance(data)) {
+    throw new Error(400);
+  }
+
+  return data;
+};
+
+export const searchGrievances = async ({ params, accessToken }) => {
+  const str_params = obj_to_query(params);
+
+  const data = await handle(`${serverUrl}/grievances?${str_params}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!validateGrievanceSearchResults(data)) {
+    throw new Error(400);
+  }
+
+  return data;
+};
+
+export const getGrievance = async ({ id, accessToken }) => {
+  const data = await handle(`${serverUrl}/grievances/${id}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!validateGrievanceWithNames(data)) {
+    throw new Error(400);
+  }
+
+  return data;
+}
+
+export const updateGrievanceStatus = async ({ id, status, accessToken }) => {
+  const data = await handle(`${serverUrl}/grievances/${id}/status`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ status }),
+  });
+
+  if (!validateSingleGrievance(data)) {
+    throw new Error(400);
+  }
+
+  return data;
+}
+
+export const createGrievanceReply = async ({ grievanceId, info, accessToken }) => {
+  const data = await handle(`${serverUrl}/grievances/${grievanceId}/replies`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(info),
+  });
+
+  if (!validateSingleGrievanceReply(data)) {
+    throw new Error(400);
+  }
+
+  return data;
+}
+
+export const getGrievanceReplies = async ({ grievanceId, params, accessToken }) => {
+  const str_params = obj_to_query(params);
+
+  const data = await handle(`${serverUrl}/grievances/${grievanceId}/replies?${str_params}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!validateGrievanceReplies(data)) {
+    throw new Error(400);
+  }
+
+  return data;
+}
+

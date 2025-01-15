@@ -231,7 +231,10 @@ export const PureTools = (tools) => {
               className="flex cursor-pointer items-center"
             >
               <p>
-                {tool.realId}{!tool.shortDescription.trim() ? "" : `, ${tool.shortDescription}`}
+                {tool.realId}
+                {!tool.shortDescription.trim()
+                  ? ""
+                  : `, ${tool.shortDescription}`}
               </p>
               {/* <p>pictures: {JSON.stringify(tool.pictures)}</p> */}
             </div>
@@ -288,7 +291,13 @@ export const useCategorySearch = () => {
   };
 
   const addCategory = async (catId) => {
-    if (categories.find((c) => c.id == catId)) return;
+    let alreadySelected = false;
+    setCategories((prev) => {
+      alreadySelected = prev.find((c) => c.id == catId);
+      return prev;
+    });
+    if (alreadySelected) return;
+
     let newCat = allCategories.find((c) => c.id == catId);
     if (!newCat) {
       newCat = categoryOptions.find((c) => c.id == catId);
@@ -312,7 +321,7 @@ export const useCategorySearch = () => {
   const clear = () => {
     setCategories([]);
     _setCategoryTerm("");
-  }
+  };
 
   return {
     categories,
@@ -410,7 +419,13 @@ export const useStoreSelect = () => {
   };
 
   const addStore = async (storeId) => {
-    if (stores.find((s) => s.id == storeId)) return;
+    let alreadySelected = false;
+    setStores((prev) => {
+      alreadySelected = prev.find((s) => s.id == storeId);
+      return prev;
+    });
+    if (alreadySelected) return;
+
     let newStore = storeOptions.find((s) => s.id == storeId);
     if (!newStore) {
       newStore = await endpoints.getStore({ id: storeId, accessToken });
@@ -421,7 +436,7 @@ export const useStoreSelect = () => {
   };
 
   const removeStore = (storeId) => {
-    setStores(stores.filter((s) => s.id != storeId));
+    setStores((prev) => prev.filter((s) => s.id != storeId));
   };
 
   return {

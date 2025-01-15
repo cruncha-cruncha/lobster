@@ -42,6 +42,16 @@ const genericOptionSchema = {
   required: ["id", "name"],
 };
 
+const genericUserWithNameSchema = {
+  type: "object",
+  $id: "#genericUserWithName",
+  properties: {
+    id: { type: "number" },
+    username: { type: "string" },
+  },
+  required: ["id", "username"],
+};
+
 const allStatusOptionsSchema = {
   type: "object",
   $id: "#allStatusOptions",
@@ -343,6 +353,99 @@ const rentalSearchResultsSchema = {
   required: ["rentals"],
 };
 
+const singleGrievanceSchema = {
+  type: "object",
+  $id: "#singleGrievance",
+  properties: {
+    id: { type: "number" },
+    authorId: { type: "number" },
+    accusedId: { type: "number" },
+    title: { type: "string" },
+    description: { type: "string" },
+    createdAt: { type: "string" },
+    status: { type: "number" },
+  },
+  required: [
+    "id",
+    "authorId",
+    "accusedId",
+    "title",
+    "description",
+    "createdAt",
+    "status",
+  ],
+};
+
+const grievanceWithNamesSchema = {
+  type: "object",
+  $id: "#grievanceWithNames",
+  properties: {
+    id: { type: "number" },
+    author: { $ref: "#genericUserWithName" },
+    accused: { $ref: "#genericUserWithName" },
+    title: { type: "string" },
+    description: { type: "string" },
+    createdAt: { type: "string" },
+    status: { type: "number" },
+  },
+  required: [
+    "id",
+    "author",
+    "accused",
+    "title",
+    "description",
+    "createdAt",
+    "status",
+  ],
+};
+
+const grievanceSearchResultsSchema = {
+  type: "object",
+  $id: "#grievanceSearchResults",
+  properties: {
+    grievances: { type: "array", items: { $ref: "#grievanceWithNames" } },
+  },
+  required: ["grievances"],
+};
+
+const singleGrievanceReplySchema = {
+  type: "object",
+  $id: "#singleGrievanceReply",
+  properties: {
+    id: { type: "number" },
+    grievanceId: { type: "number" },
+    authorId: { type: "number" },
+    text: { type: "string" },
+    createdAt: { type: "string" },
+  },
+  required: ["id", "grievanceId", "authorId", "text", "createdAt"],
+};
+
+const grievanceReplyWithNamesSchema = {
+  type: "object",
+  $id: "#grievanceReplyWithNames",
+  properties: {
+    id: { type: "number" },
+    grievanceId: { type: "number" },
+    author: { $ref: "#genericUserWithName" },
+    text: { type: "string" },
+    createdAt: { type: "string" },
+  },
+  required: ["id", "grievanceId", "author", "text", "createdAt"],
+};
+
+const grievanceRepliesSchema = {
+  type: "object",
+  $id: "#grievanceReplies",
+  properties: {
+    grievanceReplies: {
+      type: "array",
+      items: { $ref: "#grievanceReplyWithNames" },
+    },
+  },
+  required: ["grievanceReplies"],
+};
+
 const makeLazyValidator = (schema) => {
   let validate = null;
   return (data) => {
@@ -436,3 +539,26 @@ export const validateRentalSearchResults = makeLazyValidator([
 ]);
 
 export const validateExactRealTool = makeLazyValidator(exactRealToolSchema);
+
+export const validateSingleGrievance = makeLazyValidator(singleGrievanceSchema);
+
+export const validateGrievanceWithNames = makeLazyValidator([
+  genericUserWithNameSchema,
+  grievanceWithNamesSchema,
+]);
+
+export const validateGrievanceSearchResults = makeLazyValidator([
+  genericUserWithNameSchema,
+  grievanceWithNamesSchema,
+  grievanceSearchResultsSchema,
+]);
+
+export const validateSingleGrievanceReply = makeLazyValidator(
+  singleGrievanceReplySchema,
+);
+
+export const validateGrievanceReplies = makeLazyValidator([
+  genericUserWithNameSchema,
+  grievanceReplyWithNamesSchema,
+  grievanceRepliesSchema,
+]);

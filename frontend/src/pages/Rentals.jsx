@@ -241,7 +241,7 @@ export const PureRentals = (rentals) => {
 
   return (
     <div>
-      <div className="mb-3 mt-2 px-2 flex flex-col gap-x-4 gap-y-2 md:flex-row">
+      <div className="mb-3 mt-2 flex flex-col gap-x-4 gap-y-2 px-2 md:flex-row">
         <div className="flex-final mt-1 flex gap-4 md:mt-0 md:block">
           <h2 className="mt-1 text-xl md:mt-0">Rentals</h2>
           <div className="flex flex-wrap items-center gap-x-4 md:flex-col md:items-start">
@@ -310,7 +310,7 @@ export const useUserSelect = () => {
     !accessToken
       ? null
       : `get users, using ${accessToken} and ${JSON.stringify(endpointParams)}`,
-    () => endpoints.getUsers({ params: endpointParams, accessToken }),
+    () => endpoints.searchUsers({ params: endpointParams, accessToken }),
   );
 
   useEffect(() => {
@@ -324,7 +324,13 @@ export const useUserSelect = () => {
   };
 
   const addUser = async (userId) => {
-    if (users.find((u) => u.id == userId)) return;
+    let alreadySelected = false;
+    setUsers((prev) => {
+      alreadySelected = prev.find((u) => u.id == userId);
+      return prev;
+    });
+    if (alreadySelected) return;
+
     let newUser = userOptions.find((u) => u.id == userId);
     if (!newUser) {
       newUser = await endpoints.getUser({ id: userId, accessToken });
@@ -335,8 +341,12 @@ export const useUserSelect = () => {
   };
 
   const removeUser = (userId) => {
-    setUsers(users.filter((u) => u.id != userId));
+    setUsers((prev) => [...prev.filter((u) => u.id != userId)]);
   };
+
+  const clear = () => {
+    setUsers([]);
+  }
 
   return {
     users,
@@ -344,21 +354,29 @@ export const useUserSelect = () => {
     setUserTerm,
     userOptions: userOptions.map((u) => ({
       id: u.id,
-      name: u.username,
+      name: `${u.username}${u.emailAddress? `, ${u.emailAddress}` : ""}`,
     })),
     removeUser,
     addUser,
+    clear,
   };
 };
 
 export const PureUserSelect = (userSelect) => {
-  const { users, userTerm, setUserTerm, userOptions, removeUser, addUser } =
-    userSelect;
+  const {
+    users,
+    userTerm,
+    setUserTerm,
+    userOptions,
+    removeUser,
+    addUser,
+    label = "Users",
+  } = userSelect;
 
   return (
     <div>
       <SearchSelect
-        label="Users"
+        label={label}
         value={userTerm}
         onChange={setUserTerm}
         options={userOptions}
@@ -402,7 +420,13 @@ export const useToolSelect = () => {
   };
 
   const addTool = async (toolId) => {
-    if (tools.find((t) => t.id == toolId)) return;
+    let alreadySelected = false;
+    setTools((prev) => {
+      alreadySelected = prev.find((t) => t.id == toolId);
+      return prev;
+    });
+    if (alreadySelected) return;
+
     let newTool = toolOptions.find((t) => t.id == toolId);
     if (!newTool) {
       newTool = await endpoints.getTool({ id: toolId });
@@ -413,7 +437,7 @@ export const useToolSelect = () => {
   };
 
   const removeTool = (toolId) => {
-    setTools(tools.filter((t) => t.id != toolId));
+    setTools(prev => prev.filter((t) => t.id != toolId));
   };
 
   return {
@@ -422,7 +446,7 @@ export const useToolSelect = () => {
     setToolTerm,
     toolOptions: toolOptions.map((t) => ({
       id: t.id,
-      name: `${t.realId}, ${t.description}`,
+      name: `${t.realId}${!t.shortDescription.trim() ? "" : `, ${t.shortDescription}`}`,
     })),
     removeTool,
     addTool,

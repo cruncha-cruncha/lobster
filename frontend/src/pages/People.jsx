@@ -129,7 +129,7 @@ export const usePeople = () => {
     !accessToken
       ? null
       : `get users, using ${accessToken} and ${JSON.stringify(endpointParams)}`,
-    () => endpoints.getUsers({ params: endpointParams, accessToken }),
+    () => endpoints.searchUsers({ params: endpointParams, accessToken }),
   );
 
   useEffect(() => {

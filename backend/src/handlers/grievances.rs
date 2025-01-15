@@ -3,11 +3,12 @@ use crate::common;
 use crate::db_structs::{grievance, user};
 use crate::queries::grievances::{self, GrievanceWithNames};
 use crate::AppState;
-use axum::extract::{Path, Query};
+use axum::extract::Path;
 use axum::{
     extract::{Json, State},
     http::StatusCode,
 };
+use axum_extra::extract::Query;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
@@ -16,7 +17,7 @@ use std::sync::Arc;
 pub struct FilterParams {
     pub author_ids: Option<Vec<grievance::AuthorId>>,
     pub accused_ids: Option<Vec<grievance::AccusedId>>,
-    pub statuses: Option<Vec<grievance::Status>>,
+    pub statuses: Option<Vec<grievance::Status>>, // Option<Vec<tool::Status>>,
     pub page: Option<i64>,
 }
 
@@ -76,10 +77,14 @@ pub async fn update_status(
 }
 
 pub async fn get_filtered(
-    _claims: Claims,
+    claims: Claims,
     Query(params): Query<FilterParams>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<GrievancesResponse>, (StatusCode, String)> {
+    if claims.is_none() {
+        return Err((StatusCode::UNAUTHORIZED, String::from("")));
+    }
+
     let (offset, limit) = common::calculate_offset_limit(params.page.unwrap_or_default());
     grievances::select(
         grievances::SelectParams {

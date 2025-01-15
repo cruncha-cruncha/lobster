@@ -3,6 +3,7 @@ use crate::db_structs::{grievance, user};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GrievanceWithNames {
     pub id: grievance::Id,
     pub author: Option<common::UserWithName>,
