@@ -1,4 +1,4 @@
-import { useState, useEffect, useReducer } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router";
 import useSWR, { useSWRConfig } from "swr";
 import { useConstants } from "../state/constants";
@@ -7,7 +7,6 @@ import * as endpoints from "../api/endpoints";
 import { Button } from "../components/Button";
 import { TextInput } from "../components/TextInput";
 import { Select } from "../components/Select";
-import { PrevNext } from "../components/PrevNext";
 
 export const useGrievance = () => {
   const navigate = useNavigate();
@@ -147,8 +146,10 @@ export const useMakeGrievanceReply = ({ grievanceId }) => {
   const { accessToken } = useAuth();
   const { mutate } = useSWRConfig();
   const [reply, _setReply] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const replyToGrievance = () => {
+    setIsLoading(true);
     endpoints
       .createGrievanceReply({
         grievanceId,
@@ -164,6 +165,9 @@ export const useMakeGrievanceReply = ({ grievanceId }) => {
           )}`,
         );
         _setReply("");
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
   };
 
@@ -178,11 +182,13 @@ export const useMakeGrievanceReply = ({ grievanceId }) => {
     canReply,
     reply,
     setReply,
+    isLoading,
   };
 };
 
 export const PureMakeGrievanceReply = (makeGrievanceReply) => {
-  const { replyToGrievance, canReply, reply, setReply } = makeGrievanceReply;
+  const { replyToGrievance, canReply, reply, setReply, isLoading } =
+    makeGrievanceReply;
 
   return (
     <div className="px-2">
@@ -193,6 +199,7 @@ export const PureMakeGrievanceReply = (makeGrievanceReply) => {
           onClick={replyToGrievance}
           variant="green"
           disabled={!canReply}
+          isLoading={isLoading}
         />
       </div>
     </div>
@@ -208,6 +215,7 @@ export const useUpdateGrievanceStatus = ({ grievanceId }) => {
   const { accessToken } = useAuth();
   const { grievanceStatuses } = useConstants();
   const [status, _setStatus] = useState("0");
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const { data, error, isLoading, mutate } = useSWR(
     !accessToken ? null : `get grievance ${grievanceId}, using ${accessToken}`,
@@ -221,6 +229,7 @@ export const useUpdateGrievanceStatus = ({ grievanceId }) => {
   }, [data, status]);
 
   const updateStatus = () => {
+    setIsUpdating(true);
     endpoints
       .updateGrievanceStatus({
         id: grievanceId,
@@ -229,6 +238,9 @@ export const useUpdateGrievanceStatus = ({ grievanceId }) => {
       })
       .then(() => {
         mutate();
+      })
+      .finally(() => {
+        setIsUpdating(false);
       });
   };
 
@@ -244,12 +256,19 @@ export const useUpdateGrievanceStatus = ({ grievanceId }) => {
     setStatus,
     canUpdateStatus,
     options: grievanceStatuses,
+    isUpdating,
   };
 };
 
 export const PureUpdateGrievanceStatus = (updateGrievanceStatus) => {
-  const { updateStatus, status, setStatus, canUpdateStatus, options } =
-    updateGrievanceStatus;
+  const {
+    updateStatus,
+    status,
+    setStatus,
+    canUpdateStatus,
+    options,
+    isUpdating,
+  } = updateGrievanceStatus;
 
   return (
     <div className="px-2">
@@ -265,6 +284,7 @@ export const PureUpdateGrievanceStatus = (updateGrievanceStatus) => {
           onClick={updateStatus}
           variant="green"
           disabled={!canUpdateStatus}
+          isLoading={isUpdating}
         />
       </div>
     </div>

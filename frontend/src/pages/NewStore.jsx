@@ -1,4 +1,4 @@
-import { useReducer } from "react";
+import { useReducer, useState } from "react";
 import { useNavigate } from "react-router";
 import * as endpoints from "../api/endpoints";
 import { Button } from "../components/Button";
@@ -27,7 +27,7 @@ const infoReducer = (state, action) => {
 export const useNewStore = () => {
   const navigate = useNavigate();
   const { accessToken } = useAuth();
-
+  const [isCreating, setIsCreating] = useState(false);
   const [info, dispatch] = useReducer(infoReducer, {
     name: "",
     location: "",
@@ -38,6 +38,7 @@ export const useNewStore = () => {
   });
 
   const handleCreateStore = async () => {
+    setIsCreating(true);
     endpoints
       .createStore({
         info,
@@ -45,6 +46,9 @@ export const useNewStore = () => {
       })
       .then((data) => {
         navigate(`/stores/${data.id}`);
+      })
+      .finally(() => {
+        setIsCreating(false);
       });
   };
 
@@ -75,6 +79,7 @@ export const useNewStore = () => {
     canCreateNewStore: info.name && info.location && info.phoneNumber,
     handleCreateStore,
     handleCancel,
+    isCreating,
   };
 };
 
@@ -90,6 +95,7 @@ export const PureNewStore = (newStore) => {
     canCreateNewStore,
     handleCreateStore,
     handleCancel,
+    isCreating,
   } = newStore;
 
   return (
@@ -139,6 +145,7 @@ export const PureNewStore = (newStore) => {
           onClick={handleCreateStore}
           text="Create New Store"
           disabled={!canCreateNewStore}
+          isLoading={isCreating}
         />
       </div>
     </div>

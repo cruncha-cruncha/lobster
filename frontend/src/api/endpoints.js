@@ -29,6 +29,11 @@ const serverUrl = import.meta.env.VITE_SERVER_URL || "http://127.0.0.1:3000";
 
 const handle = (url, params) => {
   return fetch(url, params)
+    // .then(async (res) => {
+    //   // simulate network latency
+    //   await new Promise((resolve) => setTimeout(resolve, 1000));
+    //   return res;
+    // })
     .then((res) => {
       if (!res.ok) {
         throw new Error(res.status);
@@ -571,7 +576,7 @@ export const getGrievance = async ({ id, accessToken }) => {
   }
 
   return data;
-}
+};
 
 export const updateGrievanceStatus = async ({ id, status, accessToken }) => {
   const data = await handle(`${serverUrl}/grievances/${id}/status`, {
@@ -588,9 +593,13 @@ export const updateGrievanceStatus = async ({ id, status, accessToken }) => {
   }
 
   return data;
-}
+};
 
-export const createGrievanceReply = async ({ grievanceId, info, accessToken }) => {
+export const createGrievanceReply = async ({
+  grievanceId,
+  info,
+  accessToken,
+}) => {
   const data = await handle(`${serverUrl}/grievances/${grievanceId}/replies`, {
     method: "POST",
     headers: {
@@ -605,22 +614,28 @@ export const createGrievanceReply = async ({ grievanceId, info, accessToken }) =
   }
 
   return data;
-}
+};
 
-export const getGrievanceReplies = async ({ grievanceId, params, accessToken }) => {
+export const getGrievanceReplies = async ({
+  grievanceId,
+  params,
+  accessToken,
+}) => {
   const str_params = obj_to_query(params);
 
-  const data = await handle(`${serverUrl}/grievances/${grievanceId}/replies?${str_params}`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
+  const data = await handle(
+    `${serverUrl}/grievances/${grievanceId}/replies?${str_params}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
     },
-  });
+  );
 
   if (!validateGrievanceReplies(data)) {
     throw new Error(400);
   }
 
   return data;
-}
-
+};

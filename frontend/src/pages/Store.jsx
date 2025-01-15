@@ -146,6 +146,7 @@ const editStoreReducer = (state, action) => {
 
 export const useEditStore = ({ storeId }) => {
   const { accessToken, permissions } = useAuth();
+  const [isSaving, setIsSaving] = useState(false);
   const [info, infoDispatch] = useReducer(editStoreReducer, {
     name: "",
     location: "",
@@ -196,6 +197,7 @@ export const useEditStore = ({ storeId }) => {
       data?.otherInformation != info.otherInformation);
 
   const handleUpdate = () => {
+    setIsSaving(true);
     const payload = {
       name: info.name,
       location: info.location,
@@ -213,6 +215,9 @@ export const useEditStore = ({ storeId }) => {
       })
       .then(() => {
         mutate();
+      })
+      .finally(() => {
+        setIsSaving(false);
       });
   };
 
@@ -226,6 +231,7 @@ export const useEditStore = ({ storeId }) => {
     setOtherInformation,
     canUpdate,
     handleUpdate,
+    isSaving,
   };
 };
 
@@ -240,6 +246,7 @@ export const PureEditStore = (editStore) => {
     setOtherInformation,
     canUpdate,
     handleUpdate,
+    isSaving,
   } = editStore;
 
   return (
@@ -283,7 +290,12 @@ export const PureEditStore = (editStore) => {
         />
       </div>
       <div className="mt-3 flex justify-end gap-2 px-2">
-        <Button text="Update" disabled={!canUpdate} onClick={handleUpdate} />
+        <Button
+          text="Update"
+          disabled={!canUpdate}
+          onClick={handleUpdate}
+          isLoading={isSaving}
+        />
       </div>
     </div>
   );
@@ -298,6 +310,7 @@ export const useEditStoreStatus = ({ storeId }) => {
   const { accessToken, permissions } = useAuth();
   const { storeStatuses } = useConstants();
   const [status, _setStatus] = useState(0);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const { data, error, isLoading, mutate } = useSWR(
     !accessToken ? null : `get store ${storeId}, using ${accessToken}`,
@@ -315,6 +328,7 @@ export const useEditStoreStatus = ({ storeId }) => {
   };
 
   const handleUpdate = () => {
+    setIsUpdating(true);
     endpoints
       .updateStoreStatus({
         id: storeId,
@@ -323,6 +337,9 @@ export const useEditStoreStatus = ({ storeId }) => {
       })
       .then(() => {
         mutate();
+      })
+      .finally(() => {
+        setIsUpdating(false);
       });
   };
 
@@ -334,12 +351,19 @@ export const useEditStoreStatus = ({ storeId }) => {
     storeStatuses,
     handleUpdate,
     canEditStatus,
+    isUpdating,
   };
 };
 
 export const PureEditStoreStatus = (editStoreStatus) => {
-  const { status, setStatus, storeStatuses, handleUpdate, canEditStatus } =
-    editStoreStatus;
+  const {
+    status,
+    setStatus,
+    storeStatuses,
+    handleUpdate,
+    canEditStatus,
+    isUpdating,
+  } = editStoreStatus;
 
   return (
     <div className="px-2">
@@ -356,6 +380,7 @@ export const PureEditStoreStatus = (editStoreStatus) => {
           onClick={handleUpdate}
           text="Update Status"
           disabled={!canEditStatus}
+          isLoading={isUpdating}
         />
       </div>
     </div>
@@ -374,6 +399,7 @@ export const useAddTool = ({ storeId }) => {
   const [shortDescription, _setShortDescription] = useState("");
   const [longDescription, _setDescription] = useState("");
   const [rentalHours, _setRentalHours] = useState(defaultRentalHours);
+  const [isSaving, setIsSaving] = useState(false);
   const _categorySearch = useCategorySearch();
 
   // pictures
@@ -400,6 +426,7 @@ export const useAddTool = ({ storeId }) => {
     _categorySearch.categories.length > 0;
 
   const createTool = () => {
+    setIsSaving(true);
     return endpoints
       .createTool({
         info: {
@@ -423,6 +450,9 @@ export const useAddTool = ({ storeId }) => {
         _categorySearch.clear();
         setRealId("");
         setRentalHours(defaultRentalHours);
+      })
+      .finally(() => {
+        setIsSaving(false);
       });
   };
 
@@ -442,6 +472,7 @@ export const useAddTool = ({ storeId }) => {
     },
     createTool,
     canAddTool,
+    isSaving,
   };
 };
 
@@ -459,6 +490,7 @@ export const PureAddTool = (addTool) => {
     categorySearch,
     createTool,
     canAddTool,
+    isSaving,
   } = addTool;
 
   return (
@@ -494,7 +526,12 @@ export const PureAddTool = (addTool) => {
         />
       </div>
       <div className="mt-3 flex justify-end gap-2 px-2">
-        <Button onClick={createTool} text="Add Tool" disabled={!canAddTool} />
+        <Button
+          onClick={createTool}
+          text="Add Tool"
+          disabled={!canAddTool}
+          isLoading={isSaving}
+        />
       </div>
     </div>
   );

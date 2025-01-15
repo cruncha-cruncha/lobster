@@ -15,6 +15,7 @@ export const useRental = () => {
   const params = useParams();
   const navigate = useNavigate();
   const [endDate, _setEndDate] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
   const rentalId = params.id;
 
   const { data, isLoading, error, mutate } = useSWR(
@@ -33,6 +34,7 @@ export const useRental = () => {
   };
 
   const updateRental = () => {
+    setIsUpdating(true);
     const formattedEndDate = formatDateForBackend(endDate);
     const info = {
       ...(!formattedEndDate ? {} : { endDate: formattedEndDate }),
@@ -47,6 +49,9 @@ export const useRental = () => {
       })
       .then(() => {
         mutate();
+      })
+      .finally(() => {
+        setIsUpdating(false);
       });
   };
 
@@ -66,6 +71,8 @@ export const useRental = () => {
     navigate("/rentals");
   };
 
+  const canUpdateRental = !(!data?.endDate && !endDate) && formatDateForBackend(endDate) != data?.endDate;
+
   return {
     data,
     goToStore,
@@ -75,6 +82,8 @@ export const useRental = () => {
     endDate,
     setEndDate,
     updateRental,
+    isUpdating,
+    canUpdateRental,
   };
 };
 
@@ -88,6 +97,8 @@ export const PureRental = (tool) => {
     endDate,
     setEndDate,
     updateRental,
+    isUpdating,
+    canUpdateRental,
   } = tool;
 
   return (
@@ -103,7 +114,12 @@ export const PureRental = (tool) => {
         <DateTimeInput label="End Date" value={endDate} onChange={setEndDate} />
       </div>
       <div className="mt-3 flex justify-end gap-2 px-2">
-        <Button text="Update" onClick={updateRental} />
+        <Button
+          text="Update"
+          onClick={updateRental}
+          isLoading={isUpdating}
+          disabled={!canUpdateRental}
+        />
       </div>
     </div>
   );

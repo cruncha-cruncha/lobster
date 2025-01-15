@@ -10,6 +10,7 @@ import { Button } from "../components/Button";
 import { URL_STORE_ID_KEY } from "./Store";
 import { PureCategorySearch, useCategorySearch } from "./Tools";
 import { useToolCart } from "../state/toolCart";
+import { eqSet } from "../components/utils";
 
 export const URL_TOOL_ID_KEY = "toolId";
 
@@ -125,6 +126,7 @@ export const useTool = () => {
   };
 
   const updateTool = () => {
+    dispatch({ type: "isSaving", value: true });
     return endpoints
       .updateTool({
         id: Number(toolId),
@@ -142,6 +144,9 @@ export const useTool = () => {
       })
       .then((_data) => {
         mutate();
+      })
+      .finally(() => {
+        dispatch({ type: "isSaving", value: false });
       });
   };
 
@@ -153,6 +158,18 @@ export const useTool = () => {
   const goToRentals = () => {
     navigate(`/rentals?${URL_TOOL_ID_KEY}=${toolId}`);
   };
+
+  const canUpdateTool =
+    info.status != data?.status ||
+    info.shortDescription != data?.shortDescription ||
+    (info.longDescription != data?.longDescription &&
+      !(!info.longDescription && !data?.longDescription)) ||
+    info.realId != data?.realId ||
+    info.rentalHours != data?.rentalHours ||
+    !eqSet(
+      new Set(categorySearch.categories.map((cat) => cat.id)),
+      new Set(data?.categories.map((cat) => cat.id) || []),
+    );
 
   return {
     toolId,
@@ -174,6 +191,8 @@ export const useTool = () => {
     canRemoveFromCart,
     addToCart,
     removeFromCart,
+    isSaving: info.isSaving,
+    canUpdateTool,
   };
 };
 
@@ -198,6 +217,8 @@ export const PureTool = (tool) => {
     canRemoveFromCart,
     addToCart,
     removeFromCart,
+    isSaving,
+    canUpdateTool,
   } = tool;
 
   return (
@@ -257,7 +278,12 @@ export const PureTool = (tool) => {
         />
       </div>
       <div className="mt-3 flex justify-end gap-2 px-2">
-        <Button text="Update" onClick={updateTool} />
+        <Button
+          text="Update"
+          onClick={updateTool}
+          isLoading={isSaving}
+          disabled={!canUpdateTool}
+        />
       </div>
     </div>
   );

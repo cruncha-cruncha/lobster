@@ -1,4 +1,4 @@
-import { useReducer, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import * as endpoints from "../api/endpoints";
 import { Button } from "../components/Button";
@@ -13,13 +13,16 @@ export const useNewGrievance = () => {
 
   const [title, _setTitle] = useState("");
   const [description, _setDescription] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
 
   const handleCreateGrievance = async () => {
+    setIsCreating(true);
+
     const info = {
-        title,
-        description,
-        accusedId: _selectAccused.users[0].id,
-    }
+      title,
+      description,
+      accusedId: _selectAccused.users[0].id,
+    };
 
     endpoints
       .createGrievance({
@@ -28,6 +31,9 @@ export const useNewGrievance = () => {
       })
       .then((data) => {
         navigate(`/grievances/${data.id}`);
+      })
+      .finally(() => {
+        setIsCreating(false);
       });
   };
 
@@ -58,6 +64,7 @@ export const useNewGrievance = () => {
     handleCreateGrievance,
     canCreateNewGrievance,
     selectAccused,
+    isCreating,
   };
 };
 
@@ -71,6 +78,7 @@ export const PureNewGrievance = (newStore) => {
     handleCreateGrievance,
     canCreateNewGrievance,
     selectAccused,
+    isCreating,
   } = newStore;
 
   return (
@@ -98,6 +106,7 @@ export const PureNewGrievance = (newStore) => {
           onClick={handleCreateGrievance}
           text="Open New Grievance"
           disabled={!canCreateNewGrievance}
+          isLoading={isCreating}
         />
       </div>
     </div>

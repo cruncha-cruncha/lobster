@@ -107,7 +107,7 @@ export const useUserInfo = ({ id }) => {
     { value: "", isLoading: true, isSaving: false },
   );
 
-  const { data, error, isLoading } = useSWR(
+  const { data, error, isLoading, mutate } = useSWR(
     !accessToken ? null : `get user ${id} info, using ${accessToken}`,
     () => endpoints.getUser({ id, accessToken }),
   );
@@ -127,10 +127,7 @@ export const useUserInfo = ({ id }) => {
   };
 
   const showUpdateUserName = userId == id;
-  const canUpdateUserName =
-    !userNameState.isLoading &&
-    !userNameState.isSaving &&
-    userNameState.value !== userInfo.username;
+  const canUpdateUserName = userNameState.value !== userInfo.username;
 
   const updateUserName = async () => {
     userNameStateDispatch({ type: "saving", value: true });
@@ -142,6 +139,7 @@ export const useUserInfo = ({ id }) => {
       })
       .then((data) => {
         setUserInfo(data);
+        mutate();
       })
       .finally(() => {
         userNameStateDispatch({ type: "saving", value: false });
@@ -156,6 +154,7 @@ export const useUserInfo = ({ id }) => {
     setUserName,
     canUpdateUserName,
     updateUserName,
+    isUpdating: userNameState.isSaving,
   };
 };
 
@@ -168,6 +167,7 @@ const PureUserInfo = (userInfo) => {
     setUserName,
     canUpdateUserName,
     updateUserName,
+    isUpdating,
   } = userInfo;
 
   return (
@@ -188,6 +188,7 @@ const PureUserInfo = (userInfo) => {
               text="Update Username"
               onClick={updateUserName}
               disabled={!canUpdateUserName}
+              isLoading={isUpdating}
             />
           </div>
         </>
@@ -218,7 +219,7 @@ export const useUserStatus = ({ id }) => {
     { value: "", isLoading: true, isSaving: false },
   );
 
-  const { data, error, isLoading } = useSWR(
+  const { data, error, isLoading, mutate } = useSWR(
     !accessToken ? null : `get user ${id} info, using ${accessToken}`,
     () => endpoints.getUser({ id, accessToken }),
   );
@@ -238,21 +239,19 @@ export const useUserStatus = ({ id }) => {
   };
 
   const showUpdateUserStatus = permissions.isUserAdmin() && userId != id;
-  const canUpdateUserStatus =
-    !userStatusState.isLoading &&
-    !userStatusState.isSaving &&
-    userStatusState.value != userInfo.status;
+  const canUpdateUserStatus = userStatusState.value != userInfo.status;
 
   const updateUserStatus = async () => {
     userStatusStateDispatch({ type: "saving", value: true });
     endpoints
       .updateUserStatus({
         id: id,
-        sctatus: Number(userStatusState.value),
+        status: Number(userStatusState.value),
         accessToken,
       })
       .then((data) => {
         setUserInfo(data);
+        mutate();
       })
       .finally(() => {
         userStatusStateDispatch({ type: "saving", value: false });
@@ -267,6 +266,7 @@ export const useUserStatus = ({ id }) => {
     setStatus,
     canUpdateStatus: canUpdateUserStatus,
     updateStatus: updateUserStatus,
+    isUpdatingStatus: userStatusState.isSaving,
   };
 };
 
@@ -279,6 +279,7 @@ const PureUserStatus = (userStatus) => {
     setStatus,
     canUpdateStatus,
     updateStatus,
+    isUpdatingStatus,
   } = userStatus;
 
   return (
@@ -299,6 +300,7 @@ const PureUserStatus = (userStatus) => {
               text="Update Status"
               onClick={updateStatus}
               disabled={!canUpdateStatus}
+              isLoading={isUpdatingStatus}
             />
           </div>
         </div>
@@ -314,13 +316,11 @@ export const useUserPermissions = ({ id }) => {
     library: [],
     store: [],
   });
-  const [saving, setSaving] = useState(false);
+  const [isAddingPermission, setIsAddingPermission] = useState(false);
+  const [isRemovingPermissions, setIsRemovingPermissions] = useState([]);
   const [showFields, setShowFields] = useState(""); // "", "add", "remove"
   const [selectedRole, selectRoleOption] = useState("0");
   const storeSelect = useSingleStoreSelect();
-  // const [storeTerm, _setStoreTerm] = useState("");
-  // const [storeId, _setStoreId] = useState("0");
-  // const [storeOptions, setStoreOptions] = useState([]);
 
   const { data, error, isLoading, mutate } = useSWR(
     !accessToken ? null : `get user ${id} permissions, using ${accessToken}`,
@@ -339,7 +339,11 @@ export const useUserPermissions = ({ id }) => {
   const canUpdateStorePermissions = permissions.isStoreAdmin();
 
   const removePermission = async ({ permissionId }) => {
-    setSaving(true);
+    setIsRemovingPermissions((prev) => [
+      ...prev.filter((id) => id != permissionId),
+      permissionId,
+    ]);
+
     endpoints
       .removeUserPermission({
         id: permissionId,
@@ -348,11 +352,14 @@ export const useUserPermissions = ({ id }) => {
       .then(() => mutate())
       .finally(() => {
         setSaving(false);
+        setIsRemovingPermissions((prev) => [
+          ...prev.filter((id) => id != permissionId),
+        ]);
       });
   };
 
   const addPermission = async () => {
-    setSaving(true);
+    setIsAddingPermission(true);
 
     const permission = {
       userId: Number(id),
@@ -373,7 +380,7 @@ export const useUserPermissions = ({ id }) => {
       })
       .then(() => mutate())
       .finally(() => {
-        setSaving(false);
+        setIsAddingPermission(false);
       });
   };
 
@@ -469,6 +476,8 @@ export const useUserPermissions = ({ id }) => {
     addPermission,
     canRemovePermission,
     removePermission,
+    isAddingPermission,
+    isRemovingPermissions,
   };
 };
 
@@ -490,6 +499,8 @@ const PureUserPermissions = (userPermissions) => {
     storeSelect,
     canRemovePermission,
     removePermission,
+    isAddingPermission,
+    isRemovingPermissions,
   } = userPermissions;
 
   return (
@@ -528,6 +539,7 @@ const PureUserPermissions = (userPermissions) => {
                 text="X"
                 size="sm"
                 variant="red"
+                disabled={isRemovingPermissions.includes(info.id)}
               />
             )}
           </li>
@@ -556,6 +568,7 @@ const PureUserPermissions = (userPermissions) => {
                   text="Add Permission"
                   disabled={!canAddPermission}
                   onClick={addPermission}
+                  isLoading={isAddingPermission}
                 />
               </div>
             </>

@@ -11,6 +11,7 @@ export const useCart = () => {
   const navigate = useNavigate();
   const { toolCart, removeTool, clear: clearCart } = useToolCart();
   const [storeCode, _setStoreCode] = useState("");
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   const goToTools = () => {
     navigate("/tools");
@@ -29,6 +30,7 @@ export const useCart = () => {
   };
 
   const handleCheckout = () => {
+    setIsCheckingOut(true);
     endpoints
       .checkOutTools({
         info: {
@@ -39,6 +41,9 @@ export const useCart = () => {
       })
       .then(() => {
         clearCart();
+      })
+      .finally(() => {
+        setIsCheckingOut(false);
       });
   };
 
@@ -55,6 +60,7 @@ export const useCart = () => {
     showCheckoutFields,
     canCheckout,
     storeCode,
+    isCheckingOut,
   };
 };
 
@@ -69,6 +75,7 @@ export const PureCart = (cart) => {
     showCheckoutFields,
     canCheckout,
     storeCode,
+    isCheckingOut,
   } = cart;
 
   return (
@@ -91,7 +98,10 @@ export const PureCart = (cart) => {
         {toolCart.map((tool) => (
           <li key={tool.id} className="flex items-center justify-between">
             <div onClick={() => goToTool(tool.id)} className="cursor-pointer">
-              {tool.realId}{!tool.shortDescription.trim() ? "" : `, ${tool.shortDescription}`}
+              {tool.realId}
+              {!tool.shortDescription.trim()
+                ? ""
+                : `, ${tool.shortDescription}`}
             </div>
             <Button
               onClick={() => removeFromCart(tool.id)}
@@ -116,6 +126,7 @@ export const PureCart = (cart) => {
               onClick={handleCheckout}
               text="Checkout"
               disabled={!canCheckout}
+              isLoading={isCheckingOut}
             />
           </div>
         </div>

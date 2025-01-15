@@ -1,16 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router";
 import useSWR from "swr";
-import { useConstants } from "../state/constants";
 import { useAuth } from "../state/auth";
 import * as endpoints from "../api/endpoints";
 import { Button } from "../components/Button";
 import { TextInput } from "../components/TextInput";
-import { Select } from "../components/Select";
-import { useCategorySearch, PureCategorySearch } from "./Tools";
 import { useToolCart } from "../state/toolCart";
 import { URL_STORE_ID_KEY } from "./Store";
-import { SearchSelect } from "../components/SearchSelect";
 
 export const useStoreCart = () => {
   const params = useParams();
@@ -23,6 +19,8 @@ export const useStoreCart = () => {
     clear: clearCart,
   } = useToolCart();
   const [userCode, _setUserCode] = useState("");
+  const [isReturning, setIsReturning] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const storeId = params.id;
 
   const toolCart = _toolCart.filter((tool) => tool.storeId == storeId);
@@ -55,6 +53,7 @@ export const useStoreCart = () => {
   const canReturn = toolCart.length > 0 && userCode == "";
 
   const handleCheckout = () => {
+    setIsCheckingOut(true);
     endpoints
       .checkOutTools({
         info: {
@@ -65,10 +64,14 @@ export const useStoreCart = () => {
       })
       .then(() => {
         clearCart();
+      })
+      .finally(() => {
+        setIsCheckingOut(false);
       });
   };
 
   const handleReturn = () => {
+    setIsReturning(true);
     endpoints
       .checkInTools({
         info: {
@@ -78,6 +81,9 @@ export const useStoreCart = () => {
       })
       .then(() => {
         clearCart();
+      })
+      .finally(() => {
+        setIsReturning(false);
       });
   };
 
@@ -95,6 +101,8 @@ export const useStoreCart = () => {
     canCheckout,
     canReturn,
     userCode,
+    isReturning,
+    isCheckingOut,
   };
 };
 
@@ -113,6 +121,8 @@ export const PureStoreCart = (cart) => {
     canCheckout,
     canReturn,
     userCode,
+    isReturning,
+    isCheckingOut,
   } = cart;
 
   return (
@@ -138,7 +148,10 @@ export const PureStoreCart = (cart) => {
           <li key={tool.id}>
             <div className="flex items-center justify-between">
               <div onClick={() => goToTool(tool.id)} className="cursor-pointer">
-                {tool.realId}{!tool.shortDescription.trim() ? "" : `, ${tool.shortDescription}`}
+                {tool.realId}
+                {!tool.shortDescription.trim()
+                  ? ""
+                  : `, ${tool.shortDescription}`}
               </div>
               <Button
                 onClick={() => removeFromCart(tool.id)}
@@ -154,11 +167,17 @@ export const PureStoreCart = (cart) => {
         <TextInput label="User ID" value={userCode} onChange={setUserCode} />
       </div>
       <div className="mt-3 flex justify-end gap-2 px-2">
-        <Button text="Return" disabled={!canReturn} onClick={handleReturn} />
+        <Button
+          text="Return"
+          disabled={!canReturn}
+          onClick={handleReturn}
+          isLoading={isReturning}
+        />
         <Button
           text="Checkout"
           disabled={!canCheckout}
           onClick={handleCheckout}
+          isLoading={isCheckingOut}
         />
       </div>
     </div>
@@ -183,7 +202,9 @@ export const useQuickFindStoreTool = ({ storeId, onSingle }) => {
   };
 
   const { data, isLoading, error, mutate } = useSWR(
-    !realId ? null : `get exact real tool, using ${JSON.stringify(endpointParams)}`,
+    !realId
+      ? null
+      : `get exact real tool, using ${JSON.stringify(endpointParams)}`,
     () => endpoints.getExactRealTool({ params: endpointParams }),
   );
 
