@@ -10,6 +10,7 @@ import { URL_TOOL_ID_KEY } from "./Tool";
 import { URL_PERSON_ID_KEY } from "./Person";
 import { usePrevNext, PurePrevNext } from "../components/PrevNext";
 import { useStoreSelect, PureStoreSelect } from "./Tools";
+import { useDebounce } from "../components/useDebounce";
 
 export const useRentals = () => {
   const { accessToken } = useAuth();
@@ -283,9 +284,10 @@ export const useUserSelect = () => {
   const [users, setUsers] = useState([]);
   const [userTerm, _setUserTerm] = useState("");
   const [userOptions, setUserOptions] = useState([]);
+  const debouncedUserTerm = useDebounce(userTerm, 400);
 
   const endpointParams = {
-    term: userTerm,
+    term: debouncedUserTerm,
   };
 
   const { data, isLoading, error, mutate } = useSWR(
@@ -381,9 +383,10 @@ export const useToolSelect = () => {
   const [tools, setTools] = useState([]);
   const [toolTerm, _setToolTerm] = useState("");
   const [toolOptions, setToolOptions] = useState([]);
+  const debouncedToolTerm = useDebounce(toolTerm, 400);
 
   const endpointParams = {
-    term: toolTerm,
+    term: debouncedToolTerm,
   };
 
   const { data, isLoading, error, mutate } = useSWR(

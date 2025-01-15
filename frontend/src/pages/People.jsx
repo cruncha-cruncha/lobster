@@ -39,13 +39,12 @@ export const usePeople = () => {
   const _storeSelect = useSingleStoreSelect();
   const [params, paramsDispatch] = useReducer(paramsReducer, {
     searchTerm: "",
-    page: 1,
     storeId: "0",
     withStore: false,
     status: "1",
     role: "0",
   });
-  const debouncedParams = useDebounce(params, 200);
+  const debouncedSearchTerm = useDebounce(params.searchTerm, 400);
   const urlStoreId = urlParams.get(URL_STORE_ID_KEY);
 
   const setStatus = (e) =>
@@ -100,18 +99,18 @@ export const usePeople = () => {
   }
 
   const endpointParams = {
-    term: debouncedParams.searchTerm,
+    term: debouncedSearchTerm,
     storeIds: urlStoreId
       ? [parseInt(urlStoreId, 10)]
-      : debouncedParams.storeId === "0" || !debouncedParams.withStore
+      : params.storeId === "0" || !params.withStore
       ? ""
-      : [parseInt(debouncedParams.storeId, 10)],
+      : [parseInt(params.storeId, 10)],
     statuses:
-      debouncedParams.status === "0"
+    params.status === "0"
         ? ""
-        : [parseInt(debouncedParams.status, 10)],
+        : [parseInt(params.status, 10)],
     roles:
-      debouncedParams.role === "0" ? "" : [parseInt(debouncedParams.role, 10)],
+    params.role === "0" ? "" : [parseInt(params.role, 10)],
     page: pageControl.pageNumber,
   };
 

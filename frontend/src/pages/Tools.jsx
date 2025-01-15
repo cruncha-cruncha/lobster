@@ -13,6 +13,7 @@ import { useToolCategories } from "../state/toolCategories";
 import { usePrevNext, PurePrevNext } from "../components/PrevNext";
 import { Button } from "../components/Button";
 import { useToolCart } from "../state/toolCart";
+import { useDebounce } from "../components/useDebounce";
 
 export const buildToolList = (data) => {
   return data.tools.map((tool) => {
@@ -41,6 +42,7 @@ export const useTools = () => {
 
   const [status, _setStatus] = useState("1");
   const [searchTerm, _setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 400);
   const pageControl = usePrevNext();
 
   const categorySearch = useCategorySearch();
@@ -85,7 +87,7 @@ export const useTools = () => {
   }
 
   const endpointParams = {
-    term: searchTerm,
+    term: debouncedSearchTerm,
     storeIds: urlStoreId
       ? [urlStoreId]
       : storeSelect.stores.map((store) => store.id),
@@ -382,9 +384,10 @@ export const useStoreSelect = () => {
   const [stores, setStores] = useState([]);
   const [storeTerm, _setStoreTerm] = useState("");
   const [storeOptions, setStoreOptions] = useState([]);
+  const debouncedStoreTerm = useDebounce(storeTerm, 400);
 
   const endpointParams = {
-    term: storeTerm,
+    term: debouncedStoreTerm,
   };
 
   const { data, isLoading, error, mutate } = useSWR(

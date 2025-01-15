@@ -46,15 +46,15 @@ export const useStores = () => {
   const setTerm = (e) =>
     paramsDispatch({ type: "term", value: e.target.value });
 
-  const debouncedParams = useDebounce(params, 200);
+  const debouncedTerm = useDebounce(params.term, 400);
 
   const endpointParams = {
-    term: debouncedParams.term,
+    term: debouncedTerm,
     page: pageControl.pageNumber,
     statuses:
-      debouncedParams.status == "0"
+      params.status == "0"
         ? ""
-        : [parseInt(debouncedParams.status, 10)],
+        : [parseInt(params.status, 10)],
   };
 
   const { data, error, isLoading, mutate } = useSWR(
