@@ -15,15 +15,15 @@ import { URL_STORE_ID_KEY } from "./Store";
 const paramsReducer = (state, action) => {
   switch (action.type) {
     case "status":
-      return { ...state, status: action.value, page: 1 };
+      return { ...state, status: action.value };
     case "searchTerm":
-      return { ...state, searchTerm: action.value, page: 1 };
+      return { ...state, searchTerm: action.value };
     case "role":
-      return { ...state, role: action.value, page: 1 };
+      return { ...state, role: action.value };
     case "storeId":
-      return { ...state, storeId: action.value, page: 1 };
+      return { ...state, storeId: action.value };
     case "withStore":
-      return { ...state, withStore: action.value, page: 1 };
+      return { ...state, withStore: action.value };
     default:
       return state;
   }
@@ -47,20 +47,32 @@ export const usePeople = () => {
   const debouncedSearchTerm = useDebounce(params.searchTerm, 400);
   const urlStoreId = urlParams.get(URL_STORE_ID_KEY);
 
-  const setStatus = (e) =>
+  useEffect(() => {
+    if (params.searchTerm === debouncedSearchTerm) {
+      pageControl.setPage(1);
+    }
+  }, [params.searchTerm, debouncedSearchTerm]);
+
+  const setStatus = (e) => {
     paramsDispatch({ type: "status", value: e.target.value });
+    pageControl.setPage(1);
+  };
 
-  const setSearchTerm = (e) =>
+  const setSearchTerm = (e) => {
     paramsDispatch({ type: "searchTerm", value: e.target.value });
+  };
 
-  const setRole = (e) =>
+  const setRole = (e) => {
     paramsDispatch({ type: "role", value: e.target.value });
+    pageControl.setPage(1);
+  };
 
   const storeSelect = {
     ..._storeSelect,
     storeOptions: params.withStore ? _storeSelect.storeOptions : [],
     setStoreId: (id) => {
       paramsDispatch({ type: "storeId", value: id });
+      pageControl.setPage(1);
       urlParams.set(URL_STORE_ID_KEY, id);
       setUrlParams(urlParams);
       _storeSelect.setStoreId(id);
@@ -74,6 +86,7 @@ export const usePeople = () => {
   const setWithStore = (e) => {
     const checked = e.target.checked;
     paramsDispatch({ type: "withStore", value: checked });
+    pageControl.setPage(1);
     if (!checked && urlParams.has(URL_STORE_ID_KEY)) {
       urlParams.delete(URL_STORE_ID_KEY);
       setUrlParams(urlParams);
@@ -105,12 +118,8 @@ export const usePeople = () => {
       : params.storeId === "0" || !params.withStore
       ? ""
       : [parseInt(params.storeId, 10)],
-    statuses:
-    params.status === "0"
-        ? ""
-        : [parseInt(params.status, 10)],
-    roles:
-    params.role === "0" ? "" : [parseInt(params.role, 10)],
+    statuses: params.status === "0" ? "" : [parseInt(params.status, 10)],
+    roles: params.role === "0" ? "" : [parseInt(params.role, 10)],
     page: pageControl.pageNumber,
   };
 

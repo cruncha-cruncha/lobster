@@ -13,6 +13,7 @@ export const usePrevNext = ({ pageNumber = 1 } = {}) => {
     prev: prevPage,
     next: nextPage,
     pageNumber: page,
+    setPage,
   };
 };
 

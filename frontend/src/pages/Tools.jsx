@@ -45,8 +45,30 @@ export const useTools = () => {
   const debouncedSearchTerm = useDebounce(searchTerm, 400);
   const pageControl = usePrevNext();
 
-  const categorySearch = useCategorySearch();
+  const _categorySearch = useCategorySearch();
   const _storeSelect = useStoreSelect();
+
+  useEffect(() => {
+    if (searchTerm === debouncedSearchTerm) {
+      pageControl.setPage(1);
+    }
+  }, [searchTerm, debouncedSearchTerm]);
+
+  const categorySearch = {
+    ..._categorySearch,
+    addCategory: (args) => {
+      _categorySearch.addCategory(args);
+      pageControl.setPage(1);
+    },
+    removeCategory: (args) => {
+      _categorySearch.removeCategory(args);
+      pageControl.setPage(1);
+    },
+    setMatchAllCats: (e) => {
+      _categorySearch.setMatchAllCats(e);
+      pageControl.setPage(1);
+    },
+  };
 
   const storeSelect = {
     ..._storeSelect,
@@ -56,6 +78,7 @@ export const useTools = () => {
         setUrlParams(urlParams);
       }
       _storeSelect.addStore(storeId);
+      pageControl.setPage(1);
     },
     removeStore: (storeId) => {
       if (urlStoreId) {
@@ -63,6 +86,7 @@ export const useTools = () => {
         setUrlParams(urlParams);
       }
       _storeSelect.removeStore(storeId);
+      pageControl.setPage(1);
     },
   };
 
@@ -110,6 +134,7 @@ export const useTools = () => {
 
   const setStatus = (e) => {
     _setStatus(e.target.value);
+    pageControl.setPage(1);
   };
 
   const setSearchTerm = (e) => {

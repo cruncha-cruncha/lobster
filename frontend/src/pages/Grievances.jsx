@@ -34,6 +34,7 @@ export const Grievances = () => {
         setUrlParams(urlParams);
       }
       _authorSelect.addUser(userId);
+      pageControl.setPage(1);
     },
     removeUser: (userId) => {
       if (urlAuthorId) {
@@ -41,6 +42,7 @@ export const Grievances = () => {
         setUrlParams(urlParams);
       }
       _authorSelect.removeUser(userId);
+      pageControl.setPage(1);
     },
   };
 
@@ -52,6 +54,7 @@ export const Grievances = () => {
         setUrlParams(urlParams);
       }
       _accusedSelect.addUser(userId);
+      pageControl.setPage(1);
     },
     removeUser: (userId) => {
       if (urlAccusedId) {
@@ -59,6 +62,7 @@ export const Grievances = () => {
         setUrlParams(urlParams);
       }
       _accusedSelect.removeUser(userId);
+      pageControl.setPage(1);
     },
   };
 
@@ -107,6 +111,7 @@ export const Grievances = () => {
   const setStatus = (e) => {
     const statusId = e.target.value;
     _setStatus(statusId);
+    pageControl.setPage(1);
 
     if (statusId == "0") {
       _setStatuses([]);

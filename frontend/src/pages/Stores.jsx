@@ -13,9 +13,9 @@ import { usePrevNext, PurePrevNext } from "../components/PrevNext";
 const paramsReducer = (state, action) => {
   switch (action.type) {
     case "status":
-      return { ...state, status: action.value, page: 1 };
+      return { ...state, status: action.value };
     case "term":
-      return { ...state, term: action.value, page: 1 };
+      return { ...state, term: action.value };
     default:
       return state;
   }
@@ -40,21 +40,27 @@ export const useStores = () => {
     navigate(`/stores/${id}`);
   };
 
-  const setStatus = (e) =>
+  const setStatus = (e) => {
     paramsDispatch({ type: "status", value: e.target.value });
+    pageControl.setPage(1);
+  };
 
-  const setTerm = (e) =>
+  const setTerm = (e) => {
     paramsDispatch({ type: "term", value: e.target.value });
+  };
 
   const debouncedTerm = useDebounce(params.term, 400);
+
+  useEffect(() => {
+    if (params.term === debouncedTerm) {
+      pageControl.setPage(1);
+    }
+  }, [params.term, debouncedTerm]);
 
   const endpointParams = {
     term: debouncedTerm,
     page: pageControl.pageNumber,
-    statuses:
-      params.status == "0"
-        ? ""
-        : [parseInt(params.status, 10)],
+    statuses: params.status == "0" ? "" : [parseInt(params.status, 10)],
   };
 
   const { data, error, isLoading, mutate } = useSWR(

@@ -37,6 +37,7 @@ export const useRentals = () => {
         setUrlParams(urlParams);
       }
       _storeSelect.addStore(storeId);
+      pageControl.setPage(1);
     },
     removeStore: (storeId) => {
       if (urlStoreId) {
@@ -44,6 +45,7 @@ export const useRentals = () => {
         setUrlParams(urlParams);
       }
       _storeSelect.removeStore(storeId);
+      pageControl.setPage(1);
     },
   };
 
@@ -55,6 +57,7 @@ export const useRentals = () => {
         setUrlParams(urlParams);
       }
       _userSelect.addUser(userId);
+      pageControl.setPage(1);
     },
     removeUser: (userId) => {
       if (urlPersonId) {
@@ -62,6 +65,7 @@ export const useRentals = () => {
         setUrlParams(urlParams);
       }
       _userSelect.removeUser(userId);
+      pageControl.setPage(1);
     },
   };
 
@@ -73,6 +77,7 @@ export const useRentals = () => {
         setUrlParams(urlParams);
       }
       _toolSelect.addTool(toolId);
+      pageControl.setPage(1);
     },
     removeTool: (toolId) => {
       if (urlToolId) {
@@ -80,6 +85,7 @@ export const useRentals = () => {
         setUrlParams(urlParams);
       }
       _toolSelect.removeTool(toolId);
+      pageControl.setPage(1);
     },
   };
 
@@ -145,6 +151,7 @@ export const useRentals = () => {
 
   const setOrderAsc = (e) => {
     _setOrderAsc(e.target.checked);
+    pageControl.setPage(1);
   };
 
   const endpointParams = {
@@ -174,6 +181,7 @@ export const useRentals = () => {
 
   const setStillOpen = (e) => {
     _setStillOpen(e.target.checked);
+    pageControl.setPage(1);
     if (!e.target.checked) {
       _setOverdueOnly(false);
     }
@@ -181,6 +189,7 @@ export const useRentals = () => {
 
   const setOverdueOnly = (e) => {
     _setOverdueOnly(e.target.checked);
+    pageControl.setPage(1);
     if (e.target.checked) {
       _setStillOpen(true);
     }
