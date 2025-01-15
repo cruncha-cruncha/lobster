@@ -50,7 +50,7 @@ pub async fn create_new(
         payload.accused_id,
         payload.title,
         payload.description,
-        grievance::GrievanceStatus::Open as i32,
+        grievance::GrievanceStatus::Pending as i32,
         &state.db,
     )
     .await

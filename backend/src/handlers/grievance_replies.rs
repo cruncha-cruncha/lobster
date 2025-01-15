@@ -67,7 +67,11 @@ pub async fn get_by_grievance_id(
     Query(params): Query<SelectParams>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<GrievanceReplyResponse>, (StatusCode, String)> {
-    let (offset, limit) = common::calculate_offset_limit(params.page.unwrap_or_default());
+    let (mut offset, mut limit) = common::calculate_offset_limit(params.page.unwrap_or_default());
+    if params.page.is_none() {
+        offset = 0;
+        limit = 1000;
+    }
 
     match grievance_replies::select(
         grievance_replies::SelectParams {

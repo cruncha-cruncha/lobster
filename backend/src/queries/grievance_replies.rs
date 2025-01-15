@@ -10,6 +10,7 @@ pub struct SelectParams {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GrievanceReplyWithNames {
     pub id: grievance_reply::Id,
     pub grievance_id: grievance_reply::GrievanceId,

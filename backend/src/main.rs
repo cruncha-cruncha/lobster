@@ -144,7 +144,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             routing::patch(handlers::grievances::update_status),
         )
         .route(
-            "/grievance/:grievance_id/replies",
+            "/grievances/:grievance_id/replies",
             routing::get(handlers::grievance_replies::get_by_grievance_id)
                 .post(handlers::grievance_replies::create_new),
         );
