@@ -8,23 +8,104 @@ import { TextInput } from "../components/TextInput";
 import { Select } from "../components/Select";
 import { SearchSelect } from "../components/SearchSelect";
 import { Checkbox } from "../components/Checkbox";
-import { URL_STORE_ID_KEY } from "./Store";
-import { useToolCategories } from "../state/toolCategories";
 import { PrevNext } from "../components/PrevNext";
 import { Button } from "../components/Button";
-import { useToolCart } from "../state/toolCart";
 import { PureUserSelect, useUserSelect } from "./Rentals";
+
+export const URL_AUTHOR_ID_KEY = "authorId";
+export const URL_ACCUSED_ID_KEY = "accusedId";
 
 export const Grievances = () => {
   const { accessToken } = useAuth();
   const navigate = useNavigate();
+  const [urlParams, setUrlParams] = useSearchParams();
   const { grievanceStatuses: _grievanceStatuses } = useConstants();
   const [status, _setStatus] = useState("0");
   const [statuses, _setStatuses] = useState([]);
   const [grievances, setGrievances] = useState([]);
   const [page, setPage] = useState(1);
-  const selectAuthor = useUserSelect();
-  const selectAccused = useUserSelect();
+  const _authorSelect = useUserSelect();
+  const _accusedSelect = useUserSelect();
+  const urlAuthorId = urlParams.get(URL_AUTHOR_ID_KEY);
+  const urlAccusedId = urlParams.get(URL_ACCUSED_ID_KEY);
+
+  const authorSelect = {
+    ..._authorSelect,
+    addUser: (userId) => {
+      if (urlAuthorId) {
+        urlParams.delete(URL_AUTHOR_ID_KEY);
+        setUrlParams(urlParams);
+      }
+      _authorSelect.addUser(userId);
+    },
+    removeUser: (userId) => {
+      if (urlAuthorId) {
+        urlParams.delete(URL_AUTHOR_ID_KEY);
+        setUrlParams(urlParams);
+      }
+      _authorSelect.removeUser(userId);
+    },
+  };
+
+  const accusedSelect = {
+    ..._accusedSelect,
+    addUser: (userId) => {
+      if (urlAccusedId) {
+        urlParams.delete(URL_ACCUSED_ID_KEY);
+        setUrlParams(urlParams);
+      }
+      _accusedSelect.addUser(userId);
+    },
+    removeUser: (userId) => {
+      if (urlAccusedId) {
+        urlParams.delete(URL_ACCUSED_ID_KEY);
+        setUrlParams(urlParams);
+      }
+      _accusedSelect.removeUser(userId);
+    },
+  };
+
+  // filter by author if urlAuthorId is present
+  {
+    useEffect(() => {
+      if (!urlAuthorId || !accessToken) return;
+      _authorSelect.addUser(urlAuthorId);
+    }, [urlAuthorId, accessToken]);
+
+    const { data } = useSWR(
+      !urlAuthorId || !accessToken
+        ? null
+        : `get user ${urlAuthorId}, using ${accessToken}`,
+      () => endpoints.getUser({ id: urlAuthorId, accessToken }),
+    );
+
+    useEffect(() => {
+      if (data) {
+        _authorSelect.setUserTerm({ target: { value: data.username } });
+      }
+    }, [data]);
+  }
+
+  // filter by accused if urlAccusedId is present
+  {
+    useEffect(() => {
+      if (!urlAccusedId || !accessToken) return;
+      _accusedSelect.addUser(urlAccusedId);
+    }, [urlAccusedId, accessToken]);
+
+    const { data } = useSWR(
+      !urlAccusedId || !accessToken
+        ? null
+        : `get user ${urlAccusedId}, using ${accessToken}`,
+      () => endpoints.getUser({ id: urlAccusedId, accessToken }),
+    );
+
+    useEffect(() => {
+      if (data) {
+        _accusedSelect.setUserTerm({ target: { value: data.username } });
+      }
+    }, [data]);
+  }
 
   const setStatus = (e) => {
     const statusId = e.target.value;
@@ -36,7 +117,6 @@ export const Grievances = () => {
     }
 
     const newStatus = grievanceStatuses.find((s) => s.id == statusId);
-    console.log(newStatus);
     _setStatuses((prev) => {
       const newList = [...prev.filter((s) => s.id != statusId), newStatus];
       return newList.sort((a, b) => a.id - b.id);
@@ -54,8 +134,12 @@ export const Grievances = () => {
   };
 
   const endpointParams = {
-    authorIds: selectAuthor.users.map((u) => u.id),
-    accusedIds: selectAccused.users.map((u) => u.id),
+    authorIds: !urlAuthorId
+      ? authorSelect.users.map((u) => u.id)
+      : [urlAuthorId],
+    accusedIds: !urlAccusedId
+      ? accusedSelect.users.map((u) => u.id)
+      : [urlAccusedId],
     statuses: statuses.map((s) => s.id),
     page,
   };
@@ -73,6 +157,10 @@ export const Grievances = () => {
     navigate("/grievances/new");
   };
 
+  const goToGrievance = (grievanceId) => {
+    navigate(`/grievances/${grievanceId}`);
+  };
+
   useEffect(() => {
     if (data) {
       setGrievances(data.grievances);
@@ -80,17 +168,17 @@ export const Grievances = () => {
   }, [data]);
 
   const prevPage = () => {
-    setPage(prev => {
+    setPage((prev) => {
       if (prev > 1) {
         return prev - 1;
       }
       return prev;
-    })
+    });
   };
 
   const nextPage = () => {
-    setPage(prev => prev + 1);
-  }
+    setPage((prev) => prev + 1);
+  };
 
   const grievanceStatuses = [{ id: "0", name: "All" }, ..._grievanceStatuses];
 
@@ -106,8 +194,8 @@ export const Grievances = () => {
         />
       </div>
       <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 px-2">
-        <PureUserSelect {...selectAuthor} label="Authors" />
-        <PureUserSelect {...selectAccused} label="Accused" />
+        <PureUserSelect {...authorSelect} label="Authors" />
+        <PureUserSelect {...accusedSelect} label="Accused" />
         <div>
           <Select
             label="Status"
@@ -133,16 +221,16 @@ export const Grievances = () => {
           <li className="text-stone-400">no results</li>
         )}
         {grievances.map((grievance) => (
-          <li key={grievance.id}>
+          <li
+            key={grievance.id}
+            onClick={() => goToGrievance(grievance.id)}
+            className="cursor-pointer"
+          >
             <p>{JSON.stringify(grievance)}</p>
           </li>
         ))}
       </ul>
-      <PrevNext
-        prev={prevPage}
-        next={nextPage}
-        pageNumber={page}
-      />
+      <PrevNext prev={prevPage} next={nextPage} pageNumber={page} />
     </div>
   );
 };

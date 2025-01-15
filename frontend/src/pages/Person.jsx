@@ -8,6 +8,7 @@ import { Button } from "../components/Button";
 import { TextInput } from "../components/TextInput";
 import { Select } from "../components/Select";
 import { PureSingleStoreSelect, useSingleStoreSelect } from "./People";
+import { URL_ACCUSED_ID_KEY } from "./Grievances";
 
 export const URL_PERSON_ID_KEY = "personId";
 
@@ -24,6 +25,10 @@ export const usePerson = () => {
     navigate(`/rentals?${URL_PERSON_ID_KEY}=${userId}`);
   };
 
+  const goToGrievances = () => {
+    navigate(`/grievances?${URL_ACCUSED_ID_KEY}=${userId}`);
+  };
+
   const userInfo = useUserInfo({ id: userId });
   const userStatus = useUserStatus({ id: userId });
   const userPermissions = useUserPermissions({ id: userId });
@@ -32,6 +37,7 @@ export const usePerson = () => {
     username: userInfo.data.username || "Person",
     goToPeople,
     goToRentals,
+    goToGrievances,
     userInfo,
     userStatus,
     userPermissions,
@@ -45,6 +51,7 @@ export const PurePerson = (person) => {
     userStatus,
     userPermissions,
     goToRentals,
+    goToGrievances,
     username,
   } = person;
 
@@ -52,6 +59,12 @@ export const PurePerson = (person) => {
     <div>
       <h1 className="mt-2 px-2 text-xl">{username}</h1>
       <div className="my-2 flex justify-start gap-2 px-2">
+        <Button
+          onClick={goToGrievances}
+          text="Grievances"
+          variant="blue"
+          size="sm"
+        />
         <Button onClick={goToRentals} text="Rentals" variant="blue" size="sm" />
         <Button
           onClick={goToPeople}
