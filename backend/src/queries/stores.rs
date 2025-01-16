@@ -1,5 +1,5 @@
-use crate::common;
 use crate::db_structs::store;
+use crate::{common, db_structs::user};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -7,6 +7,7 @@ pub struct SelectParams {
     pub ids: Vec<store::Id>,
     pub statuses: Vec<store::Status>,
     pub term: String,
+    pub user_ids: Vec<user::Id>,
     pub offset: i64,
     pub limit: i64,
 }
@@ -33,18 +34,22 @@ pub async fn select(
     sqlx::query_as!(
         store::Store,
         r#"
-        SELECT *
+        SELECT ms.*
         FROM main.stores ms
+        LEFT JOIN main.permissions p ON ms.id = p.store_id AND p.status = 1
         WHERE
             (ARRAY_LENGTH($1::integer[], 1) IS NULL OR ms.id = ANY($1::integer[]))
             AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR ms.status = ANY($2::integer[]))
             AND ($3::text = '' OR $3::text <% (ms.name || ' ' || ms.location || ' ' || COALESCE(ms.email_address, '') || ' ' || ms.phone_number))
+            AND (ARRAY_LENGTH($4::integer[], 1) IS NULL OR p.user_id = ANY($4::integer[]))
+        GROUP BY ms.id
         ORDER BY ms.id
-        OFFSET $4 LIMIT $5;
+        OFFSET $5 LIMIT $6;
         "#,
         &params.ids,
         &params.statuses,
         params.term,
+        &params.user_ids,
         params.offset,
         params.limit,
     )
@@ -65,6 +70,24 @@ pub async fn select_by_code(
         WHERE ms.code = $1;
         "#,
         code,
+    )
+    .fetch_one(db)
+    .await
+    .map_err(|e| e.to_string())
+}
+
+pub async fn select_by_id(
+    store_id: store::Id,
+    db: &sqlx::Pool<sqlx::Postgres>,
+) -> Result<store::Store, String> {
+    sqlx::query_as!(
+        store::Store,
+        r#"
+        SELECT *
+        FROM main.stores ms
+        WHERE ms.id = $1;
+        "#,
+        store_id,
     )
     .fetch_one(db)
     .await

@@ -233,7 +233,7 @@ export const PurePeople = (people) => {
   );
 };
 
-export const useSingleStoreSelect = () => {
+export const useSingleStoreSelect = ({ filterParams = {} } = {}) => {
   const { accessToken } = useAuth();
   const [storeId, _setStoreId] = useState("");
   const [storeTerm, _setStoreTerm] = useState("");
@@ -251,6 +251,7 @@ export const useSingleStoreSelect = () => {
 
   const endpointParams = {
     term: storeTerm,
+    ...filterParams,
   };
 
   const { data, isLoading, error, mutate } = useSWR(

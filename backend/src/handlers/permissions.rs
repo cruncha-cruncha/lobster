@@ -55,12 +55,16 @@ fn can_modify(claims: &Claims, role_id: i32, user_id: i32, store_id: Option<i32>
         && user_id != claims.subject_as_user_id().unwrap_or_default()
     {
         return true;
-    } else if claims.is_store_admin()
+    }
+    
+    if claims.is_store_admin()
         && (role_id == auth::claims::Roles::StoreRep as i32
             || role_id == auth::claims::Roles::ToolManager as i32)
     {
         return true;
-    } else if claims.is_store_rep(store_id.unwrap_or_default())
+    }
+    
+    if claims.is_store_rep(store_id.unwrap_or_default())
         && (role_id == auth::claims::Roles::StoreRep as i32
             || role_id == auth::claims::Roles::ToolManager as i32)
         && user_id != claims.subject_as_user_id().unwrap_or_default()
@@ -229,6 +233,7 @@ pub async fn get_by_user(
             ids: store_ids,
             statuses: vec![],
             term: "".to_string(),
+            user_ids: vec![],
             offset: 0,
             limit: 1000,
         },

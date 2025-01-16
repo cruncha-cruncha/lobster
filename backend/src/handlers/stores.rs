@@ -39,6 +39,7 @@ pub struct SettableStoreData {
 pub struct FilterParams {
     pub statuses: Option<Vec<store::Status>>,
     pub term: Option<String>,
+    pub user_ids: Option<Vec<i32>>,
     pub page: Option<i64>,
 }
 
@@ -175,40 +176,25 @@ pub async fn get_by_id(
     Path(store_id): Path<i32>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<store::Store>, (StatusCode, String)> {
-    let mut stores = match stores::select(
-        stores::SelectParams {
-            ids: vec![store_id],
-            statuses: vec![],
-            term: String::new(),
-            offset: 0,
-            limit: 1,
-        },
-        &state.db,
-    )
-    .await
-    {
+    let mut store = match stores::select_by_id(store_id, &state.db).await {
         Ok(s) => s,
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     };
 
-    if stores.len() < 1 {
-        return Err((StatusCode::NOT_FOUND, "not found".to_string()));
-    }
-
     let can_see_contact_info = !claims.is_none();
     if !can_see_contact_info {
-        stores[0].email_address = None;
-        stores[0].phone_number = "".to_string();
+        store.email_address = None;
+        store.phone_number = "".to_string();
     }
 
     let can_see_code = claims.is_store_admin()
         || claims.is_store_rep(store_id)
         || claims.is_tool_manager(store_id);
     if !can_see_code {
-        stores[0].code = String::new();
+        store.code = String::new();
     }
 
-    Ok(Json(stores.remove(0)))
+    Ok(Json(store))
 }
 
 pub async fn get_filtered(
@@ -225,6 +211,7 @@ pub async fn get_filtered(
             ids: vec![],
             statuses: params.statuses.unwrap_or_default(),
             term: params.term.unwrap_or_default(),
+            user_ids: params.user_ids.unwrap_or_default(),
             offset: offset,
             limit: limit,
         },

@@ -327,24 +327,14 @@ pub async fn get_by_id(
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     };
 
-    let store = match stores::select(
-        stores::SelectParams {
-            ids: vec![tool.store_id],
-            statuses: vec![],
-            term: "".to_string(),
-            offset: 0,
-            limit: 1,
-        },
+    let store = match stores::select_by_id(
+        tool.store_id,
+
         &state.db,
     )
     .await
     {
-        Ok(mut s) => {
-            if s.is_empty() {
-                return Err((StatusCode::NOT_FOUND, "Store not found".to_string()));
-            }
-            s.remove(0)
-        }
+        Ok(s) => s,
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     };
 

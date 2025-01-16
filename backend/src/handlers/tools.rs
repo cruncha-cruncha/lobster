@@ -117,6 +117,7 @@ pub async fn create_new(
             ids: vec![payload.store_id],
             statuses: vec![],
             term: "".to_string(),
+            user_ids: vec![],
             offset: 0,
             limit: 1,
         },
@@ -173,19 +174,8 @@ pub async fn create_new(
         }
     }
 
-    let store_name = match stores::select(
-        stores::SelectParams {
-            ids: vec![payload.store_id],
-            statuses: vec![],
-            term: "".to_string(),
-            offset: 0,
-            limit: 1,
-        },
-        &state.db,
-    )
-    .await
-    {
-        Ok(s) => s[0].name.clone(),
+    let store_name = match stores::select_by_id(payload.store_id, &state.db).await {
+        Ok(s) => s.name,
         Err(e) => {
             return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
         }
@@ -332,19 +322,8 @@ pub async fn update(
         }
     }
 
-    let store_name = match stores::select(
-        stores::SelectParams {
-            ids: vec![tool.store_id],
-            statuses: vec![],
-            term: "".to_string(),
-            offset: 0,
-            limit: 1,
-        },
-        &state.db,
-    )
-    .await
-    {
-        Ok(s) => s[0].name.clone(),
+    let store_name = match stores::select_by_id(tool.store_id, &state.db).await {
+        Ok(s) => s.name,
         Err(e) => {
             return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
         }
@@ -403,19 +382,8 @@ pub async fn get_by_id(
     }
     let tool = tools.remove(0);
 
-    let store_name = match stores::select(
-        stores::SelectParams {
-            ids: vec![tool.store_id],
-            statuses: vec![],
-            term: "".to_string(),
-            offset: 0,
-            limit: 1,
-        },
-        &state.db,
-    )
-    .await
-    {
-        Ok(s) => s[0].name.clone(),
+    let store_name = match stores::select_by_id(tool.store_id, &state.db).await {
+        Ok(s) => s.name,
         Err(e) => {
             return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
         }
@@ -502,6 +470,7 @@ pub async fn get_filtered(
                 ids: store_ids,
                 statuses: vec![],
                 term: "".to_string(),
+                user_ids: vec![],
                 offset: 0,
                 limit: 1000,
             },

@@ -314,6 +314,14 @@ const PureUserStatus = (userStatus) => {
 export const useUserPermissions = ({ id }) => {
   const { roles } = useConstants();
   const { userId, accessToken, permissions } = useAuth();
+
+  const canUpdateLibraryPermissions =
+    permissions.isLibraryAdmin() && userId != id;
+  const isAnyStoreRep = permissions.isAnyStoreRep();
+  const canUpdateStorePermissions =
+    permissions.isStoreAdmin() || (isAnyStoreRep && userId != id);
+  const isOnlyStoreRep = isAnyStoreRep && !permissions.isStoreAdmin() && !permissions.isLibraryAdmin();
+
   const [userPermissions, setUserPermissions] = useState({
     library: [],
     store: [],
@@ -322,7 +330,11 @@ export const useUserPermissions = ({ id }) => {
   const [isRemovingPermissions, setIsRemovingPermissions] = useState([]);
   const [showFields, setShowFields] = useState(""); // "", "add", "remove"
   const [selectedRole, _setSelectedRole] = useState("0");
-  const storeSelect = useSingleStoreSelect();
+  const storeSelect = useSingleStoreSelect({
+    filterParams: {
+      ...(!isOnlyStoreRep ? {} : { userIds: [userId] }),
+    },
+  });
 
   const { data, error, isLoading, mutate } = useSWR(
     !accessToken ? null : `get user ${id} permissions, using ${accessToken}`,
@@ -334,11 +346,6 @@ export const useUserPermissions = ({ id }) => {
       setUserPermissions(data);
     }
   }, [data]);
-
-  const canUpdateLibraryPermissions =
-    permissions.isLibraryAdmin() && userId != id;
-
-  const canUpdateStorePermissions = permissions.isStoreAdmin();
 
   const removePermission = async ({ permissionId }) => {
     setIsRemovingPermissions((prev) => [
@@ -386,10 +393,10 @@ export const useUserPermissions = ({ id }) => {
         accessToken,
       })
       .then((data) => {
-        console.log(data);
         _setSelectedRole("0");
         storeSelect.setStoreId("");
         storeSelect.setStoreTerm({ target: { value: "" } });
+        setShowFields("");
         if (data.storeId) {
           mutate((prev) => ({
             ...prev,
@@ -453,9 +460,6 @@ export const useUserPermissions = ({ id }) => {
 
   const showStoreSearch =
     selectedRoleName === "store_rep" || selectedRoleName === "tool_manager";
-
-  // TODO: store_reps should be able to modify permissions for their store
-  // limit store options to stores they're a rep for?
 
   const permissionLookup = [
     ...userPermissions.library,
