@@ -110,7 +110,7 @@ pub async fn update_info(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<SettableStoreData>,
 ) -> Result<Json<store::Store>, (StatusCode, String)> {
-    if !claims.is_store_rep(store_id) {
+    if !claims.is_store_manager(store_id) {
         return Err((StatusCode::UNAUTHORIZED, "Must be a store rep".to_string()));
     }
 
@@ -188,7 +188,7 @@ pub async fn get_by_id(
     }
 
     let can_see_code = claims.is_store_admin()
-        || claims.is_store_rep(store_id)
+        || claims.is_store_manager(store_id)
         || claims.is_tool_manager(store_id);
     if !can_see_code {
         store.code = String::new();

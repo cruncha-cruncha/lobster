@@ -122,7 +122,7 @@ pub struct ClaimPermissions {
     pub store: HashMap<i32, Vec<i32>>, // key = store_id, val = Vec<role_id>
 }
 
-// assumes that 1 = 'library_admin', 2 = 'user_admin', 3 = 'store_admin', 4 = 'store_rep', and 5 = 'tool_manager'
+// assumes that 1 = 'library_admin', 2 = 'user_admin', 3 = 'store_admin', 4 = 'store_manager', and 5 = 'tool_manager'
 // in the fixed.roles database table
 impl Claims {
     pub fn none() -> Self {
@@ -161,7 +161,7 @@ impl Claims {
         self.permissions.library.contains(&num)
     }
 
-    pub fn is_store_rep(&self, store_id: i32) -> bool {
+    pub fn is_store_manager(&self, store_id: i32) -> bool {
         let num = Roles::StoreRep as i32;
         self.permissions
             .store

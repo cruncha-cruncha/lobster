@@ -381,7 +381,7 @@ export const useUserPermissions = ({ id }) => {
       storeId: Number(storeSelect.storeId),
     };
     if (
-      selectedRoleName !== "store_rep" &&
+      selectedRoleName !== "store_manager" &&
       selectedRoleName !== "tool_manager"
     ) {
       delete permission.storeId;
@@ -433,7 +433,7 @@ export const useUserPermissions = ({ id }) => {
       case "store_admin":
       case "user_admin":
         return canUpdateLibraryPermissions;
-      case "store_rep":
+      case "store_manager":
       case "tool_manager":
         return canUpdateStorePermissions;
       default:
@@ -450,7 +450,7 @@ export const useUserPermissions = ({ id }) => {
       case "store_admin":
       case "user_admin":
         return true;
-      case "store_rep":
+      case "store_manager":
       case "tool_manager":
         return storeSelect.storeId != "";
       default:
@@ -459,7 +459,7 @@ export const useUserPermissions = ({ id }) => {
   })();
 
   const showStoreSearch =
-    selectedRoleName === "store_rep" || selectedRoleName === "tool_manager";
+    selectedRoleName === "store_manager" || selectedRoleName === "tool_manager";
 
   const permissionLookup = [
     ...userPermissions.library,
@@ -478,7 +478,7 @@ export const useUserPermissions = ({ id }) => {
       case "store_admin":
       case "user_admin":
         return canUpdateLibraryPermissions;
-      case "store_rep":
+      case "store_manager":
       case "tool_manager":
         return canUpdateStorePermissions;
       default:

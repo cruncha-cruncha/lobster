@@ -1,5 +1,5 @@
 INSERT INTO fixed.roles (name)
-VALUES ('library_admin'), ('user_admin'), ('store_admin'), ('store_rep'), ('tool_manager');
+VALUES ('library_admin'), ('user_admin'), ('store_admin'), ('store_manager'), ('tool_manager');
 
 INSERT INTO fixed.user_statuses (name)
 VALUES ('active'), ('pending'), ('banned');
