@@ -11,6 +11,7 @@ import { useDebounce } from "../components/useDebounce";
 import * as endpoints from "../api/endpoints";
 import { usePrevNext, PurePrevNext } from "../components/PrevNext";
 import { URL_STORE_ID_KEY } from "./Store";
+import { Button } from "../components/Button";
 
 const paramsReducer = (state, action) => {
   switch (action.type) {
@@ -33,7 +34,7 @@ export const usePeople = () => {
   const navigate = useNavigate();
   const [urlParams, setUrlParams] = useSearchParams();
   const { roles, userStatuses } = useConstants();
-  const { accessToken } = useAuth();
+  const { userId, accessToken } = useAuth();
   const [peopleList, setPeopleList] = useState([]);
   const pageControl = usePrevNext();
   const _storeSelect = useSingleStoreSelect();
@@ -140,6 +141,10 @@ export const usePeople = () => {
     navigate(`/people/${id}`);
   };
 
+  const goToMyProfile = () => {
+    navigate(`/people/${userId}`);
+  };
+
   return {
     roles: [{ id: "0", name: "Any" }, ...roles],
     userStatuses: [{ id: "0", name: "Any" }, ...userStatuses],
@@ -151,6 +156,7 @@ export const usePeople = () => {
     setWithStore,
     storeSelect,
     goToPerson,
+    goToMyProfile,
     pageControl,
   };
 };
@@ -167,12 +173,21 @@ export const PurePeople = (people) => {
     setWithStore,
     storeSelect,
     goToPerson,
+    goToMyProfile,
     pageControl,
   } = people;
 
   return (
     <div>
-      <h2 className="mt-2 px-2 text-xl">People</h2>
+      <div className="mt-2 flex items-center gap-2 px-2">
+        <h2 className="mr-2 text-xl">People</h2>
+        <Button
+          text="My Profile"
+          onClick={goToMyProfile}
+          variant="blue"
+          size="sm"
+        />
+      </div>
       <div className="mb-3 mt-1 grid grid-cols-1 gap-x-4 gap-y-2 px-2 md:grid-cols-2">
         <div className="md:col-span-2">
           <TextInput
