@@ -164,7 +164,12 @@ export const PureStoreCart = (cart) => {
         ))}
       </ul>
       <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 px-2">
-        <TextInput label="User ID" value={userCode} onChange={setUserCode} />
+        <TextInput
+          id={`store-cart-user-id`}
+          label="User ID"
+          value={userCode}
+          onChange={setUserCode}
+        />
       </div>
       <div className="mt-3 flex justify-end gap-2 px-2">
         <Button
@@ -227,6 +232,7 @@ export const PureQuickFindStoreTool = (quickFindStoreTool) => {
   return (
     <>
       <TextInput
+        id={`quick-find-real-tool`}
         label="Add Tool by Real ID"
         value={realId}
         onChange={setRealId}

@@ -254,24 +254,28 @@ export const PureEditStore = (editStore) => {
     <div>
       <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 px-2 md:grid-cols-2">
         <TextInput
+          id={`store-name`}
           label="Name"
           value={info.name}
           onChange={setName}
           placeholder="Maple Key Tools"
         />
         <TextInput
+          id={`store-location`}
           label="Location"
           value={info.location}
           onChange={setLocation}
           placeholder="123 Main St, Ottawa, ON, K1R 7T7"
         />
         <TextInput
+          id={`store-email-address`}
           label="Email Address"
           value={info.emailAddress}
           onChange={setEmailAddress}
           placeholder="store-contact@example.com"
         />
         <TextInput
+          id={`store-phone-number`}
           label="Phone Number"
           value={info.phoneNumber}
           onChange={setPhoneNumber}
@@ -279,6 +283,7 @@ export const PureEditStore = (editStore) => {
         />
         <div className="md:col-span-2">
           <LargeTextInput
+            id="store-tool-rental-information"
             label="Read Before Renting"
             value={info.rentalInformation}
             onChange={setRentalInformation}
@@ -287,6 +292,7 @@ export const PureEditStore = (editStore) => {
         </div>
         <div className="md:col-span-2">
           <TextInput
+            id="store-other-information"
             label="Other Information"
             value={info.otherInformation}
             onChange={setOtherInformation}
@@ -374,6 +380,7 @@ export const PureEditStoreStatus = (editStoreStatus) => {
     <div className="px-2">
       <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
         <Select
+          id={`store-status`}
           label="Status"
           options={storeStatuses}
           value={status}
@@ -511,6 +518,7 @@ export const PureAddTool = (addTool) => {
         <PureCategorySearch {...categorySearch} />
         <div className="md:col-span-2">
           <LargeTextInput
+            id="tool-long-description"
             label="Long Description"
             value={longDescription}
             onChange={setLongDescription}

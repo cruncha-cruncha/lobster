@@ -35,7 +35,7 @@ export const Button = ({
   }
 
   return (
-    <div className="flex">
+    <div className="button flex">
       <button
         className={buttonClasses}
         onClick={onClick}

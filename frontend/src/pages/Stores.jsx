@@ -117,12 +117,14 @@ export const PureStores = (stores) => {
       </div>
       <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 px-2">
         <TextInput
+          id={`store-term`}
           value={params.term}
           onChange={setTerm}
           placeholder="Some Store"
           label="Store Name"
         />
         <Select
+          id={`store-status`}
           label="Status"
           options={storeStatuses}
           value={params.status}

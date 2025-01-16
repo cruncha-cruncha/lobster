@@ -192,7 +192,12 @@ export const PureMakeGrievanceReply = (makeGrievanceReply) => {
 
   return (
     <div className="px-2">
-      <TextInput label="Reply" value={reply} onChange={setReply} />
+      <TextInput
+        id={`reply-text`}
+        label="Reply"
+        value={reply}
+        onChange={setReply}
+      />
       <div className="mt-3 flex justify-end gap-2">
         <Button
           text="Reply"
@@ -273,6 +278,7 @@ export const PureUpdateGrievanceStatus = (updateGrievanceStatus) => {
   return (
     <div className="px-2">
       <Select
+        id={`grievance-status`}
         label="Status"
         value={status}
         onChange={setStatus}

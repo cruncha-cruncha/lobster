@@ -220,6 +220,7 @@ export const PureTools = (tools) => {
       </div>
       <div className="mb-3 mt-1 grid grid-cols-1 gap-x-4 gap-y-2 px-2">
         <TextInput
+          id={`tool-term`}
           label="Search"
           value={searchTerm}
           onChange={setSearchTerm}
@@ -228,6 +229,7 @@ export const PureTools = (tools) => {
         <PureCategorySearch {...categorySearch} />
         <PureStoreSelect {...storeSelect} />
         <Select
+          id={`tool-status`}
           label="Status"
           value={status}
           onChange={setStatus}
@@ -370,6 +372,7 @@ export const PureCategorySearch = (categorySearch) => {
       <div className="flex gap-2">
         <div className="grow">
           <SearchSelect
+            id={`tool-categories-select`}
             label="Categories"
             value={categoryTerm}
             onChange={setCategoryTerm}
@@ -478,6 +481,7 @@ export const PureStoreSelect = (storeSelect) => {
   return (
     <div>
       <SearchSelect
+        id={`store-select`}
         label="Stores"
         value={storeTerm}
         onChange={setStoreTerm}

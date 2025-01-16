@@ -176,6 +176,7 @@ export const PurePeople = (people) => {
       <div className="mb-3 mt-1 grid grid-cols-1 gap-x-4 gap-y-2 px-2 md:grid-cols-2">
         <div className="md:col-span-2">
           <TextInput
+            id={`people-search`}
             value={params.searchTerm}
             onChange={setSearchTerm}
             placeholder="Enigo Montoya"
@@ -183,12 +184,14 @@ export const PurePeople = (people) => {
           />
         </div>
         <Select
+          id={`people-role`}
           label="Role"
           options={roles}
           value={params.role}
           onChange={setRole}
         />
         <Select
+          id={`people-status`}
           label="Status"
           options={userStatuses}
           value={params.status}
@@ -279,6 +282,7 @@ export const PureSingleStoreSelect = (storeSelect) => {
 
   return (
     <SearchSelect
+      id={`single-store-select`}
       label="Store"
       value={storeTerm}
       onChange={setStoreTerm}

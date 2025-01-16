@@ -69,6 +69,7 @@ export const PureLogin = (login) => {
               <h1 className="mb-2 text-left text-xl">Login</h1>
               <form onSubmit={(e) => e.preventDefault()}>
                 <TextInput
+                  id={`login-email`}
                   placeholder="email address"
                   value={email}
                   onChange={setEmail}

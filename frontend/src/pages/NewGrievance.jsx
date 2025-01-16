@@ -86,21 +86,16 @@ export const PureNewGrievance = (newStore) => {
     <div>
       <h1 className="my-2 px-2 text-xl">Fresh Grievance</h1>
       <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 px-2">
-        {/* user select */}
         <PureUserSelect {...selectAccused} label="Accused" />
         <TextInput
+          id="grievance-title"
           label="Title"
           value={title}
           onChange={setTitle}
           placeholder="Picked My Nose"
         />
-        {/* <TextInput
-          label="Description"
-          value={description}
-          onChange={setDescription}
-          placeholder=""
-        /> */}
         <LargeTextInput
+          id="grievance-description"
           label="Description"
           value={description}
           onChange={setDescription}

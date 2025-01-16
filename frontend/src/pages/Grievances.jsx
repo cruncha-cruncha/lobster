@@ -187,6 +187,7 @@ export const Grievances = () => {
         <PureUserSelect {...accusedSelect} label="Accused" />
         <div>
           <Select
+          id={`grievance-status`}
             label="Status"
             value={status}
             onChange={setStatus}

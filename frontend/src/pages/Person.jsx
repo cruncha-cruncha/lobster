@@ -177,6 +177,7 @@ const PureUserInfo = (userInfo) => {
         <>
           <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
             <TextInput
+              id={`person-username`}
               label="Username"
               value={userName}
               onChange={setUserName}
@@ -288,6 +289,7 @@ const PureUserStatus = (userStatus) => {
         <div className="px-2">
           <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
             <Select
+              id={`person-status`}
               label="Status"
               value={status}
               onChange={setStatus}
@@ -551,6 +553,7 @@ const PureUserPermissions = (userPermissions) => {
             <>
               <div className="my-3 grid grid-cols-1 gap-x-4 gap-y-2">
                 <Select
+                  id={`person-role`}
                   label="Role"
                   options={roleOptions}
                   value={selectedRole}

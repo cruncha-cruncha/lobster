@@ -2,6 +2,7 @@ import { useState } from "react";
 
 // expects each option to have an 'id' and 'name' property
 export const SearchSelect = ({
+  id,
   label,
   value,
   onChange,
@@ -13,12 +14,15 @@ export const SearchSelect = ({
   const [collapsed, setCollapsed] = useState(true);
   const [lastSelected, setLastSelected] = useState("");
   return (
-    <div>
-      <label>{label}</label>
+    <fieldset className="search-select">
+      <label htmlFor={id} className="cursor-pointer">{label}</label>
       <div className="border-2 border-stone-800">
         <input
+          id={id}
           type="text"
-          value={(showLastSelected && collapsed && lastSelected) ? lastSelected : value}
+          value={
+            showLastSelected && collapsed && lastSelected ? lastSelected : value
+          }
           onChange={onChange}
           onFocus={() => setCollapsed(false)}
           onBlur={() => setCollapsed(true)}
@@ -40,6 +44,6 @@ export const SearchSelect = ({
           ))}
         </ul>
       </div>
-    </div>
+    </fieldset>
   );
 };

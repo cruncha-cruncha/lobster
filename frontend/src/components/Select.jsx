@@ -1,10 +1,11 @@
 // expects each option to have an 'id' and 'name' property
-export const Select = ({ label, options, value, onChange, disabled }) => {
+export const Select = ({ id, label, options, value, onChange, disabled }) => {
   return (
-    <div>
-      <label>{label}</label>
+    <fieldset className="select">
+      <label htmlFor={id} className="cursor-pointer">{label}</label>
       <div className="border-2 border-stone-800">
         <select
+          id={id}
           value={value}
           onChange={onChange}
           disabled={disabled}
@@ -17,6 +18,6 @@ export const Select = ({ label, options, value, onChange, disabled }) => {
           ))}
         </select>
       </div>
-    </div>
+    </fieldset>
   );
 };

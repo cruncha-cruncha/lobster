@@ -116,6 +116,7 @@ export const PureCart = (cart) => {
         <div className="px-2">
           <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
             <TextInput
+              id={`cart-store-code`}
               label="Store Code"
               value={storeCode}
               onChange={setStoreCode}

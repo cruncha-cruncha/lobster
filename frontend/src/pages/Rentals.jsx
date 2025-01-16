@@ -369,6 +369,7 @@ export const PureUserSelect = (userSelect) => {
   return (
     <div>
       <SearchSelect
+        id={`user-select-${label}`}
         label={label}
         value={userTerm}
         onChange={setUserTerm}
@@ -456,6 +457,7 @@ export const PureToolSelect = (toolSelect) => {
   return (
     <div>
       <SearchSelect
+        id="tool-select"
         label="Tools"
         value={toolTerm}
         onChange={setToolTerm}

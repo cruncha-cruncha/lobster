@@ -251,13 +251,20 @@ export const PureTool = (tool) => {
       </div>
       <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 px-2 md:grid-cols-2">
         <TextInput
+          id={`tool-short-description`}
           label="Short Description"
           value={info.shortDescription}
           onChange={setShortDescription}
         />
-        <TextInput label="Real ID" value={info.realId} onChange={setRealId} />
+        <TextInput
+          id={`tool-real-id`}
+          label="Real ID"
+          value={info.realId}
+          onChange={setRealId}
+        />
         <div className="md:col-span-2">
           <LargeTextInput
+            id="tool-long-description"
             label="Long Description"
             value={info.longDescription}
             onChange={setLongDescription}
@@ -267,11 +274,13 @@ export const PureTool = (tool) => {
           <PureCategorySearch {...categorySearch} />
         </div>
         <TextInput
+          id={`tool-rental-hours`}
           label="Rental Hours"
           value={info.rentalHours || ""}
           onChange={setRentalHours}
         />
         <Select
+          id={`tool-status`}
           label="Status"
           value={info.status}
           options={toolStatuses}

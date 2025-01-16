@@ -1,11 +1,14 @@
 import { parse, format, add } from "date-fns";
 
-export const DateTimeInput = ({ label, value, onChange, disabled }) => {
+export const DateTimeInput = ({ id, label, value, onChange, disabled }) => {
   return (
-    <div className="w-full">
-      <label>{label}</label>
+    <fieldset className="w-full">
+      <label htmlFor={id} className="cursor-pointer">
+        {label}
+      </label>
       <div className="border-2 border-stone-800">
         <input
+          id={id}
           type="datetime-local"
           onChange={onChange}
           value={value}
@@ -13,7 +16,7 @@ export const DateTimeInput = ({ label, value, onChange, disabled }) => {
           className="w-full px-2 py-1 ring-sky-500 transition-shadow focus-visible:outline-none focus-visible:ring-2"
         />
       </div>
-    </div>
+    </fieldset>
   );
 };
 

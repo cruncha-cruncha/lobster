@@ -71,7 +71,9 @@ export const useRental = () => {
     navigate("/rentals");
   };
 
-  const canUpdateRental = !(!data?.endDate && !endDate) && formatDateForBackend(endDate) != data?.endDate;
+  const canUpdateRental =
+    !(!data?.endDate && !endDate) &&
+    formatDateForBackend(endDate) != data?.endDate;
 
   return {
     data,
@@ -111,7 +113,12 @@ export const PureRental = (tool) => {
       </div>
       <p className="px-2">{JSON.stringify(data)}</p>
       <div className="mb-3 mt-2 flex flex-col gap-x-4 gap-y-2 px-2 md:flex-row">
-        <DateTimeInput label="End Date" value={endDate} onChange={setEndDate} />
+        <DateTimeInput
+          id="rental-end-date"
+          label="End Date"
+          value={endDate}
+          onChange={setEndDate}
+        />
       </div>
       <div className="mt-3 flex justify-end gap-2 px-2">
         <Button

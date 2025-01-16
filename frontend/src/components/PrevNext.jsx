@@ -38,7 +38,7 @@ export const PurePrevNext = (prevNext) => {
   };
 
   return (
-    <div className="flex items-center justify-center">
+    <div className="prev-next flex items-center justify-center">
       <div className="flex">
         <button
           onClick={prev}

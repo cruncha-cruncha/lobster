@@ -104,24 +104,28 @@ export const PureNewStore = (newStore) => {
       <h1 className="my-2 px-2 text-xl">New Store</h1>
       <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 px-2 md:grid-cols-2">
         <TextInput
+          id={`new-store-name`}
           label="Name"
           value={info.name}
           onChange={setName}
           placeholder="Maple Key Tools"
         />
         <TextInput
+          id={`new-store-location`}
           label="Location"
           value={info.location}
           onChange={setLocation}
           placeholder="123 Main St, Ottawa, ON, K1R 7T7"
         />
         <TextInput
+          id={`new-store-email-address`}
           label="Email Address"
           value={info.emailAddress}
           onChange={setEmailAddress}
           placeholder="store-contact@example.com"
         />
         <TextInput
+          id={`new-store-phone-number`}
           label="Phone Number"
           value={info.phoneNumber}
           onChange={setPhoneNumber}
@@ -129,6 +133,7 @@ export const PureNewStore = (newStore) => {
         />
         <div className="md:col-span-2">
           <LargeTextInput
+            id="new-store-tool-rental-information"
             label="Read Before Renting"
             value={info.rentalInformation}
             onChange={setRentalInformation}
@@ -137,6 +142,7 @@ export const PureNewStore = (newStore) => {
         </div>
         <div className="md:col-span-2">
           <TextInput
+            id="new-store-other-information"
             label="Other Information"
             value={info.otherInformation}
             onChange={setOtherInformation}

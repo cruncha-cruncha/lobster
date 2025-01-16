@@ -1,4 +1,5 @@
 export const LargeTextInput = ({
+  id,
   label,
   placeholder,
   value,
@@ -6,10 +7,13 @@ export const LargeTextInput = ({
   disabled,
 }) => {
   return (
-    <div>
-      <label>{label}</label>
+    <fieldset className="large-text-input">
+      <label htmlFor={id} className="cursor-pointer">
+        {label}
+      </label>
       <div className="border-2 border-stone-800">
         <textarea
+          id={id}
           placeholder={placeholder}
           onChange={onChange}
           value={value}
@@ -18,6 +22,6 @@ export const LargeTextInput = ({
           rows={3}
         />
       </div>
-    </div>
+    </fieldset>
   );
 };
