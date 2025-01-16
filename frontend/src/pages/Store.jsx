@@ -437,7 +437,7 @@ export const useAddTool = ({ storeId }) => {
     description !== "" &&
     _categorySearch.categories.length > 0;
 
-  const createTool = () => {
+  const createTool = ({ redirect = true } = {}) => {
     setIsSaving(true);
     return endpoints
       .createTool({
@@ -454,14 +454,15 @@ export const useAddTool = ({ storeId }) => {
         accessToken,
       })
       .then((data) => {
-        console.log(data);
-        // do something? success message? clear fields? navigate to tool? button to go to tool?
-
         setShortDescription("");
         setLongDescription("");
         _categorySearch.clear();
         setRealId("");
         setRentalHours(defaultRentalHours);
+
+        if (redirect) {
+          navigate(`/tools/${data.id}`);
+        }
       })
       .finally(() => {
         setIsSaving(false);
@@ -542,6 +543,12 @@ export const PureAddTool = (addTool) => {
         <Button
           onClick={createTool}
           text="Add Tool"
+          disabled={!canAddTool}
+          isLoading={isSaving}
+        />
+        <Button
+          onClick={createTool}
+          text="+ Add Tool"
           disabled={!canAddTool}
           isLoading={isSaving}
         />
