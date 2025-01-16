@@ -1,3 +1,4 @@
+use crate::db_structs::user;
 use crate::queries::users;
 use crate::AppState;
 use crate::{auth::claims, queries::permissions};
@@ -28,6 +29,10 @@ pub async fn login(
     let user_id = match users::select_by_email(&payload.email, &state.db).await {
         Ok(u) => {
             if u.is_some() {
+                if u.as_ref().unwrap().status != user::UserStatus::Active as i32 {
+                    return Err((StatusCode::FORBIDDEN, String::from("user is not active")));
+                }
+
                 u.unwrap().id
             } else {
                 let username = crate::usernames::rnd_username();
@@ -57,8 +62,6 @@ pub async fn login(
         }
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     };
-
-    // if user banned then...
 
     let permissions = permissions::select_for_claims(&user_id, &state.db)
         .await
@@ -94,12 +97,16 @@ pub async fn refresh(
             if u.is_none() {
                 return Err((StatusCode::NOT_FOUND, String::from("no user found")));
             }
-            u.unwrap()
+
+            let u = u.unwrap();
+            if u.status != user::UserStatus::Active as i32 {
+                return Err((StatusCode::FORBIDDEN, String::from("user is not active")));
+            }
+
+            u
         }
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
     };
-
-    // TODO: if user is banned...
 
     let permissions = permissions::select_for_claims(&user_id, &state.db)
         .await
