@@ -40,7 +40,39 @@ pub async fn select(
         WHERE
             (ARRAY_LENGTH($1::integer[], 1) IS NULL OR ms.id = ANY($1::integer[]))
             AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR ms.status = ANY($2::integer[]))
-            AND ($3::text = '' OR $3::text <% (ms.name || ' ' || ms.location || ' ' || COALESCE(ms.email_address, '') || ' ' || ms.phone_number))
+            AND ($3::text = '' OR $3::text <% (ms.name || ' ' || ms.location || ' ' || COALESCE(ms.email_address, '') || ' ' || ms.phone_number || ' ' || COALESCE(ms.rental_information, '') || ' ' || COALESCE(ms.other_information, '')))
+            AND (ARRAY_LENGTH($4::integer[], 1) IS NULL OR p.user_id = ANY($4::integer[]))
+        GROUP BY ms.id
+        ORDER BY ms.id
+        OFFSET $5 LIMIT $6;
+        "#,
+        &params.ids,
+        &params.statuses,
+        params.term,
+        &params.user_ids,
+        params.offset,
+        params.limit,
+    )
+    .fetch_all(db)
+    .await
+    .map_err(|e| e.to_string())
+}
+
+pub async fn select_no_contact(
+    params: SelectParams,
+    db: &sqlx::Pool<sqlx::Postgres>,
+) -> Result<Vec<store::Store>, String> {
+    sqlx::query_as!(
+        store::Store,
+        r#"
+        SELECT ms.id, ms.name, ms.status, ms.location, '' AS "email_address!: _", '' AS "phone_number!: _", ms.rental_information, ms.other_information, '' AS "code!: _", ms.created_at
+        FROM main.stores ms
+        LEFT JOIN main.permissions p ON ms.id = p.store_id AND p.status = 1
+        WHERE
+            (ARRAY_LENGTH($1::integer[], 1) IS NULL OR ms.id = ANY($1::integer[]))
+            AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR ms.status = ANY($2::integer[]))
+            -- (name || ' ' || COALESCE(description, '') || ' ' || ARRAY_TO_STRING(synonyms, ' '))
+            AND ($3::text = '' OR $3::text <% (ms.name || ' ' || ms.location || ' ' || COALESCE(ms.rental_information, '') || ' ' || COALESCE(ms.other_information, '')))
             AND (ARRAY_LENGTH($4::integer[], 1) IS NULL OR p.user_id = ANY($4::integer[]))
         GROUP BY ms.id
         ORDER BY ms.id

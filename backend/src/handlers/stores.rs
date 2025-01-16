@@ -206,33 +206,40 @@ pub async fn get_filtered(
     let can_see_contact_info = !claims.is_none();
     let can_see_code = claims.is_store_admin();
 
-    let stores = match stores::select(
-        stores::SelectParams {
-            ids: vec![],
-            statuses: params.statuses.unwrap_or_default(),
-            term: params.term.unwrap_or_default(),
-            user_ids: params.user_ids.unwrap_or_default(),
-            offset: offset,
-            limit: limit,
-        },
-        &state.db,
-    )
-    .await
-    {
-        Ok(mut res) => {
-            if !can_see_contact_info {
-                res.iter_mut().for_each(|s| {
-                    s.email_address = None;
-                    s.phone_number = "".to_string();
-                });
-            }
+    if !can_see_contact_info {
+        stores::select_no_contact(
+            stores::SelectParams {
+                ids: vec![],
+                statuses: params.statuses.unwrap_or_default(),
+                term: params.term.unwrap_or_default(),
+                user_ids: params.user_ids.unwrap_or_default(),
+                offset: offset,
+                limit: limit,
+            },
+            &state.db,
+        )
+        .await
+        .map(|stores| Json(FilteredResponse { stores }))
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+    } else {
+        stores::select(
+            stores::SelectParams {
+                ids: vec![],
+                statuses: params.statuses.unwrap_or_default(),
+                term: params.term.unwrap_or_default(),
+                user_ids: params.user_ids.unwrap_or_default(),
+                offset: offset,
+                limit: limit,
+            },
+            &state.db,
+        )
+        .await
+        .map(|mut stores| {
             if !can_see_code {
-                res.iter_mut().for_each(|s| s.code = String::new());
+                stores.iter_mut().for_each(|s| s.code = String::new());
             }
-            res
-        }
-        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
-    };
-
-    Ok(Json(FilteredResponse { stores }))
+            Json(FilteredResponse { stores })
+        })
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+    }
 }

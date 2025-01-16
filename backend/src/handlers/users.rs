@@ -72,7 +72,7 @@ pub async fn update_status(
 
     let claims_user_id = claims.subject_as_user_id().unwrap_or_default();
 
-    let can_see_code = claims_user_id == user_id;
+    let can_see_code = claims.is_user_admin() || claims_user_id == user_id;
 
     match users::update(user_id, None, Some(payload.status), &state.db).await {
         Ok(mut u) => {
@@ -104,7 +104,7 @@ pub async fn get_by_id(
     let can_see_email =
         claims.is_user_admin() || claims.is_store_admin() || claims_user_id == user_id;
 
-    let can_see_code = claims_user_id == user_id;
+    let can_see_code = claims.is_user_admin() || claims_user_id == user_id;
 
     match users::select_by_id(user_id, &state.db).await {
         Ok(user) => match user {
