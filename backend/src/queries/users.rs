@@ -35,7 +35,7 @@ pub async fn select(
     sqlx::query_as!(
         user::User,
         r#"
-        SELECT usr.id, usr.username, usr.status, '' AS "email_address!: _", usr.created_at, usr.code
+        SELECT usr.id, usr.username, usr.status, '' AS "email_address!: _", usr.created_at, '' AS "code!: _"
         FROM main.users usr
         LEFT JOIN main.permissions p ON usr.id = p.user_id AND p.status = 1
         WHERE
@@ -69,7 +69,7 @@ pub async fn select_with_email(
     sqlx::query_as!(
         user::User,
         r#"
-        SELECT usr.*
+        SELECT usr.id, usr.username, usr.status, usr.email_address, usr.created_at, '' AS "code!: _"
         FROM main.users usr
         LEFT JOIN main.permissions p ON usr.id = p.user_id AND p.status = 1
         WHERE

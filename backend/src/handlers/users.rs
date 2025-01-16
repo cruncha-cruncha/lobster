@@ -70,10 +70,17 @@ pub async fn update_status(
         ));
     }
 
+    let claims_user_id = claims.subject_as_user_id().unwrap_or_default();
+
+    let can_see_code = claims_user_id == user_id;
+
     match users::update(user_id, None, Some(payload.status), &state.db).await {
-        Ok(u) => {
+        Ok(mut u) => {
             let encoded = serde_json::to_vec(&u).unwrap_or_default();
             state.comm.send_message("users", &encoded).await.ok();
+            if !can_see_code {
+                u.code = String::new();
+            }
             Ok(Json(u))
         }
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
@@ -85,11 +92,17 @@ pub async fn get_by_id(
     Path(user_id): Path<i32>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<user::User>, (StatusCode, String)> {
-    let claims_user_id = claims.subject_as_user_id().unwrap_or(user_id);
+    if claims.is_none() {
+        return Err((
+            StatusCode::UNAUTHORIZED,
+            "You must be logged in".to_string(),
+        ));
+    }
 
-    let can_see_email = claims.is_user_admin()
-        || claims.is_store_admin()
-        || claims_user_id == user_id;
+    let claims_user_id = claims.subject_as_user_id().unwrap_or_default();
+
+    let can_see_email =
+        claims.is_user_admin() || claims.is_store_admin() || claims_user_id == user_id;
 
     let can_see_code = claims_user_id == user_id;
 
@@ -116,6 +129,13 @@ pub async fn get_filtered(
     Query(params): Query<FilterParams>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<FilteredResponse>, (StatusCode, String)> {
+    if claims.is_none() {
+        return Err((
+            StatusCode::UNAUTHORIZED,
+            "You must be logged in".to_string(),
+        ));
+    }
+
     let can_see_emails = claims.is_user_admin() || claims.is_store_admin();
     let (offset, limit) = common::calculate_offset_limit(params.page.unwrap_or_default());
     let params = SelectParams {
