@@ -11,6 +11,7 @@ import { URL_STORE_ID_KEY } from "./Store";
 import { PureCategorySearch, useCategorySearch } from "./Tools";
 import { useToolCart } from "../state/toolCart";
 import { eqSet } from "../components/utils";
+import { LargeTextInput } from "../components/LargeTextInput";
 
 export const URL_TOOL_ID_KEY = "toolId";
 
@@ -256,7 +257,7 @@ export const PureTool = (tool) => {
         />
         <TextInput label="Real ID" value={info.realId} onChange={setRealId} />
         <div className="md:col-span-2">
-          <TextInput
+          <LargeTextInput
             label="Long Description"
             value={info.longDescription}
             onChange={setLongDescription}

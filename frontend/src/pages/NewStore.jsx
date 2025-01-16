@@ -4,6 +4,7 @@ import * as endpoints from "../api/endpoints";
 import { Button } from "../components/Button";
 import { TextInput } from "../components/TextInput";
 import { useAuth } from "../state/auth";
+import { LargeTextInput } from "../components/LargeTextInput";
 
 const infoReducer = (state, action) => {
   switch (action.type) {
@@ -126,18 +127,22 @@ export const PureNewStore = (newStore) => {
           onChange={setPhoneNumber}
           placeholder="216-245-2368"
         />
-        <TextInput
-          label="Read Before Renting"
-          value={info.rentalInformation}
-          onChange={setRentalInformation}
-          placeholder="By appointment only ..."
-        />
-        <TextInput
-          label="Other Information"
-          value={info.otherInformation}
-          onChange={setOtherInformation}
-          placeholder=""
-        />
+        <div className="md:col-span-2">
+          <LargeTextInput
+            label="Read Before Renting"
+            value={info.rentalInformation}
+            onChange={setRentalInformation}
+            placeholder="By appointment only ..."
+          />
+        </div>
+        <div className="md:col-span-2">
+          <TextInput
+            label="Other Information"
+            value={info.otherInformation}
+            onChange={setOtherInformation}
+            placeholder=""
+          />
+        </div>
       </div>
       <div className="mt-3 flex justify-between gap-2 px-2">
         <Button onClick={handleCancel} variant="blue" text="Cancel" />

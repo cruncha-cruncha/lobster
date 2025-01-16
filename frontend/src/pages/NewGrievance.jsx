@@ -4,6 +4,7 @@ import * as endpoints from "../api/endpoints";
 import { Button } from "../components/Button";
 import { TextInput } from "../components/TextInput";
 import { useAuth } from "../state/auth";
+import { LargeTextInput } from "../components/LargeTextInput";
 import { PureUserSelect, useUserSelect } from "./Rentals";
 
 export const useNewGrievance = () => {
@@ -93,7 +94,13 @@ export const PureNewGrievance = (newStore) => {
           onChange={setTitle}
           placeholder="Picked My Nose"
         />
-        <TextInput
+        {/* <TextInput
+          label="Description"
+          value={description}
+          onChange={setDescription}
+          placeholder=""
+        /> */}
+        <LargeTextInput
           label="Description"
           value={description}
           onChange={setDescription}

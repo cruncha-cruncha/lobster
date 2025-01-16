@@ -9,6 +9,7 @@ import { TextInput } from "../components/TextInput";
 import { Select } from "../components/Select";
 import { useCategorySearch, PureCategorySearch } from "./Tools";
 import { useToolCart } from "../state/toolCart";
+import { LargeTextInput } from "../components/LargeTextInput";
 
 export const URL_STORE_ID_KEY = "storeId";
 
@@ -276,18 +277,22 @@ export const PureEditStore = (editStore) => {
           onChange={setPhoneNumber}
           placeholder="216-245-2368"
         />
-        <TextInput
-          label="Read Before Renting"
-          value={info.rentalInformation}
-          onChange={setRentalInformation}
-          placeholder="By appointment only ..."
-        />
-        <TextInput
-          label="Other Information"
-          value={info.otherInformation}
-          onChange={setOtherInformation}
-          placeholder=""
-        />
+        <div className="md:col-span-2">
+          <LargeTextInput
+            label="Read Before Renting"
+            value={info.rentalInformation}
+            onChange={setRentalInformation}
+            placeholder="By appointment only ..."
+          />
+        </div>
+        <div className="md:col-span-2">
+          <TextInput
+            label="Other Information"
+            value={info.otherInformation}
+            onChange={setOtherInformation}
+            placeholder=""
+          />
+        </div>
       </div>
       <div className="mt-3 flex justify-end gap-2 px-2">
         <Button
@@ -505,7 +510,7 @@ export const PureAddTool = (addTool) => {
         />
         <PureCategorySearch {...categorySearch} />
         <div className="md:col-span-2">
-          <TextInput
+          <LargeTextInput
             label="Long Description"
             value={longDescription}
             onChange={setLongDescription}
