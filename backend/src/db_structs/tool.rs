@@ -20,6 +20,7 @@ pub enum ToolStatus {
     Lost = 5,
     Stolen = 6,
     Retired = 7,
+    Unknown = 8,
 }
 
 #[derive(Debug, sqlx::FromRow, Serialize, Deserialize)]

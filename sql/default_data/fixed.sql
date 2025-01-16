@@ -11,7 +11,7 @@ INSERT INTO fixed.store_statuses (name)
 VALUES ('active'), ('pending'), ('closed'), ('banned');
 
 INSERT INTO fixed.tool_statuses (name)
-VALUES ('available'), ('rented'), ('maintenance'), ('broken'), ('lost'), ('stolen'), ('retired');
+VALUES ('available'), ('rented'), ('maintenance'), ('broken'), ('lost'), ('stolen'), ('retired'), ('unknown');
 
 INSERT INTO fixed.grievance_statuses (name)
 VALUES ('pending'), ('innocent'), ('guilty'), ('banned'), ('warned'), ('cautioned'), ('cheeky'), ('insulting'), ('time_served'), ('forgiven'), ('wrongly_convicted'), ('libelled'), ('at_large');
