@@ -21,7 +21,7 @@ import {
   validateSingleGrievance,
   validateGrievanceWithNames,
   validateGrievanceSearchResults,
-  validateSingleGrievanceReply,
+  validateGrievanceReplyWithNames,
   validateGrievanceReplies,
 } from "./schemas";
 
@@ -609,7 +609,7 @@ export const createGrievanceReply = async ({
     body: JSON.stringify(info),
   });
 
-  if (!validateSingleGrievanceReply(data)) {
+  if (!validateGrievanceReplyWithNames(data)) {
     throw new Error(400);
   }
 

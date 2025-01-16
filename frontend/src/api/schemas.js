@@ -557,6 +557,11 @@ export const validateSingleGrievanceReply = makeLazyValidator(
   singleGrievanceReplySchema,
 );
 
+export const validateGrievanceReplyWithNames = makeLazyValidator([
+  genericUserWithNameSchema,
+  grievanceReplyWithNamesSchema,
+]);
+
 export const validateGrievanceReplies = makeLazyValidator([
   genericUserWithNameSchema,
   grievanceReplyWithNamesSchema,

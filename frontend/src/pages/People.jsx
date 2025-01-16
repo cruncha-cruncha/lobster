@@ -245,8 +245,8 @@ export const useSingleStoreSelect = () => {
 
   const setStoreId = (id) => {
     _setStoreId(id);
-    const storeName = storeOptions.find((store) => store.id === id).name;
-    _setStoreTerm(storeName);
+    const storeName = storeOptions.find((store) => store.id === id)?.name;
+    storeName && _setStoreTerm(storeName);
   };
 
   const endpointParams = {

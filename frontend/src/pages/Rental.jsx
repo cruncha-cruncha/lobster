@@ -11,7 +11,7 @@ import {
 } from "../components/DateTimeInput";
 
 export const useRental = () => {
-  const { accessToken } = useAuth();
+  const { accessToken, permissions } = useAuth();
   const params = useParams();
   const navigate = useNavigate();
   const [endDate, _setEndDate] = useState("");
@@ -47,8 +47,8 @@ export const useRental = () => {
         info,
         accessToken,
       })
-      .then(() => {
-        mutate();
+      .then((data) => {
+        mutate(prev => ({ ...prev, endDate: data.endDate }));
       })
       .finally(() => {
         setIsUpdating(false);
@@ -71,6 +71,8 @@ export const useRental = () => {
     navigate("/rentals");
   };
 
+  const showUpdateRental = permissions.isToolManager(data?.storeId);
+
   const canUpdateRental =
     !(!data?.endDate && !endDate) &&
     formatDateForBackend(endDate) != data?.endDate;
@@ -86,6 +88,7 @@ export const useRental = () => {
     updateRental,
     isUpdating,
     canUpdateRental,
+    showUpdateRental,
   };
 };
 
@@ -101,6 +104,7 @@ export const PureRental = (tool) => {
     updateRental,
     isUpdating,
     canUpdateRental,
+    showUpdateRental,
   } = tool;
 
   return (
@@ -112,22 +116,26 @@ export const PureRental = (tool) => {
         <Button text="Person" onClick={goToPerson} variant="blue" size="sm" />
       </div>
       <p className="px-2">{JSON.stringify(data)}</p>
-      <div className="mb-3 mt-2 flex flex-col gap-x-4 gap-y-2 px-2 md:flex-row">
-        <DateTimeInput
-          id="rental-end-date"
-          label="End Date"
-          value={endDate}
-          onChange={setEndDate}
-        />
-      </div>
-      <div className="mt-3 flex justify-end gap-2 px-2">
-        <Button
-          text="Update"
-          onClick={updateRental}
-          isLoading={isUpdating}
-          disabled={!canUpdateRental}
-        />
-      </div>
+      {showUpdateRental && (
+        <>
+          <div className="mb-3 mt-2 flex flex-col gap-x-4 gap-y-2 px-2 md:flex-row">
+            <DateTimeInput
+              id="rental-end-date"
+              label="End Date"
+              value={endDate}
+              onChange={setEndDate}
+            />
+          </div>
+          <div className="mt-3 flex justify-end gap-2 px-2">
+            <Button
+              text="Update"
+              onClick={updateRental}
+              isLoading={isUpdating}
+              disabled={!canUpdateRental}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 };

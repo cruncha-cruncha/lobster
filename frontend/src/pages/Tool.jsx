@@ -39,7 +39,7 @@ const reducer = (state, action) => {
 };
 
 export const useTool = () => {
-  const { accessToken } = useAuth();
+  const { accessToken, permissions } = useAuth();
   const params = useParams();
   const navigate = useNavigate();
   const { toolStatuses } = useConstants();
@@ -143,8 +143,8 @@ export const useTool = () => {
         },
         accessToken,
       })
-      .then((_data) => {
-        mutate();
+      .then((data) => {
+        mutate(data);
       })
       .finally(() => {
         dispatch({ type: "isSaving", value: false });
@@ -159,6 +159,8 @@ export const useTool = () => {
   const goToRentals = () => {
     navigate(`/rentals?${URL_TOOL_ID_KEY}=${toolId}`);
   };
+
+  const showUpdateTool = permissions.isToolManager(data?.storeId);
 
   const canUpdateTool =
     info.status != data?.status ||
@@ -194,6 +196,7 @@ export const useTool = () => {
     removeFromCart,
     isSaving: info.isSaving,
     canUpdateTool,
+    showUpdateTool,
   };
 };
 
@@ -220,6 +223,7 @@ export const PureTool = (tool) => {
     removeFromCart,
     isSaving,
     canUpdateTool,
+    showUpdateTool,
   } = tool;
 
   return (
@@ -249,52 +253,56 @@ export const PureTool = (tool) => {
           />
         )}
       </div>
-      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 px-2 md:grid-cols-2">
-        <TextInput
-          id={`tool-short-description`}
-          label="Short Description"
-          value={info.shortDescription}
-          onChange={setShortDescription}
-        />
-        <TextInput
-          id={`tool-real-id`}
-          label="Real ID"
-          value={info.realId}
-          onChange={setRealId}
-        />
-        <div className="md:col-span-2">
-          <LargeTextInput
-            id="tool-long-description"
-            label="Long Description"
-            value={info.longDescription}
-            onChange={setLongDescription}
-          />
-        </div>
-        <div className="md:col-span-2">
-          <PureCategorySearch {...categorySearch} />
-        </div>
-        <TextInput
-          id={`tool-rental-hours`}
-          label="Rental Hours"
-          value={info.rentalHours || ""}
-          onChange={setRentalHours}
-        />
-        <Select
-          id={`tool-status`}
-          label="Status"
-          value={info.status}
-          options={toolStatuses}
-          onChange={setStatus}
-        />
-      </div>
-      <div className="mt-3 flex justify-end gap-2 px-2">
-        <Button
-          text="Update"
-          onClick={updateTool}
-          isLoading={isSaving}
-          disabled={!canUpdateTool}
-        />
-      </div>
+      {showUpdateTool && (
+        <>
+          <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 px-2 md:grid-cols-2">
+            <TextInput
+              id={`tool-short-description`}
+              label="Short Description"
+              value={info.shortDescription}
+              onChange={setShortDescription}
+            />
+            <TextInput
+              id={`tool-real-id`}
+              label="Real ID"
+              value={info.realId}
+              onChange={setRealId}
+            />
+            <div className="md:col-span-2">
+              <LargeTextInput
+                id="tool-long-description"
+                label="Long Description"
+                value={info.longDescription}
+                onChange={setLongDescription}
+              />
+            </div>
+            <div className="md:col-span-2">
+              <PureCategorySearch {...categorySearch} />
+            </div>
+            <TextInput
+              id={`tool-rental-hours`}
+              label="Rental Hours"
+              value={info.rentalHours || ""}
+              onChange={setRentalHours}
+            />
+            <Select
+              id={`tool-status`}
+              label="Status"
+              value={info.status}
+              options={toolStatuses}
+              onChange={setStatus}
+            />
+          </div>
+          <div className="mt-3 flex justify-end gap-2 px-2">
+            <Button
+              text="Update"
+              onClick={updateTool}
+              isLoading={isSaving}
+              disabled={!canUpdateTool}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 };

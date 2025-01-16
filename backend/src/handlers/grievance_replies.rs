@@ -1,7 +1,7 @@
 use crate::auth::claims::Claims;
 use crate::common;
 use crate::db_structs::{grievance, grievance_reply};
-use crate::queries::{grievance_replies, grievances};
+use crate::queries::{grievance_replies, grievances, users};
 use crate::AppState;
 use axum::extract::{Path, Query};
 use axum::{
@@ -35,7 +35,7 @@ pub async fn create_new(
     Path(grievance_id): Path<grievance::Id>,
     State(state): State<Arc<AppState>>,
     Json(payload): Json<CreateGrievanceReplyData>,
-) -> Result<Json<grievance_reply::GrievanceReply>, (StatusCode, String)> {
+) -> Result<Json<grievance_replies::GrievanceReplyWithNames>, (StatusCode, String)> {
     let author_id = match claims.subject_as_user_id() {
         Some(id) => id,
         None => return Err((StatusCode::UNAUTHORIZED, String::from(""))),
@@ -55,10 +55,37 @@ pub async fn create_new(
         return Err((StatusCode::FORBIDDEN, String::from("")));
     }
 
-    match grievance_replies::insert(grievance_id, author_id, payload.text, &state.db).await {
-        Ok(grievance) => Ok(Json(grievance)),
-        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
-    }
+    let new_reply =
+        match grievance_replies::insert(grievance_id, author_id, payload.text, &state.db).await {
+            Ok(gr) => gr,
+            Err(e) => {
+                return Err((StatusCode::INTERNAL_SERVER_ERROR, e));
+            }
+        };
+
+    let user = match users::select_by_id(author_id, &state.db).await {
+        Ok(u) => {
+            if let Some(user) = u {
+                user
+            } else {
+                return Err((StatusCode::INTERNAL_SERVER_ERROR, String::from("")));
+            }
+        }
+        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
+    };
+
+    let reply = grievance_replies::GrievanceReplyWithNames {
+        id: new_reply.id,
+        grievance_id: new_reply.grievance_id,
+        author: Some(common::UserWithName {
+            id: new_reply.author_id,
+            username: user.username,
+        }),
+        text: new_reply.text,
+        created_at: new_reply.created_at,
+    };
+
+    Ok(Json(reply))
 }
 
 pub async fn get_by_grievance_id(

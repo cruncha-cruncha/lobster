@@ -139,7 +139,7 @@ export const useUserInfo = ({ id }) => {
       })
       .then((data) => {
         setUserInfo(data);
-        mutate();
+        mutate(data);
       })
       .finally(() => {
         userNameStateDispatch({ type: "saving", value: false });
@@ -252,7 +252,7 @@ export const useUserStatus = ({ id }) => {
       })
       .then((data) => {
         setUserInfo(data);
-        mutate();
+        mutate(data);
       })
       .finally(() => {
         userStatusStateDispatch({ type: "saving", value: false });
@@ -321,7 +321,7 @@ export const useUserPermissions = ({ id }) => {
   const [isAddingPermission, setIsAddingPermission] = useState(false);
   const [isRemovingPermissions, setIsRemovingPermissions] = useState([]);
   const [showFields, setShowFields] = useState(""); // "", "add", "remove"
-  const [selectedRole, selectRoleOption] = useState("0");
+  const [selectedRole, _setSelectedRole] = useState("0");
   const storeSelect = useSingleStoreSelect();
 
   const { data, error, isLoading, mutate } = useSWR(
@@ -351,9 +351,14 @@ export const useUserPermissions = ({ id }) => {
         id: permissionId,
         accessToken,
       })
-      .then(() => mutate())
+      .then(() => {
+        mutate((prev) => ({
+          ...prev,
+          library: prev.library.filter((p) => p.id != permissionId),
+          store: prev.store.filter((p) => p.id != permissionId),
+        }));
+      })
       .finally(() => {
-        setSaving(false);
         setIsRemovingPermissions((prev) => [
           ...prev.filter((id) => id != permissionId),
         ]);
@@ -380,7 +385,36 @@ export const useUserPermissions = ({ id }) => {
         permission,
         accessToken,
       })
-      .then(() => mutate())
+      .then((data) => {
+        console.log(data);
+        _setSelectedRole("0");
+        storeSelect.setStoreId("");
+        storeSelect.setStoreTerm({ target: { value: "" } });
+        if (data.storeId) {
+          mutate((prev) => ({
+            ...prev,
+            store: [
+              ...prev.store,
+              {
+                id: data.id,
+                storeId: data.storeId,
+                role: data.roleId,
+              },
+            ],
+          }));
+        } else {
+          mutate((prev) => ({
+            ...prev,
+            library: [
+              ...prev.library,
+              {
+                id: data.id,
+                role: data.roleId,
+              },
+            ],
+          }));
+        }
+      })
       .finally(() => {
         setIsAddingPermission(false);
       });
@@ -471,7 +505,7 @@ export const useUserPermissions = ({ id }) => {
     toggleShowFields: () => setShowFields(""),
     roleOptions: [{ name: "Select Role", id: "0" }, ...roleOptions],
     selectedRole,
-    setSelectedRole: (e) => selectRoleOption(e.target.value),
+    setSelectedRole: (e) => _setSelectedRole(e.target.value),
     showStoreSearch,
     storeSelect,
     canAddPermission,

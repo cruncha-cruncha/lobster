@@ -214,8 +214,8 @@ export const useEditStore = ({ storeId }) => {
         info: payload,
         accessToken,
       })
-      .then(() => {
-        mutate();
+      .then((data) => {
+        mutate(data);
       })
       .finally(() => {
         setIsSaving(false);
@@ -346,8 +346,8 @@ export const useEditStoreStatus = ({ storeId }) => {
         status: Number(status),
         accessToken,
       })
-      .then(() => {
-        mutate();
+      .then((data) => {
+        mutate(data);
       })
       .finally(() => {
         setIsUpdating(false);

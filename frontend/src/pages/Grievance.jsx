@@ -156,13 +156,17 @@ export const useMakeGrievanceReply = ({ grievanceId }) => {
         info: { text: reply },
         accessToken,
       })
-      .then(() => {
+      .then((data) => {
         mutate(
           `get replies for grievance ${grievanceId}, using ${accessToken} and ${JSON.stringify(
             {
               orderAsc: true,
             },
           )}`,
+          (prev) => ({
+            ...prev,
+            grievanceReplies: [...prev.grievanceReplies, data],
+          }),
         );
         _setReply("");
       })
@@ -241,8 +245,8 @@ export const useUpdateGrievanceStatus = ({ grievanceId }) => {
         status: Number(status),
         accessToken,
       })
-      .then(() => {
-        mutate();
+      .then((data) => {
+        mutate((prev) => ({ ...prev, status: data.status }));
       })
       .finally(() => {
         setIsUpdating(false);
