@@ -1,7 +1,7 @@
 use crate::auth::claims;
 use crate::common;
-use crate::db_structs::permission;
-use crate::queries::{permissions, stores};
+use crate::db_structs::{permission, tool};
+use crate::queries::{permissions, stores, tools};
 use crate::AppState;
 use crate::{auth::claims::Claims, db_structs::store};
 use axum::{
@@ -149,7 +149,7 @@ pub async fn update_status(
         ));
     }
 
-    match stores::update(
+    let updated_store = match stores::update(
         store_id,
         None,
         Some(payload.status),
@@ -162,13 +162,48 @@ pub async fn update_status(
     )
     .await
     {
-        Ok(s) => {
-            let encoded = serde_json::to_vec(&s).unwrap_or_default();
-            state.comm.send_message("stores", &encoded).await.ok();
-            Ok(Json(s))
+        Ok(s) => s,
+        
+        Err(e) => {
+            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
         }
-        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+    };
+
+    if payload.status == store::StoreStatus::Active as i32 {
+        return Ok(Json(updated_store));
     }
+
+    let tools = match tools::select(tools::SelectParams {
+        term: "".to_string(),
+        statuses: vec![tool::ToolStatus::Available as i32],
+        store_ids: vec![store_id],
+        category_ids: vec![],
+        match_all_categories: false,
+        real_ids: vec![],
+        offset: 0,
+        limit: 1000,
+    }, &state.db).await {
+        Ok(t) => t,
+        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+    };
+
+    for tool in &tools {
+        match tools::update(
+            tool.id,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(tool::ToolStatus::Unknown as i32),
+            &state.db,
+        ).await {
+            Ok(_) => (),
+            Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+        }
+    }
+
+    Ok(Json(updated_store))
 }
 
 pub async fn get_by_id(
