@@ -93,7 +93,7 @@ pub async fn select_no_contact(
 pub async fn select_by_code(
     code: store::Code,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<store::Store, String> {
+) -> Result<Option<store::Store>, String> {
     sqlx::query_as!(
         store::Store,
         r#"
@@ -103,7 +103,7 @@ pub async fn select_by_code(
         "#,
         code,
     )
-    .fetch_one(db)
+    .fetch_optional(db)
     .await
     .map_err(|e| e.to_string())
 }
@@ -111,7 +111,7 @@ pub async fn select_by_code(
 pub async fn select_by_id(
     store_id: store::Id,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<store::Store, String> {
+) -> Result<Option<store::Store>, String> {
     sqlx::query_as!(
         store::Store,
         r#"
@@ -121,7 +121,7 @@ pub async fn select_by_id(
         "#,
         store_id,
     )
-    .fetch_one(db)
+    .fetch_optional(db)
     .await
     .map_err(|e| e.to_string())
 }
@@ -168,7 +168,7 @@ pub async fn update(
     rental_information: Option<store::RentalInformation>,
     other_information: Option<store::OtherInformation>,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<store::Store, String> {
+) -> Result<Option<store::Store>, String> {
     sqlx::query_as!(
         store::Store,
         r#"
@@ -193,7 +193,7 @@ pub async fn update(
         rental_information,
         other_information,
     )
-    .fetch_one(db)
+    .fetch_optional(db)
     .await
     .map_err(|e| e.to_string())
 }

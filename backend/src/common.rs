@@ -1,5 +1,11 @@
 use crate::db_structs::user;
+use axum::{
+    extract::Json,
+    http::StatusCode,
+    response::{IntoResponse, Response},
+};
 use rand::Rng;
+use serde::{Deserialize, Serialize};
 
 pub const PAGE_SIZE: i64 = 20;
 
@@ -45,7 +51,44 @@ pub struct DateBetween {
 
 impl DateBetween {
     pub fn none() -> Self {
-        Self { start: None, end: None }
+        Self {
+            start: None,
+            end: None,
+        }
+    }
+}
+
+pub struct ErrResponse {
+    pub status: StatusCode,
+    pub err_code: String,
+    pub details: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ErrResponseJsonPart {
+    err_code: String,
+    details: String,
+}
+
+impl IntoResponse for ErrResponse {
+    fn into_response(self) -> Response {
+        let json_part = Json(ErrResponseJsonPart {
+            err_code: self.err_code.clone(),
+            details: self.details.clone(),
+        });
+
+        (self.status, json_part).into_response()
+    }
+}
+
+impl ErrResponse {
+    pub fn new(status: StatusCode, err_code: &str, details: &str) -> Self {
+        Self {
+            status,
+            err_code: err_code.to_string(),
+            details: details.to_string(),
+        }
     }
 }
 
@@ -56,4 +99,3 @@ pub fn rnd_code_str(pre: &str) -> String {
     let random_str = std::iter::repeat_with(one_char).take(8).collect::<String>();
     format!("{}{}-{}", pre, &random_str[..4], &random_str[4..])
 }
-

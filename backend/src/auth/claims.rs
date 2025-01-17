@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use super::signing::{ALGORITHM, PRIVATE_KEY, PUBLIC_KEY};
 use crate::db_structs::user;
 use axum::{
@@ -8,6 +7,7 @@ use axum::{
 use jsonwebtoken::Validation;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use time::Duration;
 
 #[allow(dead_code)]
@@ -21,16 +21,11 @@ fn make_token(
     exp: Duration,
     purpose: ClaimPurpose,
     permissions: &ClaimPermissions,
-) -> Result<String, (StatusCode, String)> {
+) -> Result<String, String> {
     let now = time::OffsetDateTime::now_utc();
     let expiry = match now.checked_add(exp) {
         Some(expiry) => expiry,
-        None => {
-            return Err((
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Failed to calculate expiry".to_string(),
-            ))
-        }
+        None => return Err("Failed to calculate expiry".to_string()),
     };
 
     let claims = Claims {
@@ -43,11 +38,11 @@ fn make_token(
 
     match jsonwebtoken::encode(&HEADER, &claims, &PRIVATE_KEY) {
         Ok(token) => Ok(token),
-        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+        Err(e) => Err(e.to_string()),
     }
 }
 
-pub fn make_refresh_token(sub: &str) -> Result<String, (StatusCode, String)> {
+pub fn make_refresh_token(sub: &str) -> Result<String, String> {
     make_token(
         sub,
         REFRESH_EXPIRY_DURATION,
@@ -59,10 +54,7 @@ pub fn make_refresh_token(sub: &str) -> Result<String, (StatusCode, String)> {
     )
 }
 
-pub fn make_access_token(
-    sub: &str,
-    permissions: &ClaimPermissions,
-) -> Result<String, (StatusCode, String)> {
+pub fn make_access_token(sub: &str, permissions: &ClaimPermissions) -> Result<String, String> {
     make_token(
         sub,
         ACCESS_EXPIRY_DURATION,

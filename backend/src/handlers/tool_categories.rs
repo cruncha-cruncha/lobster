@@ -46,11 +46,12 @@ pub async fn create_new(
     claims: Claims,
     State(state): State<Arc<AppState>>,
     Json(payload): Json<NewToolCategoryData>,
-) -> Result<Json<tool_category::ToolCategory>, (StatusCode, String)> {
+) -> Result<Json<tool_category::ToolCategory>, common::ErrResponse> {
     if !claims.is_library_admin() {
-        return Err((
+        return Err(common::ErrResponse::new(
             StatusCode::FORBIDDEN,
-            "User is not a library admin".to_string(),
+            "ERR_AUTH",
+            "User is not a library admin",
         ));
     }
 
@@ -63,8 +64,12 @@ pub async fn create_new(
     .await
     {
         Ok(t) => t,
-        Err(e) => {
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+        Err(e) => { 
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ));
         }
     };
 
@@ -76,11 +81,12 @@ pub async fn update(
     Path(tool_category_id): Path<i32>,
     State(state): State<Arc<AppState>>,
     Json(payload): Json<UpdateToolCategoryData>,
-) -> Result<Json<tool_category::ToolCategory>, (StatusCode, String)> {
+) -> Result<Json<tool_category::ToolCategory>, common::ErrResponse> {
     if !claims.is_library_admin() {
-        return Err((
+        return Err(common::ErrResponse::new(
             StatusCode::FORBIDDEN,
-            "User is not a library admin".to_string(),
+            "ERR_AUTH",
+            "User is not a library admin",
         ));
     }
 
@@ -93,9 +99,22 @@ pub async fn update(
     )
     .await
     {
-        Ok(t) => t,
+        Ok(t) => {
+            if t.is_none() {
+                return Err(common::ErrResponse::new(
+                    StatusCode::NOT_FOUND,
+                    "ERR_MIA",
+                    "Tool category does not exists",
+                ));
+            }
+            t.unwrap()
+        }
         Err(e) => {
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ));
         }
     };
 
@@ -105,7 +124,7 @@ pub async fn update(
 pub async fn get_by_id(
     Path(tool_category_id): Path<i32>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<tool_category::ToolCategory>, (StatusCode, String)> {
+) -> Result<Json<tool_category::ToolCategory>, common::ErrResponse> {
     let mut tool_categories = match tool_categories::select(
         tool_categories::SelectParams {
             ids: vec![tool_category_id],
@@ -120,12 +139,20 @@ pub async fn get_by_id(
     {
         Ok(tool_categories) => tool_categories,
         Err(e) => {
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ));
         }
     };
 
     if tool_categories.is_empty() {
-        return Err((StatusCode::NOT_FOUND, "Tool category not found".to_string()));
+        return Err(common::ErrResponse::new(
+            StatusCode::NOT_FOUND,
+            "ERR_MIA",
+            "Tool category does not exists",
+        ));
     }
 
     Ok(Json(tool_categories.remove(0)))
@@ -133,7 +160,7 @@ pub async fn get_by_id(
 
 pub async fn get_all(
     State(state): State<Arc<AppState>>,
-) -> Result<Json<SearchResponse>, (StatusCode, String)> {
+) -> Result<Json<SearchResponse>, common::ErrResponse> {
     let tool_categories = match tool_categories::select(
         tool_categories::SelectParams {
             ids: vec![],
@@ -148,7 +175,11 @@ pub async fn get_all(
     {
         Ok(t) => t,
         Err(e) => {
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ));
         }
     };
 
@@ -160,7 +191,7 @@ pub async fn get_all(
 pub async fn get_filtered(
     Query(params): Query<FilterParams>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<SearchResponse>, (StatusCode, String)> {
+) -> Result<Json<SearchResponse>, common::ErrResponse> {
     let (offset, limit) = common::calculate_offset_limit(params.page.unwrap_or_default());
 
     let tool_categories = match tool_categories::select(
@@ -177,7 +208,11 @@ pub async fn get_filtered(
     {
         Ok(t) => t,
         Err(e) => {
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ));
         }
     };
 

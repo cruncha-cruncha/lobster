@@ -38,7 +38,7 @@ pub async fn update(
     synonyms: Option<tool_category::Synonyms>,
     description: Option<tool_category::Description>,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<tool_category::ToolCategory, String> {
+) -> Result<Option<tool_category::ToolCategory>, String> {
     sqlx::query_as!(
         tool_category::ToolCategory,
         r#"
@@ -54,7 +54,7 @@ pub async fn update(
         synonyms.as_deref(),
         description,
     )
-    .fetch_one(db)
+    .fetch_optional(db)
     .await
     .map_err(|e| e.to_string())
 }

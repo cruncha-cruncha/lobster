@@ -68,7 +68,7 @@ pub async fn update(
     pictures: Option<tool::Pictures>,
     status: Option<tool::Status>,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<tool::Tool, String> {
+) -> Result<Option<tool::Tool>, String> {
     sqlx::query_as!(
         tool::Tool,
         r#"
@@ -91,7 +91,7 @@ pub async fn update(
         pictures.as_deref(),
         status,
     )
-    .fetch_one(db)
+    .fetch_optional(db)
     .await
     .map_err(|e| e.to_string())
 }

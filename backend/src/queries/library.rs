@@ -38,7 +38,7 @@ pub async fn select_information(
 pub async fn update_information(
     name: Option<String>,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<LibraryInformation, String> {
+) -> Result<Option<LibraryInformation>, String> {
     sqlx::query_as!(
         LibraryInformation,
         r#"
@@ -49,7 +49,7 @@ pub async fn update_information(
         "#,
         name,
     )
-    .fetch_one(db)
+    .fetch_optional(db)
     .await
     .map_err(|e| e.to_string())
 }

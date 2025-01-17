@@ -53,10 +53,16 @@ pub async fn create_new(
     claims: Claims,
     State(state): State<Arc<AppState>>,
     Json(payload): Json<CreateStoreData>,
-) -> Result<Json<store::Store>, (StatusCode, String)> {
+) -> Result<Json<store::Store>, common::ErrResponse> {
     let user_id = match claims.subject_as_user_id() {
         Some(id) => id,
-        None => return Err((StatusCode::BAD_REQUEST, "Token missing user id".to_string())),
+        None => {
+            return Err(common::ErrResponse::new(
+                StatusCode::UNAUTHORIZED,
+                "ERR_AUTH",
+                "Token missing user id",
+            ))
+        }
     };
 
     let code = common::rnd_code_str("s-");
@@ -75,7 +81,19 @@ pub async fn create_new(
     {
         Ok(s) => s,
         Err(e) => {
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+            if e.contains("duplicate key value violates unique constraint \"stores_name_key\"") {
+                return Err(common::ErrResponse::new(
+                    StatusCode::CONFLICT,
+                    "ERR_DUP",
+                    &e,
+                ));
+            }
+
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ));
         }
     };
 
@@ -96,7 +114,13 @@ pub async fn create_new(
         ),
     ) {
         Ok(_) => (),
-        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+        Err(e) => {
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ))
+        }
     };
 
     let encoded = serde_json::to_vec(&store).unwrap_or_default();
@@ -109,9 +133,13 @@ pub async fn update_info(
     Path(store_id): Path<i32>,
     State(state): State<Arc<AppState>>,
     Json(payload): Json<SettableStoreData>,
-) -> Result<Json<store::Store>, (StatusCode, String)> {
+) -> Result<Json<store::Store>, common::ErrResponse> {
     if !claims.is_store_manager(store_id) {
-        return Err((StatusCode::UNAUTHORIZED, "Must be a store rep".to_string()));
+        return Err(common::ErrResponse::new(
+            StatusCode::FORBIDDEN,
+            "ERR_AUTH",
+            "User is not a store rep",
+        ));
     }
 
     match stores::update(
@@ -128,11 +156,23 @@ pub async fn update_info(
     .await
     {
         Ok(s) => {
+            if s.is_none() {
+                return Err(common::ErrResponse::new(
+                    StatusCode::NOT_FOUND,
+                    "ERR_MIA",
+                    "Store not found",
+                ));
+            }
+            let s = s.unwrap();
             let encoded = serde_json::to_vec(&s).unwrap_or_default();
             state.comm.send_message("stores", &encoded).await.ok();
             Ok(Json(s))
         }
-        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+        Err(e) => Err(common::ErrResponse::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "ERR_DB",
+            &e,
+        )),
     }
 }
 
@@ -141,11 +181,12 @@ pub async fn update_status(
     Path(store_id): Path<i32>,
     State(state): State<Arc<AppState>>,
     Json(payload): Json<common::StatusOnly>,
-) -> Result<Json<store::Store>, (StatusCode, String)> {
+) -> Result<Json<store::Store>, common::ErrResponse> {
     if !claims.is_store_admin() {
-        return Err((
-            StatusCode::UNAUTHORIZED,
-            "Must be a store admin".to_string(),
+        return Err(common::ErrResponse::new(
+            StatusCode::FORBIDDEN,
+            "ERR_AUTH",
+            "User is not a store admin",
         ));
     }
 
@@ -162,10 +203,22 @@ pub async fn update_status(
     )
     .await
     {
-        Ok(s) => s,
-        
+        Ok(s) => {
+            if s.is_none() {
+                return Err(common::ErrResponse::new(
+                    StatusCode::NOT_FOUND,
+                    "ERR_MIA",
+                    "Store not found",
+                ));
+            }
+            s.unwrap()
+        },
         Err(e) => {
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ));
         }
     };
 
@@ -173,18 +226,29 @@ pub async fn update_status(
         return Ok(Json(updated_store));
     }
 
-    let tools = match tools::select(tools::SelectParams {
-        term: "".to_string(),
-        statuses: vec![tool::ToolStatus::Available as i32],
-        store_ids: vec![store_id],
-        category_ids: vec![],
-        match_all_categories: false,
-        real_ids: vec![],
-        offset: 0,
-        limit: 1000,
-    }, &state.db).await {
+    let tools = match tools::select(
+        tools::SelectParams {
+            term: "".to_string(),
+            statuses: vec![tool::ToolStatus::Available as i32],
+            store_ids: vec![store_id],
+            category_ids: vec![],
+            match_all_categories: false,
+            real_ids: vec![],
+            offset: 0,
+            limit: 1000,
+        },
+        &state.db,
+    )
+    .await
+    {
         Ok(t) => t,
-        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+        Err(e) => {
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ))
+        }
     };
 
     for tool in &tools {
@@ -197,9 +261,17 @@ pub async fn update_status(
             None,
             Some(tool::ToolStatus::Unknown as i32),
             &state.db,
-        ).await {
+        )
+        .await
+        {
             Ok(_) => (),
-            Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+            Err(e) => {
+                return Err(common::ErrResponse::new(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "ERR_DB",
+                    &e,
+                ))
+            }
         }
     }
 
@@ -210,10 +282,25 @@ pub async fn get_by_id(
     claims: Claims,
     Path(store_id): Path<i32>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<store::Store>, (StatusCode, String)> {
+) -> Result<Json<store::Store>, common::ErrResponse> {
     let mut store = match stores::select_by_id(store_id, &state.db).await {
-        Ok(s) => s,
-        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+        Ok(s) => {
+            if s.is_none() {
+                return Err(common::ErrResponse::new(
+                    StatusCode::NOT_FOUND,
+                    "ERR_MIA",
+                    "Store not found",
+                ));
+            }
+            s.unwrap()
+        },
+        Err(e) => {
+            return Err(common::ErrResponse::new(
+                StatusCode::NOT_FOUND,
+                "ERR_MIA",
+                &e,
+            ))
+        }
     };
 
     let can_see_contact_info = !claims.is_none();
@@ -236,7 +323,7 @@ pub async fn get_filtered(
     claims: Claims,
     Query(params): Query<FilterParams>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<FilteredResponse>, (StatusCode, String)> {
+) -> Result<Json<FilteredResponse>, common::ErrResponse> {
     let (offset, limit) = common::calculate_offset_limit(params.page.unwrap_or_default());
     let can_see_contact_info = !claims.is_none();
     let can_see_code = claims.is_store_admin();
@@ -255,7 +342,7 @@ pub async fn get_filtered(
         )
         .await
         .map(|stores| Json(FilteredResponse { stores }))
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        .map_err(|e| common::ErrResponse::new(StatusCode::INTERNAL_SERVER_ERROR, "ERR_DB", &e))
     } else {
         stores::select(
             stores::SelectParams {
@@ -275,6 +362,6 @@ pub async fn get_filtered(
             }
             Json(FilteredResponse { stores })
         })
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        .map_err(|e| common::ErrResponse::new(StatusCode::INTERNAL_SERVER_ERROR, "ERR_DB", &e))
     }
 }

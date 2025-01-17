@@ -97,18 +97,20 @@ pub async fn create_new(
     claims: Claims,
     State(state): State<Arc<AppState>>,
     Json(payload): Json<NewToolData>,
-) -> Result<Json<ToolWithText>, (StatusCode, String)> {
+) -> Result<Json<ToolWithText>, common::ErrResponse> {
     if !claims.is_tool_manager(payload.store_id) {
-        return Err((
+        return Err(common::ErrResponse::new(
             StatusCode::FORBIDDEN,
-            "User is not a tool manager of this store".to_string(),
+            "ERR_AUTH",
+            "User is not a tool manager of this store",
         ));
     }
 
     if payload.short_description.chars().count() > SHORT_DESCRIPTION_CHAR_LIMIT {
-        return Err((
+        return Err(common::ErrResponse::new(
             StatusCode::BAD_REQUEST,
-            "Short description must be 80 characters or less".to_string(),
+            "ERR_REQ",
+            "Short description must be 80 characters or less",
         ));
     }
 
@@ -127,17 +129,29 @@ pub async fn create_new(
     {
         Ok(mut s) => {
             if s.is_empty() {
-                return Err((StatusCode::NOT_FOUND, "Store not found".to_string()));
+                return Err(common::ErrResponse::new(
+                    StatusCode::NOT_FOUND,
+                    "ERR_MIA",
+                    "Store not found",
+                ));
             }
             s.remove(0)
         }
         Err(e) => {
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ));
         }
     };
 
     if store.status != store::StoreStatus::Active as i32 {
-        return Err((StatusCode::BAD_REQUEST, "Store is not active".to_string()));
+        return Err(common::ErrResponse::new(
+            StatusCode::BAD_REQUEST,
+            "ERR_REQ",
+            "Store is not active",
+        ));
     }
 
     let tool = match tools::insert(
@@ -154,7 +168,11 @@ pub async fn create_new(
     {
         Ok(t) => t,
         Err(e) => {
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ));
         }
     };
 
@@ -170,16 +188,13 @@ pub async fn create_new(
     match tool_classifications::insert(new_classifications, &state.db).await {
         Ok(_) => {}
         Err(e) => {
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e));
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ));
         }
     }
-
-    let store_name = match stores::select_by_id(payload.store_id, &state.db).await {
-        Ok(s) => s.name,
-        Err(e) => {
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
-        }
-    };
 
     let categories = match tool_categories::select(
         tool_categories::SelectParams {
@@ -195,7 +210,11 @@ pub async fn create_new(
     {
         Ok(c) => c,
         Err(e) => {
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ));
         }
     };
 
@@ -205,7 +224,7 @@ pub async fn create_new(
         id: tool.id,
         real_id: tool.real_id,
         store_id: tool.store_id,
-        store_name,
+        store_name: store.name.clone(),
         rental_hours: tool.rental_hours,
         short_description: tool.short_description,
         long_description: tool.long_description,
@@ -220,26 +239,32 @@ pub async fn update(
     Path(tool_id): Path<i32>,
     State(state): State<Arc<AppState>>,
     Json(payload): Json<UpdateToolData>,
-) -> Result<Json<ToolWithText>, (StatusCode, String)> {
+) -> Result<Json<ToolWithText>, common::ErrResponse> {
     // all the sql statements in this handler should be inside a transaction, but I'm ignoring that for now
     match tools::select_by_ids(vec![tool_id], &state.db).await {
         Ok(tools) => {
             if tools.is_empty() {
-                return Err((
+                return Err(common::ErrResponse::new(
                     StatusCode::NOT_FOUND,
-                    "No tool with the given ID exists".to_string(),
+                    "ERR_MIA",
+                    "No tool with the given ID exists",
                 ));
             }
 
             if !claims.is_tool_manager(tools[0].store_id) {
-                return Err((
+                return Err(common::ErrResponse::new(
                     StatusCode::FORBIDDEN,
-                    "User is not a tool manager of this store".to_string(),
+                    "ERR_AUTH",
+                    "User is not a tool manager of this store",
                 ));
             }
         }
         Err(e) => {
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ));
         }
     }
 
@@ -252,9 +277,10 @@ pub async fn update(
             .count()
             > SHORT_DESCRIPTION_CHAR_LIMIT
     {
-        return Err((
+        return Err(common::ErrResponse::new(
             StatusCode::BAD_REQUEST,
-            "Short description must be 80 characters or less".to_string(),
+            "ERR_REQ",
+            "Short description must be 80 characters or less",
         ));
     }
 
@@ -270,9 +296,22 @@ pub async fn update(
     )
     .await
     {
-        Ok(t) => t,
+        Ok(t) => {
+            if t.is_none() {
+                return Err(common::ErrResponse::new(
+                    StatusCode::NOT_FOUND,
+                    "ERR_MIA",
+                    "Tool not found",
+                ));
+            }
+            t.unwrap()
+        }
         Err(e) => {
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ));
         }
     };
 
@@ -281,7 +320,11 @@ pub async fn update(
             match tool_classifications::select(vec![tool_id], vec![], &state.db).await {
                 Ok(c) => c,
                 Err(e) => {
-                    return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+                    return Err(common::ErrResponse::new(
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        "ERR_DB",
+                        &e,
+                    ));
                 }
             };
 
@@ -310,22 +353,43 @@ pub async fn update(
         match tool_classifications::insert(to_add, &state.db).await {
             Ok(_) => {}
             Err(e) => {
-                return Err((StatusCode::INTERNAL_SERVER_ERROR, e));
+                return Err(common::ErrResponse::new(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "ERR_DB",
+                    &e,
+                ));
             }
         }
 
         match tool_classifications::delete(to_remove, &state.db).await {
             Ok(_) => {}
             Err(e) => {
-                return Err((StatusCode::INTERNAL_SERVER_ERROR, e));
+                return Err(common::ErrResponse::new(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "ERR_DB",
+                    &e,
+                ));
             }
         }
     }
 
     let store_name = match stores::select_by_id(tool.store_id, &state.db).await {
-        Ok(s) => s.name,
+        Ok(s) => {
+            if s.is_none() {
+                return Err(common::ErrResponse::new(
+                    StatusCode::NOT_FOUND,
+                    "ERR_MIA",
+                    "Store not found",
+                ));
+            }
+            s.unwrap().name
+        }
         Err(e) => {
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ));
         }
     };
 
@@ -343,7 +407,11 @@ pub async fn update(
     {
         Ok(c) => c,
         Err(e) => {
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ));
         }
     };
 
@@ -366,26 +434,44 @@ pub async fn update(
 pub async fn get_by_id(
     Path(tool_id): Path<i32>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<ToolWithText>, (StatusCode, String)> {
+) -> Result<Json<ToolWithText>, common::ErrResponse> {
     let mut tools = match tools::select_by_ids(vec![tool_id], &state.db).await {
         Ok(t) => t,
         Err(e) => {
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ));
         }
     };
 
     if tools.is_empty() {
-        return Err((
+        return Err(common::ErrResponse::new(
             StatusCode::NOT_FOUND,
-            "No tool with the given ID exists".to_string(),
+            "ERR_MIA",
+            "No tool with the given ID exists",
         ));
     }
     let tool = tools.remove(0);
 
     let store_name = match stores::select_by_id(tool.store_id, &state.db).await {
-        Ok(s) => s.name,
+        Ok(s) => {
+            if s.is_none() {
+                return Err(common::ErrResponse::new(
+                    StatusCode::NOT_FOUND,
+                    "ERR_MIA",
+                    "Store not found",
+                ));
+            }
+            s.unwrap().name
+        }
         Err(e) => {
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ));
         }
     };
 
@@ -403,7 +489,11 @@ pub async fn get_by_id(
     {
         Ok(c) => c,
         Err(e) => {
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ));
         }
     };
 
@@ -424,7 +514,7 @@ pub async fn get_by_id(
 pub async fn get_filtered(
     Query(params): Query<FilterParams>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<ToolSearchResponse>, (StatusCode, String)> {
+) -> Result<Json<ToolSearchResponse>, common::ErrResponse> {
     let (offset, limit) = common::calculate_offset_limit(params.page.unwrap_or_default());
 
     let tools = match tools::select(
@@ -444,7 +534,11 @@ pub async fn get_filtered(
     {
         Ok(t) => t,
         Err(e) => {
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ));
         }
     };
 
@@ -458,7 +552,11 @@ pub async fn get_filtered(
             match tool_classifications::select(tool_ids.clone(), vec![], &state.db).await {
                 Ok(c) => c,
                 Err(e) => {
-                    return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+                    return Err(common::ErrResponse::new(
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        "ERR_DB",
+                        &e,
+                    ));
                 }
             };
     }
@@ -480,7 +578,11 @@ pub async fn get_filtered(
         {
             Ok(s) => s,
             Err(e) => {
-                return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+                return Err(common::ErrResponse::new(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "ERR_DB",
+                    &e,
+                ));
             }
         };
     }
@@ -524,7 +626,11 @@ pub async fn get_filtered(
         {
             Ok(c) => c,
             Err(e) => {
-                return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+                return Err(common::ErrResponse::new(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "ERR_DB",
+                    &e,
+                ));
             }
         };
     }
@@ -539,7 +645,7 @@ pub async fn get_filtered(
 pub async fn get_by_exact_real_id(
     Query(params): Query<ExactParams>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<tool::Tool>, (StatusCode, String)> {
+) -> Result<Json<tool::Tool>, common::ErrResponse> {
     match tools::select_exact_real(
         params.real_id,
         tool::ToolStatus::Available as i32,
@@ -550,12 +656,20 @@ pub async fn get_by_exact_real_id(
     {
         Ok(t) => {
             if t.is_none() {
-                return Err((StatusCode::NOT_FOUND, "Tool not found".to_string()));
+                return Err(common::ErrResponse::new(
+                    StatusCode::NOT_FOUND,
+                    "ERR_MIA",
+                    "Tool not found",
+                ));
             }
             Ok(Json(t.unwrap()))
         }
         Err(e) => {
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ));
         }
     }
 }

@@ -148,7 +148,7 @@ pub async fn select_by_id(
 pub async fn select_by_code(
     code: user::Code,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<user::User, String> {
+) -> Result<Option<user::User>, String> {
     sqlx::query_as!(
         user::User,
         r#"
@@ -158,7 +158,7 @@ pub async fn select_by_code(
         "#,
         code,
     )
-    .fetch_one(db)
+    .fetch_optional(db)
     .await
     .map_err(|e| e.to_string())
 }
@@ -192,7 +192,7 @@ pub async fn update(
     username: Option<&str>,
     status: Option<i32>,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<user::User, String> {
+) -> Result<Option<user::User>, String> {
     sqlx::query_as!(
         user::User,
         r#"
@@ -205,7 +205,7 @@ pub async fn update(
         status,
         id,
     )
-    .fetch_one(db)
+    .fetch_optional(db)
     .await
     .map_err(|e| e.to_string())
 }

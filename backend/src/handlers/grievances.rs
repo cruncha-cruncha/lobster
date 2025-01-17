@@ -39,10 +39,16 @@ pub async fn create_new(
     claims: Claims,
     State(state): State<Arc<AppState>>,
     Json(payload): Json<CreateGrievanceData>,
-) -> Result<Json<grievance::Grievance>, (StatusCode, String)> {
+) -> Result<Json<grievance::Grievance>, common::ErrResponse> {
     let author_id = match claims.subject_as_user_id() {
         Some(id) => id,
-        None => return Err((StatusCode::UNAUTHORIZED, String::from(""))),
+        None => {
+            return Err(common::ErrResponse::new(
+                StatusCode::UNAUTHORIZED,
+                "ERR_AUTH",
+                "Invalid user id in claims",
+            ))
+        }
     };
 
     match grievances::insert(
@@ -56,7 +62,11 @@ pub async fn create_new(
     .await
     {
         Ok(grievance) => Ok(Json(grievance)),
-        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
+        Err(e) => Err(common::ErrResponse::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "ERR_DB",
+            &e,
+        )),
     }
 }
 
@@ -65,14 +75,32 @@ pub async fn update_status(
     Path(grievance_id): Path<grievance::Id>,
     State(state): State<Arc<AppState>>,
     Json(payload): Json<common::StatusOnly>,
-) -> Result<Json<grievance::Grievance>, (StatusCode, String)> {
+) -> Result<Json<grievance::Grievance>, common::ErrResponse> {
     if !claims.is_user_admin() {
-        return Err((StatusCode::UNAUTHORIZED, String::from("")));
+        return Err(common::ErrResponse::new(
+            StatusCode::FORBIDDEN,
+            "ERR_AUTH",
+            "User is not a user admin",
+        ));
     }
 
     match grievances::update_status(grievance_id, payload.status, &state.db).await {
-        Ok(g) => Ok(Json(g)),
-        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
+        Ok(g) => {
+            if g.is_some() {
+                Ok(Json(g.unwrap()))
+            } else {
+                Err(common::ErrResponse::new(
+                    StatusCode::NOT_FOUND,
+                    "ERR_MIA",
+                    "Could not find any grievance with that id",
+                ))
+            }
+        }
+        Err(e) => Err(common::ErrResponse::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "ERR_DB",
+            &e,
+        )),
     }
 }
 
@@ -80,9 +108,13 @@ pub async fn get_filtered(
     claims: Claims,
     Query(params): Query<FilterParams>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<GrievancesResponse>, (StatusCode, String)> {
+) -> Result<Json<GrievancesResponse>, common::ErrResponse> {
     if claims.is_none() {
-        return Err((StatusCode::UNAUTHORIZED, String::from("")));
+        return Err(common::ErrResponse::new(
+            StatusCode::UNAUTHORIZED,
+            "ERR_AUTH",
+            "User is not logged in",
+        ));
     }
 
     let (offset, limit) = common::calculate_offset_limit(params.page.unwrap_or_default());
@@ -98,20 +130,38 @@ pub async fn get_filtered(
     )
     .await
     .map(|grievances| Json(GrievancesResponse { grievances }))
-    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
+    .map_err(|e| common::ErrResponse::new(StatusCode::INTERNAL_SERVER_ERROR, "ERR_DB", &e))
 }
 
 pub async fn get_by_id(
     claims: Claims,
     Path(grievance_id): Path<grievance::Id>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<GrievanceWithNames>, (StatusCode, String)> {
+) -> Result<Json<GrievanceWithNames>, common::ErrResponse> {
     if claims.is_none() {
-        return Err((StatusCode::UNAUTHORIZED, String::from("")));
+        return Err(common::ErrResponse::new(
+            StatusCode::UNAUTHORIZED,
+            "ERR_AUTH",
+            "User is not logged in",
+        ));
     }
 
     match grievances::select_by_id(grievance_id, &state.db).await {
-        Ok(grievance) => Ok(Json(grievance)),
-        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
+        Ok(grievance) => {
+            if grievance.is_some() {
+                Ok(Json(grievance.unwrap()))
+            } else {
+                Err(common::ErrResponse::new(
+                    StatusCode::NOT_FOUND,
+                    "ERR_MIA",
+                    "Could not find any grievance with that id",
+                ))
+            }
+        }
+        Err(e) => Err(common::ErrResponse::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "ERR_DB",
+            &e,
+        )),
     }
 }

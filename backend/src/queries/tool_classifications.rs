@@ -22,14 +22,14 @@ pub async fn insert(
     .map_err(|e| e.to_string())
 }
 
-pub async fn delete (
+pub async fn delete(
     data: Vec<tool_classification::ToolClassification>,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<(), String> {
+) -> Result<Option<()>, String> {
     if data.is_empty() {
-        return Ok(());
+        return Ok(None);
     }
-    
+
     match sqlx::query!(
         r#"
         DELETE FROM main.tool_classifications tc
@@ -40,18 +40,20 @@ pub async fn delete (
         &data.iter().map(|d| d.category_id).collect::<Vec<i32>>(),
     )
     .execute(db)
-    .await {
+    .await
+    {
         Ok(res) => {
             if res.rows_affected() == 0 {
-                return Err("No rows affected".to_string());
+                Ok(None)
+            } else {
+                Ok(Some(()))
             }
-            Ok(())
-        },
+        }
         Err(e) => Err(e.to_string()),
     }
 }
 
-pub async fn select (
+pub async fn select(
     tool_ids: Vec<tool_classification::ToolId>,
     category_ids: Vec<tool_classification::CategoryId>,
     db: &sqlx::Pool<sqlx::Postgres>,

@@ -56,7 +56,7 @@ pub async fn update_status(
     permission_id: permission::Id,
     status: permission::Status,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<permission::Permission, String> {
+) -> Result<Option<permission::Permission>, String> {
     sqlx::query_as!(
         permission::Permission,
         r#"
@@ -68,7 +68,7 @@ pub async fn update_status(
         status,
         permission_id,
     )
-    .fetch_one(db)
+    .fetch_optional(db)
     .await
     .map_err(|e| e.to_string())
 }

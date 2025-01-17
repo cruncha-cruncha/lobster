@@ -1,5 +1,6 @@
 use crate::common;
 use crate::db_structs::{store, user};
+use crate::queries::permissions;
 use crate::queries::users::{self, SelectParams};
 use crate::AppState;
 use crate::{auth::claims::Claims, db_structs::permission};
@@ -39,21 +40,34 @@ pub async fn update(
     Path(user_id): Path<i32>,
     State(state): State<Arc<AppState>>,
     Json(data): Json<UpdateUsername>,
-) -> Result<Json<user::User>, (StatusCode, String)> {
+) -> Result<Json<user::User>, common::ErrResponse> {
     if claims.subject_as_user_id().unwrap_or(-1) != user_id {
-        return Err((
+        return Err(common::ErrResponse::new(
             StatusCode::FORBIDDEN,
-            "You can only update your own username".to_string(),
+            "ERR_AUTH",
+            "You cannot update someone else's username",
         ));
     }
 
     match users::update(user_id, Some(&data.username), None, &state.db).await {
         Ok(u) => {
+            if u.is_none() {
+                return Err(common::ErrResponse::new(
+                    StatusCode::NOT_FOUND,
+                    "ERR_MIA",
+                    "Could not find any user with that id",
+                ));
+            }
+            let u = u.unwrap();
             let encoded = serde_json::to_vec(&u).unwrap_or_default();
             state.comm.send_message("users", &encoded).await.ok();
             Ok(Json(u))
         }
-        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
+        Err(e) => Err(common::ErrResponse::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "ERR_DB",
+            &e,
+        )),
     }
 }
 
@@ -62,11 +76,12 @@ pub async fn update_status(
     Path(user_id): Path<i32>,
     State(state): State<Arc<AppState>>,
     Json(payload): Json<common::StatusOnly>,
-) -> Result<Json<user::User>, (StatusCode, String)> {
+) -> Result<Json<user::User>, common::ErrResponse> {
     if !claims.is_user_admin() {
-        return Err((
+        return Err(common::ErrResponse::new(
             StatusCode::FORBIDDEN,
-            "You must be a user admin to update user statuses".to_string(),
+            "ERR_AUTH",
+            "User is not a user admin",
         ));
     }
 
@@ -75,7 +90,15 @@ pub async fn update_status(
     let can_see_code = claims.is_user_admin() || claims_user_id == user_id;
 
     match users::update(user_id, None, Some(payload.status), &state.db).await {
-        Ok(mut u) => {
+        Ok(u) => {
+            if u.is_none() {
+                return Err(common::ErrResponse::new(
+                    StatusCode::NOT_FOUND,
+                    "ERR_MIA",
+                    "Could not find any user with that id",
+                ));
+            }
+            let mut u = u.unwrap();
             let encoded = serde_json::to_vec(&u).unwrap_or_default();
             state.comm.send_message("users", &encoded).await.ok();
             if !can_see_code {
@@ -83,7 +106,11 @@ pub async fn update_status(
             }
             Ok(Json(u))
         }
-        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
+        Err(e) => Err(common::ErrResponse::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "ERR_DB",
+            &e,
+        )),
     }
 }
 
@@ -91,11 +118,12 @@ pub async fn get_by_id(
     claims: Claims,
     Path(user_id): Path<i32>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<user::User>, (StatusCode, String)> {
+) -> Result<Json<user::User>, common::ErrResponse> {
     if claims.is_none() {
-        return Err((
+        return Err(common::ErrResponse::new(
             StatusCode::UNAUTHORIZED,
-            "You must be logged in".to_string(),
+            "ERR_AUTH",
+            "User is not logged in",
         ));
     }
 
@@ -118,9 +146,17 @@ pub async fn get_by_id(
 
                 Ok(Json(u))
             }
-            None => Err((StatusCode::NOT_FOUND, "User not found".to_string())),
+            None => Err(common::ErrResponse::new(
+                StatusCode::NOT_FOUND,
+                "ERR_MIA",
+                "Could not find any user with that id",
+            )),
         },
-        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
+        Err(e) => Err(common::ErrResponse::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "ERR_DB",
+            &e,
+        )),
     }
 }
 
@@ -128,11 +164,12 @@ pub async fn get_filtered(
     claims: Claims,
     Query(params): Query<FilterParams>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<FilteredResponse>, (StatusCode, String)> {
+) -> Result<Json<FilteredResponse>, common::ErrResponse> {
     if claims.is_none() {
-        return Err((
+        return Err(common::ErrResponse::new(
             StatusCode::UNAUTHORIZED,
-            "You must be logged in".to_string(),
+            "ERR_AUTH",
+            "User is not logged in",
         ));
     }
 
@@ -152,11 +189,52 @@ pub async fn get_filtered(
         users::select_with_email(params, &state.db)
             .await
             .map(|users| Json(FilteredResponse { users }))
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
+            .map_err(|e| common::ErrResponse::new(StatusCode::INTERNAL_SERVER_ERROR, "ERR_DB", &e))
     } else {
         users::select(params, &state.db)
             .await
             .map(|users| Json(FilteredResponse { users }))
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
+            .map_err(|e| common::ErrResponse::new(StatusCode::INTERNAL_SERVER_ERROR, "ERR_DB", &e))
+    }
+}
+
+pub async fn create_new_user(
+    // this endpoint is only used internally, claim checks are performed in the caller
+    email_address: String,
+    State(state): State<Arc<AppState>>,
+) -> Result<Json<user::User>, common::ErrResponse> {
+    let username = crate::usernames::rnd_username();
+
+    let mut code = crate::common::rnd_code_str("");
+    while (users::select_by_code(code.clone(), &state.db).await).is_ok() {
+        code = crate::common::rnd_code_str("");
+    }
+
+    match users::insert(&username, 1, &email_address, &code, &state.db).await {
+        Ok(new_user) => {
+            let id = new_user.id;
+            match users::count(&state.db).await {
+                Ok(count) => {
+                    if count <= 1 {
+                        permissions::insert(id, 1, None, 1, &state.db).await.ok();
+                        permissions::insert(id, 2, None, 1, &state.db).await.ok();
+                        permissions::insert(id, 3, None, 1, &state.db).await.ok();
+                    }
+                }
+                Err(_) => (),
+            }
+
+            let encoded = serde_json::to_vec(&new_user).unwrap_or_default();
+            state.comm.send_message("users", &encoded).await.ok();
+
+            Ok(Json(new_user))
+        }
+        Err(e) => {
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ))
+        }
     }
 }

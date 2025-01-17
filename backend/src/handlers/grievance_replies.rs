@@ -35,44 +35,84 @@ pub async fn create_new(
     Path(grievance_id): Path<grievance::Id>,
     State(state): State<Arc<AppState>>,
     Json(payload): Json<CreateGrievanceReplyData>,
-) -> Result<Json<grievance_replies::GrievanceReplyWithNames>, (StatusCode, String)> {
+) -> Result<Json<grievance_replies::GrievanceReplyWithNames>, common::ErrResponse> {
     let author_id = match claims.subject_as_user_id() {
         Some(id) => id,
-        None => return Err((StatusCode::UNAUTHORIZED, String::from(""))),
+        None => {
+            return Err(common::ErrResponse::new(
+                StatusCode::UNAUTHORIZED,
+                "ERR_AUTH",
+                "Invalid user id in claims",
+            ))
+        }
     };
 
     let mut allowed = claims.is_user_admin();
     if !allowed {
         let grievance = match grievances::select_by_id(grievance_id, &state.db).await {
-            Ok(grievance) => grievance,
-            Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
+            Ok(grievance) => {
+                if let Some(grievance) = grievance {
+                    grievance
+                } else {
+                    return Err(common::ErrResponse::new(
+                        StatusCode::NOT_FOUND,
+                        "ERR_MIA",
+                        "Grievance not found",
+                    ));
+                }
+            }
+            Err(e) => {
+                return Err(common::ErrResponse::new(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "ERR_DB",
+                    &e,
+                ))
+            }
         };
 
         allowed = grievance.author.map_or(0, |a| a.id) == author_id
             || grievance.accused.map_or(0, |a| a.id) == author_id;
     }
     if !allowed {
-        return Err((StatusCode::FORBIDDEN, String::from("")));
+        return Err(common::ErrResponse::new(
+            StatusCode::FORBIDDEN,
+            "ERR_AUTH",
+            "User is not author, accused, or user admin",
+        ));
     }
-
-    let new_reply =
-        match grievance_replies::insert(grievance_id, author_id, payload.text, &state.db).await {
-            Ok(gr) => gr,
-            Err(e) => {
-                return Err((StatusCode::INTERNAL_SERVER_ERROR, e));
-            }
-        };
 
     let user = match users::select_by_id(author_id, &state.db).await {
         Ok(u) => {
             if let Some(user) = u {
                 user
             } else {
-                return Err((StatusCode::INTERNAL_SERVER_ERROR, String::from("")));
+                return Err(common::ErrResponse::new(
+                    StatusCode::NOT_FOUND,
+                    "ERR_MIA",
+                    "Author not found",
+                ));
             }
         }
-        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
+        Err(e) => {
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ))
+        }
     };
+
+    let new_reply =
+        match grievance_replies::insert(grievance_id, author_id, payload.text, &state.db).await {
+            Ok(gr) => gr,
+            Err(e) => {
+                return Err(common::ErrResponse::new(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "ERR_DB",
+                    &e,
+                ));
+            }
+        };
 
     let reply = grievance_replies::GrievanceReplyWithNames {
         id: new_reply.id,
@@ -89,11 +129,19 @@ pub async fn create_new(
 }
 
 pub async fn get_by_grievance_id(
-    _claims: Claims,
+    claims: Claims,
     Path(grievance_id): Path<grievance::Id>,
     Query(params): Query<SelectParams>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<GrievanceReplyResponse>, (StatusCode, String)> {
+) -> Result<Json<GrievanceReplyResponse>, common::ErrResponse> {
+    if claims.is_none() {
+        return Err(common::ErrResponse::new(
+            StatusCode::UNAUTHORIZED,
+            "ERR_AUTH",
+            "User is not logged in",
+        ));
+    }
+
     let (mut offset, mut limit) = common::calculate_offset_limit(params.page.unwrap_or_default());
     if params.page.is_none() {
         offset = 0;
@@ -112,6 +160,10 @@ pub async fn get_by_grievance_id(
     .await
     {
         Ok(grievance_replies) => Ok(Json(GrievanceReplyResponse { grievance_replies })),
-        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
+        Err(e) => Err(common::ErrResponse::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "ERR_DB",
+            &e,
+        )),
     }
 }

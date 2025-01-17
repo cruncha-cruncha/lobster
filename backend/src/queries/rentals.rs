@@ -52,7 +52,7 @@ pub async fn update(
     start_date: Option<rental::StartDate>,
     end_date: Option<rental::EndDate>,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<rental::Rental, String> {
+) -> Result<Option<rental::Rental>, String> {
     sqlx::query_as!(
         rental::Rental,
         r#"
@@ -67,7 +67,7 @@ pub async fn update(
         start_date,
         end_date,
     )
-    .fetch_one(db)
+    .fetch_optional(db)
     .await
     .map_err(|e| e.to_string())
 }
@@ -76,7 +76,7 @@ pub async fn clear_fields(
     id: rental::Id,
     end_date: bool,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<rental::Rental, String> {
+) -> Result<Option<rental::Rental>, String> {
     sqlx::query_as!(
         rental::Rental,
         r#"
@@ -89,7 +89,7 @@ pub async fn clear_fields(
         id,
         end_date,
     )
-    .fetch_one(db)
+    .fetch_optional(db)
     .await
     .map_err(|e| e.to_string())
 }
@@ -154,7 +154,7 @@ pub async fn select(
 pub async fn select_by_id(
     id: rental::Id,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<rental::Rental, String> {
+) -> Result<Option<rental::Rental>, String> {
     sqlx::query_as!(
         rental::Rental,
         r#"
@@ -164,7 +164,7 @@ pub async fn select_by_id(
         "#,
         id
     )
-    .fetch_one(db)
+    .fetch_optional(db)
     .await
     .map_err(|e| e.to_string())
 }

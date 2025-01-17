@@ -56,14 +56,14 @@ fn can_modify(claims: &Claims, role_id: i32, user_id: i32, store_id: Option<i32>
     {
         return true;
     }
-    
+
     if claims.is_store_admin()
         && (role_id == auth::claims::Roles::StoreRep as i32
             || role_id == auth::claims::Roles::ToolManager as i32)
     {
         return true;
     }
-    
+
     if claims.is_store_manager(store_id.unwrap_or_default())
         && (role_id == auth::claims::Roles::StoreRep as i32
             || role_id == auth::claims::Roles::ToolManager as i32)
@@ -79,11 +79,12 @@ pub async fn add(
     claims: Claims,
     State(state): State<Arc<AppState>>,
     Json(data): Json<NewPermissionParams>,
-) -> Result<Json<permission::Permission>, (StatusCode, String)> {
+) -> Result<Json<permission::Permission>, common::ErrResponse> {
     if !can_modify(&claims, data.role_id, data.user_id, data.store_id) {
-        return Err((
+        return Err(common::ErrResponse::new(
             StatusCode::FORBIDDEN,
-            "You do not have permission to assign this role".to_string(),
+            "ERR_AUTH",
+            "User does not have authorization to add permissions",
         ));
     }
 
@@ -105,7 +106,11 @@ pub async fn add(
     {
         Ok(p) => p,
         Err(e) => {
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ));
         }
     };
 
@@ -123,7 +128,11 @@ pub async fn add(
         .await
         {
             Ok(_) => Ok(Json(permissions.remove(0))),
-            Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
+            Err(e) => Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            )),
         }
     } else {
         match permissions::insert(
@@ -136,7 +145,11 @@ pub async fn add(
         .await
         {
             Ok(p) => Ok(Json(p)),
-            Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
+            Err(e) => Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            )),
         }
     }
 }
@@ -145,10 +158,11 @@ pub async fn delete(
     claims: Claims,
     Path(permission_id): Path<i32>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<common::NoData>, (StatusCode, String)> {
-    let err_resp = Err((
+) -> Result<Json<common::NoData>, common::ErrResponse> {
+    let err_resp = Err(common::ErrResponse::new(
         StatusCode::FORBIDDEN,
-        "You do not have permission to modify this role".to_string(),
+        "ERR_AUTH",
+        "User does not have authorization to delete permissions",
     ));
 
     let permissions = match permissions::select(
@@ -185,7 +199,11 @@ pub async fn delete(
     let status = crate::db_structs::permission::PermissionStatus::Revoked as i32;
     match permissions::update_status(permission_id, status, &state.db).await {
         Ok(_) => Ok(Json(common::NoData {})),
-        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
+        Err(e) => Err(common::ErrResponse::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "ERR_DB",
+            &e,
+        )),
     }
 }
 
@@ -193,9 +211,13 @@ pub async fn get_by_user(
     claims: Claims,
     Path(user_id): Path<i32>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<UserPermissions>, (StatusCode, String)> {
+) -> Result<Json<UserPermissions>, common::ErrResponse> {
     if claims.is_none() {
-        return Err((StatusCode::UNAUTHORIZED, "No claims found".to_string()));
+        return Err(common::ErrResponse::new(
+            StatusCode::UNAUTHORIZED,
+            "ERR_AUTH",
+            "User is not logged in",
+        ));
     }
 
     let permissions = match permissions::select(
@@ -211,7 +233,13 @@ pub async fn get_by_user(
     .await
     {
         Ok(p) => p,
-        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
+        Err(e) => {
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ))
+        }
     };
 
     let library_permissions = permissions
@@ -242,7 +270,13 @@ pub async fn get_by_user(
     .await
     {
         Ok(s) => s,
-        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e)),
+        Err(e) => {
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ))
+        }
     };
 
     let out = UserPermissions {

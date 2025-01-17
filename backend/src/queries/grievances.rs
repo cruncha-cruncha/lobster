@@ -68,7 +68,7 @@ pub async fn update_status(
     grievance_id: grievance::Id,
     status: grievance::Status,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<grievance::Grievance, String> {
+) -> Result<Option<grievance::Grievance>, String> {
     sqlx::query_as!(
         grievance::Grievance,
         r#"
@@ -80,7 +80,7 @@ pub async fn update_status(
         grievance_id,
         status,
     )
-    .fetch_one(db)
+    .fetch_optional(db)
     .await
     .map_err(|e| e.to_string())
 }
@@ -124,7 +124,7 @@ pub async fn select(
 pub async fn select_by_id(
     grievance_id: grievance::Id,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<GrievanceWithNames, String> {
+) -> Result<Option<GrievanceWithNames>, String> {
     sqlx::query_as!(
         GrievanceWithNames,
         r#"
@@ -143,7 +143,7 @@ pub async fn select_by_id(
         "#,
         grievance_id,
     )
-    .fetch_one(db)
+    .fetch_optional(db)
     .await
     .map_err(|e| e.to_string())
 }
