@@ -446,6 +446,17 @@ const grievanceRepliesSchema = {
   required: ["grievanceReplies"],
 };
 
+const errorResponseSchema = {
+  type: "object",
+  $id: "#errorResponse",
+  properties: {
+    status: { type: "number" },
+    errCode: { type: "string" },
+    details: { type: "string" },
+  },
+  required: ["status", "errCode", "details"],
+}
+
 const makeLazyValidator = (schema) => {
   let validate = null;
   return (data) => {
@@ -567,3 +578,5 @@ export const validateGrievanceReplies = makeLazyValidator([
   grievanceReplyWithNamesSchema,
   grievanceRepliesSchema,
 ]);
+
+export const validateErrorResponse = makeLazyValidator(errorResponseSchema);

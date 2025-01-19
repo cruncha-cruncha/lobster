@@ -67,6 +67,7 @@ pub struct ErrResponse {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ErrResponseJsonPart {
+    status: u16,
     err_code: String,
     details: String,
 }
@@ -74,6 +75,7 @@ pub struct ErrResponseJsonPart {
 impl IntoResponse for ErrResponse {
     fn into_response(self) -> Response {
         let json_part = Json(ErrResponseJsonPart {
+            status: self.status.as_u16(),
             err_code: self.err_code.clone(),
             details: self.details.clone(),
         });

@@ -23,33 +23,48 @@ import {
   validateGrievanceSearchResults,
   validateGrievanceReplyWithNames,
   validateGrievanceReplies,
+  validateErrorResponse,
 } from "./schemas";
+import { ApiError } from "./ApiError";
 
 const serverUrl = import.meta.env.VITE_SERVER_URL || "http://127.0.0.1:3000";
 
 const handle = (url, params) => {
-  return fetch(url, params)
-    // .then(async (res) => {
-    //   // simulate network latency
-    //   await new Promise((resolve) => setTimeout(resolve, 1000));
-    //   return res;
-    // })
-    .then((res) => {
-      if (!res.ok) {
-        throw new Error(res.status);
-      }
+  return (
+    fetch(url, params)
+      // .then(async (res) => {
+      //   // simulate network latency
+      //   await new Promise((resolve) => setTimeout(resolve, 1000));
+      //   return res;
+      // })
+      .then(async (res) => {
+        if (!res.ok) {
+          throw new Error(JSON.stringify(await res.json()));
+        }
 
-      return res.json();
-    })
-    .catch((e) => {
-      const message = e.message;
-      if (message.length === 3 && parseInt(message, 10) !== NaN) {
-        throw new Error(parseInt(message, 10));
-      } else {
+        return res.json();
+      })
+      .catch((e) => {
+        const message = e.message;
+        let parsed = null;
+        try {
+          parsed = JSON.parse(message);
+        } catch (_) {
+          // ignore it
+        }
+
+        if (parsed !== null && validateErrorResponse(parsed)) {
+          throw new ApiError(parsed);
+        }
+
         console.error(e);
-        throw new Error(500);
-      }
-    });
+        throw new ApiError({
+          status: 500,
+          errCode: "ERR_UNKNOWN",
+          details: message,
+        });
+      })
+  );
 };
 
 const obj_to_query = (obj) => {
