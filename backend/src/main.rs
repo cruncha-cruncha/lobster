@@ -152,6 +152,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .route(
             "/photos/:file_key",
             routing::delete(handlers::photos::delete).get(handlers::photos::get),
+        )
+        .route(
+            "/photos/:file_key/thumb",
+            routing::get(handlers::photos::get_thumbnail),
         );
 
     #[cfg(feature = "cors")]
