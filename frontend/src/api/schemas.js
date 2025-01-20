@@ -457,6 +457,15 @@ const errorResponseSchema = {
   required: ["status", "errCode", "details"],
 }
 
+const photoUploadResponseSchema = {
+  type: "object",
+  $id: "#photoUploadResponse",
+  properties: {
+    fileName: { type: "string" },
+  },
+  required: ["fileName"],
+}
+
 const makeLazyValidator = (schema) => {
   let validate = null;
   return (data) => {
@@ -580,3 +589,5 @@ export const validateGrievanceReplies = makeLazyValidator([
 ]);
 
 export const validateErrorResponse = makeLazyValidator(errorResponseSchema);
+
+export const validatePhotoUploadResponse = makeLazyValidator(photoUploadResponseSchema);

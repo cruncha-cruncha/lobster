@@ -24,6 +24,7 @@ import {
   validateGrievanceReplyWithNames,
   validateGrievanceReplies,
   validateErrorResponse,
+  validatePhotoUploadResponse,
 } from "./schemas";
 import { ApiError } from "./ApiError";
 
@@ -653,4 +654,53 @@ export const getGrievanceReplies = async ({
   }
 
   return data;
+};
+
+export const uploadPhoto = async ({ file, accessToken }) => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const data = await handle(`${serverUrl}/photos`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: formData,
+  });
+
+  if (!validatePhotoUploadResponse(data)) {
+    throw new Error(400);
+  }
+
+  return data;
+};
+
+export const deletePhoto = async ({ id, accessToken }) => {
+  const data = await handle(`${serverUrl}/photos/${id}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(info),
+  });
+
+  return data;
+};
+
+export const downloadPhoto = async ({ id, accessToken }) => {
+  return fetch(`${serverUrl}/photos/${id}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+};
+
+export const downloadThumbnail = async ({ id, accessToken }) => {
+  return fetch(`${serverUrl}/photos/${id}/thumb`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
 };
