@@ -2,11 +2,14 @@ import { useState } from "react";
 import { Outlet, NavLink } from "react-router";
 import { useLibraryInfo } from "../state/libraryInfo";
 import { useAuth } from "../state/auth";
+import { useLayoutInfoModal } from "../state/layoutInfoModal";
+import { PureInfoModal } from "./InfoModal";
 
 export const Layout = () => {
   const libraryInfo = useLibraryInfo();
   const auth = useAuth({ mustBeLoggedIn: true });
   const [showMenu, setShowMenu] = useState(false);
+  const modal = useLayoutInfoModal();
 
   const closeMenuIfOpen = () => {
     if (showMenu) {
@@ -16,6 +19,7 @@ export const Layout = () => {
 
   return (
     <div className="min-h-full" onClick={closeMenuIfOpen}>
+      <PureInfoModal {...modal} />
       <div className="relative w-full pb-0 pt-2">
         <div
           className="relative cursor-pointer text-center"
