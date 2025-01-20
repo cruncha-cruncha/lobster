@@ -45,8 +45,8 @@ pub async fn upload(
             Ok(b) => Some(b),
             Err(e) => {
                 return Err(common::ErrResponse::new(
-                    StatusCode::BAD_REQUEST,
-                    "ERR_REQ",
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "ERR_LOGIC",
                     &e.to_string(),
                 ));
             }
@@ -58,17 +58,17 @@ pub async fn upload(
     if file_data.is_none() {
         return Err(common::ErrResponse::new(
             StatusCode::BAD_REQUEST,
-            "ERR_BAD_REQUEST",
+            "ERR_REQ",
             "No files found",
         ));
     }
     let file_data = file_data.unwrap();
 
     let new_file_key = Uuid::new_v4();
-    let mut path = format_path(&new_file_key.to_string());
+    let path = format_path(&new_file_key.to_string());
 
     let make_image_error =
-        |e: &str| common::ErrResponse::new(StatusCode::BAD_REQUEST, "ERR_REQ", e);
+        |e: &str| common::ErrResponse::new(StatusCode::INTERNAL_SERVER_ERROR, "ERR_LOGIC", e);
 
     let img = ImageReader::new(std::io::Cursor::new(file_data))
         .with_guessed_format()
@@ -80,7 +80,7 @@ pub async fn upload(
     img.save(&path)
         .map_err(|e| make_image_error(&e.to_string()))?;
 
-    path = format_thumb_path(&new_file_key.to_string());
+    let path = format_thumb_path(&new_file_key.to_string());
     let thumb_img = img.thumbnail(128, 128);
     thumb_img
         .save(&path)
@@ -103,18 +103,14 @@ pub async fn delete(
         ));
     };
 
+    let make_image_error =
+        |e: &str| common::ErrResponse::new(StatusCode::INTERNAL_SERVER_ERROR, "ERR_LOGIC", e);
+
+    let path = format_thumb_path(&file_key);
+    fs::remove_file(&path).await.map_err(|e| make_image_error(&e.to_string()))?;
+
     let path = format_path(&file_key);
-    match fs::remove_file(&path).await {
-        Ok(stream) => stream,
-        Err(e) => {
-            eprintln!("Failed to read file: {}", &path);
-            return Err(common::ErrResponse::new(
-                StatusCode::NOT_FOUND,
-                "ERR_MIA",
-                &e.to_string(),
-            ));
-        }
-    };
+    fs::remove_file(&path).await.map_err(|e| make_image_error(&e.to_string()))?;
 
     Ok(())
 }
