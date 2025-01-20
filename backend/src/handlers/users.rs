@@ -205,8 +205,22 @@ pub async fn create_new_user(
 ) -> Result<Json<user::User>, common::ErrResponse> {
     let username = crate::usernames::rnd_username();
 
+    let lim = 5;
+    let mut count = 0;
     let mut code = crate::common::rnd_code_str("");
-    while (users::select_by_code(code.clone(), &state.db).await).is_ok() {
+    while (users::select_by_code(code.clone(), &state.db).await)
+        .ok()
+        .flatten()
+        .is_some()
+    {
+        count += 1;
+        if count >= lim {
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_LOGIN",
+                "Could not generate a unique code",
+            ));
+        }
         code = crate::common::rnd_code_str("");
     }
 
