@@ -9,7 +9,12 @@ edition = "2021"
 cors = []
 
 [dependencies]
-axum = { version = "0.7", features = ["ws", "query", "json"] }
+axum = { version = "0.7", features = [
+    "ws",
+    "query",
+    "json",
+    "multipart",
+] }
 axum-extra = { version = "0.9", features = ["query"] }
 hyper = { version = "1.0.0-rc.4", features = ["full"] }
 tokio = { version = "1.33", features = ["full"] }

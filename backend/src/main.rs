@@ -147,6 +147,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
             "/grievances/:grievance_id/replies",
             routing::get(handlers::grievance_replies::get_by_grievance_id)
                 .post(handlers::grievance_replies::create_new),
+        )
+        .route("/photos", routing::post(handlers::photos::upload))
+        .route(
+            "/photos/:file_key",
+            routing::delete(handlers::photos::delete).get(handlers::photos::get),
         );
 
     #[cfg(feature = "cors")]
