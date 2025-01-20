@@ -5,6 +5,7 @@ import { Button } from "../components/Button";
 import { TextInput } from "../components/TextInput";
 import { useAuth } from "../state/auth";
 import { LargeTextInput } from "../components/LargeTextInput";
+import { useLayoutInfoModal } from "../state/layoutInfoModal";
 
 const infoReducer = (state, action) => {
   switch (action.type) {
@@ -29,6 +30,7 @@ export const useNewStore = () => {
   const navigate = useNavigate();
   const { accessToken } = useAuth();
   const [isCreating, setIsCreating] = useState(false);
+  const { open } = useLayoutInfoModal();
   const [info, dispatch] = useReducer(infoReducer, {
     name: "",
     location: "",
@@ -47,6 +49,24 @@ export const useNewStore = () => {
       })
       .then((data) => {
         navigate(`/stores/${data.id}`);
+      })
+      .catch((e) => {
+        if (e.errCode === "ERR_DUP") {
+          open(
+            "A store with that name already exists. Please pick another one",
+            "error",
+          );
+        } else if (e.errCode === "ERR_AUTH") {
+          open(
+            "An error occured. Please refresh the page and try again",
+            "error",
+          );
+        } else {
+          open(
+            "An unknown error occurred, please contact the system administrator",
+            "error",
+          );
+        }
       })
       .finally(() => {
         setIsCreating(false);

@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { CenteredLoadingDots } from "../components/loading/LoadingDots";
 import { useLibraryInfo } from "../state/libraryInfo";
 import { useAuth } from "../state/auth";
-import { PureInfoModal } from "../components/InfoModal";
+import { PureInfoModal, useInfoModal } from "../components/InfoModal";
 import { Button } from "../components/Button";
 import { TextInput } from "../components/TextInput";
 
@@ -16,10 +15,14 @@ export const useLogin = () => {
   const navigate = useNavigate();
   const auth = useAuth();
   const [email, _setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const modal = useInfoModal();
 
   const validEmail = validateEmail(email);
 
   const onLogin = async () => {
+    setIsLoading(true);
+
     auth
       .login({
         email,
@@ -29,6 +32,9 @@ export const useLogin = () => {
       })
       .catch((e) => {
         console.error(e);
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
   };
 
@@ -37,11 +43,13 @@ export const useLogin = () => {
   };
 
   return {
+    modal,
     libraryName: libraryInfo.name,
     email,
     setEmail,
     onLogin,
     canLogin: validEmail,
+    loginLoading: isLoading,
   };
 };
 
