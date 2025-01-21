@@ -181,15 +181,15 @@ export const useTool = () => {
     }
   };
 
-  const removeExistingPhoto = (id) => {
-    const toDelete = info.pictures.find((photo) => photo.id == id);
+  const toggleRemoveExistingPhoto = (id) => {
+    const toModify = info.pictures.find((photo) => photo.id == id);
     dispatch({
       type: "pictures",
       value: [
         ...info.pictures.filter((photo) => photo.id != id),
         {
-          ...toDelete,
-          delete: true,
+          ...toModify,
+          delete: !toModify.delete,
         },
       ],
     });
@@ -215,12 +215,15 @@ export const useTool = () => {
     toolId,
     info: {
       ...info,
-      pictures: info.pictures.filter((photo) => !photo.delete),
+      pictures: info.pictures.map((photo) => ({
+        ...photo,
+        url: endpoints.makePhotoThumbnailUrl({ key: photo.photoKey }),
+      })),
     },
     newPhotos,
     removeNewPhoto,
     addNewPhotos,
-    removeExistingPhoto,
+    toggleRemoveExistingPhoto,
     data,
     goToTools,
     goToStoreTools,
@@ -251,7 +254,7 @@ export const PureTool = (tool) => {
     newPhotos,
     removeNewPhoto,
     addNewPhotos,
-    removeExistingPhoto,
+    toggleRemoveExistingPhoto,
     data,
     goToTools,
     goToStoreTools,
@@ -337,10 +340,19 @@ export const PureTool = (tool) => {
                 {info.pictures.map((photo) => (
                   <li key={photo.id}>
                     <div
-                      className="my-2 flex cursor-pointer items-center"
-                      onClick={() => removeExistingPhoto(photo.id)}
+                      className="my-2 flex cursor-pointer items-center gap-2"
+                      onClick={() => toggleRemoveExistingPhoto(photo.id)}
                     >
-                      {JSON.stringify(photo)}
+                      <img
+                        src={photo.url}
+                        alt=""
+                        className={
+                          "h-12" + (!photo.delete ? "" : " opacity-50")
+                        }
+                      />
+                      <span className={!photo.delete ? "" : "text-stone-400"}>
+                        {JSON.stringify(photo)}
+                      </span>
                     </div>
                   </li>
                 ))}

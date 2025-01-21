@@ -412,7 +412,12 @@ export const useAddTool = ({ storeId }) => {
   const [realId, _setRealId] = useState("");
   const [shortDescription, _setShortDescription] = useState("");
   const [longDescription, _setDescription] = useState("");
-  const { addPhoto, removePhoto, photos, clear: clearPhotos } = useImageUpload();
+  const {
+    addPhoto,
+    removePhoto,
+    photos,
+    clear: clearPhotos,
+  } = useImageUpload();
   const [rentalHours, _setRentalHours] = useState(defaultRentalHours);
   const [isSaving, setIsSaving] = useState(false);
   const _categorySearch = useCategorySearch();
@@ -550,11 +555,11 @@ export const PureAddTool = (addTool) => {
             {photos.map((photo) => (
               <li key={photo.id}>
                 <div
-                  className="my-2 flex cursor-pointer items-center"
+                  className="my-2 flex cursor-pointer items-center gap-2"
                   onClick={() => removePhoto(photo.id)}
                 >
                   <img src={photo.url} alt="" className="h-12" />
-                  <span className="ml-2">{photo.name}</span>
+                  <span>{photo.name}</span>
                 </div>
               </li>
             ))}

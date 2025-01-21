@@ -687,20 +687,10 @@ export const deletePhoto = async ({ key, accessToken }) => {
   return data;
 };
 
-export const downloadPhoto = async ({ key, accessToken }) => {
-  return fetch(`${serverUrl}/photos/${key}`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
+export const makePhotoUrl = ({ key }) => {
+  return `${serverUrl}/photos/${key}`;
 };
 
-export const downloadToolThumbnail = async ({ key, accessToken }) => {
-  return fetch(`${serverUrl}/photos/${key}/thumb`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
+export const makePhotoThumbnailUrl = ({ key }) => {
+  return `${serverUrl}/photos/${key}/thumb`;
 };

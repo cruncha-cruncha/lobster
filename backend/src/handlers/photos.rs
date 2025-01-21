@@ -151,18 +151,7 @@ pub async fn delete(
     Ok(Json(common::NoData {}))
 }
 
-pub async fn get(
-    claims: Claims,
-    Path(file_key): Path<String>,
-) -> Result<Response, common::ErrResponse> {
-    if claims.is_none() {
-        return Err(common::ErrResponse::new(
-            StatusCode::UNAUTHORIZED,
-            "ERR_AUTH",
-            "No claims found",
-        ));
-    };
-
+pub async fn get(Path(file_key): Path<String>) -> Result<Response, common::ErrResponse> {
     let path = format_path(&file_key);
     let data = match fs::read(&path).await {
         Ok(v) => v,
@@ -185,18 +174,7 @@ pub async fn get(
     Ok((headers, data).into_response())
 }
 
-pub async fn get_thumbnail(
-    claims: Claims,
-    Path(file_key): Path<String>,
-) -> Result<Response, common::ErrResponse> {
-    if claims.is_none() {
-        return Err(common::ErrResponse::new(
-            StatusCode::UNAUTHORIZED,
-            "ERR_AUTH",
-            "No claims found",
-        ));
-    };
-
+pub async fn get_thumbnail(Path(file_key): Path<String>) -> Result<Response, common::ErrResponse> {
     let path = format_thumb_path(&file_key);
     let data = match fs::read(&path).await {
         Ok(v) => v,
