@@ -2,8 +2,8 @@ use crate::auth::claims::Claims;
 use crate::common;
 use crate::db_structs::tool::SHORT_DESCRIPTION_CHAR_LIMIT;
 use crate::db_structs::tool_classification::ToolClassification;
-use crate::db_structs::{store, tool, tool_category, tool_classification};
-use crate::queries::{stores, tool_categories, tool_classifications, tools};
+use crate::db_structs::{store, tool, tool_category, tool_classification, tool_photo};
+use crate::queries::{stores, tool_categories, tool_classifications, tool_photos, tools};
 use crate::AppState;
 use axum::{
     extract::{Json, Path, State},
@@ -22,7 +22,7 @@ pub struct NewToolData {
     pub rental_hours: tool::RentalHours,
     pub short_description: tool::ShortDescription,
     pub long_description: Option<tool::LongDescription>,
-    pub pictures: tool::Pictures,
+    pub photo_keys: Vec<tool_photo::PhotoKey>,
     pub status: Option<tool::Status>,
 }
 
@@ -34,7 +34,7 @@ pub struct UpdateToolData {
     pub rental_hours: Option<tool::RentalHours>,
     pub short_description: Option<tool::ShortDescription>,
     pub long_description: Option<tool::LongDescription>,
-    pub pictures: Option<tool::Pictures>,
+    pub photo_keys: Option<Vec<tool_photo::PhotoKey>>,
     pub status: Option<tool::Status>,
 }
 
@@ -58,6 +58,14 @@ pub struct ExactParams {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct ToolPhotoInfo {
+    pub id: tool_photo::Id,
+    pub original_name: tool_photo::OriginalName,
+    pub photo_key: tool_photo::PhotoKey,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ToolWithText {
     pub id: tool::Id,
     pub real_id: tool::RealId,
@@ -66,7 +74,7 @@ pub struct ToolWithText {
     pub rental_hours: tool::RentalHours,
     pub short_description: tool::ShortDescription,
     pub long_description: Option<tool::LongDescription>,
-    pub pictures: tool::Pictures,
+    pub pictures: Vec<ToolPhotoInfo>,
     pub status: tool::Status,
     pub categories: Vec<tool_category::ToolCategory>,
 }
@@ -80,7 +88,7 @@ pub struct ToolWithClassifications {
     pub rental_hours: tool::RentalHours,
     pub short_description: tool::ShortDescription,
     pub long_description: Option<tool::LongDescription>,
-    pub pictures: tool::Pictures,
+    pub pictures: Vec<ToolPhotoInfo>,
     pub status: tool::Status,
     pub classifications: Vec<tool_classification::CategoryId>,
 }
@@ -160,7 +168,6 @@ pub async fn create_new(
         payload.rental_hours,
         payload.short_description,
         payload.long_description,
-        payload.pictures,
         payload.status.unwrap_or(tool::ToolStatus::Available as i32),
         &state.db,
     )
@@ -218,6 +225,60 @@ pub async fn create_new(
         }
     };
 
+    let mut pictures: Vec<ToolPhotoInfo> = vec![];
+    for photo_key in payload.photo_keys {
+        let existing = match tool_photos::select(vec![], vec![], vec![photo_key.clone()], &state.db).await {
+            Ok(mut p) => {
+                if p.is_empty() {
+                    None
+                } else {
+                    Some(p.remove(0))
+                }
+            },
+            Err(e) => {
+                return Err(common::ErrResponse::new(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "ERR_DB",
+                    &e,
+                ));
+            }
+        };
+
+        if existing.is_none() {
+            return Err(common::ErrResponse::new(
+                StatusCode::BAD_REQUEST,
+                "ERR_REQ",
+                "Photo key does not exist",
+            ));
+        }
+        let existing = existing.unwrap();
+
+        if existing.tool_id.is_some() {
+            return Err(common::ErrResponse::new(
+                StatusCode::BAD_REQUEST,
+                "ERR_REQ",
+                "Photo key is already associated with a tool",
+            ));
+        }
+
+        match tool_photos::update_tool_id(existing.id, Some(tool.id), &state.db).await {
+            Ok(_) => {}
+            Err(e) => {
+                return Err(common::ErrResponse::new(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "ERR_DB",
+                    &e,
+                ));
+            }
+        }
+
+        pictures.push(ToolPhotoInfo {
+            id: existing.id,
+            original_name: existing.original_name,
+            photo_key: existing.photo_key,
+        });
+    }
+
     let encoded = serde_json::to_vec(&tool).unwrap_or_default();
     state.comm.send_message("tools", &encoded).await.ok();
     Ok(Json(ToolWithText {
@@ -228,7 +289,7 @@ pub async fn create_new(
         rental_hours: tool.rental_hours,
         short_description: tool.short_description,
         long_description: tool.long_description,
-        pictures: tool.pictures,
+        pictures,
         status: tool.status,
         categories,
     }))
@@ -290,7 +351,6 @@ pub async fn update(
         payload.rental_hours,
         payload.short_description,
         payload.long_description,
-        payload.pictures,
         payload.status,
         &state.db,
     )
@@ -415,6 +475,110 @@ pub async fn update(
         }
     };
 
+    let mut existing_photos = match tool_photos::select(vec![], vec![tool_id], vec![], &state.db).await {
+        Ok(p) => p,
+        Err(e) => {
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ));
+        }
+    };
+
+    if payload.photo_keys.is_some() {
+        let photo_keys = payload.photo_keys.as_deref().unwrap();
+
+        for photo_key in photo_keys {
+            if existing_photos
+                .iter()
+                .any(|p| &p.photo_key == photo_key)
+            {
+                continue;
+            }
+
+            let existing = match tool_photos::select(vec![], vec![], vec![photo_key.to_string()], &state.db).await {
+                Ok(mut p) => {
+                    if p.is_empty() {
+                        None
+                    } else {
+                        Some(p.remove(0))
+                    }
+                },
+                Err(e) => {
+                    return Err(common::ErrResponse::new(
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        "ERR_DB",
+                        &e,
+                    ));
+                }
+            };
+    
+            if existing.is_none() {
+                return Err(common::ErrResponse::new(
+                    StatusCode::BAD_REQUEST,
+                    "ERR_REQ",
+                    "Photo key does not exist",
+                ));
+            }
+            let existing = existing.unwrap();
+    
+            if existing.tool_id.is_some() {
+                return Err(common::ErrResponse::new(
+                    StatusCode::BAD_REQUEST,
+                    "ERR_REQ",
+                    "Photo key is already associated with a tool",
+                ));
+            }
+    
+            match tool_photos::update_tool_id(existing.id, Some(tool.id), &state.db).await {
+                Ok(_) => {}
+                Err(e) => {
+                    return Err(common::ErrResponse::new(
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        "ERR_DB",
+                        &e,
+                    ));
+                }
+            }
+        }
+
+        for photo in &existing_photos {
+            if !photo_keys.contains(&photo.photo_key) {
+                match tool_photos::delete(vec![photo.id], &state.db).await {
+                    Ok(_) => {}
+                    Err(e) => {
+                        return Err(common::ErrResponse::new(
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            "ERR_DB",
+                            &e,
+                        ));
+                    }
+                }
+            }
+        }
+
+        existing_photos = match tool_photos::select(vec![], vec![tool_id], vec![], &state.db).await {
+            Ok(p) => p,
+            Err(e) => {
+                return Err(common::ErrResponse::new(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "ERR_DB",
+                    &e,
+                ));
+            }
+        };
+    }
+
+    let pictures = existing_photos
+        .iter()
+        .map(|p| ToolPhotoInfo {
+            id: p.id,
+            original_name: p.original_name.clone(),
+            photo_key: p.photo_key.clone(),
+        })
+        .collect();
+
     let encoded = serde_json::to_vec(&tool).unwrap_or_default();
     state.comm.send_message("tools", &encoded).await.ok();
     Ok(Json(ToolWithText {
@@ -425,7 +589,7 @@ pub async fn update(
         rental_hours: tool.rental_hours,
         short_description: tool.short_description,
         long_description: tool.long_description,
-        pictures: tool.pictures,
+        pictures,
         status: tool.status,
         categories,
     }))
@@ -497,6 +661,25 @@ pub async fn get_by_id(
         }
     };
 
+    let pictures = match tool_photos::select(vec![], vec![tool.id], vec![], &state.db).await {
+        Ok(p) => {
+            p.iter()
+                .map(|p| ToolPhotoInfo {
+                    id: p.id,
+                    original_name: p.original_name.clone(),
+                    photo_key: p.photo_key.clone(),
+                })
+                .collect()
+        },
+        Err(e) => {
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ));
+        }
+    };
+
     Ok(Json(ToolWithText {
         id: tool.id,
         real_id: tool.real_id,
@@ -505,7 +688,7 @@ pub async fn get_by_id(
         rental_hours: tool.rental_hours,
         short_description: tool.short_description,
         long_description: tool.long_description,
-        pictures: tool.pictures,
+        pictures,
         status: tool.status,
         categories,
     }))
@@ -561,6 +744,17 @@ pub async fn get_filtered(
             };
     }
 
+    let photos = match tool_photos::select(vec![], tool_ids.clone(), vec![], &state.db).await {
+        Ok(p) => p,
+        Err(e) => {
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ));
+        }
+    };
+
     let mut stores: Vec<store::Store> = vec![];
     if !store_ids.is_empty() {
         stores = match stores::select(
@@ -596,6 +790,16 @@ pub async fn get_filtered(
                 .map(|c| c.category_id)
                 .collect();
 
+            let tool_photos = photos
+                .iter()
+                .filter(|p| p.tool_id == Some(t.id))
+                .map(|p| ToolPhotoInfo {
+                    id: p.id,
+                    original_name: p.original_name.clone(),
+                    photo_key: p.photo_key.clone(),
+                })
+                .collect();
+
             ToolWithClassifications {
                 id: t.id,
                 real_id: t.real_id.clone(),
@@ -603,7 +807,7 @@ pub async fn get_filtered(
                 rental_hours: t.rental_hours,
                 short_description: t.short_description.clone(),
                 long_description: t.long_description.clone(),
-                pictures: t.pictures.clone(),
+                pictures: tool_photos,
                 status: t.status,
                 classifications,
             }

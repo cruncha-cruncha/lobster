@@ -6,5 +6,6 @@ pub mod rentals;
 pub mod stores;
 pub mod tool_categories;
 pub mod tool_classifications;
+pub mod tool_photos;
 pub mod tools;
 pub mod users;

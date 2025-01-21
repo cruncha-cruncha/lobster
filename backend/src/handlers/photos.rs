@@ -1,17 +1,20 @@
+use crate::queries::tool_photos;
+use crate::AppState;
 use crate::{auth::claims::Claims, common};
-use axum::extract::Path;
+use axum::extract::{Path, State};
 use axum::response::{IntoResponse, Response};
 use axum::{extract::Json, http::header, http::StatusCode};
 use axum_extra::extract::Multipart;
 use image::ImageReader;
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use tokio::fs;
 use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UploadResponseData {
-    pub id: String,
+    pub key: String,
 }
 
 fn format_path(file_key: &str) -> String {
@@ -24,6 +27,7 @@ fn format_thumb_path(file_key: &str) -> String {
 
 pub async fn upload(
     claims: Claims,
+    State(state): State<Arc<AppState>>,
     mut multipart: Multipart,
 ) -> Result<Json<UploadResponseData>, common::ErrResponse> {
     if claims.is_none() {
@@ -35,33 +39,41 @@ pub async fn upload(
     };
 
     let mut file_data = None;
+    let mut original_name = None;
     while let Some(field) = multipart.next_field().await.unwrap() {
         let name = field.name().unwrap().to_string();
-        if name != "file" {
-            continue;
-        }
 
-        file_data = match field.bytes().await {
-            Ok(b) => Some(b),
-            Err(e) => {
-                return Err(common::ErrResponse::new(
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "ERR_LOGIC",
-                    &e.to_string(),
-                ));
+        match name.as_str() {
+            "name" => {
+                original_name = match field.text().await {
+                    Ok(t) => Some(t),
+                    Err(_) => None,
+                };
             }
-        };
-
-        break;
+            "file" => {
+                file_data = match field.bytes().await {
+                    Ok(b) => Some(b),
+                    Err(e) => {
+                        return Err(common::ErrResponse::new(
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            "ERR_LOGIC",
+                            &e.to_string(),
+                        ));
+                    }
+                };
+            }
+            _ => (),
+        }
     }
 
-    if file_data.is_none() {
+    if file_data.is_none() || original_name.is_none() {
         return Err(common::ErrResponse::new(
             StatusCode::BAD_REQUEST,
             "ERR_REQ",
             "No files found",
         ));
     }
+    let original_name = original_name.unwrap();
     let file_data = file_data.unwrap();
 
     let new_file_key = Uuid::new_v4();
@@ -85,8 +97,29 @@ pub async fn upload(
         .save(&path)
         .map_err(|e| make_image_error(&e.to_string()))?;
 
+    match tool_photos::insert(
+        vec![tool_photos::InsertData {
+            tool_id: None,
+            photo_key: new_file_key.to_string(),
+            original_name,
+        }],
+        &state.db,
+    )
+    .await
+    {
+        Ok(_) => (),
+        Err(e) => {
+            eprintln!("Failed to insert photo: {}", &e);
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ));
+        }
+    }
+
     Ok(Json(UploadResponseData {
-        id: new_file_key.to_string(),
+        key: new_file_key.to_string(),
     }))
 }
 

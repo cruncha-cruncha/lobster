@@ -9,7 +9,6 @@ pub type StoreId = store::Id;
 pub type RentalHours = i32;
 pub type ShortDescription = String;
 pub type LongDescription = String;
-pub type Pictures = Vec<String>;
 pub type Status = i32;
 
 pub enum ToolStatus {
@@ -32,6 +31,5 @@ pub struct Tool {
     pub rental_hours: RentalHours,
     pub short_description: ShortDescription,
     pub long_description: Option<LongDescription>,
-    pub pictures: Pictures,
     pub status: Status,
 }

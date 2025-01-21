@@ -121,7 +121,6 @@ pub async fn check_in(
             None,
             None,
             None,
-            None,
             Some(tool::ToolStatus::Available as i32),
             &state.db,
         )
@@ -280,7 +279,6 @@ pub async fn check_out(
     for tool in &tools {
         match tools::update(
             tool.id,
-            None,
             None,
             None,
             None,

@@ -35,15 +35,14 @@ pub async fn insert(
     rental_hours: tool::RentalHours,
     short_description: tool::ShortDescription,
     long_description: Option<tool::LongDescription>,
-    pictures: tool::Pictures,
     status: tool::Status,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<tool::Tool, String> {
     sqlx::query_as!(
         tool::Tool,
         r#"
-        INSERT INTO main.tools (real_id, store_id, rental_hours, short_description, long_description, pictures, status)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        INSERT INTO main.tools (real_id, store_id, rental_hours, short_description, long_description, status)
+        VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING *;
         "#,
         real_id,
@@ -51,7 +50,6 @@ pub async fn insert(
         rental_hours,
         short_description,
         long_description,
-        &pictures,
         status,
     )
     .fetch_one(db)
@@ -65,7 +63,6 @@ pub async fn update(
     rental_hours: Option<tool::RentalHours>,
     short_description: Option<tool::ShortDescription>,
     long_description: Option<tool::LongDescription>,
-    pictures: Option<tool::Pictures>,
     status: Option<tool::Status>,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<Option<tool::Tool>, String> {
@@ -78,8 +75,7 @@ pub async fn update(
             rental_hours = COALESCE($3, rental_hours),
             short_description = COALESCE($4, short_description),
             long_description = COALESCE($5, long_description),
-            pictures = COALESCE($6, pictures),
-            status = COALESCE($7, status)
+            status = COALESCE($6, status)
         WHERE id = $1
         RETURNING *;
         "#,
@@ -88,7 +84,6 @@ pub async fn update(
         rental_hours,
         short_description,
         long_description,
-        pictures.as_deref(),
         status,
     )
     .fetch_optional(db)

@@ -25,9 +25,9 @@ pub async fn insert(
 pub async fn delete(
     data: Vec<tool_classification::ToolClassification>,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<Option<()>, String> {
+) -> Result<u64, String> {
     if data.is_empty() {
-        return Ok(None);
+        return Ok(0);
     }
 
     match sqlx::query!(
@@ -43,11 +43,7 @@ pub async fn delete(
     .await
     {
         Ok(res) => {
-            if res.rows_affected() == 0 {
-                Ok(None)
-            } else {
-                Ok(Some(()))
-            }
+            Ok(res.rows_affected())
         }
         Err(e) => Err(e.to_string()),
     }

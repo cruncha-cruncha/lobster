@@ -76,7 +76,6 @@ CREATE TABLE main.tools (
     rental_hours INTEGER NOT NULL,
     short_description TEXT NOT NULL,
     long_description TEXT,
-    pictures TEXT[] NOT NULL,
     status INTEGER NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT fk_status
@@ -86,6 +85,17 @@ CREATE TABLE main.tools (
 
 CREATE INDEX IF NOT EXISTS idx_tools_store_id ON main.tools USING btree(store_id);
 CREATE INDEX IF NOT EXISTS idx_tools_category_id ON main.tools USING btree(category_id);
+
+CREATE TABLE main.tool_photos (
+    id INTEGER GENERATED ALWAYS AS IDENTITY,
+    tool_id INTEGER,
+    photo_key TEXT NOT NULL,
+    original_name TEXT NOT NULL,
+    PRIMARY KEY (id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_tool_photos_tool_id ON main.tool_photos USING btree(tool_id);
+CREATE INDEX IF NOT EXISTS idx_tool_photos_photo_key ON main.tool_photos USING btree(photo_key);
 
 CREATE TABLE main.tool_classifications (
     tool_id INTEGER NOT NULL,

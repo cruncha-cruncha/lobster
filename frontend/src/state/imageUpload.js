@@ -19,7 +19,6 @@ export const useImageUpload = () => {
       setPhotos((prev) => {
         const thisPhoto = prev.find((photo) => photo.id == id);
         if (!thisPhoto) {
-          console.log("UHOH");
           return [...prev, { name, url: e.target.result, file, id }];
         }
         return [
@@ -33,12 +32,12 @@ export const useImageUpload = () => {
     };
     reader.readAsDataURL(file);
 
-    endpoints.uploadPhoto({ file, accessToken }).then((data) => {
+    endpoints.uploadPhoto({ name, file, accessToken }).then((data) => {
       setPhotos((prev) => {
         const thisPhoto = prev.find((photo) => photo.id == id);
 
         if (!thisPhoto) {
-          endpoints.deletePhoto({ id: data.id, accessToken }).catch((_e) => {
+          endpoints.deletePhoto({ key: data.key, accessToken }).catch((_e) => {
             // ignore error
           });
           return prev;
@@ -48,7 +47,7 @@ export const useImageUpload = () => {
           ...prev.filter((photo) => photo.id != id),
           {
             ...thisPhoto,
-            remoteId: data.id,
+            key: data.key,
           },
         ];
       });
@@ -58,9 +57,9 @@ export const useImageUpload = () => {
   const removePhoto = (id) => {
     setPhotos((prev) => {
       const thisPhoto = prev.find((photo) => photo.id == id);
-      if (thisPhoto.remoteId) {
+      if (thisPhoto.key) {
         endpoints
-          .deletePhoto({ id: thisPhoto.remoteId, accessToken })
+          .deletePhoto({ key: thisPhoto.key, accessToken })
           .catch((_e) => {
             // ignore error
           });
@@ -72,9 +71,9 @@ export const useImageUpload = () => {
 
   const clear = () => {
     photos.forEach((photo) => {
-      if (photo.remoteId) {
+      if (photo.key) {
         endpoints
-          .deletePhoto({ id: photo.remoteId, accessToken })
+          .deletePhoto({ key: photo.key, accessToken })
           .catch((_e) => {
             // ignore error
           });

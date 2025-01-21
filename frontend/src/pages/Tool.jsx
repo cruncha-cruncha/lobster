@@ -12,6 +12,8 @@ import { PureCategorySearch, useCategorySearch } from "./Tools";
 import { useToolCart } from "../state/toolCart";
 import { eqSet } from "../components/utils";
 import { LargeTextInput } from "../components/LargeTextInput";
+import { useImageUpload } from "../state/imageUpload";
+import { FileSelect } from "../components/FileSelect";
 
 export const URL_TOOL_ID_KEY = "toolId";
 
@@ -44,6 +46,12 @@ export const useTool = () => {
   const navigate = useNavigate();
   const { toolStatuses } = useConstants();
   const _categorySearch = useCategorySearch();
+  const {
+    addPhoto: addNewPhoto,
+    removePhoto: removeNewPhoto,
+    photos: newPhotos,
+    clear: clearPhotos,
+  } = useImageUpload();
   const { toolCart, addTool, removeTool } = useToolCart();
   const [info, dispatch] = useReducer(reducer, {
     status: "1",
@@ -128,6 +136,11 @@ export const useTool = () => {
 
   const updateTool = () => {
     dispatch({ type: "isSaving", value: true });
+
+    // TODO: delete photos first
+    // TODO: wait for new photos to upload
+    // TODO: populate photoKeys
+
     return endpoints
       .updateTool({
         id: Number(toolId),
@@ -138,7 +151,7 @@ export const useTool = () => {
           shortDescription: info.shortDescription,
           longDescription: info.longDescription,
           rentalHours: parseInt(info.rentalHours, 10) || data.rentalHours,
-          pictures: [],
+          photoKeys: [],
           status: Number(info.status),
         },
         accessToken,
@@ -160,6 +173,28 @@ export const useTool = () => {
     navigate(`/rentals?${URL_TOOL_ID_KEY}=${toolId}`);
   };
 
+  const addNewPhotos = (e) => {
+    const files = e.target.files;
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      addNewPhoto({ name: file.name, file });
+    }
+  };
+
+  const removeExistingPhoto = (id) => {
+    const toDelete = info.pictures.find((photo) => photo.id == id);
+    dispatch({
+      type: "pictures",
+      value: [
+        ...info.pictures.filter((photo) => photo.id != id),
+        {
+          ...toDelete,
+          delete: true,
+        },
+      ],
+    });
+  };
+
   const showUpdateTool = permissions.isToolManager(data?.storeId);
 
   const canUpdateTool =
@@ -167,6 +202,8 @@ export const useTool = () => {
     info.shortDescription != data?.shortDescription ||
     (info.longDescription != data?.longDescription &&
       !(!info.longDescription && !data?.longDescription)) ||
+    info.pictures.filter((photo) => photo.delete).length > 0 ||
+    newPhotos.length > 0 ||
     info.realId != data?.realId ||
     info.rentalHours != data?.rentalHours ||
     !eqSet(
@@ -176,7 +213,14 @@ export const useTool = () => {
 
   return {
     toolId,
-    info,
+    info: {
+      ...info,
+      pictures: info.pictures.filter((photo) => !photo.delete),
+    },
+    newPhotos,
+    removeNewPhoto,
+    addNewPhotos,
+    removeExistingPhoto,
     data,
     goToTools,
     goToStoreTools,
@@ -204,6 +248,10 @@ export const PureTool = (tool) => {
   const {
     toolId,
     info,
+    newPhotos,
+    removeNewPhoto,
+    addNewPhotos,
+    removeExistingPhoto,
     data,
     goToTools,
     goToStoreTools,
@@ -278,6 +326,36 @@ export const PureTool = (tool) => {
             </div>
             <div className="md:col-span-2">
               <PureCategorySearch {...categorySearch} />
+            </div>
+            <div className="md:col-span-2">
+              <FileSelect
+                id="tool-photos"
+                label="Photos"
+                onChange={addNewPhotos}
+              />
+              <ul>
+                {info.pictures.map((photo) => (
+                  <li key={photo.id}>
+                    <div
+                      className="my-2 flex cursor-pointer items-center"
+                      onClick={() => removeExistingPhoto(photo.id)}
+                    >
+                      {JSON.stringify(photo)}
+                    </div>
+                  </li>
+                ))}
+                {newPhotos.map((photo) => (
+                  <li key={photo.id}>
+                    <div
+                      className="my-2 flex cursor-pointer items-center"
+                      onClick={() => removeNewPhoto(photo.id)}
+                    >
+                      <img src={photo.url} alt="" className="h-12" />
+                      <span className="ml-2">{photo.name}</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
             <TextInput
               id={`tool-rental-hours`}

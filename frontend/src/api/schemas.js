@@ -211,7 +211,7 @@ const exactRealToolSchema = {
     rentalHours: { type: "number" },
     shortDescription: { type: "string" },
     longDescription: { type: ["string", "null"] },
-    pictures: { type: "array", items: { type: "string" } },
+    pictures: { type: "array", items: { $ref: "#toolPhoto" } },
     status: { type: "number" },
   },
   required: [
@@ -226,6 +226,17 @@ const exactRealToolSchema = {
   ],
 };
 
+const toolPhotoSchema = {
+  type: "object",
+  $id: "#toolPhoto",
+  properties: {
+    id: { type: "number" },
+    photoKey: { type: "string" },
+    originalName: { type: "string" },
+  },
+  required: ["id", "photoKey", "originalName"],
+}
+
 const singleToolSchema = {
   type: "object",
   $id: "#singleTool",
@@ -237,7 +248,7 @@ const singleToolSchema = {
     rentalHours: { type: "number" },
     shortDescription: { type: "string" },
     longDescription: { type: ["string", "null"] },
-    pictures: { type: "array", items: { type: "string" } },
+    pictures: { type: "array", items: { $ref: "#toolPhoto" } },
     status: { type: "number" },
     categories: { type: "array", items: { $ref: "#toolCategory" } },
   },
@@ -265,7 +276,7 @@ const toolWithClassificationsSchema = {
     rentalHours: { type: "number" },
     shortDescription: { type: "string" },
     longDescription: { type: ["string", "null"] },
-    pictures: { type: "array", items: { type: "string" } },
+    pictures: { type: "array", items: { $ref: "#toolPhoto" } },
     status: { type: "number" },
     classifications: { type: "array", items: { type: "number" } },
   },
@@ -461,9 +472,9 @@ const photoUploadResponseSchema = {
   type: "object",
   $id: "#photoUploadResponse",
   properties: {
-    id: { type: "string" },
+    key: { type: "string" },
   },
-  required: ["id"],
+  required: ["key"],
 }
 
 const makeLazyValidator = (schema) => {
@@ -531,11 +542,13 @@ export const validateSinglePermission = makeLazyValidator(
 );
 
 export const validateSingleTool = makeLazyValidator([
+  toolPhotoSchema,
   toolCategorySchema,
   singleToolSchema,
 ]);
 
 export const validateToolSearchResults = makeLazyValidator([
+  toolPhotoSchema,
   toolWithClassificationsSchema,
   storeInfoSchema,
   toolCategorySchema,

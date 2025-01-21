@@ -656,8 +656,9 @@ export const getGrievanceReplies = async ({
   return data;
 };
 
-export const uploadPhoto = async ({ file, accessToken }) => {
+export const uploadPhoto = async ({ name, file, accessToken }) => {
   const formData = new FormData();
+  formData.append("name", name);
   formData.append("file", file);
 
   const data = await handle(`${serverUrl}/photos`, {
@@ -675,8 +676,8 @@ export const uploadPhoto = async ({ file, accessToken }) => {
   return data;
 };
 
-export const deletePhoto = async ({ id, accessToken }) => {
-  const data = await handle(`${serverUrl}/photos/${id}`, {
+export const deletePhoto = async ({ key, accessToken }) => {
+  const data = await handle(`${serverUrl}/photos/${key}`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -686,8 +687,8 @@ export const deletePhoto = async ({ id, accessToken }) => {
   return data;
 };
 
-export const downloadPhoto = async ({ id, accessToken }) => {
-  return fetch(`${serverUrl}/photos/${id}`, {
+export const downloadPhoto = async ({ key, accessToken }) => {
+  return fetch(`${serverUrl}/photos/${key}`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -695,8 +696,8 @@ export const downloadPhoto = async ({ id, accessToken }) => {
   });
 };
 
-export const downloadThumbnail = async ({ id, accessToken }) => {
-  return fetch(`${serverUrl}/photos/${id}/thumb`, {
+export const downloadToolThumbnail = async ({ key, accessToken }) => {
+  return fetch(`${serverUrl}/photos/${key}/thumb`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${accessToken}`,

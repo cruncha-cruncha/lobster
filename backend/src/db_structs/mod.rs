@@ -7,4 +7,5 @@ pub mod store;
 pub mod tool;
 pub mod tool_category;
 pub mod tool_classification;
+pub mod tool_photo;
 pub mod user;

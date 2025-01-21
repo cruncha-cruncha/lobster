@@ -443,7 +443,7 @@ export const useAddTool = ({ storeId }) => {
 
     let count = 0;
     const lim = 50;
-    while (photos.filter((photo) => !photo.remoteId).length > 0) {
+    while (photos.filter((photo) => !photo.key).length > 0) {
       await new Promise((resolve) => setTimeout(resolve, 200));
       count += 1;
       if (count > lim) {
@@ -460,18 +460,18 @@ export const useAddTool = ({ storeId }) => {
           shortDescription,
           longDescription,
           rentalHours: parseInt(rentalHours, 10) || defaultRentalHours,
-          pictures: photos.map((photo) => photo.remoteId),
+          photoKeys: photos.map((photo) => photo.key),
           status: 1,
         },
         accessToken,
       })
       .then((data) => {
-        setShortDescription("");
-        setLongDescription("");
+        _setShortDescription("");
+        _setLongDescription("");
         clearPhotos();
         _categorySearch.clear();
-        setRealId("");
-        setRentalHours(defaultRentalHours);
+        _setRealId("");
+        _setRentalHours(defaultRentalHours);
 
         if (redirect) {
           navigate(`/tools/${data.id}`);

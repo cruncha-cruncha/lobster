@@ -258,7 +258,6 @@ pub async fn update_status(
             None,
             None,
             None,
-            None,
             Some(tool::ToolStatus::Unknown as i32),
             &state.db,
         )
