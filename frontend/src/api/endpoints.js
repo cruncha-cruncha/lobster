@@ -681,7 +681,6 @@ export const deletePhoto = async ({ id, accessToken }) => {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
-    body: JSON.stringify(info),
   });
 
   return data;

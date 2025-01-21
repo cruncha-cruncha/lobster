@@ -11,7 +11,7 @@ use uuid::Uuid;
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UploadResponseData {
-    pub file_name: String,
+    pub id: String,
 }
 
 fn format_path(file_key: &str) -> String {
@@ -72,10 +72,9 @@ pub async fn upload(
 
     let img = ImageReader::new(std::io::Cursor::new(file_data))
         .with_guessed_format()
-        .map_err(|e| make_image_error(&e.to_string()))?
-        .decode()
-        .map_err(|e| make_image_error(&e.to_string()))?
-        .resize(1024, 1024, image::imageops::FilterType::Triangle);
+        .map_err(|e| make_image_error(&e.to_string()))?;
+    let img = img.decode().map_err(|e| make_image_error(&e.to_string()))?;
+    let img = img.resize(1024, 1024, image::imageops::FilterType::Triangle);
 
     img.save(&path)
         .map_err(|e| make_image_error(&e.to_string()))?;
@@ -87,14 +86,14 @@ pub async fn upload(
         .map_err(|e| make_image_error(&e.to_string()))?;
 
     Ok(Json(UploadResponseData {
-        file_name: new_file_key.to_string(),
+        id: new_file_key.to_string(),
     }))
 }
 
 pub async fn delete(
     claims: Claims,
     Path(file_key): Path<String>,
-) -> Result<(), common::ErrResponse> {
+) -> Result<Json<common::NoData>, common::ErrResponse> {
     if claims.is_none() {
         return Err(common::ErrResponse::new(
             StatusCode::UNAUTHORIZED,
@@ -107,12 +106,16 @@ pub async fn delete(
         |e: &str| common::ErrResponse::new(StatusCode::INTERNAL_SERVER_ERROR, "ERR_LOGIC", e);
 
     let path = format_thumb_path(&file_key);
-    fs::remove_file(&path).await.map_err(|e| make_image_error(&e.to_string()))?;
+    fs::remove_file(&path)
+        .await
+        .map_err(|e| make_image_error(&e.to_string()))?;
 
     let path = format_path(&file_key);
-    fs::remove_file(&path).await.map_err(|e| make_image_error(&e.to_string()))?;
+    fs::remove_file(&path)
+        .await
+        .map_err(|e| make_image_error(&e.to_string()))?;
 
-    Ok(())
+    Ok(Json(common::NoData {}))
 }
 
 pub async fn get(

@@ -6,7 +6,7 @@ mod queries;
 mod rabbit;
 mod usernames;
 
-use axum::{routing, Router};
+use axum::{extract::DefaultBodyLimit, routing, Router};
 use rabbit::communicator::Communicator;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::{env, error::Error, net::SocketAddr, sync::Arc};
@@ -148,7 +148,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
             routing::get(handlers::grievance_replies::get_by_grievance_id)
                 .post(handlers::grievance_replies::create_new),
         )
-        .route("/photos", routing::post(handlers::photos::upload))
+        .route(
+            "/photos",
+            routing::post(handlers::photos::upload).layer(DefaultBodyLimit::max(10485760)),
+        )
         .route(
             "/photos/:file_key",
             routing::delete(handlers::photos::delete).get(handlers::photos::get),

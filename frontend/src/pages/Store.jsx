@@ -10,6 +10,8 @@ import { Select } from "../components/Select";
 import { useCategorySearch, PureCategorySearch } from "./Tools";
 import { useToolCart } from "../state/toolCart";
 import { LargeTextInput } from "../components/LargeTextInput";
+import { FileSelect } from "../components/FileSelect";
+import { useImageUpload } from "../state/imageUpload";
 
 export const URL_STORE_ID_KEY = "storeId";
 
@@ -410,11 +412,10 @@ export const useAddTool = ({ storeId }) => {
   const [realId, _setRealId] = useState("");
   const [shortDescription, _setShortDescription] = useState("");
   const [longDescription, _setDescription] = useState("");
+  const { addPhoto, removePhoto, photos, clear: clearPhotos } = useImageUpload();
   const [rentalHours, _setRentalHours] = useState(defaultRentalHours);
   const [isSaving, setIsSaving] = useState(false);
   const _categorySearch = useCategorySearch();
-
-  // pictures
 
   const setRealId = (e) => {
     _setRealId(e.target.value);
@@ -434,11 +435,22 @@ export const useAddTool = ({ storeId }) => {
 
   const canAddTool =
     realId !== "" &&
-    description !== "" &&
+    shortDescription !== "" &&
     _categorySearch.categories.length > 0;
 
-  const createTool = ({ redirect = true } = {}) => {
+  const createTool = async ({ redirect = true } = {}) => {
     setIsSaving(true);
+
+    let count = 0;
+    const lim = 50;
+    while (photos.filter((photo) => !photo.remoteId).length > 0) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      count += 1;
+      if (count > lim) {
+        throw new Error("Timeout waiting for photos to upload");
+      }
+    }
+
     return endpoints
       .createTool({
         info: {
@@ -448,7 +460,7 @@ export const useAddTool = ({ storeId }) => {
           shortDescription,
           longDescription,
           rentalHours: parseInt(rentalHours, 10) || defaultRentalHours,
-          pictures: [],
+          pictures: photos.map((photo) => photo.remoteId),
           status: 1,
         },
         accessToken,
@@ -456,6 +468,7 @@ export const useAddTool = ({ storeId }) => {
       .then((data) => {
         setShortDescription("");
         setLongDescription("");
+        clearPhotos();
         _categorySearch.clear();
         setRealId("");
         setRentalHours(defaultRentalHours);
@@ -467,6 +480,14 @@ export const useAddTool = ({ storeId }) => {
       .finally(() => {
         setIsSaving(false);
       });
+  };
+
+  const addPhotos = (e) => {
+    const files = e.target.files;
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      addPhoto({ name: file.name, file });
+    }
   };
 
   return {
@@ -486,6 +507,9 @@ export const useAddTool = ({ storeId }) => {
     createTool,
     canAddTool,
     isSaving,
+    photos,
+    addPhotos,
+    removePhoto,
   };
 };
 
@@ -504,6 +528,9 @@ export const PureAddTool = (addTool) => {
     createTool,
     canAddTool,
     isSaving,
+    photos,
+    addPhotos,
+    removePhoto,
   } = addTool;
 
   return (
@@ -517,6 +544,22 @@ export const PureAddTool = (addTool) => {
           placeholder="A red screw driver, square head"
         />
         <PureCategorySearch {...categorySearch} />
+        <div className="md:col-span-2">
+          <FileSelect id="tool-photos" label="Photos" onChange={addPhotos} />
+          <ul>
+            {photos.map((photo) => (
+              <li key={photo.id}>
+                <div
+                  className="my-2 flex cursor-pointer items-center"
+                  onClick={() => removePhoto(photo.id)}
+                >
+                  <img src={photo.url} alt="" className="h-12" />
+                  <span className="ml-2">{photo.name}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
         <div className="md:col-span-2">
           <LargeTextInput
             id="tool-long-description"

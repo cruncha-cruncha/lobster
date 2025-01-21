@@ -461,9 +461,9 @@ const photoUploadResponseSchema = {
   type: "object",
   $id: "#photoUploadResponse",
   properties: {
-    fileName: { type: "string" },
+    id: { type: "string" },
   },
-  required: ["fileName"],
+  required: ["id"],
 }
 
 const makeLazyValidator = (schema) => {
