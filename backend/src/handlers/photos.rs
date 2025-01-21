@@ -7,6 +7,7 @@ use axum::{extract::Json, http::header, http::StatusCode};
 use axum_extra::extract::Multipart;
 use image::ImageReader;
 use serde::{Deserialize, Serialize};
+use std::env;
 use std::sync::Arc;
 use tokio::fs;
 use uuid::Uuid;
@@ -17,12 +18,20 @@ pub struct UploadResponseData {
     pub key: String,
 }
 
-fn format_path(file_key: &str) -> String {
-    format!("./home/photos/{}.jpeg", file_key)
+pub fn get_root_path() -> String {
+    return env::var("ROOT_PHOTOS_PATH").unwrap_or("./photos".to_string());
 }
 
-fn format_thumb_path(file_key: &str) -> String {
-    format!("./home/photos/thumbs/{}.jpeg", file_key)
+pub fn get_thumbs_path() -> String {
+    return format!("{}/thumbs", get_root_path());
+}
+
+pub fn format_path(file_key: &str) -> String {
+    format!("{}/{}.jpeg", get_root_path(), file_key)
+}
+
+pub fn format_thumb_path(file_key: &str) -> String {
+    format!("{}/{}.jpeg", get_thumbs_path(), file_key)
 }
 
 pub async fn upload(
@@ -156,7 +165,6 @@ pub async fn get(Path(file_key): Path<String>) -> Result<Response, common::ErrRe
     let data = match fs::read(&path).await {
         Ok(v) => v,
         Err(e) => {
-            eprintln!("Failed to read file: {}", &path);
             return Err(common::ErrResponse::new(
                 StatusCode::NOT_FOUND,
                 "ERR_MIA",
@@ -179,7 +187,6 @@ pub async fn get_thumbnail(Path(file_key): Path<String>) -> Result<Response, com
     let data = match fs::read(&path).await {
         Ok(v) => v,
         Err(e) => {
-            eprintln!("Failed to read file: {}", &path);
             return Err(common::ErrResponse::new(
                 StatusCode::NOT_FOUND,
                 "ERR_MIA",

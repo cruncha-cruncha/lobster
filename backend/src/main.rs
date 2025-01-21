@@ -7,6 +7,7 @@ mod rabbit;
 mod usernames;
 
 use axum::{extract::DefaultBodyLimit, routing, Router};
+use handlers::photos;
 use rabbit::communicator::Communicator;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::{env, error::Error, net::SocketAddr, sync::Arc};
@@ -41,6 +42,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
         db: pool,
         comm: comm,
     });
+
+    {
+        let photo_storage_path = photos::get_root_path();
+        std::fs::create_dir_all(photo_storage_path)?;
+        let photo_storage_path = photos::get_thumbs_path();
+        std::fs::create_dir_all(photo_storage_path)?;
+    }
 
     let hosting_addr_string = env::var("HOSTING_ADDR").expect("HOSTING_ADDR must be set");
     let hosting_addr = hosting_addr_string
