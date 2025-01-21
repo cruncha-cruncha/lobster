@@ -50,7 +50,8 @@ export const useTool = () => {
     addPhoto: addNewPhoto,
     removePhoto: removeNewPhoto,
     photos: newPhotos,
-    clear: clearPhotos,
+    reset: resetNewPhotos,
+    getLatest: getLatestNewPhotos,
   } = useImageUpload();
   const { toolCart, addTool, removeTool } = useToolCart();
   const [info, dispatch] = useReducer(reducer, {
@@ -134,12 +135,33 @@ export const useTool = () => {
     removeTool(toolId);
   };
 
-  const updateTool = () => {
+  const updateTool = async () => {
     dispatch({ type: "isSaving", value: true });
 
-    // TODO: delete photos first
-    // TODO: wait for new photos to upload
-    // TODO: populate photoKeys
+    await Promise.all(
+      info.pictures
+        .filter((photo) => photo.delete)
+        .map((photo) => {
+          return endpoints.deletePhoto({ key: photo.photoKey, accessToken });
+        }),
+    );
+
+    let count = 0;
+    const lim = 50;
+    let latestNewPhotos = getLatestNewPhotos();
+    while (latestNewPhotos.filter((photo) => !photo.key).length > 0) {
+      count += 1;
+      if (count > lim) {
+        throw new Error("Timeout waiting for photos to upload");
+      }
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      latestNewPhotos = getLatestNewPhotos();
+    }
+
+    const photoKeys = [
+      ...info.pictures.filter((p) => !p.delete).map((photo) => photo.photoKey),
+      ...latestNewPhotos.map((photo) => photo.key),
+    ];
 
     return endpoints
       .updateTool({
@@ -151,12 +173,13 @@ export const useTool = () => {
           shortDescription: info.shortDescription,
           longDescription: info.longDescription,
           rentalHours: parseInt(info.rentalHours, 10) || data.rentalHours,
-          photoKeys: [],
+          photoKeys,
           status: Number(info.status),
         },
         accessToken,
       })
       .then((data) => {
+        resetNewPhotos();
         mutate(data);
       })
       .finally(() => {

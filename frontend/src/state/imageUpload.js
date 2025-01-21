@@ -72,21 +72,34 @@ export const useImageUpload = () => {
   const clear = () => {
     photos.forEach((photo) => {
       if (photo.key) {
-        endpoints
-          .deletePhoto({ key: photo.key, accessToken })
-          .catch((_e) => {
-            // ignore error
-          });
+        endpoints.deletePhoto({ key: photo.key, accessToken }).catch((_e) => {
+          // ignore error
+        });
       }
     });
 
     setPhotos([]);
   };
 
+  const reset = () => {
+    setPhotos([]);
+  };
+
+  const getLatest = () => {
+    let out = [];
+    setPhotos((prev) => {
+      out = [...prev];
+      return prev;
+    });
+    return out;
+  };
+
   return {
     addPhoto,
     removePhoto,
     clear,
+    reset,
+    getLatest,
     photos,
   };
 };

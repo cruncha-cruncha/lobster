@@ -417,6 +417,7 @@ export const useAddTool = ({ storeId }) => {
     removePhoto,
     photos,
     clear: clearPhotos,
+    getLatest: getLatestPhotos,
   } = useImageUpload();
   const [rentalHours, _setRentalHours] = useState(defaultRentalHours);
   const [isSaving, setIsSaving] = useState(false);
@@ -448,12 +449,14 @@ export const useAddTool = ({ storeId }) => {
 
     let count = 0;
     const lim = 50;
-    while (photos.filter((photo) => !photo.key).length > 0) {
-      await new Promise((resolve) => setTimeout(resolve, 200));
+    let latestPhotos = getLatestPhotos();
+    while (latestPhotos.filter((photo) => !photo.key).length > 0) {
       count += 1;
       if (count > lim) {
         throw new Error("Timeout waiting for photos to upload");
       }
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      latestPhotos = getLatestPhotos();
     }
 
     return endpoints
@@ -465,7 +468,7 @@ export const useAddTool = ({ storeId }) => {
           shortDescription,
           longDescription,
           rentalHours: parseInt(rentalHours, 10) || defaultRentalHours,
-          photoKeys: photos.map((photo) => photo.key),
+          photoKeys: latestPhotos.map((photo) => photo.key),
           status: 1,
         },
         accessToken,
