@@ -187,7 +187,7 @@ export const Grievances = () => {
         <PureUserSelect {...accusedSelect} label="Accused" />
         <div>
           <Select
-          id={`grievance-status`}
+            id={`grievance-status`}
             label="Status"
             value={status}
             onChange={setStatus}
@@ -214,9 +214,12 @@ export const Grievances = () => {
           <li
             key={grievance.id}
             onClick={() => goToGrievance(grievance.id)}
-            className="cursor-pointer"
+            className="my-2 cursor-pointer"
           >
-            <p>{JSON.stringify(grievance)}</p>
+            <p>
+              {grievance.author.username}: {grievance.title} (
+              {grievance.accused.username})
+            </p>
           </li>
         ))}
       </ul>
