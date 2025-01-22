@@ -282,16 +282,16 @@ pub async fn get_by_id(
     Path(store_id): Path<i32>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<store::Store>, common::ErrResponse> {
-    let mut store = match stores::select_by_id(store_id, &state.db).await {
-        Ok(s) => {
-            if s.is_none() {
+    let mut store = match stores::select_by_ids(vec![store_id], &state.db).await {
+        Ok(mut s) => {
+            if s.is_empty() {
                 return Err(common::ErrResponse::new(
                     StatusCode::NOT_FOUND,
                     "ERR_MIA",
                     "Store not found",
                 ));
             }
-            s.unwrap()
+            s.remove(0)
         },
         Err(e) => {
             return Err(common::ErrResponse::new(

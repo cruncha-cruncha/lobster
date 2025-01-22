@@ -134,24 +134,25 @@ pub async fn get_by_id(
 
     let can_see_code = claims.is_user_admin() || claims_user_id == user_id;
 
-    match users::select_by_id(user_id, &state.db).await {
-        Ok(user) => match user {
-            Some(mut u) => {
-                if !can_see_email {
-                    u.email_address = String::new();
-                }
-                if !can_see_code {
-                    u.code = String::new();
-                }
-
-                Ok(Json(u))
+    match users::select_by_ids(vec![user_id], &state.db).await {
+        Ok(mut users) => {
+            if users.is_empty() {
+                return Err(common::ErrResponse::new(
+                    StatusCode::NOT_FOUND,
+                    "ERR_MIA",
+                    "Could not find any user with that id",
+                ));
             }
-            None => Err(common::ErrResponse::new(
-                StatusCode::NOT_FOUND,
-                "ERR_MIA",
-                "Could not find any user with that id",
-            )),
-        },
+            let mut u = users.remove(0);
+            if !can_see_email {
+                u.email_address = String::new();
+            }
+            if !can_see_code {
+                u.code = String::new();
+            }
+
+            Ok(Json(u))
+        }
         Err(e) => Err(common::ErrResponse::new(
             StatusCode::INTERNAL_SERVER_ERROR,
             "ERR_DB",

@@ -81,17 +81,16 @@ pub async fn create_new(
         ));
     }
 
-    let user = match users::select_by_id(author_id, &state.db).await {
-        Ok(u) => {
-            if let Some(user) = u {
-                user
-            } else {
+    let user = match users::select_by_ids(vec![author_id], &state.db).await {
+        Ok(mut u) => {
+            if u.is_empty(){
                 return Err(common::ErrResponse::new(
                     StatusCode::NOT_FOUND,
                     "ERR_MIA",
                     "Author not found",
                 ));
             }
+            u.remove(0)
         }
         Err(e) => {
             return Err(common::ErrResponse::new(

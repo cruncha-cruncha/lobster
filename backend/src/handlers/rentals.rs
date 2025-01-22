@@ -50,7 +50,7 @@ pub struct SettableRentalData {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FilteredResponse {
-    pub rentals: Vec<rental::Rental>,
+    pub rentals: Vec<RentalWithText>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -394,7 +394,67 @@ pub async fn get_filtered(
         }
     };
 
-    Ok(Json(FilteredResponse { rentals }))
+    let users = match users::select_by_ids(rentals.iter().map(|r| r.renter_id).collect(), &state.db)
+        .await
+    {
+        Ok(u) => u,
+        Err(e) => {
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ))
+        }
+    };
+
+    let tools =
+        match tools::select_by_ids(rentals.iter().map(|r| r.tool_id).collect(), &state.db).await {
+            Ok(t) => t,
+            Err(e) => {
+                return Err(common::ErrResponse::new(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "ERR_DB",
+                    &e,
+                ))
+            }
+        };
+
+    let stores =
+        match stores::select_by_ids(tools.iter().map(|t| t.store_id).collect(), &state.db).await {
+            Ok(s) => s,
+            Err(e) => {
+                return Err(common::ErrResponse::new(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "ERR_DB",
+                    &e,
+                ))
+            }
+        };
+
+    let rentals_with_text = rentals
+        .iter()
+        .map(|r| {
+            let user = users.iter().find(|u| u.id == r.renter_id).unwrap();
+            let tool = tools.iter().find(|t| t.id == r.tool_id).unwrap();
+            let store = stores.iter().find(|s| s.id == tool.store_id).unwrap();
+            RentalWithText {
+                id: r.id,
+                tool_id: r.tool_id,
+                tool_real_id: tool.real_id.clone(),
+                tool_short_description: tool.short_description.clone(),
+                store_id: tool.store_id,
+                store_name: store.name.clone(),
+                renter_id: r.renter_id,
+                renter_username: user.username.clone(),
+                start_date: r.start_date,
+                end_date: r.end_date,
+            }
+        })
+        .collect();
+
+    Ok(Json(FilteredResponse {
+        rentals: rentals_with_text,
+    }))
 }
 
 pub async fn get_by_id(
@@ -430,16 +490,16 @@ pub async fn get_by_id(
         }
     };
 
-    let user = match users::select_by_id(rental.renter_id, &state.db).await {
-        Ok(u) => {
-            if u.is_none() {
+    let user = match users::select_by_ids(vec![rental.renter_id], &state.db).await {
+        Ok(mut u) => {
+            if u.is_empty() {
                 return Err(common::ErrResponse::new(
                     StatusCode::NOT_FOUND,
                     "ERR_MIA",
                     "User not found",
                 ));
             }
-            u.unwrap()
+            u.remove(0)
         }
         Err(e) => {
             return Err(common::ErrResponse::new(
@@ -470,16 +530,16 @@ pub async fn get_by_id(
         }
     };
 
-    let store = match stores::select_by_id(tool.store_id, &state.db).await {
-        Ok(s) => {
-            if s.is_none() {
+    let store = match stores::select_by_ids(vec![tool.store_id], &state.db).await {
+        Ok(mut s) => {
+            if s.is_empty() {
                 return Err(common::ErrResponse::new(
                     StatusCode::NOT_FOUND,
                     "ERR_MIA",
                     "Store not found",
                 ));
             }
-            s.unwrap()
+            s.remove(0)
         }
         Err(e) => {
             return Err(common::ErrResponse::new(

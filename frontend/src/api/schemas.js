@@ -328,7 +328,7 @@ const singleRentalSchema = {
 
 const rentalWithTextSchema = {
   type: "object",
-  $id: "#singleRental",
+  $id: "#rentalWithText",
   properties: {
     id: { type: "number" },
     toolId: { type: "number" },
@@ -359,7 +359,7 @@ const rentalSearchResultsSchema = {
   type: "object",
   $id: "#rentalSearchResults",
   properties: {
-    rentals: { type: "array", items: { $ref: "#singleRental" } },
+    rentals: { type: "array", items: { $ref: "#rentalWithText" } },
   },
   required: ["rentals"],
 };
@@ -567,7 +567,7 @@ export const validateSingleRental = makeLazyValidator(singleRentalSchema);
 export const validateRentalWithText = makeLazyValidator(rentalWithTextSchema);
 
 export const validateRentalSearchResults = makeLazyValidator([
-  singleRentalSchema,
+  rentalWithTextSchema,
   rentalSearchResultsSchema,
 ]);
 

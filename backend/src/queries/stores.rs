@@ -108,20 +108,20 @@ pub async fn select_by_code(
     .map_err(|e| e.to_string())
 }
 
-pub async fn select_by_id(
-    store_id: store::Id,
+pub async fn select_by_ids(
+    store_ids: Vec<store::Id>,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<Option<store::Store>, String> {
+) -> Result<Vec<store::Store>, String> {
     sqlx::query_as!(
         store::Store,
         r#"
         SELECT *
         FROM main.stores ms
-        WHERE ms.id = $1;
+        WHERE ms.id = ANY($1::integer[]);
         "#,
-        store_id,
+        &store_ids,
     )
-    .fetch_optional(db)
+    .fetch_all(db)
     .await
     .map_err(|e| e.to_string())
 }

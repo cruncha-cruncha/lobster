@@ -433,16 +433,16 @@ pub async fn update(
         }
     }
 
-    let store_name = match stores::select_by_id(tool.store_id, &state.db).await {
-        Ok(s) => {
-            if s.is_none() {
+    let store_name = match stores::select_by_ids(vec![tool.store_id], &state.db).await {
+        Ok(mut s) => {
+            if s.is_empty() {
                 return Err(common::ErrResponse::new(
                     StatusCode::NOT_FOUND,
                     "ERR_MIA",
                     "Store not found",
                 ));
             }
-            s.unwrap().name
+            s.remove(0).name
         }
         Err(e) => {
             return Err(common::ErrResponse::new(
@@ -619,16 +619,16 @@ pub async fn get_by_id(
     }
     let tool = tools.remove(0);
 
-    let store_name = match stores::select_by_id(tool.store_id, &state.db).await {
-        Ok(s) => {
-            if s.is_none() {
+    let store_name = match stores::select_by_ids(vec![tool.store_id], &state.db).await {
+        Ok(mut s) => {
+            if s.is_empty() {
                 return Err(common::ErrResponse::new(
                     StatusCode::NOT_FOUND,
                     "ERR_MIA",
                     "Store not found",
                 ));
             }
-            s.unwrap().name
+            s.remove(0).name
         }
         Err(e) => {
             return Err(common::ErrResponse::new(

@@ -103,9 +103,9 @@ pub async fn refresh(
         }
     };
 
-    let user = match users::select_by_id(user_id, &state.db).await {
-        Ok(u) => {
-            if u.is_none() {
+    let user = match users::select_by_ids(vec![user_id], &state.db).await {
+        Ok(mut u) => {
+            if u.is_empty() {
                 return Err(common::ErrResponse::new(
                     StatusCode::NOT_FOUND,
                     "ERR_MIA",
@@ -113,7 +113,7 @@ pub async fn refresh(
                 ));
             }
 
-            let u = u.unwrap();
+            let u = u.remove(0);
             if u.status != user::UserStatus::Active as i32 {
                 return Err(common::ErrResponse::new(
                     StatusCode::FORBIDDEN,

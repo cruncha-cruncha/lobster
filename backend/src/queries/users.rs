@@ -127,20 +127,20 @@ pub async fn select_by_email(
     .map_err(|e| e.to_string())
 }
 
-pub async fn select_by_id(
-    id: user::Id,
+pub async fn select_by_ids(
+    ids: Vec<user::Id>,
     db: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<Option<user::User>, String> {
+) -> Result<Vec<user::User>, String> {
     sqlx::query_as!(
         user::User,
         r#"
         SELECT *
         FROM main.users mu
-        WHERE mu.id = $1
+        WHERE mu.id = ANY($1::integer[])
         "#,
-        id,
+        &ids,
     )
-    .fetch_optional(db)
+    .fetch_all(db)
     .await
     .map_err(|e| e.to_string())
 }
