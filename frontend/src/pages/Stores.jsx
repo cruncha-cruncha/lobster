@@ -136,13 +136,13 @@ export const PureStores = (stores) => {
         />
       </div>
       <div>
-        <ul className="mb-3 mt-4 border-x-2 border-stone-400 px-2">
+        <ul className="mb-3 mt-4 overflow-y-auto border-x-2 border-stone-400 px-2 [&>*:first-child]:mt-1 [&>*:last-child]:mb-1 [&>*]:my-2">
           {storeList.length == 0 && (
             <li className="text-stone-400">no results</li>
           )}
           {storeList.map((store) => (
             <li key={store.id}>
-              <Link to={goToStore(store.id)} className="mb-2 cursor-pointer">
+              <Link to={goToStore(store.id)} className="cursor-pointer">
                 <p>
                   {store.name},{" "}
                   {store.location.trim() ? (

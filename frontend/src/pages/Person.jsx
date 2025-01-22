@@ -313,7 +313,10 @@ export const useUserPermissions = ({ id }) => {
   const isAnyStoreRep = permissions.isAnyStoreRep();
   const canUpdateStorePermissions =
     permissions.isStoreAdmin() || (isAnyStoreRep && userId != id);
-  const isOnlyStoreRep = isAnyStoreRep && !permissions.isStoreAdmin() && !permissions.isLibraryAdmin();
+  const isOnlyStoreRep =
+    isAnyStoreRep &&
+    !permissions.isStoreAdmin() &&
+    !permissions.isLibraryAdmin();
 
   const [userPermissions, setUserPermissions] = useState({
     library: [],
@@ -539,15 +542,12 @@ const PureUserPermissions = (userPermissions) => {
   return (
     <div>
       <h2 className="px-2 text-lg">Permissions</h2>
-      <ul className="mt-1 border-x-2 border-stone-400 px-2 py-px">
+      <ul className="mt-1 overflow-y-auto border-x-2 border-stone-400 px-2 py-px [&>*]:my-1">
         {libraryPermissions.length <= 0 && storePermissions.length <= 0 && (
           <li className="text-stone-400">none found</li>
         )}
         {libraryPermissions.map((permission) => (
-          <li
-            key={permission.id}
-            className="my-1 flex items-center justify-between"
-          >
+          <li key={permission.id} className="flex items-center justify-between">
             <span>{permission.roleName}</span>
             {showFields === "remove" && canRemovePermission(permission.id) && (
               <Button
@@ -562,7 +562,7 @@ const PureUserPermissions = (userPermissions) => {
           </li>
         ))}
         {storePermissions.map((info) => (
-          <li key={info.id} className="my-1 flex items-center justify-between">
+          <li key={info.id} className="flex items-center justify-between">
             <span>
               {info.roleName} of {info.storeName}
             </span>

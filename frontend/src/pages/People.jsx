@@ -229,21 +229,19 @@ export const PurePeople = (people) => {
         )}
       </div>
       <div>
-        <ul className="mb-3 mt-4 border-x-2 border-stone-400 px-2">
+        <ul className="mb-3 mt-4 overflow-y-auto border-x-2 border-stone-400 px-2 [&>*:first-child]:mt-1 [&>*:last-child]:mb-1 [&>*]:my-2">
           {peopleList.length == 0 && (
             <li className="text-stone-400">no results</li>
           )}
           {peopleList.map((person) => (
-            <Link
-              key={person.id}
-              to={goToPerson(person.id)}
-              className="mb-2 cursor-pointer"
-            >
-              <p>
-                {person.username}
-                {person.emailAddress && `, ${person.emailAddress}`}
-              </p>
-            </Link>
+            <li key={person.id}>
+              <Link to={goToPerson(person.id)} className="cursor-pointer">
+                <p>
+                  {person.username}
+                  {person.emailAddress && `, ${person.emailAddress}`}
+                </p>
+              </Link>
+            </li>
           ))}
         </ul>
       </div>

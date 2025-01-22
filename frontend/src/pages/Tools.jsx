@@ -248,12 +248,12 @@ export const PureTools = (tools) => {
         />
       </div>
       {warnSingleStore && <p>currently filtering by a store</p>}
-      <ul className="mb-3 mt-4 border-x-2 border-stone-400 px-2">
+      <ul className="mb-3 mt-4 overflow-y-auto border-x-2 border-stone-400 px-2 [&>*:first-child]:mt-1 [&>*:last-child]:mb-1 [&>*]:my-2">
         {toolsList.length == 0 && (
           <li className="text-stone-400">no results</li>
         )}
         {toolsList.map((tool) => (
-          <li key={tool.id} className="mb-2 flex justify-between">
+          <li key={tool.id} className="flex justify-between">
             <div
               onClick={() => goToTool(tool.id)}
               className="flex cursor-pointer items-center gap-2"
