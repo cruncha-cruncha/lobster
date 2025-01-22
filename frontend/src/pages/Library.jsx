@@ -62,13 +62,13 @@ export const PureLibrary = (library) => {
 
   return (
     <div>
-      <h1 className="my-2 px-2 text-xl">Library Settings</h1>
+      <h1 className="my-2 px-2 text-xl">Network Settings</h1>
       <p className="px-2">(id: "{uuid}")</p>
       <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 px-2">
         <TextInput
           id={`library-name`}
           label="Name"
-          placeholder="Library Name"
+          placeholder="Network Name"
           value={info.name}
           onChange={setName}
         />

@@ -230,9 +230,20 @@ export const PureRentals = (rentals) => {
 
   return (
     <div>
+      <div className="my-2 flex items-center gap-2 px-2">
+        <h1 className="mr-2 text-xl">Rentals</h1>
+      </div>
+      <div className="px-2">
+        <p>
+          Here you can search for people in the network by username (and/or
+          email if you're a user administrator). This page can also be used to
+          find all people associated with a store. Click on one of the results
+          to see more information about a user, as well as links to their
+          rentals and grievances (accused).
+        </p>
+      </div>
       <div className="mb-3 mt-2 flex flex-col gap-x-4 gap-y-2 px-2 md:flex-row">
-        <div className="flex-final mt-1 flex gap-4 md:mt-0 md:block">
-          <h2 className="mt-1 text-xl md:mt-0">Rentals</h2>
+        <div className="flex-final mt-0 flex gap-4 md:block">
           <div className="flex flex-wrap items-center gap-x-4 md:flex-col md:items-start">
             <Checkbox
               id="rental-still-open"

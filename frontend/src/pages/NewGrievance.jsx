@@ -85,6 +85,15 @@ export const PureNewGrievance = (newStore) => {
   return (
     <div>
       <h1 className="my-2 px-2 text-xl">Fresh Grievance</h1>
+      <div className="px-2">
+        <p>
+          A grievance can be opened for any number of reasons: a tool returned
+          broken, a rude interaction, a missing piece. Both author and accused
+          can reply to a grievance, as well as any user administrator.
+          Grievances cannot be edited; any words written in anger or haste will
+          be lasting.
+        </p>
+      </div>
       <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 px-2">
         <PureUserSelect {...selectAccused} label="Accused" />
         <TextInput

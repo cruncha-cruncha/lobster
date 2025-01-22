@@ -41,7 +41,7 @@ export const Layout = () => {
                   <NavLink to="/rentals">Rentals</NavLink>
                   <NavLink to="/tools">Tools</NavLink>
                   <NavLink to="/stores">Stores</NavLink>
-                  <NavLink to="/library">Library</NavLink>
+                  <NavLink to="/library">Network</NavLink>
                   <button
                     onClick={() => auth.logout()}
                     className="block w-full text-left hover:!bg-transparent hover:!text-black"

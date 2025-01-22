@@ -46,13 +46,13 @@ export const PureSetupLibrary = (setupLibrary) => {
       <div className="mx-2 flex w-full max-w-sm flex-col justify-center">
         <h1 className="mb-2 text-center text-xl">Welcome</h1>
         <p>
-          Welcome to your new tool lending library. What would you like the
-          library to be called?
+          Welcome to your new tool lending network. What would you like the
+          network to be called?
         </p>
         <div className="my-2 border-2 border-stone-800">
           <input
             type="text"
-            placeholder="Library Name"
+            placeholder="Network Name"
             onChange={setName}
             value={name}
             className="w-full px-2 py-1 ring-sky-500 transition-shadow focus-visible:outline-none focus-visible:ring-2"

@@ -174,7 +174,7 @@ export const PurePeople = (people) => {
 
   return (
     <div>
-      <div className="mt-2 flex items-center gap-2 px-2">
+      <div className="my-2 flex items-center gap-2 px-2">
         <h2 className="mr-2 text-xl">People</h2>
         <Button
           text="My Profile"
@@ -182,6 +182,15 @@ export const PurePeople = (people) => {
           variant="blue"
           size="sm"
         />
+      </div>
+      <div className="px-2">
+        <p>
+          Here you can search for people in the network by username (and/or
+          email if you're a user administrator). This page can also be used to
+          find all people associated with a store. Click on one of the results
+          to see more information about a user, as well as links to their
+          rentals and grievances (accused).
+        </p>
       </div>
       <div className="mb-3 mt-1 grid grid-cols-1 gap-x-4 gap-y-2 px-2 md:grid-cols-2">
         <div className="md:col-span-2">

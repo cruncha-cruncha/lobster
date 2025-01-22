@@ -177,6 +177,16 @@ export const Grievances = () => {
           size="sm"
         />
       </div>
+      <div className="px-2">
+        <p>
+          A grievance can be opened for any number of reasons: a tool returned
+          broken, a rude interaction, a missing piece. Here you can also search
+          for past grievances by author, accused, or title. Click on one of the
+          results to see more information about the grievance (including
+          replies). Results are displayed as 'author: Title (accused)'. Only
+          user administrators can update the status of a grievance.
+        </p>
+      </div>
       <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 px-2">
         <PureUserSelect {...authorSelect} label="Authors" />
         <PureUserSelect {...accusedSelect} label="Accused" />

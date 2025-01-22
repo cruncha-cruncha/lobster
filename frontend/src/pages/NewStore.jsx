@@ -122,6 +122,16 @@ export const PureNewStore = (newStore) => {
   return (
     <div>
       <h1 className="my-2 px-2 text-xl">New Store</h1>
+      <div className="px-2">
+        <p>
+          Here you can create a new store. All store information is visible to
+          other members of the network; please provide as much detail as you
+          feel comfortable with. Often "Read Before Renting" instructions will
+          include 'text me first', 'by appointment only', and 'please bring
+          proof of address'. All information can be changed later. All new
+          stores must be approved by a store administrator.
+        </p>
+      </div>
       <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 px-2 md:grid-cols-2">
         <TextInput
           id={`new-store-name`}
@@ -135,7 +145,7 @@ export const PureNewStore = (newStore) => {
           label="Location"
           value={info.location}
           onChange={setLocation}
-          placeholder="123 Main St, Ottawa, ON, K1R 7T7"
+          placeholder="#12, 250 Parkdale Ave"
         />
         <TextInput
           id={`new-store-email-address`}

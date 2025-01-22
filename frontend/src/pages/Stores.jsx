@@ -99,7 +99,7 @@ export const PureStores = (stores) => {
 
   return (
     <div>
-      <div className="mt-2 flex items-center gap-2 px-2">
+      <div className="my-2 flex items-center gap-2 px-2">
         <h2 className="mr-2 text-xl">Stores</h2>
         <div className="flex gap-2">
           <Button
@@ -110,13 +110,22 @@ export const PureStores = (stores) => {
           />
         </div>
       </div>
+      <div className="px-2">
+        <p>
+          Here you can search for stores by name, location, email address, or
+          phone number. Generally a 'store' corresponds to someone's apartment.
+          Click on one of the results to see more details about the store. If
+          you're interested in providing tools to the network, start by creating
+          a your own store.
+        </p>
+      </div>
       <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 px-2">
         <TextInput
           id={`store-term`}
           value={params.term}
           onChange={setTerm}
           placeholder="Some Store"
-          label="Store Name"
+          label="Search"
         />
         <Select
           id={`store-status`}

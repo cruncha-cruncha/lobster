@@ -158,7 +158,7 @@ export const useTools = () => {
   };
 
   return {
-    toolStatuses: [{ id: "0", name: "All" }, ...toolStatuses],
+    toolStatuses: [{ id: "0", name: "Any" }, ...toolStatuses],
     status,
     setStatus,
     searchTerm,
@@ -221,6 +221,13 @@ export const PureTools = (tools) => {
             size="sm"
           />
         </div>
+      </div>
+      <div className="px-2">
+        <p>
+          Here you can search for tools by description or id. Click on a tool
+          for more information. Clicking 'Add' will add the tool to your cart,
+          but be careful; your cart will empty on refresh.
+        </p>
       </div>
       <div className="mb-3 mt-1 grid grid-cols-1 gap-x-4 gap-y-2 px-2">
         <TextInput
