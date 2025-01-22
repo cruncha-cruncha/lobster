@@ -1,25 +1,20 @@
 import { useState } from "react";
 import { useAuth } from "../state/auth";
 import * as endpoints from "../api/endpoints";
-import { useNavigate } from "react-router";
+import { Link } from "react-router";
 import { TextInput } from "../components/TextInput";
 import { Button } from "../components/Button";
 import { useToolCart } from "../state/toolCart";
 
 export const useCart = () => {
   const { accessToken } = useAuth();
-  const navigate = useNavigate();
   const { toolCart, removeTool, clear: clearCart } = useToolCart();
   const [storeCode, _setStoreCode] = useState("");
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
-  const goToTools = () => {
-    navigate("/tools");
-  };
+  const goToTools = () => "/tools";
 
-  const goToTool = (toolId) => {
-    navigate(`/tools/${toolId}`);
-  };
+  const goToTool = (toolId) => `/tools/${toolId}`;
 
   const removeFromCart = (toolId) => {
     removeTool(toolId);
@@ -84,7 +79,7 @@ export const PureCart = (cart) => {
         <h1 className="mr-2 text-xl">Cart</h1>
         <div className="flex justify-start gap-2">
           <Button
-            onClick={goToTools}
+            goTo={goToTools()}
             text="All Tools"
             variant="blue"
             size="sm"
@@ -97,12 +92,12 @@ export const PureCart = (cart) => {
         )}
         {toolCart.map((tool) => (
           <li key={tool.id} className="flex items-center justify-between">
-            <div onClick={() => goToTool(tool.id)} className="cursor-pointer">
+            <Link to={goToTool(tool.id)} className="cursor-pointer">
               {tool.realId}
               {!tool.shortDescription.trim()
                 ? ""
                 : `, ${tool.shortDescription}`}
-            </div>
+            </Link>
             <Button
               onClick={() => removeFromCart(tool.id)}
               text="Remove"

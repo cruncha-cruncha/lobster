@@ -1,5 +1,5 @@
 import { useReducer, useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router";
+import { useParams } from "react-router";
 import useSWR from "swr";
 import { useConstants } from "../state/constants";
 import { useAuth } from "../state/auth";
@@ -13,21 +13,14 @@ import { URL_ACCUSED_ID_KEY } from "./Grievances";
 export const URL_PERSON_ID_KEY = "personId";
 
 export const usePerson = () => {
-  const navigate = useNavigate();
   const params = useParams();
   const userId = params.id;
 
-  const goToPeople = () => {
-    navigate("/people");
-  };
+  const goToPeople = () => "/people";
 
-  const goToRentals = () => {
-    navigate(`/rentals?${URL_PERSON_ID_KEY}=${userId}`);
-  };
+  const goToRentals = () => `/rentals?${URL_PERSON_ID_KEY}=${userId}`;
 
-  const goToGrievances = () => {
-    navigate(`/grievances?${URL_ACCUSED_ID_KEY}=${userId}`);
-  };
+  const goToGrievances = () => `/grievances?${URL_ACCUSED_ID_KEY}=${userId}`;
 
   const userInfo = useUserInfo({ id: userId });
   const userStatus = useUserStatus({ id: userId });
@@ -60,14 +53,14 @@ export const PurePerson = (person) => {
       <h1 className="mt-2 px-2 text-xl">{username}</h1>
       <div className="my-2 flex justify-start gap-2 px-2">
         <Button
-          onClick={goToGrievances}
+          goTo={goToGrievances()}
           text="Grievances"
           variant="blue"
           size="sm"
         />
-        <Button onClick={goToRentals} text="Rentals" variant="blue" size="sm" />
+        <Button goTo={goToRentals()} text="Rentals" variant="blue" size="sm" />
         <Button
-          onClick={goToPeople}
+          goTo={goToPeople()}
           text="All People"
           variant="blue"
           size="sm"

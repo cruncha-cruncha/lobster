@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { useAuth } from "../state/auth";
 import * as endpoints from "../api/endpoints";
-import { useNavigate, useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { SearchSelect } from "../components/SearchSelect";
 import { Checkbox } from "../components/Checkbox";
 import { URL_STORE_ID_KEY } from "./Store";
@@ -14,7 +14,6 @@ import { useDebounce } from "../components/useDebounce";
 
 export const useRentals = () => {
   const { accessToken } = useAuth();
-  const navigate = useNavigate();
   const [urlParams, setUrlParams] = useSearchParams();
   const _storeSelect = useStoreSelect();
   const _userSelect = useUserSelect();
@@ -195,9 +194,7 @@ export const useRentals = () => {
     }
   };
 
-  const goToRental = (rentalId) => {
-    navigate(`/rentals/${rentalId}`);
-  };
+  const goToRental = (rentalId) => `/rentals/${rentalId}`;
 
   return {
     storeSelect,
@@ -268,12 +265,10 @@ export const PureRentals = (rentals) => {
           <li className="text-stone-400">no results</li>
         )}
         {rentalList.map((rental) => (
-          <li
-            key={rental.id}
-            onClick={() => goToRental(rental.id)}
-            className="mb-2 cursor-pointer"
-          >
-            {JSON.stringify(rental)}
+          <li key={rental.id}>
+            <Link to={goToRental(rental.id)} className="mb-2 cursor-pointer">
+              {JSON.stringify(rental)}
+            </Link>
           </li>
         ))}
       </ul>

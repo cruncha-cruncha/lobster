@@ -1,5 +1,5 @@
 import { useState, useEffect, useReducer } from "react";
-import { useNavigate, useParams } from "react-router";
+import { useParams, useNavigate } from "react-router";
 import useSWR from "swr";
 import { useConstants } from "../state/constants";
 import { useAuth } from "../state/auth";
@@ -16,7 +16,6 @@ import { useImageUpload } from "../state/imageUpload";
 export const URL_STORE_ID_KEY = "storeId";
 
 export const useStore = () => {
-  const navigate = useNavigate();
   const params = useParams();
   const { toolCart } = useToolCart();
   const { accessToken, permissions } = useAuth();
@@ -27,27 +26,17 @@ export const useStore = () => {
     () => endpoints.getStore({ id: storeId, accessToken }),
   );
 
-  const goToStores = () => {
-    navigate("/stores");
-  };
+  const goToStores = () => "/stores";
 
-  const goToPeople = () => {
-    navigate(`/people?${URL_STORE_ID_KEY}=${storeId}`);
-  };
+  const goToPeople = () => `/people?${URL_STORE_ID_KEY}=${storeId}`;
 
-  const goToTools = () => {
-    navigate(`/tools?${URL_STORE_ID_KEY}=${storeId}`);
-  };
+  const goToTools = () => `/tools?${URL_STORE_ID_KEY}=${storeId}`;
 
   const cartSize = toolCart.filter((tool) => tool.storeId == storeId).length;
 
-  const goToCart = () => {
-    navigate(`/stores/${storeId}/cart`);
-  };
+  const goToCart = () => `/stores/${storeId}/cart`;
 
-  const goToRentals = () => {
-    navigate(`/rentals?${URL_STORE_ID_KEY}=${storeId}`);
-  };
+  const goToRentals = () => `/rentals?${URL_STORE_ID_KEY}=${storeId}`;
 
   const showEditStore = permissions.isStoreRep(storeId);
   const showEditStoreStatus = permissions.isStoreAdmin();
@@ -89,32 +78,17 @@ export const PureStore = (store) => {
     <div>
       <h1 className="mt-2 px-2 text-xl">{storeName}</h1>
       <div className="my-2 flex flex-wrap justify-start gap-2 px-2">
+        <Button goTo={goToTools()} text="Tools" variant="blue" size="sm" />
+        <Button goTo={goToRentals()} text="Rentals" variant="blue" size="sm" />
+        <Button goTo={goToPeople()} text="People" variant="blue" size="sm" />
         <Button
-          onClick={() => goToTools()}
-          text="Tools"
-          variant="blue"
-          size="sm"
-        />
-        <Button
-          onClick={() => goToRentals()}
-          text="Rentals"
-          variant="blue"
-          size="sm"
-        />
-        <Button
-          onClick={() => goToPeople()}
-          text="People"
-          variant="blue"
-          size="sm"
-        />
-        <Button
-          onClick={() => goToStores()}
+          goTo={goToStores()}
           text="All Stores"
           variant="blue"
           size="sm"
         />
         <Button
-          onClick={goToCart}
+          goTo={goToCart()}
           text={`Cart (${cartSize})`}
           variant="blue"
           size="sm"
@@ -408,6 +382,7 @@ export const EditStoreStatus = (params) => {
 
 export const useAddTool = ({ storeId }) => {
   const defaultRentalHours = 48;
+  const navigate = useNavigate();
   const { accessToken } = useAuth();
   const [realId, _setRealId] = useState("");
   const [shortDescription, _setShortDescription] = useState("");

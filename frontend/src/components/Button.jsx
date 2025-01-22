@@ -1,3 +1,4 @@
+import { Link } from "react-router";
 import { CenteredLoadingDots } from "./loading/LoadingDots";
 
 export const Button = ({
@@ -5,6 +6,7 @@ export const Button = ({
   size,
   text,
   onClick,
+  goTo,
   disabled,
   isLoading,
 }) => {
@@ -32,6 +34,17 @@ export const Button = ({
     buttonClasses += " px-3 py-1";
   } else {
     buttonClasses += " px-4 py-2";
+  }
+
+  if (goTo) {
+    return (
+      <div className="button flex items-center">
+        <Link to={goTo} className={buttonClasses}>
+          {isLoading && <CenteredLoadingDots />}
+          <span className={isLoading ? "invisible" : ""}>{text}</span>
+        </Link>
+      </div>
+    );
   }
 
   return (

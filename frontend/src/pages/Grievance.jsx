@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router";
+import { useParams } from "react-router";
 import useSWR, { useSWRConfig } from "swr";
 import { useConstants } from "../state/constants";
 import { useAuth } from "../state/auth";
@@ -9,7 +9,6 @@ import { TextInput } from "../components/TextInput";
 import { Select } from "../components/Select";
 
 export const useGrievance = () => {
-  const navigate = useNavigate();
   const params = useParams();
   const { accessToken, userId, permissions } = useAuth();
   const { grievanceStatuses } = useConstants();
@@ -41,17 +40,11 @@ export const useGrievance = () => {
       }),
   );
 
-  const goToGrievances = () => {
-    navigate("/grievances");
-  };
+  const goToGrievances = () => "/grievances";
 
-  const goToAuthor = () => {
-    navigate(`/people/${data?.author.id}`);
-  };
+  const goToAuthor = () => `/people/${data?.author.id}`;
 
-  const goToAccused = () => {
-    navigate(`/people/${data?.accused.id}`);
-  };
+  const goToAccused = () => `/people/${data?.accused.id}`;
 
   const status = !data?.status
     ? ""
@@ -102,19 +95,19 @@ export const PureGrievance = (grievance) => {
       <h1 className="mt-2 px-2 text-xl">{title}</h1>
       <div className="my-2 flex flex-wrap justify-start gap-2 px-2">
         <Button
-          onClick={() => goToAuthor()}
+          goTo={goToAuthor()}
           text="Author"
           variant="blue"
           size="sm"
         />
         <Button
-          onClick={() => goToAccused()}
+          goTo={goToAccused()}
           text="Accused"
           variant="blue"
           size="sm"
         />
         <Button
-          onClick={() => goToGrievances()}
+          goTo={goToGrievances()}
           text="All Grievances"
           variant="blue"
           size="sm"

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import useSWR from "swr";
 import { useAuth } from "../state/auth";
 import * as endpoints from "../api/endpoints";
@@ -11,7 +11,6 @@ import { URL_STORE_ID_KEY } from "./Store";
 export const useStoreCart = () => {
   const params = useParams();
   const { accessToken } = useAuth();
-  const navigate = useNavigate();
   const {
     toolCart: _toolCart,
     addTool,
@@ -25,17 +24,11 @@ export const useStoreCart = () => {
 
   const toolCart = _toolCart.filter((tool) => tool.storeId == storeId);
 
-  const goToStoreTools = () => {
-    navigate(`/tools?${URL_STORE_ID_KEY}=${storeId}`);
-  };
+  const goToStoreTools = () => `/tools?${URL_STORE_ID_KEY}=${storeId}`;
 
-  const goToStore = () => {
-    navigate(`/stores/${storeId}`);
-  };
+  const goToStore = () => `/stores/${storeId}`;
 
-  const goToTool = (toolId) => {
-    navigate(`/tools/${toolId}`);
-  };
+  const goToTool = (toolId) => `/tools/${toolId}`;
 
   const addToCart = (tool) => {
     addTool(tool);
@@ -130,12 +123,12 @@ export const PureStoreCart = (cart) => {
       <h1 className="mt-2 px-2 text-xl">Store Cart</h1>
       <div className="mt-2 flex justify-start gap-2 px-2">
         <Button
-          onClick={goToStoreTools}
+          goTo={goToStoreTools()}
           text="Store Tools"
           variant="blue"
           size="sm"
         />
-        <Button onClick={goToStore} text="Store" variant="blue" size="sm" />
+        <Button goTo={goToStore()} text="Store" variant="blue" size="sm" />
       </div>
       <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 px-2">
         <QuickFindStoreTool storeId={storeId} onSingle={addToCart} />
@@ -147,12 +140,12 @@ export const PureStoreCart = (cart) => {
         {toolCart.map((tool) => (
           <li key={tool.id}>
             <div className="flex items-center justify-between">
-              <div onClick={() => goToTool(tool.id)} className="cursor-pointer">
+              <Link to={goToTool(tool.id)} className="cursor-pointer">
                 {tool.realId}
                 {!tool.shortDescription.trim()
                   ? ""
                   : `, ${tool.shortDescription}`}
-              </div>
+              </Link>
               <Button
                 onClick={() => removeFromCart(tool.id)}
                 text="Remove"

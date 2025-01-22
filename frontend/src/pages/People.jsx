@@ -1,5 +1,5 @@
 import { useState, useReducer, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { useConstants } from "../state/constants";
 import useSWR from "swr";
 import { TextInput } from "../components/TextInput";
@@ -31,7 +31,6 @@ const paramsReducer = (state, action) => {
 };
 
 export const usePeople = () => {
-  const navigate = useNavigate();
   const [urlParams, setUrlParams] = useSearchParams();
   const { roles, userStatuses } = useConstants();
   const { userId, accessToken } = useAuth();
@@ -137,13 +136,9 @@ export const usePeople = () => {
     }
   });
 
-  const goToPerson = (id) => {
-    navigate(`/people/${id}`);
-  };
+  const goToPerson = (id) => `/people/${id}`;
 
-  const goToMyProfile = () => {
-    navigate(`/people/${userId}`);
-  };
+  const goToMyProfile = () => `/people/${userId}`;
 
   return {
     roles: [{ id: "0", name: "Any" }, ...roles],
@@ -183,7 +178,7 @@ export const PurePeople = (people) => {
         <h2 className="mr-2 text-xl">People</h2>
         <Button
           text="My Profile"
-          onClick={goToMyProfile}
+          goTo={goToMyProfile()}
           variant="blue"
           size="sm"
         />
@@ -230,16 +225,16 @@ export const PurePeople = (people) => {
             <li className="text-stone-400">no results</li>
           )}
           {peopleList.map((person) => (
-            <div
+            <Link
               key={person.id}
-              onClick={() => goToPerson(person.id)}
+              to={goToPerson(person.id)}
               className="mb-2 cursor-pointer"
             >
               <p>
                 {person.username}
                 {person.emailAddress && `, ${person.emailAddress}`}
               </p>
-            </div>
+            </Link>
           ))}
         </ul>
       </div>

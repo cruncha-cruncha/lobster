@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import useSWR from "swr";
 import { useAuth } from "../state/auth";
 import * as endpoints from "../api/endpoints";
-import { useNavigate, useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { useConstants } from "../state/constants";
 import { Select } from "../components/Select";
 import { usePrevNext, PurePrevNext } from "../components/PrevNext";
@@ -14,7 +14,6 @@ export const URL_ACCUSED_ID_KEY = "accusedId";
 
 export const Grievances = () => {
   const { accessToken } = useAuth();
-  const navigate = useNavigate();
   const [urlParams, setUrlParams] = useSearchParams();
   const { grievanceStatuses: _grievanceStatuses } = useConstants();
   const [status, _setStatus] = useState("0");
@@ -155,13 +154,9 @@ export const Grievances = () => {
     () => endpoints.searchGrievances({ params: endpointParams, accessToken }),
   );
 
-  const goToNewGrievance = () => {
-    navigate("/grievances/new");
-  };
+  const goToNewGrievance = () => "/grievances/new";
 
-  const goToGrievance = (grievanceId) => {
-    navigate(`/grievances/${grievanceId}`);
-  };
+  const goToGrievance = (grievanceId) => `/grievances/${grievanceId}`;
 
   useEffect(() => {
     if (data) {
@@ -177,7 +172,7 @@ export const Grievances = () => {
         <h1 className="mr-2 text-xl">Grievances</h1>
         <Button
           text="Open New"
-          onClick={goToNewGrievance}
+          goTo={goToNewGrievance()}
           variant="blue"
           size="sm"
         />
@@ -211,15 +206,16 @@ export const Grievances = () => {
           <li className="text-stone-400">no results</li>
         )}
         {grievances.map((grievance) => (
-          <li
-            key={grievance.id}
-            onClick={() => goToGrievance(grievance.id)}
-            className="my-2 cursor-pointer"
-          >
-            <p>
-              {grievance.author.username}: {grievance.title} (
-              {grievance.accused.username})
-            </p>
+          <li key={grievance.id}>
+            <Link
+              to={goToGrievance(grievance.id)}
+              className="my-2 cursor-pointer"
+            >
+              <p>
+                {grievance.author.username}: {grievance.title} (
+                {grievance.accused.username})
+              </p>
+            </Link>
           </li>
         ))}
       </ul>

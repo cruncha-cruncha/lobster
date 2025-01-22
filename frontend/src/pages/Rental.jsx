@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import useSWR from "swr";
 import { useAuth } from "../state/auth";
 import * as endpoints from "../api/endpoints";
-import { useParams, useNavigate } from "react-router";
+import { useParams } from "react-router";
 import { Button } from "../components/Button";
 import {
   DateTimeInput,
@@ -13,7 +13,6 @@ import {
 export const useRental = () => {
   const { accessToken, permissions } = useAuth();
   const params = useParams();
-  const navigate = useNavigate();
   const [endDate, _setEndDate] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
   const rentalId = params.id;
@@ -55,21 +54,13 @@ export const useRental = () => {
       });
   };
 
-  const goToStore = () => {
-    navigate(`/stores/${data.storeId}`);
-  };
+  const goToStore = () => `/stores/${data?.storeId}`;
 
-  const goToTool = () => {
-    navigate(`/tools/${data.toolId}`);
-  };
+  const goToTool = () => `/tools/${data?.toolId}`;
 
-  const goToPerson = () => {
-    navigate(`/people/${data.renterId}`);
-  };
+  const goToPerson = () => `/people/${data?.renterId}`;
 
-  const goToRentals = () => {
-    navigate("/rentals");
-  };
+  const goToRentals = () => "/rentals";
 
   const showUpdateRental = permissions.isToolManager(data?.storeId);
 
@@ -110,10 +101,10 @@ export const PureRental = (tool) => {
   return (
     <div>
       <div className="my-2 flex justify-start gap-2 px-2">
-        <Button text="Rentals" onClick={goToRentals} variant="blue" size="sm" />
-        <Button text="Tool" onClick={goToTool} variant="blue" size="sm" />
-        <Button text="Store" onClick={goToStore} variant="blue" size="sm" />
-        <Button text="Person" onClick={goToPerson} variant="blue" size="sm" />
+        <Button text="Rentals" goTo={goToRentals()} variant="blue" size="sm" />
+        <Button text="Tool" goTo={goToTool()} variant="blue" size="sm" />
+        <Button text="Store" goTo={goToStore()} variant="blue" size="sm" />
+        <Button text="Person" goTo={goToPerson()} variant="blue" size="sm" />
       </div>
       <p className="px-2">{JSON.stringify(data)}</p>
       {showUpdateRental && (

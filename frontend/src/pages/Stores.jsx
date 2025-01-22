@@ -1,5 +1,5 @@
 import { useReducer, useState, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { Link } from "react-router";
 import { useConstants } from "../state/constants";
 import { useAuth } from "../state/auth";
 import useSWR from "swr";
@@ -23,7 +23,6 @@ const paramsReducer = (state, action) => {
 
 export const useStores = () => {
   const { accessToken } = useAuth();
-  const navigate = useNavigate();
   const { storeStatuses } = useConstants();
   const pageControl = usePrevNext();
   const [storeList, setStoreList] = useState([]);
@@ -32,13 +31,9 @@ export const useStores = () => {
     term: "",
   });
 
-  const goToNewStore = async () => {
-    navigate("/stores/new");
-  };
+  const goToNewStore = () => "/stores/new";
 
-  const goToStore = (id) => {
-    navigate(`/stores/${id}`);
-  };
+  const goToStore = (id) => `/stores/${id}`;
 
   const setStatus = (e) => {
     paramsDispatch({ type: "status", value: e.target.value });
@@ -108,7 +103,7 @@ export const PureStores = (stores) => {
         <h2 className="mr-2 text-xl">Stores</h2>
         <div className="flex gap-2">
           <Button
-            onClick={goToNewStore}
+            goTo={goToNewStore()}
             text="New Store"
             variant="blue"
             size="sm"
@@ -137,19 +132,17 @@ export const PureStores = (stores) => {
             <li className="text-stone-400">no results</li>
           )}
           {storeList.map((store) => (
-            <li
-              key={store.id}
-              onClick={() => goToStore(store.id)}
-              className="mb-2 cursor-pointer"
-            >
-              <p>
-                {store.name},{" "}
-                {store.location.trim() ? (
-                  store.location
-                ) : (
-                  <span className="text-stone-400">no location</span>
-                )}
-              </p>
+            <li key={store.id}>
+              <Link to={goToStore(store.id)} className="mb-2 cursor-pointer">
+                <p>
+                  {store.name},{" "}
+                  {store.location.trim() ? (
+                    store.location
+                  ) : (
+                    <span className="text-stone-400">no location</span>
+                  )}
+                </p>
+              </Link>
             </li>
           ))}
         </ul>

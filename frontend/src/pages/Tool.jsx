@@ -2,7 +2,7 @@ import { useEffect, useReducer } from "react";
 import useSWR from "swr";
 import { useAuth } from "../state/auth";
 import * as endpoints from "../api/endpoints";
-import { useParams, useNavigate } from "react-router";
+import { useParams } from "react-router";
 import { useConstants } from "../state/constants";
 import { TextInput } from "../components/TextInput";
 import { Select } from "../components/Select";
@@ -43,7 +43,6 @@ const reducer = (state, action) => {
 export const useTool = () => {
   const { accessToken, permissions } = useAuth();
   const params = useParams();
-  const navigate = useNavigate();
   const { toolStatuses } = useConstants();
   const _categorySearch = useCategorySearch();
   const {
@@ -92,17 +91,11 @@ export const useTool = () => {
     }
   }, [data]);
 
-  const goToTools = () => {
-    navigate("/tools");
-  };
+  const goToTools = () => "/tools";
 
-  const goToStoreTools = () => {
-    navigate(`/tools?${URL_STORE_ID_KEY}=${data.storeId}`);
-  };
+  const goToStoreTools = () => `/tools?${URL_STORE_ID_KEY}=${data?.storeId}`;
 
-  const goToStore = () => {
-    navigate(`/stores/${data.storeId}`);
-  };
+  const goToStore = () => `/stores/${data?.storeId}`;
 
   const setStatus = (e) => {
     dispatch({ type: "status", value: e.target.value });
@@ -192,9 +185,7 @@ export const useTool = () => {
     showMatchAllCats: false,
   };
 
-  const goToRentals = () => {
-    navigate(`/rentals?${URL_TOOL_ID_KEY}=${toolId}`);
-  };
+  const goToRentals = () => `/rentals?${URL_TOOL_ID_KEY}=${toolId}`;
 
   const addNewPhotos = (e) => {
     const files = e.target.files;
@@ -304,15 +295,15 @@ export const PureTool = (tool) => {
     <div>
       <h2 className="mt-2 px-2 text-xl">{data?.realId || "Tool"}</h2>
       <div className="my-2 flex gap-2 px-2">
-        <Button text="All Tools" onClick={goToTools} variant="blue" size="sm" />
+        <Button text="All Tools" goTo={goToTools()} variant="blue" size="sm" />
         <Button
           text="Store Tools"
-          onClick={goToStoreTools}
+          goTo={goToStoreTools()}
           variant="blue"
           size="sm"
         />
-        <Button text="Rentals" onClick={goToRentals} variant="blue" size="sm" />
-        <Button text="Store" onClick={goToStore} variant="blue" size="sm" />
+        <Button text="Rentals" goTo={goToRentals()} variant="blue" size="sm" />
+        <Button text="Store" goTo={goToStore()} variant="blue" size="sm" />
       </div>
       <p className="px-2">{JSON.stringify(data)}</p>
       <div className="flex justify-end gap-2 px-2">
