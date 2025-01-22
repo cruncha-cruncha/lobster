@@ -23,6 +23,7 @@ export const useLibraryInfo = () => {
     if (data) {
       setUuid(data.uuid);
       setName(data.name);
+      document.title = data.name;
     }
   }, [data]);
 
