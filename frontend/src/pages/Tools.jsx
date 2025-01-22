@@ -169,6 +169,10 @@ export const useTools = () => {
       ...tool,
       canAddToCart: !inCart(tool.id),
       canRemoveFromCart: inCart(tool.id),
+      pictures: tool.pictures.map((photo) => ({
+        ...photo,
+        url: endpoints.makePhotoThumbnailUrl({ key: photo.photoKey }),
+      })),
     })),
     goToTool,
     warnSingleStore: !!urlStoreId,
@@ -245,15 +249,19 @@ export const PureTools = (tools) => {
           <li key={tool.id} className="mb-2 flex justify-between">
             <div
               onClick={() => goToTool(tool.id)}
-              className="flex cursor-pointer items-center"
+              className="flex cursor-pointer items-center gap-2"
             >
+              {tool.pictures.length > 0 ? (
+                <img src={tool.pictures[0].url} className="h-12" />
+              ) : (
+                <div className="h-12 w-12"></div>
+              )}
               <p>
                 {tool.realId}
                 {!tool.shortDescription.trim()
                   ? ""
                   : `, ${tool.shortDescription}`}
               </p>
-              {/* <p>pictures: {JSON.stringify(tool.pictures)}</p> */}
             </div>
             <div className="flex gap-2">
               {tool.canAddToCart && (
