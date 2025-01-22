@@ -12,7 +12,7 @@ import { PureUserSelect, useUserSelect } from "./Rentals";
 export const URL_AUTHOR_ID_KEY = "authorId";
 export const URL_ACCUSED_ID_KEY = "accusedId";
 
-export const Grievances = () => {
+export const useGrievances = () => {
   const { accessToken } = useAuth();
   const [urlParams, setUrlParams] = useSearchParams();
   const { grievanceStatuses: _grievanceStatuses } = useConstants();
@@ -166,6 +166,36 @@ export const Grievances = () => {
 
   const grievanceStatuses = [{ id: "0", name: "All" }, ..._grievanceStatuses];
 
+  return {
+    setStatus,
+    statuses,
+    removeStatus,
+    authorSelect,
+    accusedSelect,
+    status,
+    grievanceStatuses,
+    pageControl,
+    goToNewGrievance,
+    goToGrievance,
+    grievanceList: grievances,
+  };
+};
+
+export const PureGrievances = (grievances) => {
+  const {
+    setStatus,
+    statuses,
+    removeStatus,
+    authorSelect,
+    accusedSelect,
+    status,
+    grievanceStatuses,
+    pageControl,
+    goToNewGrievance,
+    goToGrievance,
+    grievanceList,
+  } = grievances;
+
   return (
     <div>
       <div className="my-2 flex items-center gap-2 px-2">
@@ -212,10 +242,10 @@ export const Grievances = () => {
         </div>
       </div>
       <ul className="mb-3 mt-4 border-x-2 border-stone-400 px-2">
-        {grievances.length == 0 && (
+        {grievanceList.length == 0 && (
           <li className="text-stone-400">no results</li>
         )}
-        {grievances.map((grievance) => (
+        {grievanceList.map((grievance) => (
           <li key={grievance.id}>
             <Link
               to={goToGrievance(grievance.id)}
@@ -232,4 +262,9 @@ export const Grievances = () => {
       <PurePrevNext {...pageControl} />
     </div>
   );
+};
+
+export const Grievances = (params) => {
+  const grievances = useGrievances(params);
+  return <PureGrievances {...grievances} />;
 };
