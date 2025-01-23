@@ -6,9 +6,11 @@ import useSWR from "swr";
 import * as endpoints from "../api/endpoints";
 import { Button } from "../components/Button";
 import { TextInput } from "../components/TextInput";
+import { Checkbox } from "../components/Checkbox";
 import { Select } from "../components/Select";
 import { useDebounce } from "../components/useDebounce";
 import { usePrevNext, PurePrevNext } from "../components/PrevNext";
+import { SearchSelect } from "../components/SearchSelect";
 
 const paramsReducer = (state, action) => {
   switch (action.type) {
@@ -16,6 +18,8 @@ const paramsReducer = (state, action) => {
       return { ...state, status: action.value };
     case "term":
       return { ...state, term: action.value };
+    case "withUser":
+      return { ...state, withUser: action.value };
     default:
       return state;
   }
@@ -26,9 +30,11 @@ export const useStores = () => {
   const { storeStatuses } = useConstants();
   const pageControl = usePrevNext();
   const [storeList, setStoreList] = useState([]);
+  const _singleUserSelect = useSingleUserSelect();
   const [params, paramsDispatch] = useReducer(paramsReducer, {
     status: "1",
     term: "",
+    withUser: false,
   });
 
   const goToNewStore = () => "/stores/new";
@@ -44,6 +50,11 @@ export const useStores = () => {
     paramsDispatch({ type: "term", value: e.target.value });
   };
 
+  const setWithUser = (e) => {
+    paramsDispatch({ type: "withUser", value: e.target.checked });
+    pageControl.setPage(1);
+  };
+
   const debouncedTerm = useDebounce(params.term, 400);
 
   useEffect(() => {
@@ -54,6 +65,7 @@ export const useStores = () => {
 
   const endpointParams = {
     term: debouncedTerm,
+    userIds: params.withUser ? [_singleUserSelect.userId] : [],
     page: pageControl.pageNumber,
     statuses: params.status == "0" ? "" : [parseInt(params.status, 10)],
   };
@@ -73,6 +85,14 @@ export const useStores = () => {
     }
   }, [data]);
 
+  const singleUserSelect = {
+    ..._singleUserSelect,
+    setUserId: (id) => {
+      pageControl.setPage(1);
+      _singleUserSelect.setUserId(id);
+    },
+  };
+
   return {
     storeList,
     storeStatuses: [{ id: "0", name: "Any" }, ...storeStatuses],
@@ -81,7 +101,9 @@ export const useStores = () => {
     goToStore,
     setStatus,
     setTerm,
+    setWithUser,
     pageControl,
+    singleUserSelect,
   };
 };
 
@@ -92,9 +114,11 @@ export const PureStores = (stores) => {
     params,
     setTerm,
     setStatus,
+    setWithUser,
     storeStatuses,
     storeList,
     pageControl,
+    singleUserSelect,
   } = stores;
 
   return (
@@ -134,6 +158,17 @@ export const PureStores = (stores) => {
           value={params.status}
           onChange={setStatus}
         />
+        <Checkbox
+          id="store-with-person"
+          label="Related to a User"
+          checked={params.withUser}
+          onChange={setWithUser}
+        />
+        {params.withUser && (
+          <div>
+            <PureSingleUserSelect {...singleUserSelect} />
+          </div>
+        )}
       </div>
       <div>
         <ul className="mb-3 mt-4 overflow-y-auto border-x-2 border-stone-400 px-2 [&>*:first-child]:mt-1 [&>*:last-child]:mb-1 [&>*]:my-2">
@@ -158,6 +193,65 @@ export const PureStores = (stores) => {
       </div>
       <PurePrevNext {...pageControl} />
     </div>
+  );
+};
+
+export const useSingleUserSelect = () => {
+  const { accessToken } = useAuth();
+  const [userId, _setUserId] = useState("");
+  const [userTerm, _setUserTerm] = useState("");
+  const [userOptions, setUserOptions] = useState([]);
+
+  const setUserTerm = (e) => {
+    _setUserTerm(e.target.value);
+  };
+
+  const setUserId = (id) => {
+    _setUserId(id);
+    const username = userOptions.find((user) => user.id === id)?.username;
+    username && _setUserTerm(username);
+  };
+
+  const endpointParams = {
+    term: userTerm,
+  };
+
+  const { data, isLoading, error, mutate } = useSWR(
+    !accessToken
+      ? null
+      : `get users, using ${accessToken} and ${JSON.stringify(endpointParams)}`,
+    () => endpoints.searchUsers({ params: endpointParams, accessToken }),
+  );
+
+  useEffect(() => {
+    if (data) {
+      setUserOptions(
+        data.users.map((user) => ({ ...user, name: user.username })),
+      );
+    }
+  }, [data]);
+
+  return {
+    userId,
+    userTerm,
+    userOptions,
+    setUserTerm,
+    setUserId,
+  };
+};
+
+export const PureSingleUserSelect = (singleUserSelect) => {
+  const { userTerm, userOptions, setUserTerm, setUserId } = singleUserSelect;
+
+  return (
+    <SearchSelect
+      id={`single-user-select`}
+      label="User"
+      value={userTerm}
+      onChange={setUserTerm}
+      options={userOptions}
+      onSelect={setUserId}
+    />
   );
 };
 

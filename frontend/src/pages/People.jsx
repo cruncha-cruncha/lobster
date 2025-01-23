@@ -218,7 +218,7 @@ export const PurePeople = (people) => {
         />
         <Checkbox
           id="person-with-store"
-          label="Related to Store"
+          label="Related to a Store"
           checked={params.withStore}
           onChange={setWithStore}
         />
@@ -295,8 +295,8 @@ export const useSingleStoreSelect = ({ filterParams = {} } = {}) => {
   };
 };
 
-export const PureSingleStoreSelect = (storeSelect) => {
-  const { storeTerm, storeOptions, setStoreTerm, setStoreId } = storeSelect;
+export const PureSingleStoreSelect = (singleStoreSelect) => {
+  const { storeTerm, storeOptions, setStoreTerm, setStoreId } = singleStoreSelect;
 
   return (
     <SearchSelect
