@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from "react";
+import { useEffect, useReducer, useState } from "react";
 import useSWR from "swr";
 import { useAuth } from "../state/auth";
 import * as endpoints from "../api/endpoints";
@@ -63,6 +63,7 @@ export const useTool = () => {
     isLoading: true,
     isSaving: false,
   });
+  const [photosOffset, setPhotosOffset] = useState(0);
   const toolId = params.id;
 
   const updateLocalInfo = (data) => {
@@ -229,10 +230,12 @@ export const useTool = () => {
     toolId,
     info: {
       ...info,
-      pictures: info.pictures.map((photo) => ({
-        ...photo,
-        url: endpoints.makePhotoThumbnailUrl({ key: photo.photoKey }),
-      })),
+      pictures: info.pictures
+        .map((photo) => ({
+          ...photo,
+          url: endpoints.makePhotoThumbnailUrl({ key: photo.photoKey }),
+        }))
+        .sort((a, b) => a.id - b.id),
     },
     newPhotos,
     removeNewPhoto,
@@ -261,6 +264,22 @@ export const useTool = () => {
     isSaving: info.isSaving,
     canUpdateTool,
     showUpdateTool,
+    scrollPhotosRight: () => {
+      setPhotosOffset((prev) => {
+        if (-1 * prev >= 16.5 * (data?.pictures.length - 1)) return prev;
+        return prev - 16.5;
+      });
+    },
+    scrollPhotosLeft: () => {
+      setPhotosOffset((prev) => {
+        if (prev >= 0) return prev;
+        return prev + 16.5;
+      });
+    },
+    photosOffset,
+    canScrollPhotosLeft: photosOffset < 0,
+    canScrollPhotosRight:
+      -1 * photosOffset < 16.5 * (data?.pictures.length - 1),
   };
 };
 
@@ -292,6 +311,11 @@ export const PureTool = (tool) => {
     isSaving,
     canUpdateTool,
     showUpdateTool,
+    scrollPhotosLeft,
+    scrollPhotosRight,
+    photosOffset,
+    canScrollPhotosLeft,
+    canScrollPhotosRight,
   } = tool;
 
   return (
@@ -308,19 +332,48 @@ export const PureTool = (tool) => {
         <Button text="Rentals" goTo={goToRentals()} variant="blue" size="sm" />
         <Button text="Store" goTo={goToStore()} variant="blue" size="sm" />
       </div>
-      <div className="px-2">
-        <div>
+      <div className="relative w-full overflow-x-hidden">
+        <div className="absolute z-10 h-full w-1 bg-white/20 backdrop-blur-sm"></div>
+        <div className="absolute left-[16.5rem] z-10 h-full w-full bg-white/20 backdrop-blur-sm"></div>
+        <div
+          className="relative ml-1 flex"
+          style={{
+            left: `${photosOffset}rem`,
+            transition: "left .3s ease-out",
+          }}
+        >
           {(data?.pictures || []).map((photo) => {
             return (
-              <img
-                key={photo.photoKey}
-                src={endpoints.makePhotoUrl({ key: photo.photoKey })}
-                alt=""
-                className="h-64"
-              />
+              <div className="px-1" key={photo.photoKey}>
+                <div className="relative flex h-64 w-64 items-center justify-center">
+                  <img
+                    src={endpoints.makePhotoUrl({ key: photo.photoKey })}
+                    alt=""
+                    className="max-h-full max-w-full"
+                  />
+                </div>
+              </div>
             );
           })}
         </div>
+      </div>
+      <div className="my-2 ml-1 flex w-64 justify-around font-bold">
+        <Button
+          onClick={scrollPhotosLeft}
+          text="<"
+          variant="blue"
+          size="sm"
+          disabled={!canScrollPhotosLeft}
+        />
+        <Button
+          onClick={scrollPhotosRight}
+          text=">"
+          variant="blue"
+          size="sm"
+          disabled={!canScrollPhotosRight}
+        />
+      </div>
+      <div className="px-2">
         <p>status: {data?.status?.name}</p>
         <p>id: {data?.realId?.trim()}</p>
         <p>store: {data?.storeName?.trim()}</p>
@@ -389,13 +442,16 @@ export const PureTool = (tool) => {
                       className="my-2 flex cursor-pointer items-center gap-2"
                       onClick={() => toggleRemoveExistingPhoto(photo.id)}
                     >
-                      <img
-                        src={photo.url}
-                        alt=""
-                        className={
-                          "h-12" + (!photo.delete ? "" : " opacity-50")
-                        }
-                      />
+                      <div className="relative flex h-12 w-12 items-center justify-center">
+                        <img
+                          src={photo.url}
+                          alt=""
+                          className={
+                            "max-h-full max-w-full" +
+                            (!photo.delete ? "" : " opacity-50")
+                          }
+                        />
+                      </div>
                       <p>
                         {!photo.delete && (
                           <span className="text-red-500">X </span>

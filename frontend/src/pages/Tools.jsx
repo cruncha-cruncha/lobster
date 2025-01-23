@@ -175,7 +175,6 @@ export const useTools = () => {
       })),
     })),
     goToTool,
-    warnSingleStore: !!urlStoreId,
     addToCart,
     removeFromCart,
     showGoToCart: toolCart.length > 0,
@@ -196,7 +195,6 @@ export const PureTools = (tools) => {
     storeSelect,
     toolsList,
     goToTool,
-    warnSingleStore,
     addToCart,
     removeFromCart,
     showGoToCart,
@@ -247,7 +245,6 @@ export const PureTools = (tools) => {
           options={toolStatuses}
         />
       </div>
-      {warnSingleStore && <p>currently filtering by a store</p>}
       <ul className="mb-3 mt-4 overflow-y-auto border-x-2 border-stone-400 px-2 [&>*:first-child]:mt-1 [&>*:last-child]:mb-1 [&>*]:my-2">
         {toolsList.length == 0 && (
           <li className="text-stone-400">no results</li>
@@ -258,11 +255,14 @@ export const PureTools = (tools) => {
               onClick={() => goToTool(tool.id)}
               className="flex cursor-pointer items-center gap-2"
             >
-              {tool.pictures.length > 0 ? (
-                <img src={tool.pictures[0].url} className="h-12" />
-              ) : (
-                <div className="h-12 w-12"></div>
-              )}
+              <div className="relative flex h-12 w-12 items-center justify-center">
+                {tool.pictures.length > 0 && (
+                  <img
+                    src={tool.pictures[0].url}
+                    className="max-h-full max-w-full"
+                  />
+                )}
+              </div>
               <p>
                 {tool.shortDescription.trim()} ({tool.realId.trim()})
               </p>

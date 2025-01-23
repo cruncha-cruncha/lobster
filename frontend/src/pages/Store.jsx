@@ -553,7 +553,13 @@ export const PureAddTool = (addTool) => {
                   className="my-2 flex cursor-pointer items-center gap-2"
                   onClick={() => removePhoto(photo.id)}
                 >
-                  <img src={photo.url} alt="" className="h-12" />
+                  <div className="relative flex h-12 w-12 items-center justify-center">
+                    <img
+                      src={photo.url}
+                      alt=""
+                      className="max-h-full max-w-full"
+                    />
+                  </div>
                   <span>{photo.name}</span>
                 </div>
               </li>
@@ -790,7 +796,7 @@ export const PureStoreUsers = (storeUsers) => {
   return (
     <div className="">
       <div className="">
-        <h2 className="text-lg px-2">People</h2>
+        <h2 className="px-2 text-lg">People</h2>
         <ul className="mt-1 overflow-y-auto border-x-2 border-stone-400 px-2 py-px [&>*]:my-1">
           {users.length <= 0 && (
             <li>
