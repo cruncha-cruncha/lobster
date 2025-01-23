@@ -124,7 +124,7 @@ export const useAuth = ({ mustBeLoggedIn = false } = {}) => {
     isUserAdmin: () => _permissions.library.includes(2),
     isStoreAdmin: () => _permissions.library.includes(3),
     isAnyStoreRep: () => Object.values(_permissions.store).some((p) => p.includes(4)),
-    isStoreRep: (id) => (_permissions.store[id] || []).includes(4),
+    isStoreManager: (id) => (_permissions.store[id] || []).includes(4),
     isToolManager: (id) => (_permissions.store[id] || []).includes(5),
   };
 

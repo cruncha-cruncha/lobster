@@ -49,7 +49,7 @@ export const useTool = () => {
     addPhoto: addNewPhoto,
     removePhoto: removeNewPhoto,
     photos: newPhotos,
-    reset: resetNewPhotos,
+    clear: clearNewPhotos,
     getLatest: getLatestNewPhotos,
   } = useImageUpload();
   const { toolCart, addTool, removeTool } = useToolCart();
@@ -172,7 +172,7 @@ export const useTool = () => {
         accessToken,
       })
       .then((data) => {
-        resetNewPhotos();
+        clearNewPhotos();
         mutate(data);
       })
       .finally(() => {

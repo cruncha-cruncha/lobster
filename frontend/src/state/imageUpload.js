@@ -69,7 +69,7 @@ export const useImageUpload = () => {
     });
   };
 
-  const clear = () => {
+  const deleteAll = () => {
     photos.forEach((photo) => {
       if (photo.key) {
         endpoints.deletePhoto({ key: photo.key, accessToken }).catch((_e) => {
@@ -81,7 +81,7 @@ export const useImageUpload = () => {
     setPhotos([]);
   };
 
-  const reset = () => {
+  const clear = () => {
     setPhotos([]);
   };
 
@@ -97,8 +97,8 @@ export const useImageUpload = () => {
   return {
     addPhoto,
     removePhoto,
+    deleteAll,
     clear,
-    reset,
     getLatest,
     photos,
   };

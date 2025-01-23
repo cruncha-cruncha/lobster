@@ -361,19 +361,24 @@ export const useUserPermissions = ({ id }) => {
   const removePermissions = async () => {
     setIsRemovingPermissions(true);
 
-    await Promise.all(toDelete.map((id) => endpoints.removeUserPermission({ id, accessToken }).then(() => {
-      mutate((prev) => ({
-        ...prev,
-        library: prev.library.filter((p) => p.id != id),
-        store: prev.store.filter((p) => p.id != id),
-      }));
-    }))).catch((e) => {
-      // do something
-    })
-    .finally(() => {
-      setIsRemovingPermissions(false);
-      _setToDelete([]);
-    });
+    await Promise.all(
+      toDelete.map((id) =>
+        endpoints.removeUserPermission({ id, accessToken }).then(() => {
+          mutate((prev) => ({
+            ...prev,
+            library: prev.library.filter((p) => p.id != id),
+            store: prev.store.filter((p) => p.id != id),
+          }));
+        }),
+      ),
+    )
+      .catch((e) => {
+        // do something
+      })
+      .finally(() => {
+        setIsRemovingPermissions(false);
+        _setToDelete([]);
+      });
   };
 
   const addPermission = async () => {

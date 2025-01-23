@@ -198,7 +198,7 @@ export const PureStores = (stores) => {
 
 export const useSingleUserSelect = () => {
   const { accessToken } = useAuth();
-  const [userId, _setUserId] = useState("");
+  const [user, _setUser] = useState(null);
   const [userTerm, _setUserTerm] = useState("");
   const [userOptions, setUserOptions] = useState([]);
 
@@ -207,9 +207,9 @@ export const useSingleUserSelect = () => {
   };
 
   const setUserId = (id) => {
-    _setUserId(id);
-    const username = userOptions.find((user) => user.id === id)?.username;
-    username && _setUserTerm(username);
+    const user = userOptions.find((user) => user.id === id);
+    user && _setUser(user);
+    user && _setUserTerm(user.username);
   };
 
   const endpointParams = {
@@ -231,12 +231,19 @@ export const useSingleUserSelect = () => {
     }
   }, [data]);
 
+  const clear = () => {
+    _setUser(null);
+    _setUserTerm("");
+  };
+
   return {
-    userId,
+    userId: user ? user.id : null,
+    user,
     userTerm,
     userOptions,
     setUserTerm,
     setUserId,
+    clear,
   };
 };
 

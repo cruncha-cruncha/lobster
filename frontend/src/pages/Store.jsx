@@ -1,5 +1,5 @@
 import { useState, useEffect, useReducer } from "react";
-import { useParams, useNavigate } from "react-router";
+import { useParams, useNavigate, Link } from "react-router";
 import useSWR from "swr";
 import { useConstants } from "../state/constants";
 import { useAuth } from "../state/auth";
@@ -12,18 +12,18 @@ import { useToolCart } from "../state/toolCart";
 import { LargeTextInput } from "../components/LargeTextInput";
 import { FileSelect } from "../components/FileSelect";
 import { useImageUpload } from "../state/imageUpload";
-import { formatOxfordComma } from "../components/utils";
+import { PureSingleUserSelect, useSingleUserSelect } from "./Stores";
 
 export const URL_STORE_ID_KEY = "storeId";
 
 export const useStore = () => {
   const params = useParams();
   const { toolCart } = useToolCart();
-  const { accessToken, permissions } = useAuth();
+  const { userId, accessToken, permissions } = useAuth();
   const { storeStatuses, roles } = useConstants();
   const storeId = params.id;
 
-  const { data, error, isLoading } = useSWR(
+  const { data, error, isLoading, mutate } = useSWR(
     !accessToken ? null : `get store ${storeId}, using ${accessToken}`,
     () => endpoints.getStore({ id: storeId, accessToken }),
   );
@@ -40,14 +40,12 @@ export const useStore = () => {
 
   const goToRentals = () => `/rentals?${URL_STORE_ID_KEY}=${storeId}`;
 
-  const showEditStore = permissions.isStoreRep(storeId);
+  const showEditStore = permissions.isStoreManager(storeId);
   const showEditStoreStatus = permissions.isStoreAdmin();
   const showAddTool = permissions.isToolManager(storeId) && data?.status == 1;
-  const storePermissions = (permissions.store[storeId] || []).map((p) =>
-    roles.find((r) => r.id == p),
-  );
 
   return {
+    userId,
     data: {
       ...data,
       status: storeStatuses.find((s) => s.id == data?.status),
@@ -63,7 +61,6 @@ export const useStore = () => {
     showEditStore,
     showEditStoreStatus,
     showAddTool,
-    storePermissions,
   };
 };
 
@@ -81,7 +78,6 @@ export const PureStore = (store) => {
     showEditStore,
     showEditStoreStatus,
     showAddTool,
-    storePermissions,
   } = store;
 
   return (
@@ -104,15 +100,7 @@ export const PureStore = (store) => {
           size="sm"
         />
       </div>
-      {storePermissions.length > 0 && (
-        <div className="my-2 px-2">
-          <p>
-            You are a {formatOxfordComma(storePermissions.map((p) => p.name))}{" "}
-            of this store.
-          </p>
-        </div>
-      )}
-      <div className="mb-4 px-2">
+      <div className={"mb-3 px-2"}>
         <p>status: {data?.status?.name}</p>
         <p>name: {data?.name?.trim()}</p>
         <p>code: {data?.code?.trim()}</p>
@@ -122,6 +110,8 @@ export const PureStore = (store) => {
         <p>rental info: {data?.rentalInformation?.trim()}</p>
         <p>other info: {data?.otherInformation?.trim()}</p>
       </div>
+      <StoreUsers storeId={storeId} />
+      <div className="pt-2"></div>
       {showAddTool && <AddTool storeId={storeId} />}
       {showEditStore && <EditStore storeId={storeId} />}
       {showEditStoreStatus && <EditStoreStatus storeId={storeId} />}
@@ -613,6 +603,317 @@ export const PureAddTool = (addTool) => {
 export const AddTool = (params) => {
   const addTool = useAddTool(params);
   return <PureAddTool {...addTool} />;
+};
+
+export const useStoreUsers = ({ storeId }) => {
+  const { accessToken, userId, permissions } = useAuth();
+  const _singleUserSelect = useSingleUserSelect();
+  const { roles } = useConstants();
+  const [selectedRole, _setSelectedRole] = useState("0");
+  const [showFields, setShowFields] = useState(""); // "", "add", "remove"
+  const [isAddingPermission, setIsAddingPermission] = useState(false);
+  const [isRemovingPermissions, setIsRemovingPermissions] = useState(false);
+  const [toDelete, _setToDelete] = useState([]);
+
+  const endpointParams = {
+    storeIds: [parseInt(storeId, 10)],
+  };
+
+  const { data, error, isLoading, mutate } = useSWR(
+    !accessToken
+      ? null
+      : `get users, using ${accessToken} and ${endpointParams}`,
+    () => endpoints.searchUsers({ accessToken, params: endpointParams }),
+  );
+
+  const singleUserSelect = {
+    ..._singleUserSelect,
+  };
+
+  const setSelectedRole = (e) => {
+    _setSelectedRole(e.target.value);
+  };
+
+  const goToPerson = (id) => `/people/${id}`;
+
+  const toggleMarkPermissioForDelete = (permissionId) => {
+    _setToDelete((prev) => {
+      if (prev.includes(permissionId)) {
+        return prev.filter((id) => id != permissionId);
+      }
+      return [...prev, permissionId];
+    });
+  };
+
+  const removePermissions = async () => {
+    setIsRemovingPermissions(true);
+
+    await Promise.all(
+      toDelete.map((id) =>
+        endpoints.removeUserPermission({ id, accessToken }).then(() => {
+          mutate((prev) => {
+            const user = prev.users.find((u) =>
+              u.permissions.find((p) => p.id == id),
+            );
+            user.permissions = user.permissions.filter((p) => p.id != id);
+            return { ...prev };
+          });
+        }),
+      ),
+    )
+      .then(() => {
+        setShowFields("");
+        _setToDelete([]);
+      })
+      .catch((e) => {
+        // do something
+      })
+      .finally(() => {
+        setIsRemovingPermissions(false);
+      });
+  };
+
+  const addPermission = async () => {
+    setIsAddingPermission(true);
+
+    const permission = {
+      userId: Number(_singleUserSelect.userId),
+      roleId: Number(selectedRole),
+      storeId: Number(storeId),
+    };
+
+    const user = { ..._singleUserSelect.user };
+
+    endpoints
+      .addUserPermission({
+        permission,
+        accessToken,
+      })
+      .then((data) => {
+        _setSelectedRole("0");
+        _singleUserSelect.clear();
+        setShowFields("");
+        mutate((prev) => {
+          const existingUser =
+            prev.users.find((u) => u.id == data.userId) || user || {};
+
+          const out = {
+            ...prev,
+            users: [
+              ...prev.users.filter((u) => u.id != data.userId),
+              {
+                ...existingUser,
+                permissions: [...(existingUser.permissions || []), data],
+              },
+            ],
+          };
+
+          return out;
+        });
+      })
+      .finally(() => {
+        setIsAddingPermission(false);
+      });
+  };
+
+  const canAddPermission = (() => {
+    if (showFields !== "add") return false;
+    if (selectedRole == "0") return false;
+    if (!_singleUserSelect.userId) return false;
+    return true;
+  })();
+
+  return {
+    userId,
+    users: (data?.users || []).map((user) => ({
+      ...user,
+      permissions: user.permissions
+        .filter((p) => p.storeId == storeId)
+        .map((p) => ({
+          ...p,
+          role: roles.find((r) => r.id == p.roleId),
+        })),
+    })),
+    singleUserSelect,
+    roleOptions: [
+      { name: "Select Role", id: "0" },
+      ...roles.filter(
+        (r) => r.name == "store_manager" || r.name == "tool_manager",
+      ),
+    ],
+    selectedRole,
+    setSelectedRole,
+    goToPerson,
+    showEditRoles: permissions.isStoreManager(storeId),
+    showFields,
+    showAddFields: () => setShowFields("add"),
+    showRemoveFields: () => setShowFields("remove"),
+    toggleShowFields: () => {
+      setShowFields("");
+      _setToDelete([]);
+    },
+    isAddingPermission,
+    isRemovingPermissions,
+    canRemovePermissions: toDelete.length > 0,
+    toggleMarkPermissioForDelete,
+    toDelete,
+    removePermissions,
+    canAddPermission,
+    addPermission,
+  };
+};
+
+export const PureStoreUsers = (storeUsers) => {
+  const {
+    userId,
+    singleUserSelect,
+    roleOptions,
+    selectedRole,
+    setSelectedRole,
+    users,
+    goToPerson,
+    showEditRoles,
+    showFields,
+    showAddFields,
+    showRemoveFields,
+    toggleShowFields,
+    isAddingPermission,
+    isRemovingPermissions,
+    canRemovePermissions,
+    toggleMarkPermissioForDelete,
+    toDelete,
+    removePermissions,
+    canAddPermission,
+    addPermission,
+  } = storeUsers;
+
+  return (
+    <div className="">
+      <div className="px-2">
+        <h2 className="text-lg">People</h2>
+        <ul>
+          {users.map((user) =>
+            user.permissions.map((p) => (
+              <li
+                key={`${user.id}-${p.id}`}
+                className={
+                  "my-1" +
+                  (showFields == "remove" ? " cursor-pointer" : "") +
+                  (toDelete.includes(p.id) ? " text-stone-400" : "")
+                }
+                onClick={() => {
+                  showFields == "remove" && toggleMarkPermissioForDelete(p.id);
+                }}
+              >
+                {showFields == "remove" && !toDelete.includes(p.id) && (
+                  <span className="text-red-400">X </span>
+                )}
+                <span>
+                  {userId == user.id ? (
+                    <>
+                      {showFields == "remove" ? (
+                        "You"
+                      ) : (
+                        <Link to={goToPerson(user.id)}>You</Link>
+                      )}
+                      <span> are a </span>
+                    </>
+                  ) : (
+                    <>
+                      {showFields == "remove" ? (
+                        <>
+                          {user.username.trim()}
+                          {!user.emailAddress?.trim()
+                            ? ""
+                            : ` (${user.emailAddress.trim()})`}
+                        </>
+                      ) : (
+                        <Link to={goToPerson(user.id)}>
+                          {user.username.trim()}
+                          {!user.emailAddress?.trim()
+                            ? ""
+                            : ` (${user.emailAddress.trim()})`}
+                        </Link>
+                      )}
+                      <span> is a </span>
+                    </>
+                  )}
+                  {p.role.name}
+                </span>
+              </li>
+            )),
+          )}
+        </ul>
+      </div>
+      {showEditRoles && (
+        <div className="px-2">
+          {showFields == "" && (
+            <div className="mt-3 flex justify-start gap-2">
+              <Button
+                text="Add Permission"
+                onClick={showAddFields}
+                variant="blue"
+              />
+              <Button
+                text="Remove Permissions"
+                onClick={showRemoveFields}
+                variant="blue"
+              />
+            </div>
+          )}
+          {showFields == "add" && (
+            <div>
+              <div className="mb-3 mt-1 grid grid-cols-1 gap-x-4 gap-y-2">
+                <PureSingleUserSelect {...singleUserSelect} />
+                <Select
+                  id={`person-role`}
+                  label="Role"
+                  options={roleOptions}
+                  value={selectedRole}
+                  onChange={setSelectedRole}
+                />
+              </div>
+              <div className="mt-3 flex justify-between gap-2">
+                <Button
+                  text="Cancel"
+                  onClick={toggleShowFields}
+                  variant="blue"
+                />
+                <Button
+                  text="Add Permission"
+                  disabled={!canAddPermission}
+                  onClick={addPermission}
+                  isLoading={isAddingPermission}
+                />
+              </div>
+            </div>
+          )}
+          {showFields == "remove" && (
+            <div>
+              <div className="mt-3 flex justify-between gap-2">
+                <Button
+                  text="Cancel"
+                  onClick={toggleShowFields}
+                  variant="blue"
+                />
+                <Button
+                  text="Save Changes"
+                  disabled={!canRemovePermissions}
+                  onClick={removePermissions}
+                  isLoading={isRemovingPermissions}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export const StoreUsers = (params) => {
+  const storeUsers = useStoreUsers(params);
+  return <PureStoreUsers {...storeUsers} />;
 };
 
 export const Store = () => {
