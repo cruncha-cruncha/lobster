@@ -42,7 +42,7 @@ export const useLogin = () => {
           return handleLogin();
         }
 
-        return modal.open("Account pending, please wait for verification", "");
+        return modal.open("Account pending, please wait for verification.", "");
       })
       .catch(() => {
         modal.open("Error creating account", "error");
@@ -149,6 +149,7 @@ export const PureLogin = (login) => {
                   <Button
                     color="green"
                     text="Login"
+                    typeSubmit={true}
                     disabled={!canLogin}
                     onClick={handleLogin}
                     isLoading={isLoading}

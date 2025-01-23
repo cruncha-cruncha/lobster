@@ -9,6 +9,7 @@ export const Button = ({
   goTo,
   disabled,
   isLoading,
+  typeSubmit,
 }) => {
   let buttonClasses =
     "rounded-full transition-colors relative flex items-center justify-center";
@@ -54,6 +55,7 @@ export const Button = ({
         className={buttonClasses}
         onClick={onClick}
         disabled={disabled || isLoading}
+        type={!typeSubmit ? "button" : "submit"}
       >
         {isLoading && <AbsoluteLoadingDots />}
         <span className={isLoading ? "invisible" : ""}>{text}</span>
