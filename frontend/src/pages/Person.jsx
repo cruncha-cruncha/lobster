@@ -9,6 +9,8 @@ import { TextInput } from "../components/TextInput";
 import { Select } from "../components/Select";
 import { PureSingleStoreSelect, useSingleStoreSelect } from "./People";
 import { URL_ACCUSED_ID_KEY } from "./Grievances";
+import { validatePassword } from "./Login";
+import { useLayoutInfoModal } from "../state/layoutInfoModal";
 
 export const URL_PERSON_ID_KEY = "personId";
 
@@ -92,8 +94,12 @@ const userNameStateReducer = (state, action) => {
 };
 
 export const useUserInfo = ({ id }) => {
-  const { userId, accessToken } = useAuth();
+  const { userId, accessToken, permissions } = useAuth();
   const [userInfo, setUserInfo] = useState({});
+  const [oldPassword, _setOldPassword] = useState("");
+  const [newPassword, _setNewPassword] = useState("");
+  const [updatingPassword, setUpdatingPassword] = useState(false);
+  const modal = useLayoutInfoModal();
   const [userNameState, userNameStateDispatch] = useReducer(
     userNameStateReducer,
     { value: "", isLoading: true, isSaving: false },
@@ -119,14 +125,15 @@ export const useUserInfo = ({ id }) => {
   };
 
   const showUpdateUserName = userId == id;
-  const canUpdateUserName = userInfo.username && userNameState.value !== userInfo.username;
+  const canUpdateUserName =
+    userInfo.username && userNameState.value !== userInfo.username;
 
   const updateUserName = async () => {
     userNameStateDispatch({ type: "saving", value: true });
     endpoints
       .updateUser({
         id,
-        username: userNameState.value,
+        info: { username: userNameState.value },
         accessToken,
       })
       .then((data) => {
@@ -138,6 +145,41 @@ export const useUserInfo = ({ id }) => {
       });
   };
 
+  const setNewPassword = (e) => {
+    _setNewPassword(e.target.value);
+  };
+
+  const setOldPassword = (e) => {
+    _setOldPassword(e.target.value);
+  };
+
+  const updatePassword = async () => {
+    setUpdatingPassword(true);
+
+    return endpoints
+      .updateUser({
+        id,
+        info: { newPassword, oldPassword },
+        accessToken,
+      })
+      .then(() => {
+        _setNewPassword("");
+        _setOldPassword("");
+        modal.open("Password updated", "success");
+      })
+      .catch((e) => {
+        console.log(e);
+        modal.open("Unable to update password", "error");
+      })
+      .finally(() => {
+        setUpdatingPassword(false);
+      });
+  };
+
+  const resetPassword = async () => {
+    // TODO
+  }
+
   return {
     data: userInfo,
     showUpdateUserName,
@@ -147,6 +189,20 @@ export const useUserInfo = ({ id }) => {
     canUpdateUserName,
     updateUserName,
     isUpdating: userNameState.isSaving,
+    showUpdatePassword: id == userId,
+    showResetPassword: true, // id != userId && permissions.isUserAdmin(),
+    newPassword,
+    oldPassword,
+    canUpdatePassword:
+      validatePassword(oldPassword) &&
+      validatePassword(newPassword) &&
+      oldPassword !== newPassword,
+    canResetPassword: validatePassword(newPassword),
+    setNewPassword,
+    setOldPassword,
+    updatingPassword,
+    updatePassword,
+    resetPassword,
   };
 };
 
@@ -160,6 +216,17 @@ const PureUserInfo = (userInfo) => {
     canUpdateUserName,
     updateUserName,
     isUpdating,
+    showUpdatePassword,
+    showResetPassword,
+    newPassword,
+    oldPassword,
+    setNewPassword,
+    setOldPassword,
+    canUpdatePassword,
+    canResetPassword,
+    updatingPassword,
+    updatePassword,
+    resetPassword,
   } = userInfo;
 
   return (
@@ -200,6 +267,50 @@ const PureUserInfo = (userInfo) => {
             />
           </div>
         </>
+      )}
+      {showUpdatePassword && (
+        <div>
+          <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
+            <TextInput
+              id={`person-old-password`}
+              label="Current Password"
+              value={oldPassword}
+              onChange={setOldPassword}
+              disabled={updatingPassword}
+            />
+            <TextInput
+              id={`person-new-password`}
+              label="New Password"
+              value={newPassword}
+              onChange={setNewPassword}
+              disabled={updatingPassword}
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button
+              text="Update Password"
+              disabled={!canUpdatePassword}
+              onClick={updatePassword}
+              isLoading={updatingPassword}
+            />
+          </div>
+        </div>
+      )}
+      {showResetPassword && (
+        <div>
+          <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">
+            <TextInput
+              id={`person-reset-password`}
+              label="New Password"
+              value={newPassword}
+              onChange={setNewPassword}
+              disabled={updatingPassword}
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button text="Reset Password" disabled={!canResetPassword} onClick={resetPassword} />
+          </div>
+        </div>
       )}
     </div>
   );

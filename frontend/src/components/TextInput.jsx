@@ -5,6 +5,7 @@ export const TextInput = ({
   value,
   onChange,
   disabled,
+  hideText,
 }) => {
   return (
     <fieldset className="text-input">
@@ -14,7 +15,7 @@ export const TextInput = ({
       <div className="border-2 border-stone-800">
         <input
           id={id}
-          type="text"
+          type={!hideText ? "text" : "password"}
           placeholder={placeholder}
           onChange={onChange}
           value={value}

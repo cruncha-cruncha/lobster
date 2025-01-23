@@ -18,7 +18,7 @@ use std::sync::Arc;
 pub struct UpdateUserData {
     pub username: Option<user::Username>,
     pub old_password: Option<String>,
-    pub password: Option<String>,
+    pub new_password: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -83,7 +83,7 @@ pub async fn update(
         ));
     }
 
-    if payload.password.is_some() {
+    if payload.new_password.is_some() {
         if payload.old_password.is_none() {
             return Err(common::ErrResponse::new(
                 StatusCode::BAD_REQUEST,
@@ -92,7 +92,7 @@ pub async fn update(
             ));
         }
 
-        if payload.password.as_ref().unwrap().len() < encryption::MIN_PASSWORD_LENGTH {
+        if payload.new_password.as_ref().unwrap().len() < encryption::MIN_PASSWORD_LENGTH {
             return Err(common::ErrResponse::new(
                 StatusCode::BAD_REQUEST,
                 "ERR_REQ",
@@ -134,7 +134,7 @@ pub async fn update(
     match users::update(
         user_id,
         payload.username.as_deref(),
-        payload.password.as_deref(),
+        payload.new_password.as_deref(),
         None,
         &state.db,
     )

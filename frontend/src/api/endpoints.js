@@ -218,14 +218,14 @@ export const getUser = async ({ id, accessToken }) => {
   return data;
 };
 
-export const updateUser = async ({ id, username, accessToken }) => {
+export const updateUser = async ({ id, info, accessToken }) => {
   const data = await handle(`${serverUrl}/users/${id}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
     },
-    body: JSON.stringify({ username }),
+    body: JSON.stringify(info),
   });
 
   return data;

@@ -132,6 +132,7 @@ export const PureLogin = (login) => {
                   <TextInput
                     id={`login-password`}
                     placeholder="password"
+                    hideText={true}
                     value={password}
                     onChange={setPassword}
                     disabled={isLoading}

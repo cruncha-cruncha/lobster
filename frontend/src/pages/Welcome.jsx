@@ -2,10 +2,22 @@ import { Button } from "../components/Button";
 import { useAuth } from "../state/auth";
 import { useLibraryInfo } from "../state/libraryInfo";
 import { useMyStores } from "../state/myStores";
+import useSWR from "swr";
+import * as endpoints from "../api/endpoints";
 
 export const useWelcome = () => {
-  const { userId } = useAuth();
+  const { userId, accessToken } = useAuth();
   const { stores } = useMyStores();
+
+  const {
+    data: userData,
+    error: userError,
+    isLoading: userIsLoading,
+    mutate: mutateUser,
+  } = useSWR(
+    !accessToken || !userId ? null : `get user ${userId}, using ${accessToken}`,
+    () => endpoints.getUser({ id: userId, accessToken }),
+  );
 
   const { name: libraryName } = useLibraryInfo();
 
@@ -18,16 +30,20 @@ export const useWelcome = () => {
     goToMyProfile,
     goToStore,
     stores,
+    userData,
   };
 };
 
 export const PureWelcome = (newStore) => {
-  const { libraryName, goToMyProfile, goToStore, stores } = newStore;
+  const { libraryName, goToMyProfile, goToStore, stores, userData } = newStore;
 
   return (
     <div>
       <div className="my-2 flex items-center gap-2 px-2">
-        <h2 className="mr-2 text-xl">Welcome</h2>
+        <h2 className="mr-2 text-xl">
+          Welcome
+          {!userData?.username?.trim() ? "" : `, ${userData.username.trim()}`}
+        </h2>
       </div>
       <div className="my-2 px-2">
         <p>
