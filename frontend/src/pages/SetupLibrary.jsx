@@ -1,17 +1,20 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import * as endpoints from "../api/endpoints";
 import { useLibraryInfo } from "../state/libraryInfo";
 import { Button } from "../components/Button";
 
 export const useSetupLibrary = () => {
+  const navigate = useNavigate();
   const libraryInfo = useLibraryInfo();
   const [name, _setName] = useState("");
 
   const onConfirm = async () => {
     endpoints
       .createLibrary({ name })
-      .then((_) => {
-        return libraryInfo.refresh();
+      .then(() => libraryInfo.refresh())
+      .then(() => {
+        navigate("/login");
       })
       .catch((e) => {
         console.error(e);
