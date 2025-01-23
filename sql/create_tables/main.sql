@@ -86,7 +86,6 @@ CREATE TABLE main.tools (
 );
 
 CREATE INDEX IF NOT EXISTS idx_tools_store_id ON main.tools USING btree(store_id);
-CREATE INDEX IF NOT EXISTS idx_tools_category_id ON main.tools USING btree(category_id);
 
 CREATE TABLE main.tool_photos (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
@@ -161,9 +160,6 @@ CREATE INDEX IF NOT EXISTS idx_fuzzy_stores ON main.stores
 
 CREATE INDEX IF NOT EXISTS idx_fuzzy_stores_with_contact ON main.stores
   USING gist((name || ' ' || location || ' ' || COALESCE(email_address, '') || ' ' || phone_number || ' ' || COALESCE(rental_information, '') || ' ' || COALESCE(other_information, '')) gist_trgm_ops(siglen=256));
-
-CREATE INDEX IF NOT EXISTS idx_fuzzy_tool_categories ON main.tool_categories
-  USING gist((name || ' ' || COALESCE(description, '') || ' ' || ARRAY_TO_STRING(synonyms, ' ')) gist_trgm_ops(siglen=256));
 
 CREATE INDEX IF NOT EXISTS idx_fuzzy_tools ON main.tools
   USING gist((real_id || ' ' || short_description || ' ' || COALESCE(long_description, '')) gist_trgm_ops(siglen=256));

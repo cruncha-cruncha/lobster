@@ -1,11 +1,11 @@
-FROM rust:1-buster AS builder
+FROM rust:1-bookworm AS builder
 WORKDIR /app
 ARG SQLX_OFFLINE=true
 COPY . . 
 ADD .env.docker .env
 RUN cargo build -F cors
 
-FROM debian:buster-slim
+FROM debian:bookworm-slim
 WORKDIR /app
 COPY --from=builder /app/.env ./.env
 COPY --from=builder /app/private.pem ./private.pem
