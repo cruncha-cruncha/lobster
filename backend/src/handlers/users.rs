@@ -32,7 +32,27 @@ pub struct FilterParams {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FilteredResponse {
-    pub users: Vec<user::User>,
+    pub users: Vec<UserWithPermissions>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UserWithPermissions {
+    pub id: user::Id,
+    pub username: user::Username,
+    pub status: user::Status,
+    pub code: user::Code,
+    pub email_address: user::EmailAddress,
+    pub created_at: user::CreatedAt,
+    pub permissions: Vec<UserPermission>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UserPermission {
+    pub id: permission::Id,
+    pub role_id: permission::RoleId,
+    pub store_id: Option<permission::StoreId>,
 }
 
 pub async fn update(
@@ -186,17 +206,60 @@ pub async fn get_filtered(
         limit: limit,
     };
 
+    let users: Vec<user::User>;
     if can_see_emails {
-        users::select_with_email(params, &state.db)
+        users = users::select_with_email(params, &state.db)
             .await
-            .map(|users| Json(FilteredResponse { users }))
-            .map_err(|e| common::ErrResponse::new(StatusCode::INTERNAL_SERVER_ERROR, "ERR_DB", &e))
+            .map_err(|e| {
+                common::ErrResponse::new(StatusCode::INTERNAL_SERVER_ERROR, "ERR_DB", &e)
+            })?;
     } else {
-        users::select(params, &state.db)
-            .await
-            .map(|users| Json(FilteredResponse { users }))
-            .map_err(|e| common::ErrResponse::new(StatusCode::INTERNAL_SERVER_ERROR, "ERR_DB", &e))
+        users = users::select(params, &state.db).await.map_err(|e| {
+            common::ErrResponse::new(StatusCode::INTERNAL_SERVER_ERROR, "ERR_DB", &e)
+        })?;
     }
+
+    let permissions = permissions::select(
+        permissions::SelectParams {
+            ids: vec![],
+            user_ids: users.iter().map(|u| u.id).collect(),
+            role_ids: vec![],
+            store_ids: vec![],
+            statuses: vec![permission::PermissionStatus::Active as i32],
+        },
+        &state.db,
+    )
+    .await
+    .map_err(|e| common::ErrResponse::new(StatusCode::INTERNAL_SERVER_ERROR, "ERR_DB", &e))?;
+
+    let users_with_permissions = users
+        .iter()
+        .map(|u| {
+            let user_permissions = permissions
+                .iter()
+                .filter(|p| p.user_id == u.id)
+                .map(|p| UserPermission {
+                    id: p.id,
+                    role_id: p.role_id,
+                    store_id: p.store_id,
+                })
+                .collect();
+
+            UserWithPermissions {
+                id: u.id,
+                username: u.username.clone(),
+                status: u.status,
+                code: u.code.clone(),
+                email_address: u.email_address.clone(),
+                created_at: u.created_at,
+                permissions: user_permissions,
+            }
+        })
+        .collect();
+
+    Ok(Json(FilteredResponse {
+        users: users_with_permissions,
+    }))
 }
 
 pub async fn create_new_user(

@@ -87,11 +87,43 @@ const userInfoSchema = {
   required: ["id", "username", "status", "emailAddress", "createdAt"],
 };
 
+const simpleUserPermissionSchema = {
+  type: "object",
+  $id: "#simpleUserPermission",
+  properties: {
+    id: { type: "number" },
+    roleId: { type: "number" },
+    storeId: { type: ["number", "null"] },
+  },
+  required: ["id", "roleId", "storeId"],
+};
+
+const userWithPermissionsSchema = {
+  type: "object",
+  $id: "#userWithPermissions",
+  properties: {
+    id: { type: "number" },
+    username: { type: "string" },
+    status: { type: "number" },
+    emailAddress: { type: "string" },
+    createdAt: { type: "string" },
+    permissions: { type: "array", items: { $ref: "#simpleUserPermission" } },
+  },
+  required: [
+    "id",
+    "username",
+    "status",
+    "emailAddress",
+    "createdAt",
+    "permissions",
+  ],
+};
+
 const filteredUsersSchema = {
   type: "object",
   $id: "#fliteredUsers",
   properties: {
-    users: { type: "array", items: { $ref: "#userInfo" } },
+    users: { type: "array", items: { $ref: "#userWithPermissions" } },
   },
   required: ["users"],
 };
@@ -235,7 +267,7 @@ const toolPhotoSchema = {
     originalName: { type: "string" },
   },
   required: ["id", "photoKey", "originalName"],
-}
+};
 
 const singleToolSchema = {
   type: "object",
@@ -466,7 +498,7 @@ const errorResponseSchema = {
     details: { type: "string" },
   },
   required: ["status", "errCode", "details"],
-}
+};
 
 const photoUploadResponseSchema = {
   type: "object",
@@ -475,7 +507,7 @@ const photoUploadResponseSchema = {
     key: { type: "string" },
   },
   required: ["key"],
-}
+};
 
 const makeLazyValidator = (schema) => {
   let validate = null;
@@ -519,7 +551,8 @@ export const validateRoleOptions = makeLazyValidator([
 export const validateUserInfo = makeLazyValidator(userInfoSchema);
 
 export const validateFilteredUsers = makeLazyValidator([
-  userInfoSchema,
+  simpleUserPermissionSchema,
+  userWithPermissionsSchema,
   filteredUsersSchema,
 ]);
 
@@ -603,4 +636,6 @@ export const validateGrievanceReplies = makeLazyValidator([
 
 export const validateErrorResponse = makeLazyValidator(errorResponseSchema);
 
-export const validatePhotoUploadResponse = makeLazyValidator(photoUploadResponseSchema);
+export const validatePhotoUploadResponse = makeLazyValidator(
+  photoUploadResponseSchema,
+);
