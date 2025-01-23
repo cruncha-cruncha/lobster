@@ -144,9 +144,9 @@ export const PureStores = (stores) => {
             <li key={store.id}>
               <Link to={goToStore(store.id)} className="cursor-pointer">
                 <p>
-                  {store.name},{" "}
+                  {store.name.trim()},{" "}
                   {store.location.trim() ? (
-                    store.location
+                    store.location.trim()
                   ) : (
                     <span className="text-stone-400">no location</span>
                   )}

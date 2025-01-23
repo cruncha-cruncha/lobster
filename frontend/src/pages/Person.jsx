@@ -619,11 +619,14 @@ const PureUserPermissions = (userPermissions) => {
                 onClick={showAddFields}
                 variant="blue"
               />
-              <Button
-                text="Remove Permissions"
-                onClick={showRemoveFields}
-                variant="blue"
-              />
+              {(libraryPermissions.length > 0 ||
+                storePermissions.length > 0) && (
+                <Button
+                  text="Remove Permissions"
+                  onClick={showRemoveFields}
+                  variant="blue"
+                />
+              )}
             </div>
           )}
         </div>

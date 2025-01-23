@@ -11,6 +11,7 @@ import { URL_PERSON_ID_KEY } from "./Person";
 import { usePrevNext, PurePrevNext } from "../components/PrevNext";
 import { useStoreSelect, PureStoreSelect } from "./Tools";
 import { useDebounce } from "../components/useDebounce";
+import { formatDateTime } from "../components/utils";
 
 export const useRentals = () => {
   const { accessToken } = useAuth();
@@ -247,7 +248,7 @@ export const PureRentals = (rentals) => {
           <div className="flex flex-wrap items-center gap-x-4 md:flex-col md:items-start">
             <Checkbox
               id="rental-still-open"
-              label="Still Open"
+              label="Not Returned"
               checked={stillOpen}
               onChange={setStillOpen}
             />
@@ -278,7 +279,19 @@ export const PureRentals = (rentals) => {
         {rentalList.map((rental) => (
           <li key={rental.id}>
             <Link to={goToRental(rental.id)} className="mb-2 cursor-pointer">
-              {JSON.stringify(rental)}
+              <p>
+                {rental.toolShortDescription.trim()} ({rental.toolRealId.trim()}),{" "}
+                {rental.storeName.trim()}
+              </p>
+              <p>{rental.renterUsername.trim()}</p>
+              <p>
+                checked out: {formatDateTime(rental.startDate)},{" "}
+                {!rental.endDate ? (
+                  <span className="text-stone-400">not returned</span>
+                ) : (
+                  `returned: ${formatDateTime(rental.endDate)}`
+                )}
+              </p>
             </Link>
           </li>
         ))}
@@ -385,8 +398,16 @@ export const PureUserSelect = (userSelect) => {
       />
       <ul>
         {users.map((user) => (
-          <li key={user.id} onClick={() => removeUser(user.id)}>
-            {JSON.stringify(user)}
+          <li
+            key={user.id}
+            onClick={() => removeUser(user.id)}
+            className="cursor-pointer"
+          >
+            <p>
+              <span className="text-red-400">X </span>
+              {user.username.trim()}
+              {!user.emailAddress.trim() ? "" : `, ${user.emailAddress.trim()}`}
+            </p>
           </li>
         ))}
       </ul>
@@ -473,8 +494,15 @@ export const PureToolSelect = (toolSelect) => {
       />
       <ul>
         {tools.map((tool) => (
-          <li key={tool.id} onClick={() => removeTool(tool.id)}>
-            {JSON.stringify(tool)}
+          <li
+            key={tool.id}
+            onClick={() => removeTool(tool.id)}
+            className="cursor-pointer"
+          >
+            <p>
+              <span className="text-red-400">X </span>
+              {tool.shortDescription.trim()} ({tool.realId.trim()})
+            </p>
           </li>
         ))}
       </ul>

@@ -237,8 +237,8 @@ export const PurePeople = (people) => {
             <li key={person.id}>
               <Link to={goToPerson(person.id)} className="cursor-pointer">
                 <p>
-                  {person.username}
-                  {person.emailAddress && `, ${person.emailAddress}`}
+                  {person.username.trim()}
+                  {person.emailAddress.trim() && `, ${person.emailAddress.trim()}`}
                 </p>
               </Link>
             </li>

@@ -264,10 +264,7 @@ export const PureTools = (tools) => {
                 <div className="h-12 w-12"></div>
               )}
               <p>
-                {tool.realId}
-                {!tool.shortDescription.trim()
-                  ? ""
-                  : `, ${tool.shortDescription}`}
+                {tool.shortDescription.trim()} ({tool.realId.trim()})
               </p>
             </div>
             <div className="flex gap-2">
@@ -412,8 +409,15 @@ export const PureCategorySearch = (categorySearch) => {
       </div>
       <ul>
         {categories.map((cat) => (
-          <li key={cat.id} onClick={() => removeCategory(cat.id)}>
-            {JSON.stringify(cat)}
+          <li
+            key={cat.id}
+            onClick={() => removeCategory(cat.id)}
+            className="cursor-pointer"
+          >
+            <p>
+              <span className="text-red-400">X </span>
+              {cat.name}
+            </p>
           </li>
         ))}
       </ul>
@@ -506,8 +510,15 @@ export const PureStoreSelect = (storeSelect) => {
       />
       <ul>
         {stores.map((store) => (
-          <li key={store.id} onClick={() => removeStore(store.id)}>
-            {JSON.stringify(store)}
+          <li
+            key={store.id}
+            onClick={() => removeStore(store.id)}
+            className="cursor-pointer"
+          >
+            <p>
+              <span className="text-red-400">X </span>
+              {store.name.trim()}
+            </p>
           </li>
         ))}
       </ul>

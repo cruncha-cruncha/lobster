@@ -249,8 +249,8 @@ export const PureGrievances = (grievances) => {
           <li key={grievance.id}>
             <Link to={goToGrievance(grievance.id)} className="cursor-pointer">
               <p>
-                {grievance.author.username}: {grievance.title} (
-                {grievance.accused.username})
+                {grievance.author.username.trim()}: {grievance.title.trim()} (
+                {grievance.accused.username.trim()})
               </p>
             </Link>
           </li>
