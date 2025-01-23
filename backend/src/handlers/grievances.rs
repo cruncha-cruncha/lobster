@@ -18,6 +18,7 @@ pub struct FilterParams {
     pub author_ids: Option<Vec<grievance::AuthorId>>,
     pub accused_ids: Option<Vec<grievance::AccusedId>>,
     pub statuses: Option<Vec<grievance::Status>>, // Option<Vec<tool::Status>>,
+    pub term: Option<String>,
     pub page: Option<i64>,
 }
 
@@ -123,6 +124,7 @@ pub async fn get_filtered(
             author_ids: params.author_ids.unwrap_or_default(),
             accused_ids: params.accused_ids.unwrap_or_default(),
             statuses: params.statuses.unwrap_or_default(),
+            term: params.term.unwrap_or_default(),
             offset,
             limit,
         },

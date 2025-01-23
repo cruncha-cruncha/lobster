@@ -19,6 +19,7 @@ pub struct SelectParams {
     pub author_ids: Vec<grievance::AuthorId>,
     pub accused_ids: Vec<grievance::AccusedId>,
     pub statuses: Vec<grievance::Status>,
+    pub term: String,
     pub offset: i64,
     pub limit: i64,
 }
@@ -107,12 +108,14 @@ pub async fn select(
                 (ARRAY_LENGTH($1::integer[], 1) IS NULL OR g.status = ANY($1::integer[]))
                 AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR g.author_id = ANY($2::integer[]))
                 AND (ARRAY_LENGTH($3::integer[], 1) IS NULL OR g.accused_id = ANY($3::integer[]))
+                AND ($4::text = '' OR g.title <% $4::text)
             ORDER BY g.created_at DESC
-            OFFSET $4 LIMIT $5;
+            OFFSET $5 LIMIT $6;
             "#,
         &params.statuses,
         &params.author_ids,
         &params.accused_ids,
+        params.term,
         params.offset,
         params.limit,
     )

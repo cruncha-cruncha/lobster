@@ -165,3 +165,6 @@ CREATE INDEX IF NOT EXISTS idx_fuzzy_tool_categories ON main.tool_categories
 
 CREATE INDEX IF NOT EXISTS idx_fuzzy_tools ON main.tools
   USING gist((real_id || ' ' || short_description || ' ' || COALESCE(long_description, '')) gist_trgm_ops(siglen=256));
+
+CREATE INDEX IF NOT EXISTS idx_fuzzy_grievances ON main.grievances
+  USING gist(title gist_trgm_ops(siglen=256));
