@@ -8,6 +8,8 @@ import { Select } from "../components/Select";
 import { usePrevNext, PurePrevNext } from "../components/PrevNext";
 import { Button } from "../components/Button";
 import { PureUserSelect, useUserSelect } from "./Rentals";
+import { TextInput } from "../components/TextInput";
+import { useDebounce } from "../components/useDebounce";
 
 export const URL_AUTHOR_ID_KEY = "authorId";
 export const URL_ACCUSED_ID_KEY = "accusedId";
@@ -18,12 +20,14 @@ export const useGrievances = () => {
   const { grievanceStatuses: _grievanceStatuses } = useConstants();
   const [status, _setStatus] = useState("0");
   const [statuses, _setStatuses] = useState([]);
+  const [term, _setTerm] = useState("");
   const [grievances, setGrievances] = useState([]);
   const pageControl = usePrevNext();
   const _authorSelect = useUserSelect();
   const _accusedSelect = useUserSelect();
   const urlAuthorId = urlParams.get(URL_AUTHOR_ID_KEY);
   const urlAccusedId = urlParams.get(URL_ACCUSED_ID_KEY);
+  const debouncedTerm = useDebounce(term, 500);
 
   const authorSelect = {
     ..._authorSelect,
@@ -134,6 +138,11 @@ export const useGrievances = () => {
     });
   };
 
+  const setTerm = (e) => {
+    _setTerm(e.target.value);
+    pageControl.setPage(1);
+  };
+
   const endpointParams = {
     authorIds: !urlAuthorId
       ? authorSelect.users.map((u) => u.id)
@@ -142,6 +151,7 @@ export const useGrievances = () => {
       ? accusedSelect.users.map((u) => u.id)
       : [urlAccusedId],
     statuses: statuses.map((s) => s.id),
+    term: debouncedTerm,
     page: pageControl.pageNumber,
   };
 
@@ -178,6 +188,8 @@ export const useGrievances = () => {
     goToNewGrievance,
     goToGrievance,
     grievanceList: grievances,
+    term,
+    setTerm,
   };
 };
 
@@ -194,6 +206,8 @@ export const PureGrievances = (grievances) => {
     goToNewGrievance,
     goToGrievance,
     grievanceList,
+    term,
+    setTerm,
   } = grievances;
 
   return (
@@ -218,6 +232,12 @@ export const PureGrievances = (grievances) => {
         </p>
       </div>
       <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 px-2">
+        <TextInput
+          label="Title"
+          value={term}
+          onChange={setTerm}
+          placeholder="Broke my hammer"
+        />
         <PureUserSelect {...authorSelect} label="Authors" />
         <PureUserSelect {...accusedSelect} label="Accused" />
         <div>
