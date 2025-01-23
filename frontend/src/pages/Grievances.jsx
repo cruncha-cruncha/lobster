@@ -140,8 +140,13 @@ export const useGrievances = () => {
 
   const setTerm = (e) => {
     _setTerm(e.target.value);
-    pageControl.setPage(1);
   };
+
+  useEffect(() => {
+    if (term === debouncedTerm) {
+      pageControl.setPage(1);
+    }
+  }, [term, debouncedTerm]);
 
   const endpointParams = {
     authorIds: !urlAuthorId
