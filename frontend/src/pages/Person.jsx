@@ -95,6 +95,7 @@ const userNameStateReducer = (state, action) => {
 
 export const useUserInfo = ({ id }) => {
   const { userId, accessToken, permissions } = useAuth();
+  const { userStatuses } = useConstants();
   const [userInfo, setUserInfo] = useState({});
   const [oldPassword, _setOldPassword] = useState("");
   const [newPassword, _setNewPassword] = useState("");
@@ -231,7 +232,10 @@ export const useUserInfo = ({ id }) => {
   })();
 
   return {
-    data: userInfo,
+    data: {
+      ...userInfo,
+      status: userStatuses.find((s) => s.id == userInfo.status),
+    },
     showUpdateUserName,
     userName: userNameState.value,
     userNameLoading: userNameState.isLoading,
@@ -285,6 +289,7 @@ const PureUserInfo = (userInfo) => {
 
   return (
     <div className="px-2">
+      <p>status: {data?.status?.name}</p>
       <p>
         email:{" "}
         {!data.emailAddress?.trim() ? (
