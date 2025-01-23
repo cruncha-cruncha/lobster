@@ -1,4 +1,4 @@
-use crate::auth::encryption;
+use crate::auth::encryption::{self, MIN_PASSWORD_LENGTH};
 use crate::common;
 use crate::db_structs::{store, user};
 use crate::queries::permissions;
@@ -30,6 +30,13 @@ pub struct FilterParams {
     pub roles: Option<Vec<permission::RoleId>>,
     pub created_at: Option<common::DateBetween>,
     pub page: Option<i64>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PasswordResetData {
+    pub user_id: i32,
+    pub new_password: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -92,7 +99,7 @@ pub async fn update(
             ));
         }
 
-        if payload.new_password.as_ref().unwrap().len() < encryption::MIN_PASSWORD_LENGTH {
+        if payload.new_password.as_ref().unwrap().len() < MIN_PASSWORD_LENGTH {
             return Err(common::ErrResponse::new(
                 StatusCode::BAD_REQUEST,
                 "ERR_REQ",
@@ -351,4 +358,54 @@ pub async fn get_filtered(
     Ok(Json(FilteredResponse {
         users: users_with_permissions,
     }))
+}
+
+pub async fn reset_password(
+    claims: Claims,
+    State(state): State<Arc<AppState>>,
+    Json(payload): Json<PasswordResetData>,
+) -> Result<Json<common::NoData>, common::ErrResponse> {
+    if !claims.is_user_admin() {
+        return Err(common::ErrResponse::new(
+            StatusCode::FORBIDDEN,
+            "ERR_AUTH",
+            "User is not an admin",
+        ));
+    }
+
+    if payload.new_password.len() < MIN_PASSWORD_LENGTH {
+        return Err(common::ErrResponse::new(
+            StatusCode::BAD_REQUEST,
+            "ERR_REQ",
+            "Password is too short",
+        ));
+    }
+
+    match users::update(
+        payload.user_id,
+        None,
+        Some(&payload.new_password),
+        None,
+        &state.db,
+    )
+    .await
+    {
+        Ok(u) => {
+            if u.is_none() {
+                return Err(common::ErrResponse::new(
+                    StatusCode::NOT_FOUND,
+                    "ERR_MIA",
+                    "Could not find any user with that id",
+                ));
+            }
+            Ok(Json(common::NoData {}))
+        }
+        Err(e) => {
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ))
+        }
+    }
 }

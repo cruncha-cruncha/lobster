@@ -186,6 +186,19 @@ export const refresh = async ({ refreshToken }) => {
   return data;
 };
 
+export const resetPassword = async ({ info, accessToken }) => {
+  const data = await handle(`${serverUrl}/reset-password`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(info),
+  });
+
+  return data;
+};
+
 export const searchUsers = async ({ params, accessToken }) => {
   const str_params = obj_to_query(params);
 

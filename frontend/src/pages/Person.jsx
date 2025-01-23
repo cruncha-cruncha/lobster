@@ -99,6 +99,8 @@ export const useUserInfo = ({ id }) => {
   const [oldPassword, _setOldPassword] = useState("");
   const [newPassword, _setNewPassword] = useState("");
   const [updatingPassword, setUpdatingPassword] = useState(false);
+  const [resetWarningLevel, setResetWarningLevel] = useState(0);
+  const [warningTimeout, setWarningTimeout] = useState(null);
   const modal = useLayoutInfoModal();
   const [userNameState, userNameStateDispatch] = useReducer(
     userNameStateReducer,
@@ -147,6 +149,11 @@ export const useUserInfo = ({ id }) => {
 
   const setNewPassword = (e) => {
     _setNewPassword(e.target.value);
+    setResetWarningLevel(0);
+    if (warningTimeout) {
+      clearTimeout(warningTimeout);
+      setWarningTimeout(null);
+    }
   };
 
   const setOldPassword = (e) => {
@@ -177,8 +184,51 @@ export const useUserInfo = ({ id }) => {
   };
 
   const resetPassword = async () => {
-    // TODO
-  }
+    if (resetWarningLevel === 0) {
+      setResetWarningLevel(1);
+      setWarningTimeout(
+        setTimeout(() => {
+          setResetWarningLevel(2);
+        }, 5000),
+      );
+      return;
+    }
+
+    setUpdatingPassword(true);
+
+    return endpoints
+      .resetPassword({
+        info: { userId: Number(id), newPassword },
+        accessToken,
+      })
+      .then(() => {
+        _setNewPassword("");
+        setResetWarningLevel(0);
+        modal.open("Password updated", "success");
+      })
+      .catch((e) => {
+        console.log(e);
+        modal.open("Unable to update password", "error");
+      })
+      .finally(() => {
+        setUpdatingPassword(false);
+      });
+  };
+
+  const resetWarning = (() => {
+    switch (resetWarningLevel) {
+      case 0:
+        return "";
+      case 1:
+        return "Please wait 5 seconds...";
+      case 2:
+        return "Are you sure?";
+      case 3:
+        return "Please wait...";
+      default:
+        return "";
+    }
+  })();
 
   return {
     data: userInfo,
@@ -190,19 +240,22 @@ export const useUserInfo = ({ id }) => {
     updateUserName,
     isUpdating: userNameState.isSaving,
     showUpdatePassword: id == userId,
-    showResetPassword: true, // id != userId && permissions.isUserAdmin(),
+    showResetPassword: id != userId && permissions.isUserAdmin(),
     newPassword,
     oldPassword,
     canUpdatePassword:
       validatePassword(oldPassword) &&
       validatePassword(newPassword) &&
       oldPassword !== newPassword,
-    canResetPassword: validatePassword(newPassword),
+    canResetPassword:
+      validatePassword(newPassword) &&
+      resetWarning != "Please wait 5 seconds...",
     setNewPassword,
     setOldPassword,
     updatingPassword,
     updatePassword,
     resetPassword,
+    resetWarning,
   };
 };
 
@@ -227,6 +280,7 @@ const PureUserInfo = (userInfo) => {
     updatingPassword,
     updatePassword,
     resetPassword,
+    resetWarning,
   } = userInfo;
 
   return (
@@ -307,8 +361,13 @@ const PureUserInfo = (userInfo) => {
               disabled={updatingPassword}
             />
           </div>
-          <div className="flex justify-end gap-2">
-            <Button text="Reset Password" disabled={!canResetPassword} onClick={resetPassword} />
+          <div className="flex items-center justify-end gap-2">
+            {resetWarning && <p>{resetWarning}</p>}
+            <Button
+              text="Reset Password"
+              disabled={!canResetPassword}
+              onClick={resetPassword}
+            />
           </div>
         </div>
       )}
@@ -686,7 +745,7 @@ const PureUserPermissions = (userPermissions) => {
   } = userPermissions;
 
   return (
-    <div>
+    <div className="mt-3">
       <h2 className="px-2 text-lg">Permissions</h2>
       <ul className="mt-1 overflow-y-auto border-x-2 border-stone-400 px-2 py-px [&>*]:my-1">
         {libraryPermissions.length <= 0 && storePermissions.length <= 0 && (

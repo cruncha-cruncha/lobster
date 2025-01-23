@@ -59,6 +59,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .route("/hello", routing::get(|| async { "hello, world" }))
         .route("/login", routing::post(handlers::auth::login))
         .route("/sign-up", routing::post(handlers::auth::sign_up))
+        .route(
+            "/reset-password",
+            routing::post(handlers::users::reset_password),
+        )
         .route("/refresh", routing::post(handlers::auth::refresh))
         .route(
             "/statuses",
