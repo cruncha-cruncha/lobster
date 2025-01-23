@@ -160,7 +160,7 @@ export const useTool = () => {
       .updateTool({
         id: Number(toolId),
         info: {
-          realId: info.realId,
+          realId: info.realId.trim(),
           storeId: Number(data.storeId),
           categoryIds: categorySearch.categories.map((cat) => cat.id),
           shortDescription: info.shortDescription,
@@ -238,7 +238,10 @@ export const useTool = () => {
     removeNewPhoto,
     addNewPhotos,
     toggleRemoveExistingPhoto,
-    data,
+    data: {
+      ...data,
+      status: toolStatuses.find((status) => status.id == data?.status),
+    },
     goToTools,
     goToStoreTools,
     goToStore,
@@ -305,7 +308,36 @@ export const PureTool = (tool) => {
         <Button text="Rentals" goTo={goToRentals()} variant="blue" size="sm" />
         <Button text="Store" goTo={goToStore()} variant="blue" size="sm" />
       </div>
-      <p className="px-2">{JSON.stringify(data)}</p>
+      <div className="px-2">
+        <div>
+          {(data?.pictures || []).map((photo) => {
+            return (
+              <img
+                key={photo.photoKey}
+                src={endpoints.makePhotoUrl({ key: photo.photoKey })}
+                alt=""
+                className="h-64"
+              />
+            );
+          })}
+        </div>
+        <p>status: {data?.status?.name}</p>
+        <p>id: {data?.realId?.trim()}</p>
+        <p>store: {data?.storeName?.trim()}</p>
+        <p>short description: {data?.shortDescription?.trim()}</p>
+        <p>
+          long description:{" "}
+          {!data?.longDescription?.trim() ? (
+            <span className="text-stone-400">none</span>
+          ) : (
+            data.longDescription.trim()
+          )}
+        </p>
+        <p>
+          categories:{" "}
+          {(data?.categories || []).map((cat) => cat.name).join(", ")}
+        </p>
+      </div>
       <div className="flex justify-end gap-2 px-2">
         {canAddToCart && (
           <Button text="Add to Cart" onClick={() => addToCart(toolId)} />
@@ -364,9 +396,14 @@ export const PureTool = (tool) => {
                           "h-12" + (!photo.delete ? "" : " opacity-50")
                         }
                       />
-                      <span className={!photo.delete ? "" : "text-stone-400"}>
-                        {JSON.stringify(photo)}
-                      </span>
+                      <p>
+                        {!photo.delete && (
+                          <span className="text-red-500">X </span>
+                        )}
+                        <span className={!photo.delete ? "" : "text-stone-400"}>
+                          {photo.originalName}
+                        </span>
+                      </p>
                     </div>
                   </li>
                 ))}

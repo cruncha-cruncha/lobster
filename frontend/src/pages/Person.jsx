@@ -66,7 +66,6 @@ export const PurePerson = (person) => {
           size="sm"
         />
       </div>
-
       <PureUserInfo {...userInfo} />
       <PureUserStatus {...userStatus} />
       <PureUserPermissions {...userPermissions} />
@@ -165,7 +164,22 @@ const PureUserInfo = (userInfo) => {
 
   return (
     <div className="px-2">
-      <p>{JSON.stringify(data)}</p>
+      <p>
+        email:{" "}
+        {!data.emailAddress?.trim() ? (
+          <span className="text-stone-400">unknown</span>
+        ) : (
+          data.emailAddress.trim()
+        )}
+      </p>
+      <p>
+        code:{" "}
+        {!data.code?.trim() ? (
+          <span className="text-stone-400">unknown</span>
+        ) : (
+          data.code.trim()
+        )}
+      </p>
       {showUpdateUserName && (
         <>
           <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2">

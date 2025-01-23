@@ -9,6 +9,7 @@ import {
   formatDateForBackend,
   formatDateForInput,
 } from "../components/DateTimeInput";
+import { formatDateTime } from "../components/utils";
 
 export const useRental = () => {
   const { accessToken, permissions } = useAuth();
@@ -47,7 +48,7 @@ export const useRental = () => {
         accessToken,
       })
       .then((data) => {
-        mutate(prev => ({ ...prev, endDate: data.endDate }));
+        mutate((prev) => ({ ...prev, endDate: data.endDate }));
       })
       .finally(() => {
         setIsUpdating(false);
@@ -106,13 +107,28 @@ export const PureRental = (tool) => {
         <Button text="Store" goTo={goToStore()} variant="blue" size="sm" />
         <Button text="Person" goTo={goToPerson()} variant="blue" size="sm" />
       </div>
-      <p className="px-2">{JSON.stringify(data)}</p>
+      <div className="px-2">
+        <p>
+          tool: {data?.toolShortDescription.trim()} ({data?.toolRealId.trim()})
+        </p>
+        <p>store: {data?.storeName.trim()}</p>
+        <p>user: {data?.renterUsername.trim()}</p>
+        <p>checked out: {formatDateTime(data?.startDate)}</p>
+        <p>
+          returned:
+          {!data?.endDate ? (
+            <span className="text-stone-400"> not returned</span>
+          ) : (
+            ` ${formatDateTime(data?.endDate)}`
+          )}
+        </p>
+      </div>
       {showUpdateRental && (
         <>
           <div className="mb-3 mt-2 flex flex-col gap-x-4 gap-y-2 px-2 md:flex-row">
             <DateTimeInput
               id="rental-end-date"
-              label="End Date"
+              label="Returned"
               value={endDate}
               onChange={setEndDate}
             />

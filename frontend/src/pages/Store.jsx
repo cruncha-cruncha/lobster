@@ -19,6 +19,7 @@ export const useStore = () => {
   const params = useParams();
   const { toolCart } = useToolCart();
   const { accessToken, permissions } = useAuth();
+  const { storeStatuses } = useConstants();
   const storeId = params.id;
 
   const { data, error, isLoading } = useSWR(
@@ -43,7 +44,10 @@ export const useStore = () => {
   const showAddTool = permissions.isToolManager(storeId) && data?.status == 1;
 
   return {
-    data,
+    data: {
+      ...data,
+      status: storeStatuses.find((s) => s.id == data?.status),
+    },
     storeId,
     storeName: data?.name || "Store",
     goToStores,
@@ -94,10 +98,19 @@ export const PureStore = (store) => {
           size="sm"
         />
       </div>
-      <p className="px-2">{JSON.stringify(data)}</p>
+      <div className="px-2 mb-4">
+        <p>status: {data?.status?.name}</p>
+        <p>name: {data?.name?.trim()}</p>
+        <p>code: {data?.code?.trim()}</p>
+        <p>location: {data?.location?.trim()}</p>
+        <p>phone: {data?.phoneNumber?.trim()}</p>
+        <p>email: {data?.emailAddress?.trim()}</p>
+        <p>rental info: {data?.rentalInformation?.trim()}</p>
+        <p>other info: {data?.otherInformation?.trim()}</p>
+      </div>
+      {showAddTool && <AddTool storeId={storeId} />}
       {showEditStore && <EditStore storeId={storeId} />}
       {showEditStoreStatus && <EditStoreStatus storeId={storeId} />}
-      {showAddTool && <AddTool storeId={storeId} />}
     </div>
   );
 };
@@ -437,7 +450,7 @@ export const useAddTool = ({ storeId }) => {
     return endpoints
       .createTool({
         info: {
-          realId,
+          realId: realId.trim(),
           storeId: Number(storeId),
           categoryIds: [],
           shortDescription,
