@@ -1,0 +1,76 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT *\n        FROM main.stores ms\n        WHERE ms.code = $1;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "status",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "email_address",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "phone_number",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "rental_information",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "other_information",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "code",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "location",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e0e2ccfa4224a178e5c5c118df7abb55e66f1f11c22657d0a2ba435b3871045e"
+}

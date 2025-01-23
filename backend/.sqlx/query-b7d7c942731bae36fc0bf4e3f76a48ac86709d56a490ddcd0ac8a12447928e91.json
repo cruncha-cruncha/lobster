@@ -1,0 +1,60 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT *\n        FROM main.tools\n        WHERE real_id = $1 AND status = $2 AND store_id = $3;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "real_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "store_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "rental_hours",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "status",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "short_description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "long_description",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "b7d7c942731bae36fc0bf4e3f76a48ac86709d56a490ddcd0ac8a12447928e91"
+}

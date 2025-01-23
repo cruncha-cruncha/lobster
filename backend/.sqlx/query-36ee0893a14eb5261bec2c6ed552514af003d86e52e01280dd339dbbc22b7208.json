@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        DELETE FROM main.tool_classifications tc\n        USING UNNEST($1::integer[], $2::integer[]) AS t(tool_id, category_id)\n        WHERE tc.tool_id = t.tool_id AND tc.category_id = t.category_id;\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4Array",
+        "Int4Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "36ee0893a14eb5261bec2c6ed552514af003d86e52e01280dd339dbbc22b7208"
+}

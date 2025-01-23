@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT * FROM main.tool_classifications tc\n        WHERE\n            (ARRAY_LENGTH($1::integer[], 1) IS NULL OR tc.tool_id = ANY($1::integer[]))\n            AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR tc.category_id = ANY($2::integer[]))\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "tool_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "category_id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4Array",
+        "Int4Array"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "bc0fe6d3243fe5e8ea5a1f69e758a9fd5a096debb5c15bef35f0c16edb66813c"
+}

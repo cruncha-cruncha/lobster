@@ -1,0 +1,49 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            gr.id,\n            gr.grievance_id,\n            gr.text,\n            gr.created_at,\n            (u.id, u.username) as \"author: common::UserWithName\"\n        FROM main.grievance_replies gr\n        LEFT JOIN main.users u ON gr.author_id = u.id\n        WHERE gr.grievance_id = $1\n        ORDER BY (CASE $2::bool WHEN TRUE THEN gr.created_at WHEN FALSE THEN NULL END) ASC, (CASE $2::bool WHEN TRUE THEN NULL WHEN FALSE THEN gr.created_at END) DESC, gr.id\n        OFFSET $3 LIMIT $4;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "grievance_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "text",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "author: common::UserWithName",
+        "type_info": "Record"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "9103e3bb281a493abc8ea72888a7f02a58dbb272fde537bede0d68f5c75306e1"
+}

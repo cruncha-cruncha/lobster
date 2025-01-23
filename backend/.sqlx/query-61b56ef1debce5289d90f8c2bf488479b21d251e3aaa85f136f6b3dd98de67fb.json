@@ -1,0 +1,63 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE main.tools\n        SET\n            real_id = COALESCE($2, real_id),\n            rental_hours = COALESCE($3, rental_hours),\n            short_description = COALESCE($4, short_description),\n            long_description = COALESCE($5, long_description),\n            status = COALESCE($6, status)\n        WHERE id = $1\n        RETURNING *;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "real_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "store_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "rental_hours",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "status",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "short_description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "long_description",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text",
+        "Int4",
+        "Text",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "61b56ef1debce5289d90f8c2bf488479b21d251e3aaa85f136f6b3dd98de67fb"
+}

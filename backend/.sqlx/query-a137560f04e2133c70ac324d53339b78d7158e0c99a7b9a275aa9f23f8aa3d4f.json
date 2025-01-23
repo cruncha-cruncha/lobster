@@ -1,0 +1,44 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT tc.*\n        FROM main.tool_categories tc\n        LEFT JOIN main.tool_classifications tcl ON tc.id = tcl.category_id\n        WHERE\n            (ARRAY_LENGTH($1::integer[], 1) IS NULL OR tc.id = ANY($1::integer[]))\n            AND ($2::text = '' OR $2::text <% (tc.name || ' ' || COALESCE(tc.description, '') || ' ' || ARRAY_TO_STRING(tc.synonyms, ' ')))\n            AND (ARRAY_LENGTH($3::integer[], 1) IS NULL OR tcl.tool_id = ANY($3::integer[]))\n        GROUP BY tc.id\n        ORDER BY tc.id\n        OFFSET $4 LIMIT $5;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "synonyms",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 3,
+        "name": "description",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4Array",
+        "Text",
+        "Int4Array",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "a137560f04e2133c70ac324d53339b78d7158e0c99a7b9a275aa9f23f8aa3d4f"
+}

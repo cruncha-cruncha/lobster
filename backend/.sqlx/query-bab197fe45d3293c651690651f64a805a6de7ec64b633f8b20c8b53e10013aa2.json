@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT * FROM main.tool_photos tp\n        WHERE\n            (ARRAY_LENGTH($1::integer[], 1) IS NULL OR tp.id = ANY($1::integer[]))\n            AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR tp.tool_id = ANY($2::integer[]))\n            AND (ARRAY_LENGTH($3::text[], 1) IS NULL OR tp.photo_key = ANY($3::text[]))\n        LIMIT 600;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "tool_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "photo_key",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "original_name",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4Array",
+        "Int4Array",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "bab197fe45d3293c651690651f64a805a6de7ec64b633f8b20c8b53e10013aa2"
+}

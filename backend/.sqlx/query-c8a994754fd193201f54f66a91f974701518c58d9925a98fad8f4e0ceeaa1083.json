@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO main.tool_photos (tool_id, photo_key, original_name)\n        SELECT * FROM UNNEST($1::integer[], $2::text[], $3::text[]);\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4Array",
+        "TextArray",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c8a994754fd193201f54f66a91f974701518c58d9925a98fad8f4e0ceeaa1083"
+}

@@ -1,0 +1,81 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT ms.*\n        FROM main.stores ms\n        LEFT JOIN main.permissions p ON ms.id = p.store_id AND p.status = 1\n        WHERE\n            (ARRAY_LENGTH($1::integer[], 1) IS NULL OR ms.id = ANY($1::integer[]))\n            AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR ms.status = ANY($2::integer[]))\n            AND ($3::text = '' OR $3::text <% (ms.name || ' ' || ms.location || ' ' || COALESCE(ms.email_address, '') || ' ' || ms.phone_number || ' ' || COALESCE(ms.rental_information, '') || ' ' || COALESCE(ms.other_information, '')))\n            AND (ARRAY_LENGTH($4::integer[], 1) IS NULL OR p.user_id = ANY($4::integer[]))\n        GROUP BY ms.id\n        ORDER BY ms.id\n        OFFSET $5 LIMIT $6;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "status",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "email_address",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "phone_number",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "rental_information",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "other_information",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "code",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "location",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4Array",
+        "Int4Array",
+        "Text",
+        "Int4Array",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "71b4977c90153f9f216a4722f7cbadbbadf603664555e6775939c482a1ef8e9b"
+}

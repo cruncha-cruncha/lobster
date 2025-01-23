@@ -1,0 +1,69 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO main.users (username, status, email_address, salt, password, code)\n        VALUES ($1, $2, $3, $4, $5, $6)\n        RETURNING *;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "username",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "status",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "email_address",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "salt",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 5,
+        "name": "password",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 6,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "code",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4",
+        "Text",
+        "Bytea",
+        "Bytea",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "47d6329f4793b11e6943b3e3a13787fe3080e4bdb6beded1678e398216830883"
+}

@@ -1,0 +1,83 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO main.stores (name, status, location, email_address, phone_number, rental_information, other_information, code)\n        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)\n        RETURNING *;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "status",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "email_address",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "phone_number",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "rental_information",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "other_information",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "code",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "location",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "69886e762daa29a0313525befba1aeb6c2050cce5185bbb693d3c049c202cebf"
+}

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE main.tool_photos tp\n        SET tool_id = $2\n        WHERE tp.id = $1;\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "38682477028f712008c1743814dc6a893b05a88451cdde8d01206f14319704a9"
+}

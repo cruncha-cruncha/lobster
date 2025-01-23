@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT mr.*\n        FROM main.rentals mr\n        LEFT JOIN main.tools t ON mr.tool_id = t.id\n        WHERE\n            (ARRAY_LENGTH($1::integer[], 1) IS NULL OR mr.renter_id = ANY($1::integer[]))\n            AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR mr.tool_id = ANY($2::integer[]))\n            AND (ARRAY_LENGTH($3::integer[], 1) IS NULL OR t.store_id = ANY($3::integer[]))\n            AND (COALESCE($4, '1970-01-01 00:00:00+00'::timestamp with time zone) <= mr.start_date AND mr.start_date < COALESCE($5, '9999-12-31 23:59:59+00'::timestamp with time zone))\n            AND (($6::timestamp with time zone IS NULL AND $7::timestamp with time zone IS NULL AND mr.end_date IS NULL)\n                OR (COALESCE($6, '1970-01-01 00:00:00+00'::timestamp with time zone) <= mr.end_date AND mr.end_date < COALESCE($7, '9999-12-31 23:59:59+00'::timestamp with time zone)))\n            AND (mr.end_date IS NULL = $8::bool)\n            AND ($9::bool IS NULL OR ((mr.start_date + interval '1' HOUR * t.rental_hours) < CURRENT_TIMESTAMP) = $9::bool)\n        ORDER BY (\n            CASE $11::bool\n                WHEN TRUE THEN CASE $10::integer\n                    WHEN 1 THEN mr.start_date\n                    WHEN 2 THEN mr.end_date\n                END\n                WHEN FALSE THEN NULL\n            END\n        ) ASC, (\n            CASE $11::bool\n                WHEN FALSE THEN CASE $10::integer\n                    WHEN 1 THEN mr.start_date\n                    WHEN 2 THEN mr.end_date\n                END\n                WHEN TRUE THEN NULL\n            END\n        ) DESC, mr.id\n        OFFSET $12 LIMIT $13;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "tool_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "renter_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "start_date",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "end_date",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4Array",
+        "Int4Array",
+        "Int4Array",
+        "Timestamptz",
+        "Timestamptz",
+        "Timestamptz",
+        "Timestamptz",
+        "Bool",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "70e15593a2595121409ec8a63bad9b0c3f16b24999606811f4bb9106e69abcfa"
+}

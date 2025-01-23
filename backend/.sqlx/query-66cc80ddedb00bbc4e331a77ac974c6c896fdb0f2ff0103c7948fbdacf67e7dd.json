@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO main.tool_classifications (tool_id, category_id)\n        SELECT * FROM UNNEST($1::integer[], $2::integer[]);\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4Array",
+        "Int4Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "66cc80ddedb00bbc4e331a77ac974c6c896fdb0f2ff0103c7948fbdacf67e7dd"
+}

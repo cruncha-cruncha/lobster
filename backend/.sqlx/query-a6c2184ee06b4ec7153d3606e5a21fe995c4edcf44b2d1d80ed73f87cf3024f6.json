@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT *\n        FROM main.permissions p\n        WHERE \n            (ARRAY_LENGTH($1::integer[], 1) IS NULL OR p.id = ANY($1::integer[]))\n            AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR p.user_id = ANY($2::integer[]))\n            AND (ARRAY_LENGTH($3::integer[], 1) IS NULL OR p.role_id = ANY($3::integer[]))\n            AND (ARRAY_LENGTH($4::integer[], 1) IS NULL OR p.store_id = ANY($4::integer[]))\n            AND (ARRAY_LENGTH($5::integer[], 1) IS NULL OR p.status = ANY($5::integer[]));\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "role_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "store_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "status",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4Array",
+        "Int4Array",
+        "Int4Array",
+        "Int4Array",
+        "Int4Array"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "a6c2184ee06b4ec7153d3606e5a21fe995c4edcf44b2d1d80ed73f87cf3024f6"
+}

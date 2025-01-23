@@ -1,0 +1,65 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT mt.*\n        FROM main.tools mt\n        LEFT JOIN main.tool_classifications tc ON mt.id = tc.tool_id\n        WHERE\n            ($1::text = '' OR $1::text <% (mt.real_id || ' ' || mt.short_description || ' ' || COALESCE(mt.long_description, '')))\n            AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR mt.status = ANY($2::integer[]))\n            AND (ARRAY_LENGTH($3::integer[], 1) IS NULL OR mt.store_id = ANY($3::integer[]))\n            AND (ARRAY_LENGTH($4::text[], 1) IS NULL OR mt.real_id = ANY($4::text[]))\n            AND (ARRAY_LENGTH($5::integer[], 1) IS NULL OR tc.category_id = ANY($5::integer[]))\n        GROUP BY mt.id having count(*) >= COALESCE(NULLIF(ARRAY_LENGTH($5::integer[], 1), $6), 1)\n        ORDER BY mt.id \n        OFFSET $7 LIMIT $8;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "real_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "store_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "rental_hours",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "status",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "short_description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "long_description",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4Array",
+        "Int4Array",
+        "TextArray",
+        "Int4Array",
+        "Int4",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "2380ea1149710a96d0502732808c44edcd1f23bc4948ff3c68463ec463b1f5a6"
+}

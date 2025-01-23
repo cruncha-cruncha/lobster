@@ -1,0 +1,63 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT \n                g.id,\n                g.title,\n                g.description,\n                g.created_at,\n                g.status,\n                (u1.id, u1.username) as \"author: common::UserWithName\",\n                (u2.id, u2.username) as \"accused: common::UserWithName\"\n            FROM main.grievances g\n            LEFT JOIN main.users u1 ON g.author_id = u1.id\n            LEFT JOIN main.users u2 ON g.accused_id = u2.id\n            WHERE\n                (ARRAY_LENGTH($1::integer[], 1) IS NULL OR g.status = ANY($1::integer[]))\n                AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR g.author_id = ANY($2::integer[]))\n                AND (ARRAY_LENGTH($3::integer[], 1) IS NULL OR g.accused_id = ANY($3::integer[]))\n                AND ($4::text = '' OR $4::text <% g.title)\n            ORDER BY g.created_at DESC\n            OFFSET $5 LIMIT $6;\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "status",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "author: common::UserWithName",
+        "type_info": "Record"
+      },
+      {
+        "ordinal": 6,
+        "name": "accused: common::UserWithName",
+        "type_info": "Record"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4Array",
+        "Int4Array",
+        "Int4Array",
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "837739080289ae2ff034ec72976f495ddefb7bb235d728b456d0389c06df8cd8"
+}

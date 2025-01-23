@@ -1,0 +1,83 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE main.stores ms\n        SET\n            name = COALESCE($2, ms.name),\n            status = COALESCE($3, ms.status),\n            location = COALESCE($4, ms.location),\n            email_address = COALESCE($5, ms.email_address),\n            phone_number = COALESCE($6, ms.phone_number),\n            rental_information = COALESCE($7, ms.rental_information),\n            other_information = COALESCE($8, ms.other_information)\n        WHERE ms.id = $1\n        RETURNING *;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "status",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "email_address",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "phone_number",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "rental_information",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "other_information",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "code",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "location",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text",
+        "Int4",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "0e3cd5c6a8febccad9d16c6509c63b83ea61e1a96c1441bbf224163c67431ae3"
+}
