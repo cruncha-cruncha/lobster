@@ -19,14 +19,18 @@ export const URL_STORE_ID_KEY = "storeId";
 export const useStore = () => {
   const params = useParams();
   const { toolCart } = useToolCart();
-  const { userId, accessToken, permissions } = useAuth();
+  const { userId, accessToken, permissions, isLoggedIn } = useAuth();
   const { storeStatuses, roles } = useConstants();
   const storeId = params.id;
 
   const { data, error, isLoading, mutate } = useSWR(
-    !accessToken ? null : `get store ${storeId}, using ${accessToken}`,
+    !accessToken
+      ? `get store ${storeId}`
+      : `get store ${storeId}, using ${accessToken}`,
     () => endpoints.getStore({ id: storeId, accessToken }),
   );
+
+  const showRentalAndPeopleButtons = isLoggedIn;
 
   const goToStores = () => "/stores";
 
@@ -61,6 +65,7 @@ export const useStore = () => {
     showEditStore,
     showEditStoreStatus,
     showAddTool,
+    showRentalAndPeopleButtons,
   };
 };
 
@@ -78,6 +83,7 @@ export const PureStore = (store) => {
     showEditStore,
     showEditStoreStatus,
     showAddTool,
+    showRentalAndPeopleButtons,
   } = store;
 
   return (
@@ -91,8 +97,17 @@ export const PureStore = (store) => {
           size="sm"
         />
         <Button goTo={goToTools()} text="Tools" variant="blue" size="sm" />
-        <Button goTo={goToRentals()} text="Rentals" variant="blue" size="sm" />
-        <Button goTo={goToPeople()} text="People" variant="blue" size="sm" />
+        {showRentalAndPeopleButtons && (
+          <Button
+            goTo={goToRentals()}
+            text="Rentals"
+            variant="blue"
+            size="sm"
+          />
+        )}
+        {showRentalAndPeopleButtons && (
+          <Button goTo={goToPeople()} text="People" variant="blue" size="sm" />
+        )}
         <Button
           goTo={goToCart()}
           text={`Cart (${cartSize})`}

@@ -58,6 +58,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let app = Router::new()
         .route("/hello", routing::get(|| async { "hello, world" }))
         .route("/login", routing::post(handlers::auth::login))
+        .route("/sign-up", routing::post(handlers::auth::sign_up))
         .route("/refresh", routing::post(handlers::auth::refresh))
         .route(
             "/statuses",

@@ -119,7 +119,7 @@ export const useUserInfo = ({ id }) => {
   };
 
   const showUpdateUserName = userId == id;
-  const canUpdateUserName = userNameState.value !== userInfo.username;
+  const canUpdateUserName = userInfo.username && userNameState.value !== userInfo.username;
 
   const updateUserName = async () => {
     userNameStateDispatch({ type: "saving", value: true });

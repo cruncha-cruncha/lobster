@@ -1,3 +1,4 @@
+use crate::auth::encryption;
 use crate::common;
 use crate::db_structs::{store, user};
 use crate::queries::permissions;
@@ -14,8 +15,10 @@ use std::sync::Arc;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct UpdateUsername {
-    pub username: user::Username,
+pub struct UpdateUserData {
+    pub username: Option<user::Username>,
+    pub old_password: Option<String>,
+    pub password: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -33,6 +36,17 @@ pub struct FilterParams {
 #[serde(rename_all = "camelCase")]
 pub struct FilteredResponse {
     pub users: Vec<UserWithPermissions>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SafeUser {
+    pub id: user::Id,
+    pub username: user::Username,
+    pub status: user::Status,
+    pub code: user::Code,
+    pub email_address: user::EmailAddress,
+    pub created_at: user::CreatedAt,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -59,8 +73,8 @@ pub async fn update(
     claims: Claims,
     Path(user_id): Path<i32>,
     State(state): State<Arc<AppState>>,
-    Json(data): Json<UpdateUsername>,
-) -> Result<Json<user::User>, common::ErrResponse> {
+    Json(payload): Json<UpdateUserData>,
+) -> Result<Json<SafeUser>, common::ErrResponse> {
     if claims.subject_as_user_id().unwrap_or(-1) != user_id {
         return Err(common::ErrResponse::new(
             StatusCode::FORBIDDEN,
@@ -69,7 +83,63 @@ pub async fn update(
         ));
     }
 
-    match users::update(user_id, Some(&data.username), None, &state.db).await {
+    if payload.password.is_some() {
+        if payload.old_password.is_none() {
+            return Err(common::ErrResponse::new(
+                StatusCode::BAD_REQUEST,
+                "ERR_BAD_REQUEST",
+                "You must provide the old password to change it",
+            ));
+        }
+
+        if payload.password.as_ref().unwrap().len() < encryption::MIN_PASSWORD_LENGTH {
+            return Err(common::ErrResponse::new(
+                StatusCode::BAD_REQUEST,
+                "ERR_REQ",
+                "Password is too short",
+            ));
+        }
+
+        let user = match users::select_by_ids(vec![user_id], &state.db).await {
+            Ok(mut users) => {
+                if users.is_empty() {
+                    return Err(common::ErrResponse::new(
+                        StatusCode::NOT_FOUND,
+                        "ERR_MIA",
+                        "Could not find any user with that id",
+                    ));
+                }
+                users.remove(0)
+            }
+            Err(e) => {
+                return Err(common::ErrResponse::new(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "ERR_DB",
+                    &e,
+                ))
+            }
+        };
+
+        let old_hashed_password =
+            encryption::hash_password(&payload.old_password.unwrap(), &user.salt);
+        if user.password != &old_hashed_password[..] {
+            return Err(common::ErrResponse::new(
+                StatusCode::BAD_REQUEST,
+                "ERR_REQ",
+                "Old password is incorrect",
+            ));
+        }
+    }
+
+    match users::update(
+        user_id,
+        payload.username.as_deref(),
+        payload.password.as_deref(),
+        None,
+        &state.db,
+    )
+    .await
+    {
         Ok(u) => {
             if u.is_none() {
                 return Err(common::ErrResponse::new(
@@ -81,7 +151,14 @@ pub async fn update(
             let u = u.unwrap();
             let encoded = serde_json::to_vec(&u).unwrap_or_default();
             state.comm.send_message("users", &encoded).await.ok();
-            Ok(Json(u))
+            Ok(Json(SafeUser {
+                id: u.id,
+                username: u.username,
+                status: u.status,
+                code: u.code,
+                email_address: u.email_address,
+                created_at: u.created_at,
+            }))
         }
         Err(e) => Err(common::ErrResponse::new(
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -96,7 +173,7 @@ pub async fn update_status(
     Path(user_id): Path<i32>,
     State(state): State<Arc<AppState>>,
     Json(payload): Json<common::StatusOnly>,
-) -> Result<Json<user::User>, common::ErrResponse> {
+) -> Result<Json<SafeUser>, common::ErrResponse> {
     if !claims.is_user_admin() {
         return Err(common::ErrResponse::new(
             StatusCode::FORBIDDEN,
@@ -109,7 +186,7 @@ pub async fn update_status(
 
     let can_see_code = claims.is_user_admin() || claims_user_id == user_id;
 
-    match users::update(user_id, None, Some(payload.status), &state.db).await {
+    match users::update(user_id, None, None, Some(payload.status), &state.db).await {
         Ok(u) => {
             if u.is_none() {
                 return Err(common::ErrResponse::new(
@@ -124,7 +201,14 @@ pub async fn update_status(
             if !can_see_code {
                 u.code = String::new();
             }
-            Ok(Json(u))
+            Ok(Json(SafeUser {
+                id: u.id,
+                username: u.username,
+                status: u.status,
+                code: u.code,
+                email_address: u.email_address,
+                created_at: u.created_at,
+            }))
         }
         Err(e) => Err(common::ErrResponse::new(
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -138,7 +222,7 @@ pub async fn get_by_id(
     claims: Claims,
     Path(user_id): Path<i32>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<user::User>, common::ErrResponse> {
+) -> Result<Json<SafeUser>, common::ErrResponse> {
     if claims.is_none() {
         return Err(common::ErrResponse::new(
             StatusCode::UNAUTHORIZED,
@@ -171,7 +255,14 @@ pub async fn get_by_id(
                 u.code = String::new();
             }
 
-            Ok(Json(u))
+            Ok(Json(SafeUser {
+                id: u.id,
+                username: u.username,
+                status: u.status,
+                code: u.code,
+                email_address: u.email_address,
+                created_at: u.created_at,
+            }))
         }
         Err(e) => Err(common::ErrResponse::new(
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -260,59 +351,4 @@ pub async fn get_filtered(
     Ok(Json(FilteredResponse {
         users: users_with_permissions,
     }))
-}
-
-pub async fn create_new_user(
-    // this endpoint is only used internally, claim checks are performed in the caller
-    email_address: String,
-    State(state): State<Arc<AppState>>,
-) -> Result<Json<user::User>, common::ErrResponse> {
-    let username = crate::usernames::rnd_username();
-
-    let lim = 5;
-    let mut count = 0;
-    let mut code = crate::common::rnd_code_str("");
-    while (users::select_by_code(code.clone(), &state.db).await)
-        .ok()
-        .flatten()
-        .is_some()
-    {
-        count += 1;
-        if count >= lim {
-            return Err(common::ErrResponse::new(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "ERR_LOGIN",
-                "Could not generate a unique code",
-            ));
-        }
-        code = crate::common::rnd_code_str("");
-    }
-
-    match users::insert(&username, 1, &email_address, &code, &state.db).await {
-        Ok(new_user) => {
-            let id = new_user.id;
-            match users::count(&state.db).await {
-                Ok(count) => {
-                    if count <= 1 {
-                        permissions::insert(id, 1, None, 1, &state.db).await.ok();
-                        permissions::insert(id, 2, None, 1, &state.db).await.ok();
-                        permissions::insert(id, 3, None, 1, &state.db).await.ok();
-                    }
-                }
-                Err(_) => (),
-            }
-
-            let encoded = serde_json::to_vec(&new_user).unwrap_or_default();
-            state.comm.send_message("users", &encoded).await.ok();
-
-            Ok(Json(new_user))
-        }
-        Err(e) => {
-            return Err(common::ErrResponse::new(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "ERR_DB",
-                &e,
-            ))
-        }
-    }
 }

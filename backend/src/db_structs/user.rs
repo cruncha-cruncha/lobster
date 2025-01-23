@@ -5,6 +5,8 @@ pub type Username = String;
 pub type Status = i32;
 pub type Code = String;
 pub type EmailAddress = String;
+pub type Salt = Vec<u8>;
+pub type Password = Vec<u8>;
 pub type CreatedAt = time::OffsetDateTime;
 
 pub enum UserStatus {
@@ -21,5 +23,7 @@ pub struct User {
     pub status: Status,
     pub code: Code,
     pub email_address: EmailAddress,
+    pub salt: Salt,
+    pub password: Password,
     pub created_at: CreatedAt,
 }

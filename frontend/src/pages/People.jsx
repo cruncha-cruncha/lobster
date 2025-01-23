@@ -238,7 +238,8 @@ export const PurePeople = (people) => {
               <Link to={goToPerson(person.id)} className="cursor-pointer">
                 <p>
                   {person.username.trim()}
-                  {person.emailAddress.trim() && `, ${person.emailAddress.trim()}`}
+                  {person.emailAddress.trim() &&
+                    `, ${person.emailAddress.trim()}`}
                 </p>
               </Link>
             </li>
@@ -296,7 +297,8 @@ export const useSingleStoreSelect = ({ filterParams = {} } = {}) => {
 };
 
 export const PureSingleStoreSelect = (singleStoreSelect) => {
-  const { storeTerm, storeOptions, setStoreTerm, setStoreId } = singleStoreSelect;
+  const { storeTerm, storeOptions, setStoreTerm, setStoreId } =
+    singleStoreSelect;
 
   return (
     <SearchSelect

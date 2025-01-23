@@ -1,3 +1,4 @@
+use crate::auth::encryption;
 use crate::common;
 use crate::db_structs::{permission, store, user};
 use serde::{Deserialize, Serialize};
@@ -35,7 +36,7 @@ pub async fn select(
     sqlx::query_as!(
         user::User,
         r#"
-        SELECT usr.id, usr.username, usr.status, '' AS "email_address!: _", usr.created_at, '' AS "code!: _"
+        SELECT usr.id, usr.username, usr.status, '' AS "email_address!: _", usr.created_at, '' AS "code!: _", usr.password, usr.salt
         FROM main.users usr
         LEFT JOIN main.permissions p ON usr.id = p.user_id AND p.status = 1
         WHERE
@@ -69,7 +70,7 @@ pub async fn select_with_email(
     sqlx::query_as!(
         user::User,
         r#"
-        SELECT usr.id, usr.username, usr.status, usr.email_address, usr.created_at, '' AS "code!: _"
+        SELECT usr.id, usr.username, usr.status, usr.email_address, usr.created_at, '' AS "code!: _", usr.password, usr.salt
         FROM main.users usr
         LEFT JOIN main.permissions p ON usr.id = p.user_id AND p.status = 1
         WHERE
@@ -96,12 +97,14 @@ pub async fn select_with_email(
     .map_err(|e| e.to_string())
 }
 
-pub async fn count(db: &sqlx::Pool<sqlx::Postgres>) -> Result<i64, String> {
+pub async fn count(limit: i64, db: &sqlx::Pool<sqlx::Postgres>) -> Result<i64, String> {
     sqlx::query!(
         r#"
         SELECT COUNT(*) as count
-        FROM main.users usr;
+        FROM main.users usr
+        LIMIT $1;
         "#,
+        limit,
     )
     .fetch_one(db)
     .await
@@ -167,19 +170,25 @@ pub async fn insert(
     username: &str,
     status: i32,
     email: &str,
+    password: &str,
     code: &str,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<user::User, String> {
+    let salt = encryption::generate_salt();
+    let hashed_password = encryption::hash_password(password, &salt);
+
     sqlx::query_as!(
         user::User,
         r#"
-        INSERT INTO main.users (username, status, email_address, code)
-        VALUES ($1, $2, $3, $4)
+        INSERT INTO main.users (username, status, email_address, salt, password, code)
+        VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING *;
         "#,
         username,
         status,
         email,
+        &salt,
+        &hashed_password,
         code,
     )
     .fetch_one(db)
@@ -190,19 +199,34 @@ pub async fn insert(
 pub async fn update(
     id: user::Id,
     username: Option<&str>,
+    password: Option<&str>,
     status: Option<i32>,
     db: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<Option<user::User>, String> {
+    let mut hashed_password = None;
+
+    if password.is_some() {
+        let mut existing_users = select_by_ids(vec![id], db).await?;
+        if existing_users.is_empty() {
+            return Ok(None);
+        }
+
+        let password = password.unwrap();
+        let existing_user = existing_users.remove(0);
+        hashed_password = Some(encryption::hash_password(&password, &existing_user.salt).to_vec());
+    }
+
     sqlx::query_as!(
         user::User,
         r#"
         UPDATE main.users usr
-        SET username = COALESCE(NULLIF($1, ''), usr.username), status = COALESCE($2, usr.status)
-        WHERE id = $3
+        SET username = COALESCE(NULLIF($1, ''), usr.username), status = COALESCE($2, usr.status), password = COALESCE($3, usr.password)
+        WHERE id = $4
         RETURNING *;
         "#,
         username,
         status,
+        hashed_password.as_deref(),
         id,
     )
     .fetch_optional(db)

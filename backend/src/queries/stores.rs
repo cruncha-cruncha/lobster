@@ -65,14 +65,13 @@ pub async fn select_no_contact(
     sqlx::query_as!(
         store::Store,
         r#"
-        SELECT ms.id, ms.name, ms.status, ms.location, '' AS "email_address!: _", '' AS "phone_number!: _", ms.rental_information, ms.other_information, '' AS "code!: _", ms.created_at
+        SELECT ms.id, ms.name, ms.status, '' AS "location!: _", '' AS "email_address!: _", '' AS "phone_number!: _", ms.rental_information, ms.other_information, '' AS "code!: _", ms.created_at
         FROM main.stores ms
         LEFT JOIN main.permissions p ON ms.id = p.store_id AND p.status = 1
         WHERE
             (ARRAY_LENGTH($1::integer[], 1) IS NULL OR ms.id = ANY($1::integer[]))
             AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR ms.status = ANY($2::integer[]))
-            -- (name || ' ' || COALESCE(description, '') || ' ' || ARRAY_TO_STRING(synonyms, ' '))
-            AND ($3::text = '' OR $3::text <% (ms.name || ' ' || ms.location || ' ' || COALESCE(ms.rental_information, '') || ' ' || COALESCE(ms.other_information, '')))
+            AND ($3::text = '' OR $3::text <% (ms.name || ' ' || COALESCE(ms.rental_information, '') || ' ' || COALESCE(ms.other_information, '')))
             AND (ARRAY_LENGTH($4::integer[], 1) IS NULL OR p.user_id = ANY($4::integer[]))
         GROUP BY ms.id
         ORDER BY ms.id

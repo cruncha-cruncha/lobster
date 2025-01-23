@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { CenteredLoadingDots } from "./loading/LoadingDots";
+import { LoadingDots, AbsoluteLoadingDots } from "./loading/LoadingDots";
 
 export const Button = ({
   variant,
@@ -10,7 +10,8 @@ export const Button = ({
   disabled,
   isLoading,
 }) => {
-  let buttonClasses = "rounded-full transition-colors";
+  let buttonClasses =
+    "rounded-full transition-colors relative flex items-center justify-center";
 
   if (variant === "blue") {
     buttonClasses +=
@@ -40,7 +41,7 @@ export const Button = ({
     return (
       <div className="button flex items-center">
         <Link to={goTo} className={buttonClasses}>
-          {isLoading && <CenteredLoadingDots />}
+          {isLoading && <LoadingDots />}
           <span className={isLoading ? "invisible" : ""}>{text}</span>
         </Link>
       </div>
@@ -54,7 +55,7 @@ export const Button = ({
         onClick={onClick}
         disabled={disabled || isLoading}
       >
-        {isLoading && <CenteredLoadingDots />}
+        {isLoading && <AbsoluteLoadingDots />}
         <span className={isLoading ? "invisible" : ""}>{text}</span>
       </button>
     </div>

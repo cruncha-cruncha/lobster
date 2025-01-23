@@ -1,10 +1,7 @@
 import { useState } from "react";
-import { CenteredLoadingDots } from "../components/loading/LoadingDots";
-import { useInfoModal, PureInfoModal } from "../components/InfoModal";
 import * as endpoints from "../api/endpoints";
 import { useLibraryInfo } from "../state/libraryInfo";
 import { Button } from "../components/Button";
-import { TextInput } from "../components/TextInput";
 
 export const useSetupLibrary = () => {
   const libraryInfo = useLibraryInfo();
@@ -34,12 +31,7 @@ export const useSetupLibrary = () => {
 };
 
 export const PureSetupLibrary = (setupLibrary) => {
-  const {
-    name,
-    setName,
-    onConfirm,
-    canConfirm,
-  } = setupLibrary;
+  const { name, setName, onConfirm, canConfirm } = setupLibrary;
 
   return (
     <div className="flex min-h-full items-center justify-center">
@@ -60,18 +52,12 @@ export const PureSetupLibrary = (setupLibrary) => {
         </div>
         <p>
           This can be changed later, but needs to be set up now for internal
-          purposes.
-        </p>
-        <p>
-          After setup, you will be taken to a login screen. Your account will
-          get all permissions.
+          purposes. Please sign up on the next screen if you have not already
+          done so. The first person to sign up will become the library
+          administrator, but this role can also be re-assigned later.
         </p>
         <div className="mt-4 flex justify-end gap-2">
-          <Button 
-            onClick={onConfirm}
-            text="Confirm"
-            disabled={!canConfirm}            
-          />
+          <Button onClick={onConfirm} text="Confirm" disabled={!canConfirm} />
         </div>
       </div>
     </div>

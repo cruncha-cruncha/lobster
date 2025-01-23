@@ -1,3 +1,4 @@
+use crate::auth::encryption;
 use crate::db_structs::user;
 use crate::queries::users;
 use crate::{auth::claims, queries::permissions};
@@ -20,6 +21,7 @@ pub struct Tokens {
 #[serde(rename_all = "camelCase")]
 pub struct LoginData {
     pub email: String,
+    pub password: String,
 }
 
 pub async fn login(
@@ -28,24 +30,33 @@ pub async fn login(
 ) -> Result<Json<Tokens>, common::ErrResponse> {
     let user_id = match users::select_by_email(&payload.email, &state.db).await {
         Ok(u) => {
-            if u.is_some() {
-                if u.as_ref().unwrap().status != user::UserStatus::Active as i32 {
-                    return Err(common::ErrResponse::new(
-                        StatusCode::FORBIDDEN,
-                        "ERR_AUTH",
-                        "User is not active",
-                    ));
-                }
-
-                u.unwrap().id
-            } else {
-                let new_user = super::users::create_new_user(
-                    payload.email,
-                    axum::extract::State(state.clone()),
-                )
-                .await?;
-                new_user.id
+            if u.is_none() {
+                return Err(common::ErrResponse::new(
+                    StatusCode::NOT_FOUND,
+                    "ERR_MIA",
+                    "User not found",
+                ));
             }
+
+            let u = u.unwrap();
+            if u.status != user::UserStatus::Active as i32 {
+                return Err(common::ErrResponse::new(
+                    StatusCode::FORBIDDEN,
+                    "ERR_AUTH",
+                    "User is not active",
+                ));
+            }
+
+            let hashed_password = encryption::hash_password(&payload.password, &u.salt);
+            if hashed_password != &u.password[..] {
+                return Err(common::ErrResponse::new(
+                    StatusCode::UNAUTHORIZED,
+                    "ERR_AUTH",
+                    "Invalid password",
+                ));
+            }
+
+            u.id
         }
         Err(e) => {
             return Err(common::ErrResponse::new(
@@ -152,4 +163,100 @@ pub async fn refresh(
         access_token: access_token,
         refresh_token: None,
     }))
+}
+
+pub async fn sign_up(
+    State(state): State<Arc<AppState>>,
+    Json(payload): Json<LoginData>,
+) -> Result<Json<super::users::SafeUser>, common::ErrResponse> {
+    if payload.password.len() < encryption::MIN_PASSWORD_LENGTH {
+        return Err(common::ErrResponse::new(
+            StatusCode::BAD_REQUEST,
+            "ERR_REQ",
+            "Password is too short",
+        ));
+    }
+
+    let username = crate::usernames::rnd_username();
+
+    let lim = 5;
+    let mut count = 0;
+    let mut code = crate::common::rnd_code_str("");
+    while (users::select_by_code(code.clone(), &state.db).await)
+        .ok()
+        .flatten()
+        .is_some()
+    {
+        count += 1;
+        if count >= lim {
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_LOGIN",
+                "Could not generate a unique code",
+            ));
+        }
+        code = crate::common::rnd_code_str("");
+    }
+
+    match users::insert(
+        &username,
+        user::UserStatus::Pending as i32,
+        &payload.email,
+        &payload.password,
+        &code,
+        &state.db,
+    )
+    .await
+    {
+        Ok(mut new_user) => {
+            let id = new_user.id;
+            match users::count(2, &state.db).await {
+                Ok(count) => {
+                    if count <= 1 {
+                        new_user = match users::update(
+                            id,
+                            None,
+                            None,
+                            Some(user::UserStatus::Active as i32),
+                            &state.db,
+                        )
+                        .await
+                        {
+                            Ok(u) => u.unwrap(),
+                            Err(e) => {
+                                return Err(common::ErrResponse::new(
+                                    StatusCode::INTERNAL_SERVER_ERROR,
+                                    "ERR_DB",
+                                    &e,
+                                ))
+                            }
+                        };
+                        permissions::insert(id, 1, None, 1, &state.db).await.ok();
+                        permissions::insert(id, 2, None, 1, &state.db).await.ok();
+                        permissions::insert(id, 3, None, 1, &state.db).await.ok();
+                    }
+                }
+                Err(_) => (),
+            }
+
+            let encoded = serde_json::to_vec(&new_user).unwrap_or_default();
+            state.comm.send_message("users", &encoded).await.ok();
+
+            Ok(Json(super::users::SafeUser {
+                id: new_user.id,
+                username: new_user.username,
+                status: new_user.status,
+                code: new_user.code,
+                email_address: new_user.email_address,
+                created_at: new_user.created_at,
+            }))
+        }
+        Err(e) => {
+            return Err(common::ErrResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "ERR_DB",
+                &e,
+            ))
+        }
+    }
 }

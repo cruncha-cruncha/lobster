@@ -142,11 +142,25 @@ export const updateLibrary = async ({ info, accessToken }) => {
   return data;
 };
 
-export const login = async ({ email }) => {
+export const signUp = async ({ email, password }) => {
+  const data = await handle(`${serverUrl}/sign-up`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+
+  if (!validateUserInfo(data)) {
+    throw new Error(400);
+  }
+
+  return data;
+};
+
+export const login = async ({ email, password }) => {
   const data = await handle(`${serverUrl}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({ email, password }),
   });
 
   if (!validateTokens(data)) {
@@ -287,7 +301,7 @@ export const searchStores = async ({ params, accessToken }) => {
   const data = await handle(`${serverUrl}/stores?${str_params}`, {
     method: "GET",
     headers: {
-      Authorization: `Bearer ${accessToken}`,
+      ...(!accessToken ? {} : { Authorization: `Bearer ${accessToken}` }),
     },
   });
 
@@ -302,7 +316,7 @@ export const getStore = async ({ id, accessToken }) => {
   const data = await handle(`${serverUrl}/stores/${id}`, {
     method: "GET",
     headers: {
-      Authorization: `Bearer ${accessToken}`,
+      ...(!accessToken ? {} : { Authorization: `Bearer ${accessToken}` }),
     },
   });
 

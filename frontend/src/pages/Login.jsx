@@ -5,6 +5,12 @@ import { useAuth } from "../state/auth";
 import { PureInfoModal, useInfoModal } from "../components/InfoModal";
 import { Button } from "../components/Button";
 import { TextInput } from "../components/TextInput";
+import { useConstants } from "../state/constants";
+import * as endpoints from "../api/endpoints";
+
+export const validatePassword = (password) => {
+  return password.length >= 4;
+};
 
 export const validateEmail = (email) => {
   return new RegExp(/^.+@.+\..+$/).test(email);
@@ -13,25 +19,52 @@ export const validateEmail = (email) => {
 export const useLogin = () => {
   const libraryInfo = useLibraryInfo();
   const navigate = useNavigate();
+  const { userStatuses } = useConstants();
   const auth = useAuth();
   const [email, _setEmail] = useState("");
+  const [password, _setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const modal = useInfoModal();
 
   const validEmail = validateEmail(email);
+  const validPassword = validatePassword(password);
 
-  const onLogin = async () => {
+  const handleSignup = async () => {
     setIsLoading(true);
 
-    auth
+    return endpoints
+      .signUp({
+        email,
+        password,
+      })
+      .then((data) => {
+        if (userStatuses.find((s) => s.id === data.status)?.name === "active") {
+          return handleLogin();
+        }
+
+        return modal.open("Account pending, please wait for verification", "");
+      })
+      .catch(() => {
+        modal.open("Error creating account", "error");
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
+  const handleLogin = async () => {
+    setIsLoading(true);
+
+    return auth
       .login({
         email,
+        password,
       })
       .then(() => {
         navigate("/welcome");
       })
-      .catch((e) => {
-        console.error(e);
+      .catch(() => {
+        modal.open("Incorrect username or password", "error");
       })
       .finally(() => {
         setIsLoading(false);
@@ -42,14 +75,22 @@ export const useLogin = () => {
     _setEmail(e.target.value);
   };
 
+  const setPassword = (e) => {
+    _setPassword(e.target.value);
+  };
+
   return {
     modal,
     libraryName: libraryInfo.name,
     email,
     setEmail,
-    onLogin,
-    canLogin: validEmail,
-    loginLoading: isLoading,
+    password,
+    setPassword,
+    handleLogin,
+    handleSignup,
+    canLogin: validEmail && validPassword,
+    canSignUp: validEmail && validPassword,
+    isLoading,
   };
 };
 
@@ -59,9 +100,13 @@ export const PureLogin = (login) => {
     libraryName,
     email,
     setEmail,
-    onLogin,
+    password,
+    setPassword,
+    handleLogin,
+    handleSignup,
     canLogin,
-    loginLoading,
+    canSignUp,
+    isLoading,
   } = login;
 
   return (
@@ -76,20 +121,36 @@ export const PureLogin = (login) => {
             <div className="p-2">
               <h1 className="mb-2 text-left text-xl">Login</h1>
               <form onSubmit={(e) => e.preventDefault()}>
-                <TextInput
-                  id={`login-email`}
-                  placeholder="email address"
-                  value={email}
-                  onChange={setEmail}
-                  disabled={loginLoading}
-                />
-                <div className="mt-3 flex justify-end">
+                <div className="grid grid-cols-1 gap-x-4 gap-y-2">
+                  <TextInput
+                    id={`login-email`}
+                    placeholder="email address"
+                    value={email}
+                    onChange={setEmail}
+                    disabled={isLoading}
+                  />
+                  <TextInput
+                    id={`login-password`}
+                    placeholder="password"
+                    value={password}
+                    onChange={setPassword}
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="mt-3 flex justify-end gap-2">
+                  <Button
+                    color="green"
+                    text="Sign Up"
+                    disabled={!canSignUp}
+                    onClick={handleSignup}
+                    isLoading={isLoading}
+                  />
                   <Button
                     color="green"
                     text="Login"
                     disabled={!canLogin}
-                    onClick={onLogin}
-                    isLoading={loginLoading}
+                    onClick={handleLogin}
+                    isLoading={isLoading}
                   />
                 </div>
               </form>

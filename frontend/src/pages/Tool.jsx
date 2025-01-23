@@ -41,7 +41,7 @@ const reducer = (state, action) => {
 };
 
 export const useTool = () => {
-  const { accessToken, permissions } = useAuth();
+  const { accessToken, permissions, isLoggedIn } = useAuth();
   const params = useParams();
   const { toolStatuses } = useConstants();
   const _categorySearch = useCategorySearch();
@@ -65,6 +65,8 @@ export const useTool = () => {
   });
   const [photosOffset, setPhotosOffset] = useState(0);
   const toolId = params.id;
+
+  const showRentalsButton = isLoggedIn;
 
   const updateLocalInfo = (data) => {
     dispatch({ type: "status", value: data.status });
@@ -280,6 +282,7 @@ export const useTool = () => {
     canScrollPhotosLeft: photosOffset < 0,
     canScrollPhotosRight:
       -1 * photosOffset < 16.5 * (data?.pictures.length - 1),
+    showRentalsButton,
   };
 };
 
@@ -316,6 +319,7 @@ export const PureTool = (tool) => {
     photosOffset,
     canScrollPhotosLeft,
     canScrollPhotosRight,
+    showRentalsButton,
   } = tool;
 
   return (
@@ -329,7 +333,14 @@ export const PureTool = (tool) => {
           variant="blue"
           size="sm"
         />
-        <Button text="Rentals" goTo={goToRentals()} variant="blue" size="sm" />
+        {showRentalsButton && (
+          <Button
+            text="Rentals"
+            goTo={goToRentals()}
+            variant="blue"
+            size="sm"
+          />
+        )}
         <Button text="Store" goTo={goToStore()} variant="blue" size="sm" />
       </div>
       <div className="relative w-full overflow-x-hidden">

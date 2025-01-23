@@ -36,7 +36,7 @@ const Init = ({ children }) => {
   if (libraryInfo.name) {
     return children;
   } else if (libraryInfo.error) {
-    if (libraryInfo.error.message === "404") {
+    if (libraryInfo.error.errCode === "ERR_MIA") {
       return <SetupLibrary />;
     } else {
       return (

@@ -81,6 +81,7 @@ const userInfoSchema = {
     id: { type: "number" },
     username: { type: "string" },
     status: { type: "number" },
+    code: { type: "string" },
     emailAddress: { type: "string" },
     createdAt: { type: "string" },
   },

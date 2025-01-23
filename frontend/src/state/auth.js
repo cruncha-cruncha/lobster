@@ -56,7 +56,7 @@ export const useSetupAuth = () => {
   }, [refreshToken]);
 };
 
-export const useAuth = ({ mustBeLoggedIn = false } = {}) => {
+export const useAuth = () => {
   const navigate = useNavigate();
   const [userId, setUserId] = useAtom(userIdAtom);
   const [_permissions, setPermissions] = useAtom(userPermissionsAtom);
@@ -67,12 +67,9 @@ export const useAuth = ({ mustBeLoggedIn = false } = {}) => {
   );
 
   const isLoggedIn = !!userId && !!accessToken;
-  if (!isLoggedIn && !attemptingRefresh && mustBeLoggedIn) {
-    navigate("/login");
-  }
 
-  const login = useCallback(({ email }) => {
-    return endpoints.login({ email }).then((data) => {
+  const login = useCallback(({ email, password }) => {
+    return endpoints.login({ email, password }).then((data) => {
       setAccessToken(data.accessToken);
       setRefreshToken(data.refreshToken);
       const decoded = jwtDecode(data.accessToken);

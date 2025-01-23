@@ -23,6 +23,8 @@ export const useLibrary = () => {
     name: remoteInfo.name,
   });
 
+  const showUpdateName = auth.permissions.isLibraryAdmin();
+
   const canSave = info.name !== remoteInfo.name && !isLoading;
 
   const save = (e) => {
@@ -39,7 +41,6 @@ export const useLibrary = () => {
       })
       .then(() => remoteInfo.refresh())
       .catch((e) => {
-        alert("Failed to save library settings");
         console.error(e);
       })
       .finally(() => {
@@ -53,34 +54,40 @@ export const useLibrary = () => {
     setName: (e) => dispatch({ type: "name", value: e.target.value }),
     isLoading,
     canSave,
+    showUpdateName,
     save,
   };
 };
 
 export const PureLibrary = (library) => {
-  const { uuid, info, setName, canSave, save, isLoading } = library;
+  const { uuid, info, setName, canSave, save, isLoading, showUpdateName } =
+    library;
 
   return (
     <div>
       <h1 className="my-2 px-2 text-xl">Network Settings</h1>
       <p className="px-2">(id: "{uuid}")</p>
-      <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 px-2">
-        <TextInput
-          id={`library-name`}
-          label="Name"
-          placeholder="Network Name"
-          value={info.name}
-          onChange={setName}
-        />
-      </div>
-      <div className="mt-3 flex justify-end gap-2 px-2">
-        <Button
-          onClick={save}
-          disabled={!canSave}
-          text="Save"
-          loading={isLoading}
-        />
-      </div>
+      {showUpdateName && (
+        <>
+          <div className="mb-3 mt-2 grid grid-cols-1 gap-x-4 gap-y-2 px-2">
+            <TextInput
+              id={`library-name`}
+              label="Name"
+              placeholder="Network Name"
+              value={info.name}
+              onChange={setName}
+            />
+          </div>
+          <div className="mt-3 flex justify-end gap-2 px-2">
+            <Button
+              onClick={save}
+              disabled={!canSave}
+              text="Save"
+              loading={isLoading}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 };

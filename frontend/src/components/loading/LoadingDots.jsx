@@ -10,12 +10,10 @@ export const LoadingDots = ({ className }) => {
   );
 };
 
-export const CenteredLoadingDots = ({ className }) => {
+export const AbsoluteLoadingDots = ({ className }) => {
   return (
-    <div className="relative h-full w-full">
-      <div className="absolute flex h-full w-full items-center justify-center">
-        <LoadingDots className={className} />
-      </div>
+    <div className="absolute left-0 right-0 flex h-full items-center justify-center">
+      <LoadingDots className={className} />
     </div>
   );
 };

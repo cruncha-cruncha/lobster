@@ -7,7 +7,7 @@ import { PureInfoModal } from "./InfoModal";
 
 export const Layout = () => {
   const libraryInfo = useLibraryInfo();
-  const auth = useAuth({ mustBeLoggedIn: true });
+  const { logout, isLoggedIn } = useAuth();
   const [showMenu, setShowMenu] = useState(false);
   const modal = useLayoutInfoModal();
 
@@ -34,20 +34,25 @@ export const Layout = () => {
             <div className="mt-2 w-full border-y border-black pb-2 text-left transition-colors">
               <div className="flex items-stretch justify-center">
                 <div className="relative w-full max-w-5xl *:my-1 *:block *:px-2 *:duration-150 hover:*:bg-blue-900 hover:*:text-white">
-                  <NavLink to="/people" className="!mt-2 hover:bg-blue-900">
-                    People
-                  </NavLink>
-                  <NavLink to="/grievances">Grievances</NavLink>
-                  <NavLink to="/rentals">Rentals</NavLink>
+                  {isLoggedIn && (
+                    <NavLink to="/people" className="!mt-2 hover:bg-blue-900">
+                      People
+                    </NavLink>
+                  )}
+                  {isLoggedIn && <NavLink to="/grievances">Grievances</NavLink>}
+                  {isLoggedIn && <NavLink to="/rentals">Rentals</NavLink>}
                   <NavLink to="/tools">Tools</NavLink>
                   <NavLink to="/stores">Stores</NavLink>
-                  <NavLink to="/library">Network</NavLink>
-                  <button
-                    onClick={() => auth.logout()}
-                    className="block w-full text-left hover:!bg-transparent hover:!text-black"
-                  >
-                    - logout
-                  </button>
+                  {isLoggedIn && <NavLink to="/library">Network</NavLink>}
+                  {isLoggedIn && (
+                    <button
+                      onClick={() => logout()}
+                      className="block w-full text-left hover:!bg-transparent hover:!text-black"
+                    >
+                      - logout
+                    </button>
+                  )}
+                  {!isLoggedIn && <NavLink to="/login">Login</NavLink>}
                 </div>
               </div>
             </div>

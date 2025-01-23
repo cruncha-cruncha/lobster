@@ -26,7 +26,7 @@ const paramsReducer = (state, action) => {
 };
 
 export const useStores = () => {
-  const { accessToken } = useAuth();
+  const { accessToken, isLoggedIn } = useAuth();
   const { storeStatuses } = useConstants();
   const pageControl = usePrevNext();
   const [storeList, setStoreList] = useState([]);
@@ -36,6 +36,8 @@ export const useStores = () => {
     term: "",
     withUser: false,
   });
+
+  const showNewStoreButton = isLoggedIn;
 
   const goToNewStore = () => "/stores/new";
 
@@ -72,7 +74,7 @@ export const useStores = () => {
 
   const { data, error, isLoading, mutate } = useSWR(
     !accessToken
-      ? null
+      ? `get stores, using ${JSON.stringify(endpointParams)}`
       : `get stores, using ${accessToken} and ${JSON.stringify(
           endpointParams,
         )}`,
@@ -104,6 +106,7 @@ export const useStores = () => {
     setWithUser,
     pageControl,
     singleUserSelect,
+    showNewStoreButton,
   };
 };
 
@@ -119,20 +122,23 @@ export const PureStores = (stores) => {
     storeList,
     pageControl,
     singleUserSelect,
+    showNewStoreButton,
   } = stores;
 
   return (
     <div>
       <div className="my-2 flex items-center gap-2 px-2">
         <h2 className="mr-2 text-xl">Stores</h2>
-        <div className="flex gap-2">
-          <Button
-            goTo={goToNewStore()}
-            text="New Store"
-            variant="blue"
-            size="sm"
-          />
-        </div>
+        {showNewStoreButton && (
+          <div className="flex gap-2">
+            <Button
+              goTo={goToNewStore()}
+              text="New Store"
+              variant="blue"
+              size="sm"
+            />
+          </div>
+        )}
       </div>
       <div className="px-2">
         <p>

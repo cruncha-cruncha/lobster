@@ -11,6 +11,8 @@ CREATE TABLE main.users (
     username TEXT NOT NULL,
     status INTEGER NOT NULL,
     email_address TEXT NOT NULL,
+    salt BYTEA NOT NULL,
+    password BYTEA NOT NULL,
     created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
     code TEXT NOT NULL,
     PRIMARY KEY (id),
@@ -155,7 +157,7 @@ CREATE INDEX IF NOT EXISTS idx_fuzzy_users_with_email ON main.users
   USING gist((username || ' ' || email_address) gist_trgm_ops(siglen=256));
 
 CREATE INDEX IF NOT EXISTS idx_fuzzy_stores ON main.stores
-  USING gist((name || ' ' || location || ' ' || COALESCE(rental_information, '') || ' ' || COALESCE(other_information, '')) gist_trgm_ops(siglen=256));
+  USING gist((name || ' ' || COALESCE(rental_information, '') || ' ' || COALESCE(other_information, '')) gist_trgm_ops(siglen=256));
 
 CREATE INDEX IF NOT EXISTS idx_fuzzy_stores_with_contact ON main.stores
   USING gist((name || ' ' || location || ' ' || COALESCE(email_address, '') || ' ' || phone_number || ' ' || COALESCE(rental_information, '') || ' ' || COALESCE(other_information, '')) gist_trgm_ops(siglen=256));

@@ -306,6 +306,7 @@ pub async fn get_by_id(
     if !can_see_contact_info {
         store.email_address = None;
         store.phone_number = "".to_string();
+        store.location = "".to_string();
     }
 
     let can_see_code = claims.is_store_admin()
