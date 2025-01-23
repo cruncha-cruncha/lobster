@@ -108,7 +108,7 @@ pub async fn select(
                 (ARRAY_LENGTH($1::integer[], 1) IS NULL OR g.status = ANY($1::integer[]))
                 AND (ARRAY_LENGTH($2::integer[], 1) IS NULL OR g.author_id = ANY($2::integer[]))
                 AND (ARRAY_LENGTH($3::integer[], 1) IS NULL OR g.accused_id = ANY($3::integer[]))
-                AND ($4::text = '' OR g.title <% $4::text)
+                AND ($4::text = '' OR $4::text <% g.title)
             ORDER BY g.created_at DESC
             OFFSET $5 LIMIT $6;
             "#,
