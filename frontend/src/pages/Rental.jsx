@@ -102,7 +102,7 @@ export const PureRental = (tool) => {
   return (
     <div>
       <div className="my-2 flex justify-start gap-2 px-2">
-        <Button text="Rentals" goTo={goToRentals()} variant="blue" size="sm" />
+        <Button text="All Rentals" goTo={goToRentals()} variant="blue" size="sm" />
         <Button text="Tool" goTo={goToTool()} variant="blue" size="sm" />
         <Button text="Store" goTo={goToStore()} variant="blue" size="sm" />
         <Button text="Person" goTo={goToPerson()} variant="blue" size="sm" />

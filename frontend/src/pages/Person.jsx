@@ -53,18 +53,18 @@ export const PurePerson = (person) => {
       <h1 className="mt-2 px-2 text-xl">{username}</h1>
       <div className="my-2 flex justify-start gap-2 px-2">
         <Button
+          goTo={goToPeople()}
+          text="All People"
+          variant="blue"
+          size="sm"
+        />
+        <Button
           goTo={goToGrievances()}
           text="Grievances"
           variant="blue"
           size="sm"
         />
         <Button goTo={goToRentals()} text="Rentals" variant="blue" size="sm" />
-        <Button
-          goTo={goToPeople()}
-          text="All People"
-          variant="blue"
-          size="sm"
-        />
       </div>
       <PureUserInfo {...userInfo} />
       <PureUserStatus {...userStatus} />

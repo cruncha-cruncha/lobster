@@ -94,14 +94,14 @@ export const PureGrievance = (grievance) => {
     <div>
       <h1 className="mt-2 px-2 text-xl">{title}</h1>
       <div className="my-2 flex flex-wrap justify-start gap-2 px-2">
-        <Button goTo={goToAuthor()} text="Author" variant="blue" size="sm" />
-        <Button goTo={goToAccused()} text="Accused" variant="blue" size="sm" />
         <Button
           goTo={goToGrievances()}
           text="All Grievances"
           variant="blue"
           size="sm"
         />
+        <Button goTo={goToAuthor()} text="Author" variant="blue" size="sm" />
+        <Button goTo={goToAccused()} text="Accused" variant="blue" size="sm" />
       </div>
       <div className="mb-2 px-2">
         <p>Accused: {accused.username}</p>
