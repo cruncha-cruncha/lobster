@@ -1,5 +1,5 @@
 import { useReducer, useState, useEffect } from "react";
-import { useParams } from "react-router";
+import { useParams, Link } from "react-router";
 import useSWR from "swr";
 import { useConstants } from "../state/constants";
 import { useAuth } from "../state/auth";
@@ -337,7 +337,7 @@ export const useUserPermissions = ({ id }) => {
     store: [],
   });
   const [isAddingPermission, setIsAddingPermission] = useState(false);
-  const [isRemovingPermissions, setIsRemovingPermissions] = useState([]);
+  const [isRemovingPermissions, setIsRemovingPermissions] = useState(false);
   const [showFields, setShowFields] = useState(""); // "", "add", "remove"
   const [selectedRole, _setSelectedRole] = useState("0");
   const storeSelect = useSingleStoreSelect({
@@ -345,6 +345,7 @@ export const useUserPermissions = ({ id }) => {
       ...(!isOnlyStoreRep ? {} : { userIds: [userId] }),
     },
   });
+  const [toDelete, _setToDelete] = useState([]);
 
   const { data, error, isLoading, mutate } = useSWR(
     !accessToken ? null : `get user ${id} permissions, using ${accessToken}`,
@@ -357,29 +358,22 @@ export const useUserPermissions = ({ id }) => {
     }
   }, [data]);
 
-  const removePermission = async ({ permissionId }) => {
-    setIsRemovingPermissions((prev) => [
-      ...prev.filter((id) => id != permissionId),
-      permissionId,
-    ]);
+  const removePermissions = async () => {
+    setIsRemovingPermissions(true);
 
-    endpoints
-      .removeUserPermission({
-        id: permissionId,
-        accessToken,
-      })
-      .then(() => {
-        mutate((prev) => ({
-          ...prev,
-          library: prev.library.filter((p) => p.id != permissionId),
-          store: prev.store.filter((p) => p.id != permissionId),
-        }));
-      })
-      .finally(() => {
-        setIsRemovingPermissions((prev) => [
-          ...prev.filter((id) => id != permissionId),
-        ]);
-      });
+    await Promise.all(toDelete.map((id) => endpoints.removeUserPermission({ id, accessToken }).then(() => {
+      mutate((prev) => ({
+        ...prev,
+        library: prev.library.filter((p) => p.id != id),
+        store: prev.store.filter((p) => p.id != id),
+      }));
+    }))).catch((e) => {
+      // do something
+    })
+    .finally(() => {
+      setIsRemovingPermissions(false);
+      _setToDelete([]);
+    });
   };
 
   const addPermission = async () => {
@@ -496,6 +490,17 @@ export const useUserPermissions = ({ id }) => {
     }
   };
 
+  const goToStore = (storeId) => `/stores/${storeId}`;
+
+  const toggleMarkPermissioForDelete = (permissionId) => {
+    _setToDelete((prev) => {
+      if (prev.includes(permissionId)) {
+        return prev.filter((id) => id != permissionId);
+      }
+      return [...prev, permissionId];
+    });
+  };
+
   return {
     libraryPermissions: userPermissions.library.map((p) => ({
       id: p.id,
@@ -516,7 +521,10 @@ export const useUserPermissions = ({ id }) => {
     showFields,
     showAddFields: () => setShowFields("add"),
     showRemoveFields: () => setShowFields("remove"),
-    toggleShowFields: () => setShowFields(""),
+    toggleShowFields: () => {
+      setShowFields("");
+      _setToDelete([]);
+    },
     roleOptions: [{ name: "Select Role", id: "0" }, ...roleOptions],
     selectedRole,
     setSelectedRole: (e) => _setSelectedRole(e.target.value),
@@ -525,9 +533,13 @@ export const useUserPermissions = ({ id }) => {
     canAddPermission,
     addPermission,
     canRemovePermission,
-    removePermission,
     isAddingPermission,
     isRemovingPermissions,
+    canRemovePermissions: toDelete.length > 0,
+    goToStore,
+    toDelete,
+    toggleMarkPermissioForDelete,
+    removePermissions,
   };
 };
 
@@ -548,9 +560,13 @@ const PureUserPermissions = (userPermissions) => {
     addPermission,
     storeSelect,
     canRemovePermission,
-    removePermission,
     isAddingPermission,
     isRemovingPermissions,
+    canRemovePermissions,
+    goToStore,
+    toDelete,
+    toggleMarkPermissioForDelete,
+    removePermissions,
   } = userPermissions;
 
   return (
@@ -560,34 +576,35 @@ const PureUserPermissions = (userPermissions) => {
         {libraryPermissions.length <= 0 && storePermissions.length <= 0 && (
           <li className="text-stone-400">none found</li>
         )}
-        {libraryPermissions.map((permission) => (
-          <li key={permission.id} className="flex items-center justify-between">
-            <span>{permission.roleName}</span>
-            {showFields === "remove" && canRemovePermission(permission.id) && (
-              <Button
-                onClick={() =>
-                  removePermission({ permissionId: permission.id })
-                }
-                text="X"
-                variant="red"
-                size="sm"
-              />
-            )}
-          </li>
-        ))}
-        {storePermissions.map((info) => (
-          <li key={info.id} className="flex items-center justify-between">
-            <span>
-              {info.roleName} of {info.storeName}
-            </span>
-            {showFields === "remove" && canRemovePermission(info.id) && (
-              <Button
-                onClick={() => removePermission({ permissionId: info.id })}
-                text="X"
-                size="sm"
-                variant="red"
-                disabled={isRemovingPermissions.includes(info.id)}
-              />
+        {[...libraryPermissions, ...storePermissions].map((info) => (
+          <li
+            key={info.id}
+            className={
+              (showFields === "remove" && canRemovePermission(info.id)
+                ? " cursor-pointer"
+                : "") + (toDelete.includes(info.id) ? " text-stone-400" : "")
+            }
+            onClick={() => {
+              if (showFields === "remove" && canRemovePermission(info.id)) {
+                toggleMarkPermissioForDelete(info.id);
+              }
+            }}
+          >
+            {showFields === "remove" &&
+              canRemovePermission(info.id) &&
+              !toDelete.includes(info.id) && (
+                <span className="text-red-400">X </span>
+              )}
+            <span>{info.roleName}</span>
+            {info.storeName && (
+              <>
+                <span> of </span>
+                {showFields === "remove" && canRemovePermission(info.id) ? (
+                  <span>{info.storeName}</span>
+                ) : (
+                  <Link to={goToStore(info.storeId)}>{info.storeName}</Link>
+                )}
+              </>
             )}
           </li>
         ))}
@@ -622,8 +639,14 @@ const PureUserPermissions = (userPermissions) => {
             </>
           )}
           {showFields === "remove" && (
-            <div className="mt-3 flex justify-start gap-2">
-              <Button text="Done" onClick={toggleShowFields} variant="blue" />
+            <div className="mt-3 flex justify-between gap-2">
+              <Button text="Cancel" onClick={toggleShowFields} variant="blue" />
+              <Button
+                text="Save Changes"
+                disabled={!canRemovePermissions}
+                onClick={removePermissions}
+                isLoading={isRemovingPermissions}
+              />
             </div>
           )}
           {showFields === "" && (
