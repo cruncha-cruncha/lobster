@@ -28,7 +28,7 @@ export const useLogin = () => {
         email,
       })
       .then(() => {
-        navigate("/tools");
+        navigate("/welcome");
       })
       .catch((e) => {
         console.error(e);

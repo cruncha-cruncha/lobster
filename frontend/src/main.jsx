@@ -20,6 +20,7 @@ import { NewStore } from "./pages/NewStore";
 import { Library } from "./pages/Library";
 import { Tool } from "./pages/Tool";
 import { Rental } from "./pages/Rental";
+import { Welcome } from "./pages/Welcome";
 import { StoreCart } from "./pages/StoreCart";
 import { useSetupAuth } from "./state/auth";
 import { useInitConstants } from "./state/constants";
@@ -69,7 +70,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="/rentals" element={<Rentals />} />
             <Route path="rentals/:id" element={<Rental />} />
             <Route path="/cart" element={<Cart />} />
-            <Route index element={<Tools />} />
+            <Route index element={<Welcome />} />
             <Route path="/tools" element={<Tools />} />
             <Route path="/tools/:id" element={<Tool />} />
             <Route path="/stores" element={<Stores />} />
@@ -77,6 +78,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="/stores/:id" element={<Store />} />
             <Route path="/stores/:id/cart" element={<StoreCart />} />
             <Route path="/library" element={<Library />} />
+            <Route path="/welcome" element={<Welcome />} />
           </Route>
         </Routes>
       </Init>

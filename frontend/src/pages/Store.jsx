@@ -12,6 +12,7 @@ import { useToolCart } from "../state/toolCart";
 import { LargeTextInput } from "../components/LargeTextInput";
 import { FileSelect } from "../components/FileSelect";
 import { useImageUpload } from "../state/imageUpload";
+import { formatOxfordComma } from "../components/utils";
 
 export const URL_STORE_ID_KEY = "storeId";
 
@@ -19,7 +20,7 @@ export const useStore = () => {
   const params = useParams();
   const { toolCart } = useToolCart();
   const { accessToken, permissions } = useAuth();
-  const { storeStatuses } = useConstants();
+  const { storeStatuses, roles } = useConstants();
   const storeId = params.id;
 
   const { data, error, isLoading } = useSWR(
@@ -42,6 +43,9 @@ export const useStore = () => {
   const showEditStore = permissions.isStoreRep(storeId);
   const showEditStoreStatus = permissions.isStoreAdmin();
   const showAddTool = permissions.isToolManager(storeId) && data?.status == 1;
+  const storePermissions = (permissions.store[storeId] || []).map((p) =>
+    roles.find((r) => r.id == p),
+  );
 
   return {
     data: {
@@ -59,6 +63,7 @@ export const useStore = () => {
     showEditStore,
     showEditStoreStatus,
     showAddTool,
+    storePermissions,
   };
 };
 
@@ -76,6 +81,7 @@ export const PureStore = (store) => {
     showEditStore,
     showEditStoreStatus,
     showAddTool,
+    storePermissions,
   } = store;
 
   return (
@@ -98,7 +104,15 @@ export const PureStore = (store) => {
           size="sm"
         />
       </div>
-      <div className="px-2 mb-4">
+      {storePermissions.length > 0 && (
+        <div className="my-2 px-2">
+          <p>
+            You are a {formatOxfordComma(storePermissions.map((p) => p.name))}{" "}
+            of this store.
+          </p>
+        </div>
+      )}
+      <div className="mb-4 px-2">
         <p>status: {data?.status?.name}</p>
         <p>name: {data?.name?.trim()}</p>
         <p>code: {data?.code?.trim()}</p>
