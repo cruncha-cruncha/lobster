@@ -789,9 +789,14 @@ export const PureStoreUsers = (storeUsers) => {
 
   return (
     <div className="">
-      <div className="px-2">
-        <h2 className="text-lg">People</h2>
-        <ul>
+      <div className="">
+        <h2 className="text-lg px-2">People</h2>
+        <ul className="mt-1 overflow-y-auto border-x-2 border-stone-400 px-2 py-px [&>*]:my-1">
+          {users.length <= 0 && (
+            <li>
+              <span className="text-stone-400">none</span>
+            </li>
+          )}
           {users.map((user) =>
             user.permissions.map((p) => (
               <li
