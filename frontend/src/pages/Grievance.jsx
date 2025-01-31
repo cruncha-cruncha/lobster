@@ -64,7 +64,6 @@ export const useGrievance = () => {
     author: data?.author || { id: 0, username: "" },
     accused: data?.accused || { id: 0, username: "" },
     status,
-    grievanceId,
     replies: repliesData?.grievanceReplies || [],
     showMakeReply,
     showUpdateStatus,
