@@ -7,7 +7,7 @@ services:
   lobster-backend:
     build: ./backend
     volumes:
-      - "img-data:/home/photos"
+      - "lobster-img-data:/home/photos"
     depends_on:
       lobster-postgres:
         condition: service_healthy
@@ -19,7 +19,7 @@ services:
   lobster-postgres:
     build: ./sql
     volumes:
-      - "pg-data:/var/lib/postgresql/data"
+      - "lobster-pg-data:/var/lib/postgresql/data"
     networks:
       - lobster-backend-net
     healthcheck:
@@ -29,9 +29,9 @@ services:
       retries: 4
 
 volumes:
-  pg-data:
+  lobster-pg-data:
     driver: local
-  img-data:
+  lobster-img-data:
     driver: local
 
 networks:
