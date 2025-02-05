@@ -47,6 +47,7 @@ pub async fn upload(
         ));
     };
 
+    let mut count = 0;
     let mut file_data = None;
     let mut original_name = None;
     while let Some(field) = multipart.next_field().await.unwrap() {
@@ -72,6 +73,11 @@ pub async fn upload(
                 };
             }
             _ => (),
+        }
+
+        count += 1;
+        if count >= 2 {
+            break;
         }
     }
 

@@ -83,7 +83,7 @@ pub async fn create_new(
 
     let user = match users::select_by_ids(vec![author_id], &state.db).await {
         Ok(mut u) => {
-            if u.is_empty(){
+            if u.is_empty() {
                 return Err(common::ErrResponse::new(
                     StatusCode::NOT_FOUND,
                     "ERR_MIA",
