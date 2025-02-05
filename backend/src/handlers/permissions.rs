@@ -88,8 +88,12 @@ pub async fn add(
         ));
     }
 
+    common::verify_payload_integer_range(data.user_id, 1, i32::MAX)?;
+    common::verify_payload_integer_range(data.role_id, 1, i32::MAX)?;
+
     let mut store_ids = vec![];
     if let Some(store_id) = data.store_id {
+        common::verify_payload_integer_range(store_id, 1, i32::MAX)?;
         store_ids.push(store_id);
     }
     let mut permissions = match permissions::select(

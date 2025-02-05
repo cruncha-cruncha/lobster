@@ -94,7 +94,7 @@ pub async fn update(
         if payload.old_password.is_none() {
             return Err(common::ErrResponse::new(
                 StatusCode::BAD_REQUEST,
-                "ERR_BAD_REQUEST",
+                "ERR_REQ",
                 "You must provide the old password to change it",
             ));
         }
@@ -137,6 +137,8 @@ pub async fn update(
             ));
         }
     }
+
+    common::none_or_verify_payload_text_length(payload.username.as_deref(), 1, common::MAX_USERNAME_LENGTH)?;
 
     match users::update(
         user_id,

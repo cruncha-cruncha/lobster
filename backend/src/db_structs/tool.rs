@@ -1,8 +1,6 @@
 use super::store;
 use serde::{Deserialize, Serialize};
 
-pub const SHORT_DESCRIPTION_CHAR_LIMIT: usize = 80;
-
 pub type Id = i32;
 pub type RealId = String;
 pub type StoreId = store::Id;

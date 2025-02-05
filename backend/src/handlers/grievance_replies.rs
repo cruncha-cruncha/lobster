@@ -81,6 +81,12 @@ pub async fn create_new(
         ));
     }
 
+    common::verify_payload_text_length(
+        payload.text.as_str(),
+        1,
+        common::MAX_GRIEVANCE_REPLY_TEXT_LENGTH,
+    )?;
+
     let user = match users::select_by_ids(vec![author_id], &state.db).await {
         Ok(mut u) => {
             if u.is_empty() {

@@ -65,6 +65,25 @@ pub async fn create_new(
         }
     };
 
+    common::verify_payload_text_length(&payload.name, 1, common::MAX_STORE_TITLE_LENGTH)?;
+    common::verify_payload_text_length(&payload.location, 1, common::MAX_STORE_LOCATION_LENGTH)?;
+    common::verify_payload_text_length(
+        payload.email_address.as_deref().unwrap_or_default(),
+        0,
+        common::MAX_STORE_EMAIL_LENGTH,
+    )?;
+    common::verify_payload_text_length(&payload.phone_number, 1, common::MAX_STORE_PHONE_LENGTH)?;
+    common::verify_payload_text_length(
+        payload.rental_information.as_deref().unwrap_or_default(),
+        0,
+        common::MAX_STORE_RENTAL_INFO_LENGTH,
+    )?;
+    common::verify_payload_text_length(
+        payload.other_information.as_deref().unwrap_or_default(),
+        0,
+        common::MAX_STORE_OTHER_INFO_LENGTH,
+    )?;
+
     let code = common::rnd_code_str("s-");
     let store = match stores::insert(
         payload.name,
@@ -142,6 +161,37 @@ pub async fn update_info(
         ));
     }
 
+    common::none_or_verify_payload_text_length(
+        payload.name.as_deref(),
+        1,
+        common::MAX_STORE_TITLE_LENGTH,
+    )?;
+    common::none_or_verify_payload_text_length(
+        payload.location.as_deref(),
+        1,
+        common::MAX_STORE_LOCATION_LENGTH,
+    )?;
+    common::verify_payload_text_length(
+        payload.email_address.as_deref().unwrap_or_default(),
+        0,
+        common::MAX_STORE_EMAIL_LENGTH,
+    )?;
+    common::none_or_verify_payload_text_length(
+        payload.phone_number.as_deref(),
+        1,
+        common::MAX_STORE_PHONE_LENGTH,
+    )?;
+    common::verify_payload_text_length(
+        payload.rental_information.as_deref().unwrap_or_default(),
+        1,
+        common::MAX_STORE_RENTAL_INFO_LENGTH,
+    )?;
+    common::verify_payload_text_length(
+        payload.other_information.as_deref().unwrap_or_default(),
+        1,
+        common::MAX_STORE_OTHER_INFO_LENGTH,
+    )?;
+
     match stores::update(
         store_id,
         payload.name,
@@ -212,7 +262,7 @@ pub async fn update_status(
                 ));
             }
             s.unwrap()
-        },
+        }
         Err(e) => {
             return Err(common::ErrResponse::new(
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -292,7 +342,7 @@ pub async fn get_by_id(
                 ));
             }
             s.remove(0)
-        },
+        }
         Err(e) => {
             return Err(common::ErrResponse::new(
                 StatusCode::NOT_FOUND,

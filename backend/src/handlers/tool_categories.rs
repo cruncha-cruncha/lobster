@@ -55,6 +55,22 @@ pub async fn create_new(
         ));
     }
 
+    common::verify_payload_text_length(&payload.name, 1, common::MAX_TOOL_CATEGORY_NAME_LENGTH)?;
+    common::none_or_verify_payload_text_length(payload.description.as_deref(), 1, common::MAX_TOOL_CATEGORY_DESCRIPTION_LENGTH)?;
+    if payload.synonyms.is_some() {
+        if payload.synonyms.as_deref().unwrap_or_default().len() > common::MAX_TOOL_CATEGORY_SYNONYMS_LENGTH{
+            return Err(common::ErrResponse::new(
+                StatusCode::BAD_REQUEST,
+                "ERR_REQ",
+                "Too many synonyms",
+            ));
+        }
+
+        for synonym in payload.synonyms.as_ref().unwrap() {
+            common::verify_payload_text_length(synonym, 1, common::MAX_TOOL_CATEGORY_NAME_LENGTH)?;
+        }
+    }
+
     let tool_category = match tool_categories::insert(
         payload.name,
         payload.synonyms.unwrap_or_default(),
@@ -89,6 +105,8 @@ pub async fn update(
             "User is not a library admin",
         ));
     }
+
+    // TODO: verify
 
     let tool_category = match tool_categories::update(
         tool_category_id,

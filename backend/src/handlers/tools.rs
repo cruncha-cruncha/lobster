@@ -1,6 +1,5 @@
 use crate::auth::claims::Claims;
 use crate::common;
-use crate::db_structs::tool::SHORT_DESCRIPTION_CHAR_LIMIT;
 use crate::db_structs::tool_classification::ToolClassification;
 use crate::db_structs::{store, tool, tool_category, tool_classification, tool_photo};
 use crate::queries::{stores, tool_categories, tool_classifications, tool_photos, tools};
@@ -114,13 +113,34 @@ pub async fn create_new(
         ));
     }
 
-    if payload.short_description.chars().count() > SHORT_DESCRIPTION_CHAR_LIMIT {
-        return Err(common::ErrResponse::new(
-            StatusCode::BAD_REQUEST,
-            "ERR_REQ",
-            "Short description must be 80 characters or less",
-        ));
-    }
+    common::none_or_verify_payload_text_length(
+        payload.real_id.as_deref(),
+        1,
+        common::MAX_TOOL_REAL_ID_LENGTH,
+    )?;
+    common::verify_payload_integer_range(payload.store_id, 1, i32::MAX)?;
+    common::verify_payload_integer_range(payload.rental_hours, 1, i32::MAX)?;
+    common::verify_payload_text_length(
+        &payload.short_description,
+        1,
+        common::MAX_TOOL_SHORT_DESCRIPTION_LENGTH,
+    )?;
+    common::none_or_verify_payload_text_length(
+        payload.long_description.as_deref(),
+        1,
+        common::MAX_TOOL_LONG_DESCRIPTION_LENGTH,
+    )?;
+    common::none_or_verify_payload_integer_range(payload.status, 1, i32::MAX)?;
+    common::verify_payload_integer_range(
+        payload.category_ids.len().try_into().unwrap_or_default(),
+        1,
+        common::MAX_TOOL_CATEGORIES_LENGTH,
+    )?;
+    common::verify_payload_integer_range(
+        payload.photo_keys.len().try_into().unwrap_or_default(),
+        1,
+        common::MAX_TOOL_PHOTOS_LENGTH,
+    )?;
 
     let store = match stores::select(
         stores::SelectParams {
@@ -227,22 +247,23 @@ pub async fn create_new(
 
     let mut pictures: Vec<ToolPhotoInfo> = vec![];
     for photo_key in payload.photo_keys {
-        let existing = match tool_photos::select(vec![], vec![], vec![photo_key.clone()], &state.db).await {
-            Ok(mut p) => {
-                if p.is_empty() {
-                    None
-                } else {
-                    Some(p.remove(0))
+        let existing =
+            match tool_photos::select(vec![], vec![], vec![photo_key.clone()], &state.db).await {
+                Ok(mut p) => {
+                    if p.is_empty() {
+                        None
+                    } else {
+                        Some(p.remove(0))
+                    }
                 }
-            },
-            Err(e) => {
-                return Err(common::ErrResponse::new(
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "ERR_DB",
-                    &e,
-                ));
-            }
-        };
+                Err(e) => {
+                    return Err(common::ErrResponse::new(
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        "ERR_DB",
+                        &e,
+                    ));
+                }
+            };
 
         if existing.is_none() {
             return Err(common::ErrResponse::new(
@@ -329,21 +350,39 @@ pub async fn update(
         }
     }
 
-    if payload.short_description.is_some()
-        && payload
-            .short_description
+    common::none_or_verify_payload_text_length(
+        payload.real_id.as_deref(),
+        1,
+        common::MAX_TOOL_REAL_ID_LENGTH,
+    )?;
+    common::none_or_verify_payload_integer_range(payload.rental_hours, 1, i32::MAX)?;
+    common::none_or_verify_payload_text_length(
+        payload.short_description.as_deref(),
+        1,
+        common::MAX_TOOL_SHORT_DESCRIPTION_LENGTH,
+    )?;
+    common::none_or_verify_payload_text_length(
+        payload.long_description.as_deref(),
+        1,
+        common::MAX_TOOL_LONG_DESCRIPTION_LENGTH,
+    )?;
+    common::none_or_verify_payload_integer_range(payload.status, 1, i32::MAX)?;
+    common::none_or_verify_payload_integer_range(
+        payload
+            .category_ids
             .as_deref()
-            .unwrap()
-            .chars()
-            .count()
-            > SHORT_DESCRIPTION_CHAR_LIMIT
-    {
-        return Err(common::ErrResponse::new(
-            StatusCode::BAD_REQUEST,
-            "ERR_REQ",
-            "Short description must be 80 characters or less",
-        ));
-    }
+            .map(|v| v.len().try_into().unwrap_or_default()),
+        1,
+        common::MAX_TOOL_CATEGORIES_LENGTH,
+    )?;
+    common::none_or_verify_payload_integer_range(
+        payload
+            .photo_keys
+            .as_deref()
+            .map(|v| v.len().try_into().unwrap_or_default()),
+        1,
+        common::MAX_TOOL_PHOTOS_LENGTH,
+    )?;
 
     let tool = match tools::update(
         tool_id,
@@ -475,45 +514,46 @@ pub async fn update(
         }
     };
 
-    let mut existing_photos = match tool_photos::select(vec![], vec![tool_id], vec![], &state.db).await {
-        Ok(p) => p,
-        Err(e) => {
-            return Err(common::ErrResponse::new(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "ERR_DB",
-                &e,
-            ));
-        }
-    };
+    let mut existing_photos =
+        match tool_photos::select(vec![], vec![tool_id], vec![], &state.db).await {
+            Ok(p) => p,
+            Err(e) => {
+                return Err(common::ErrResponse::new(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "ERR_DB",
+                    &e,
+                ));
+            }
+        };
 
     if payload.photo_keys.is_some() {
         let photo_keys = payload.photo_keys.as_deref().unwrap();
 
         for photo_key in photo_keys {
-            if existing_photos
-                .iter()
-                .any(|p| &p.photo_key == photo_key)
-            {
+            if existing_photos.iter().any(|p| &p.photo_key == photo_key) {
                 continue;
             }
 
-            let existing = match tool_photos::select(vec![], vec![], vec![photo_key.to_string()], &state.db).await {
-                Ok(mut p) => {
-                    if p.is_empty() {
-                        None
-                    } else {
-                        Some(p.remove(0))
+            let existing =
+                match tool_photos::select(vec![], vec![], vec![photo_key.to_string()], &state.db)
+                    .await
+                {
+                    Ok(mut p) => {
+                        if p.is_empty() {
+                            None
+                        } else {
+                            Some(p.remove(0))
+                        }
                     }
-                },
-                Err(e) => {
-                    return Err(common::ErrResponse::new(
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                        "ERR_DB",
-                        &e,
-                    ));
-                }
-            };
-    
+                    Err(e) => {
+                        return Err(common::ErrResponse::new(
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            "ERR_DB",
+                            &e,
+                        ));
+                    }
+                };
+
             if existing.is_none() {
                 return Err(common::ErrResponse::new(
                     StatusCode::BAD_REQUEST,
@@ -522,7 +562,7 @@ pub async fn update(
                 ));
             }
             let existing = existing.unwrap();
-    
+
             if existing.tool_id.is_some() {
                 return Err(common::ErrResponse::new(
                     StatusCode::BAD_REQUEST,
@@ -530,7 +570,7 @@ pub async fn update(
                     "Photo key is already associated with a tool",
                 ));
             }
-    
+
             match tool_photos::update_tool_id(existing.id, Some(tool.id), &state.db).await {
                 Ok(_) => {}
                 Err(e) => {
@@ -558,7 +598,8 @@ pub async fn update(
             }
         }
 
-        existing_photos = match tool_photos::select(vec![], vec![tool_id], vec![], &state.db).await {
+        existing_photos = match tool_photos::select(vec![], vec![tool_id], vec![], &state.db).await
+        {
             Ok(p) => p,
             Err(e) => {
                 return Err(common::ErrResponse::new(
@@ -662,15 +703,14 @@ pub async fn get_by_id(
     };
 
     let pictures = match tool_photos::select(vec![], vec![tool.id], vec![], &state.db).await {
-        Ok(p) => {
-            p.iter()
-                .map(|p| ToolPhotoInfo {
-                    id: p.id,
-                    original_name: p.original_name.clone(),
-                    photo_key: p.photo_key.clone(),
-                })
-                .collect()
-        },
+        Ok(p) => p
+            .iter()
+            .map(|p| ToolPhotoInfo {
+                id: p.id,
+                original_name: p.original_name.clone(),
+                photo_key: p.photo_key.clone(),
+            })
+            .collect(),
         Err(e) => {
             return Err(common::ErrResponse::new(
                 StatusCode::INTERNAL_SERVER_ERROR,

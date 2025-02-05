@@ -52,6 +52,10 @@ pub async fn create_new(
         }
     };
 
+    common::verify_payload_text_length(payload.title.as_str(), 1, common::MAX_GRIEVANCE_TITLE_LENGTH)?;
+    common::verify_payload_text_length(payload.description.as_str(), 1, common::MAX_GRIEVANCE_DESCRIPTION_LENGTH)?;
+    common::verify_payload_integer_range(payload.accused_id, 1, i32::MAX)?;
+
     match grievances::insert(
         author_id,
         payload.accused_id,

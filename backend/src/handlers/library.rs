@@ -129,6 +129,12 @@ pub async fn update_info(
         ));
     }
 
+    common::verify_payload_text_length(
+        payload.name.as_deref().unwrap_or_default(),
+        1,
+        common::MAX_LIBRARY_NAME_LENGTH,
+    )?;
+
     match library::update_information(payload.name, &state.db).await {
         Ok(_) => Ok(Json(common::NoData {})),
         Err(e) => Err(common::ErrResponse::new(
@@ -161,6 +167,8 @@ pub async fn create_library(
             ))
         }
     };
+
+    common::verify_payload_text_length(payload.name.as_str(), 1, common::MAX_LIBRARY_NAME_LENGTH)?;
 
     match library::insert_information(&payload.name, &state.db).await {
         Ok(_) => Ok(Json(common::NoData {})),

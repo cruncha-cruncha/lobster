@@ -79,6 +79,12 @@ pub async fn check_in(
             "ERR_REQ",
             "No tools to check in",
         ));
+    } else if payload.tool_ids.len() > common::MAX_TOOL_RENTAL_CHECK_IN_COUNT {
+        return Err(common::ErrResponse::new(
+            StatusCode::BAD_REQUEST,
+            "ERR_REQ",
+            "Too many tools to check in",
+        ));
     }
 
     let tools = match tools::select_by_ids(payload.tool_ids.clone(), &state.db).await {
@@ -208,6 +214,14 @@ pub async fn check_out(
             StatusCode::BAD_REQUEST,
             "ERR_REQ",
             "Both user code and store code cannot be provided",
+        ));
+    }
+
+    if payload.tool_ids.len() > common::MAX_TOOL_RENTAL_CHECK_OUT_COUNT {
+        return Err(common::ErrResponse::new(
+            StatusCode::BAD_REQUEST,
+            "ERR_REQ",
+            "Too many tools to check out",
         ));
     }
 

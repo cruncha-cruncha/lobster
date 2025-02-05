@@ -91,6 +91,14 @@ pub async fn upload(
     let original_name = original_name.unwrap();
     let file_data = file_data.unwrap();
 
+    if original_name.len() <= 0 || file_data.len() <= 0 {
+        return Err(common::ErrResponse::new(
+            StatusCode::BAD_REQUEST,
+            "ERR_REQ",
+            "No files found",
+        ));
+    }
+
     let new_file_key = Uuid::new_v4();
     let path = format_path(&new_file_key.to_string());
 
